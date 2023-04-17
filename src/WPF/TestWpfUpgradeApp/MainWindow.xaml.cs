@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TestWpfUpgradeApp.ViewModels;
 
 namespace TestWpfUpgradeApp
 {
@@ -23,6 +24,7 @@ namespace TestWpfUpgradeApp
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = new MainViewModel();
         }
     }
 }
