@@ -1,24 +1,43 @@
-﻿using System;
+﻿using GeneralUpdate.Core.Bootstrap;
+using GeneralUpdate.Core.Domain.Enum;
+using GeneralUpdate.Core.OSS;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TestWpfApp.ViewModels
+namespace TestWpfUpgradeApp.ViewModels
 {
     public class MainViewModel
     {
         /// <summary>
+        /// 启动OSS更新
+        /// </summary>
+        public void LaunchOSS() 
+        {
+            //Task.Run(async () =>
+            //{
+            //    var url = "http://192.168.50.203";
+            //    var apk = "GeneralUpdate.Client.apk";
+            //    var authority = "com.generalupdate.oss";
+            //    var currentVersion = "1.0.0.0";
+            //    var versionFileName = "version.json";
+            //    await GeneralUpdateOSS.Start<Strategy>(new ParamsAndroid(url, apk, authority, currentVersion, versionFileName));
+            //});
+        }
+
+        /// <summary>
         /// 启动自动升级
         /// </summary>
-        public void LaunchUpgrade()
+        public void LaunchUpgrade() 
         {
             //Task.Run(async () =>
             //{
             //    //ClientStrategy该更新策略将完成1.自动升级组件自更新 2.启动更新组件 3.配置好ClientParameter无需再像之前的版本写args数组进程通讯了。
             //    //generalClientBootstrap.Config(baseUrl, "B8A7FADD-386C-46B0-B283-C9F963420C7C").
             //    var configinfo = GetWindowsConfiginfo();
-            //    var generalClientBootstrap = await new GeneralBootstrap()
+            //    var generalClientBootstrap = await new GeneralClientBootstrap()
             //    //单个或多个更新包下载通知事件
             //    .AddListenerMultiDownloadProgress(OnMultiDownloadProgressChanged)
             //    //单个或多个更新包下载速度、剩余下载事件、当前下载版本信息通知事件
