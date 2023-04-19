@@ -12,22 +12,6 @@ namespace TestWpfUpgradeApp.ViewModels
     public class MainViewModel
     {
         /// <summary>
-        /// 启动OSS更新
-        /// </summary>
-        public void LaunchOSS() 
-        {
-            //Task.Run(async () =>
-            //{
-            //    var url = "http://192.168.50.203";
-            //    var apk = "GeneralUpdate.Client.apk";
-            //    var authority = "com.generalupdate.oss";
-            //    var currentVersion = "1.0.0.0";
-            //    var versionFileName = "version.json";
-            //    await GeneralUpdateOSS.Start<Strategy>(new ParamsAndroid(url, apk, authority, currentVersion, versionFileName));
-            //});
-        }
-
-        /// <summary>
         /// 启动自动升级
         /// </summary>
         public void LaunchUpgrade() 

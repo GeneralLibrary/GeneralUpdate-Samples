@@ -11,8 +11,4 @@
     <PackageReference Include="GeneralUpdate.ClientCore" Version="2.8.10" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
-
 </Project>
