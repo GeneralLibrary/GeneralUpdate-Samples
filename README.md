@@ -2,7 +2,7 @@
 
 The GeneralUpdate twin project provides code examples for Quick Start.
 
-| directory    | note                                                         |
+| Directory    | Note                                                         |
 | ------------ | ------------------------------------------------------------ |
 | client       | Client-side sample code                                      |
 | file service | File server emulation tool                                   |
