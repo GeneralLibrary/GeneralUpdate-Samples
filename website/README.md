@@ -6,9 +6,9 @@ permalink: /
 
 > 贴心的编程学习路线，全面的编程知识百科
 >
-> 作者：[程序员JusterZhu](https://yuyuanweb.feishu.cn/wiki/Abldw5WkjidySxkKxU2cQdAtnah)
+> 作者：JusterZhu
 >
-> 本站地址：[https://codefather.cn](https://codefather.cn)
+> 本站地址：https://justerzhu.cn
 
 ## 本站内容
 
@@ -58,7 +58,3 @@ JusterZhu公司旗下的产品和服务，如后端求职突击、前端面试�
 ## [编程词典](/编程词典)
 
 计算机编程领域专业术语大全，覆盖 Java、Python、前端、Go、C++、游戏开发、人工智能、大数据、云计算、区块链、机器学习、深度学习、网络安全、算法、操作系统、数据库、物联网、嵌入式、移动开发等 30 个方向。 
-
-## [作者介绍](/作者)
-
-没啥好说的，感谢您的阅读！
