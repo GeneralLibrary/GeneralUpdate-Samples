@@ -1,6 +1,6 @@
 # ✨GeneralUpdate-Samples
 
-![GeneralUpdate_h](imgs\GeneralUpdate_h.png)
+![](imgs\GeneralUpdate_h.png)
 
 The GeneralUpdate twin project provides code examples for Quick Start.
 
