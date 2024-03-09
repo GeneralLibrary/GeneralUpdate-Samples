@@ -64,7 +64,7 @@ public async Task TestSetBlocklist()
 
 ### 注解
 
-DifferentialCore提供以下能力。
+DifferentialCore提供增量识别，生成二进制补丁、补丁还原、设置黑名单能力。
 
 #### 方法
 
@@ -111,3 +111,14 @@ Set a blacklist.
 **blackFiles** A collection of blacklist files that are skipped when updated.
 
 **blackFileFormats ** A collection of blacklist file name extensions that are skipped on update.
+
+
+
+### 适用于
+
+| 产品           | 版本          |
+| -------------- | ------------- |
+| .NET           | 5、6、7、8、9 |
+| .NET Framework | 4.6.1         |
+| .NET Standard  | 2.0           |
+| .NET Core      | 2.0           |

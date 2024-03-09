@@ -2,7 +2,7 @@
 
 ### 定义
 
-命名控件：GeneralUpdate.Zip
+命名空间：GeneralUpdate.Zip
 
 程序集：GeneralUpdate.Zip.dll
 
@@ -125,3 +125,14 @@ GeneralZipFactory提供以下能力。
 **includeBaseDirectory** Whether to include the root directory when packing.
 
 **encoding** Compressed package encoding format.
+
+
+
+### 适用于
+
+| 产品           | 版本          |
+| -------------- | ------------- |
+| .NET           | 5、6、7、8、9 |
+| .NET Framework | 4.6.1         |
+| .NET Standard  | 2.0           |
+| .NET Core      | 2.0           |
