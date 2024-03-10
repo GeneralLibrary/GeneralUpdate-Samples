@@ -1,0 +1,15 @@
+## Q&A
+
+
+
+### 提问
+
+- Gitee issues : https://gitee.com/GeneralLibrary/GeneralUpdate/issues
+- Github issues : https://github.com/GeneralLibrary/GeneralUpdate/issues
+
+-  .NET技术交流群 341349660
+- GeneralUpdate交流群 748744489
+
+
+
+![gitee_issues](../imgs/gitee_issues.png)

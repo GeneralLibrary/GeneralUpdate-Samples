@@ -76,9 +76,15 @@ DifferentialCore提供增量识别，生成二进制补丁、补丁还原、设�
 
 
 
-### Clean()
+### <img src="../imgs/func.png" alt="func" style="zoom:10%;" />Clean()
+
+**方法**
 
 Generate patch file [Cannot contain files with the same name but different extensions] .
+
+```c#
+public async Task Clean(string sourcePath, string targetPath, string patchPath = null);
+```
 
 **参数**
 
@@ -90,9 +96,15 @@ Generate patch file [Cannot contain files with the same name but different exten
 
 
 
-### Dirty()
+### <img src="../imgs/func.png" alt="func" style="zoom:10%;" />Dirty()
+
+**方法**
 
 Apply patch [Cannot contain files with the same name but different extensions] .
+
+```c#
+public async Task Dirty(string appPath, string patchPath);
+```
 
 **参数**
 
@@ -102,9 +114,15 @@ Apply patch [Cannot contain files with the same name but different extensions] .
 
 
 
-### SetBlocklist()
+### <img src="../imgs/func.png" alt="func" style="zoom:10%;" />SetBlocklist()
+
+**方法**
 
 Set a blacklist.
+
+```c#
+public void SetBlocklist(List<string> blackFiles, List<string> blackFileFormats);
+```
 
 **参数**
 

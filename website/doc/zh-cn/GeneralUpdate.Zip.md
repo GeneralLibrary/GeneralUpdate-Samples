@@ -110,7 +110,17 @@ GeneralZipFactory提供以下能力。
 
 
 
-### CreatefOperate()
+### <img src="../imgs/func.png" alt="func" style="zoom:10%;" />CreatefOperate()
+
+**方法**
+
+初始化压缩包操作参数。
+
+```c#
+public IFactory CreateOperate(OperationType type, string name, string sourcePath, string destinationPath, bool includeBaseDirectory = false, Encoding encoding = null);
+```
+
+
 
 **参数**
 
