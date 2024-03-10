@@ -2,7 +2,14 @@
 
 #### 简介
 
-工具使用.NET MAUI (.NET 6)进行开发，目前只支持桌面端使用。
+工具使用.NET WPF(.NET 8)进行开发，目前只支持windows桌面端使用。
+
+- 仓库地址：
+
+  https://gitee.com/GeneralLibrary/GeneralUpdate.Tools
+  https://github.com/GeneralLibrary/GeneralUpdate.Tools
+
+
 
 #### 提供功能
 
@@ -13,9 +20,9 @@
 | 可编辑选择差分文件 | 开发中 | 可视化查看差分包的打包内容，并可选择打包文件。               |
 | 多平台支持         | 部分   | 仅支持Windows、Linux、MacCatalyst。                          |
 
+
+
 #### 使用示例
-
-
 
 Source path：表示上一个版本的文件夹路径。
 
