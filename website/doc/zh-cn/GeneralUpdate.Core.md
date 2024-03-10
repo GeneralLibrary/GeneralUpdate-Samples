@@ -24,6 +24,8 @@ NuGet\Install-Package GeneralUpdate.Core -Version 1.0.0
 
 ### 示例
 
+<img src="../imgs/muti_donwload.png" alt="muti_donwload" style="zoom:50%;" />
+
 以下示例定义方法，包含GeneralUpdateBootstrap使用方法。
 
 ```c#

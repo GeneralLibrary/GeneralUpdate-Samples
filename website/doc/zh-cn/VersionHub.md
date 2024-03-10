@@ -31,6 +31,16 @@ NuGet\Install-Package GeneralUpdate.ClientCore -Version 1.0.0
 VersionHub<string>.Instance.Subscribe($"{baseUrl}/{hubName}", "TESTNAME", new Action<string>(GetMessage));
 ```
 
+**点对点推送**
+
+<img src="../imgs/maui_windows_push_version.png" alt="maui_windows_push_version" style="zoom:50%;" />
+
+
+
+**一次推送更新给多个客户端**
+
+![push_version_mutil](../imgs/push_version_mutil.png)
+
 
 
 ### 注解

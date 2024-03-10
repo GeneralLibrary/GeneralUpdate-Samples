@@ -24,6 +24,26 @@ NuGet\Install-Package GeneralUpdate.Maui.OSS -Version 1.0.0
 
 ### 示例
 
+<img src="../imgs/oss_maui_flow.png" alt="oss_maui_flow" style="zoom:50%;" />
+
+1.准备version.json版本信息配置文件，更新文件（update.apk）更新文件就直接是新版本的apk了 (或.abb)。 
+
+2.Client启动时直接请求OSS服务器或文件服务器，下载version.json文件。
+
+```json
+{ 
+    "PubTime": 1680444916,
+    "Name": "com.companyname.generalupdate.ossclient",
+    "MD5": "9bf414990a67e74f11752d03f49b15d8", 
+    "Version": "1.0.5", 
+    "Url": "http://192.168.50.203/com.companyname.generalupdate.ossclient.apk" 
+} 
+```
+
+3.下载到本地之后解析版本信息内容，判断是否需要更新。 4.需要更新则下载update.apk。 5.下载完成之后执行安装，这一步就交给了安卓操作系统执行。执行完成之后运行新版本app。
+
+
+
 以下示例定义方法，包含GeneralUpdateOSS使用方法。
 
 ```c#
