@@ -8,7 +8,7 @@
 
 
 
-GeneralClientOSS类是另外一种更新机制与GeneralClientBootstrap不同的是，GeneralClientOSS不需要编写服务端的代码直接根据OSS文件服务器的version.josn的版本信息进行更新，大大简化了新手使用本组件的门槛。
+GeneralClientOSS类是另外一种更新机制与GeneralClientBootstrap不同的是，GeneralClientOSS不需要编写服务端的代码直接根据OSS文件服务器的version.josn的版本信息进行更新，简化了新手使用本组件的门槛。
 
 ```c#
 public sealed class GeneralClientOSS

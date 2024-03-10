@@ -29,3 +29,28 @@ The GeneralUpdate twin project provides code examples for Quick Start.
 - https://github.com/GeneralLibrary/GeneralUpdate
 
 - https://gitee.com/GeneralLibrary/GeneralUpdate
+
+
+
+## ✨Website
+
+IDE : Visual Sutdio Code
+
+Software environment : Vue /  Node.js
+
+```shell
+# build cmd
+
+# get node.js version
+node -v
+
+# get npm version
+npm -v
+
+# install npm
+npm -i
+
+# build local docs
+docs:dev
+```
+

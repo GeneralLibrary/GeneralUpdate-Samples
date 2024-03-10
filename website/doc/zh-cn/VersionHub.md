@@ -82,7 +82,7 @@ TParameter
 
 **url** string http请求的api地址。
 
-**name** string The name needs to be guaranteed to be unique.
+**name** string 名称需要保证是唯一的。
 
 **receiveMessageCallback** Action<TParameter> 接收服务端推送信息的回调函数。
 

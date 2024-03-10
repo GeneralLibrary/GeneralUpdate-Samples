@@ -1,9 +1,5 @@
 ## Q&A
 
-
-
-### 提问
-
 - Gitee issues : https://gitee.com/GeneralLibrary/GeneralUpdate/issues
 - Github issues : https://github.com/GeneralLibrary/GeneralUpdate/issues
 
