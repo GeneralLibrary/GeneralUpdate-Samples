@@ -24,6 +24,8 @@ NuGet\Install-Package GeneralUpdate.Maui.OSS -Version 1.0.0
 
 ### 示例
 
+​                                                                                                         <img src="../imgs/maui_android_upgrade.png" alt="maui_android_upgrade" style="zoom:50%;" />
+
 <img src="../imgs/oss_maui_flow.png" alt="oss_maui_flow" style="zoom:50%;" />
 
 1.准备version.json版本信息配置文件，更新文件（update.apk）更新文件就直接是新版本的apk了 (或.abb)。 
