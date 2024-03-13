@@ -112,7 +112,7 @@ GeneralUpdateOSS提供以下能力。
 Starting an OSS update.
 
 ```c#
-public static async Task Start(ParamsOSS configParams, string upgradeAppName = "GeneralUpdate.Upgrade")
+public static async Task Start(ParamsOSS configParams, string upgradeAppName = "GeneralUpdate.Upgrade");
 ```
 
 
@@ -126,6 +126,8 @@ ParamsOSS 更新配置参数，详细内容参考本文档  <img src="D:\github_
 **参数**
 
 **parameter** ParamsOSS安卓平台的跟新配置参数。
+
+**upgradeAppName** 需要升级的应用名称。
 
 
 

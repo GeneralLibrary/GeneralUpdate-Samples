@@ -31,13 +31,13 @@ NuGet\Install-Package GeneralUpdate.ClientCore -Version 1.0.0
 VersionHub<string>.Instance.Subscribe($"{baseUrl}/{hubName}", "TESTNAME", new Action<string>(GetMessage));
 ```
 
-**点对点推送**
+**（1）点对点推送**
 
 <img src="../imgs/maui_windows_push_version.png" alt="maui_windows_push_version" style="zoom:50%;" />
 
 
 
-**一次推送更新给多个客户端**
+**（2）一次推送更新给多个客户端**
 
 ![push_version_mutil](../imgs/push_version_mutil.png)
 
@@ -45,7 +45,7 @@ VersionHub<string>.Instance.Subscribe($"{baseUrl}/{hubName}", "TESTNAME", new Ac
 
 ### 注解
 
-VersionHub提供以下能力。
+VersionHub提供服务器对客户端一对一、一对多的推送功能。
 
 #### 属性
 

@@ -72,7 +72,7 @@
 ### 版本号执行标准
 
 - Nuget版本管理参考标准：https://docs.microsoft.com/zh-cn/nuget/concepts/package-versioning 
-- 应用程序集版本管理参考标准：https://docs.microsoft.com/zh-cn/dotnet/standard/assembly/versi oning （被组件更新的客户端程序，说通俗点就是你公司的产品；组件的操作将按照这个标准执行。） 
+- 应用程序集版本管理参考标准：https://docs.microsoft.com/zh-cn/dotnet/standard/assembly/versioning （被组件更新的客户端程序，说通俗点就是你公司的产品；组件的操作将按照这个标准执行。） 
 - 每次迭代除了更新AssemblyInfo中的版本号，还需要修改DLL文件的版本号。
 
 
