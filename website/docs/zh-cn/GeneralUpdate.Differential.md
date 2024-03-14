@@ -4,7 +4,7 @@ sidebar_position: 4
 
 ### 定义
 
-命名控件：GeneralUpdate.Differential
+命名空间：GeneralUpdate.Differential
 
 程序集：GeneralUpdate.Differential.dll
 
