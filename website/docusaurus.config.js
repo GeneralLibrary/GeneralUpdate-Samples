@@ -31,7 +31,16 @@ const config = {
   // may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: ['en','zh'],
+    localeConfigs: {
+      en: {
+        htmlLang: 'en-GB',
+      },
+      // You can omit a locale (e.g. fr) if you don't need to override the defaults
+      zh: {
+        htmlLang: 'zh-GB',
+      },
+    }
   },
 
   presets: [
@@ -46,13 +55,7 @@ const config = {
           editUrl:
             'https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website/doc',
         },
-        blog: {
-          showReadingTime: true,
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website',
-        },
+        blog: false,
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -78,16 +81,14 @@ const config = {
             position: 'left',
             label: 'Doc',
           },
-          { 
-            label: 'Blog',
-            to: '/blog',
-            position: 'left'
-          },
           {
             href: 'https://github.com/GeneralLibrary',
             label: 'GitHub',
             position: 'right',
-          },
+          },{
+            type: 'localeDropdown',
+            position: 'right',
+          }
         ],
       },
       footer: {
@@ -98,7 +99,7 @@ const config = {
             items: [
               {
                 label: 'GeneralLibrary',
-                to: '/docs/zh-cn/Component Introduction',
+                to: '/docs/doc/Component Introduction',
               },
             ],
           },
