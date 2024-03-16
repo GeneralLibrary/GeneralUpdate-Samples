@@ -10,7 +10,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 const config = {
   title: 'GeneralLibrary',
   tagline: 'This is a technology from an alien planet.',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/general.ico',
 
   // Set the production url of your site here
   url: 'https://your-docusaurus-site.example.com',
@@ -69,7 +69,7 @@ const config = {
         title: 'GeneralLibrary',
         logo: {
           alt: 'GeneralLibrary Logo',
-          src: 'img/logo.svg',
+          src: 'img/general.png',
         },
         items: [
           {
@@ -78,7 +78,11 @@ const config = {
             position: 'left',
             label: 'Doc',
           },
-          {to: '/blog', label: 'Release logs', position: 'left'},
+          { 
+            label: 'Blog',
+            to: '/blog',
+            position: 'left'
+          },
           {
             href: 'https://github.com/GeneralLibrary',
             label: 'GitHub',
@@ -90,7 +94,7 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'Docs',
+            title: 'Doc',
             items: [
               {
                 label: 'GeneralLibrary',
@@ -119,17 +123,13 @@ const config = {
             title: 'More',
             items: [
               {
-                label: 'Release logs',
-                to: '/blog',
-              },
-              {
                 label: 'GitHub',
                 href: 'https://github.com/GeneralLibrary',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} General team Project, Inc.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Juster zhu Project, Inc.`,
       },
       prism: {
         theme: prismThemes.github,

@@ -1,5 +1,8 @@
 ---
-sidebar_position: 1
+slug: releaselog
+title: releaselog
+authors: juster
+tags: [log]
 ---
 
 # 📒更新日志
