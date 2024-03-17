@@ -92,6 +92,11 @@ const config = {
             position: 'left'
           },
           {
+            label:'关于',
+            href:'/About',
+            position: 'left'
+          },
+          {
             href: 'https://github.com/GeneralLibrary',
             label: 'GitHub',
             position: 'right',
