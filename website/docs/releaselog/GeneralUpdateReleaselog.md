@@ -1,6 +1,6 @@
 ---
 slug: releaselog
-title: releaselog
+title: GeneralUpdate
 authors: juster
 tags: [log]
 ---

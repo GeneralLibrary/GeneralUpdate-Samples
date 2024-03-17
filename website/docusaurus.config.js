@@ -79,7 +79,7 @@ const config = {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',
             position: 'left',
-            label: 'Doc',
+            label: '文档',
           },
           {
             label:'生态伙伴',
