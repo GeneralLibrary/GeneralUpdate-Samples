@@ -82,6 +82,16 @@ const config = {
             label: 'Doc',
           },
           {
+            label:'生态伙伴',
+            href:'/EcologicalPartners',
+            position: 'left'
+          },
+          {
+            label:'企业合作',
+            href:'/CooperativeEnterprises',
+            position: 'left'
+          },
+          {
             href: 'https://github.com/GeneralLibrary',
             label: 'GitHub',
             position: 'right',
