@@ -6,19 +6,20 @@ on:
       - main
     paths:
       - 'website/'
+      - '.github/workflows/pages-deploy.yml'
 jobs:
   build:
     name: Build
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    - run: cd website
     - name: Setup Node.js environment
-      uses: actions/setup-node@v4.0.2      
-    - name: Install dependencies
-      run: yarn
+      uses: actions/setup-node@v4.0.2
     - name: Build project
-      run: yarn build
+      run: |
+        cd website
+        yarn
+        yarn build
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
