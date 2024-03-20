@@ -130,7 +130,7 @@ public void SetBlocklist(List<string> blackFiles, List<string> blackFileFormats)
 
 **blackFiles** A collection of blacklist files that are skipped when updated.
 
-**blackFileFormats ** A collection of blacklist file name extensions that are skipped on update.
+**blackFileFormats** A collection of blacklist file name extensions that are skipped on update.
 
 
 

@@ -150,7 +150,7 @@ GeneralUpdateBootstrap提供以下能力。
 
 **AppType** int 1:ClientApp 2:UpdateApp
 
-**UpdateUrl ** string Update check api address.
+**UpdateUrl** string Update check api address.
 
 **AppName**  string Need to start the name of the app.
 
@@ -170,15 +170,15 @@ GeneralUpdateBootstrap提供以下能力。
 
 **DownloadTimeOut** int Time-out event for file download.
 
-**AppSecretKey **string application key.
+**AppSecretKey** string application key.
 
 **ClientVersion** string Client current version.
 
 **LastVersion** string The latest version.
 
-**InstallPath **string installation path (for update file logic).
+**InstallPath**string installation path (for update file logic).
 
-**TempPath **string Download file temporary storage path (for update file logic).
+**TempPath** string Download file temporary storage path (for update file logic).
 
 **ProcessBase64** string Configuration parameters for upgrading the terminal program.
 
@@ -206,7 +206,7 @@ GeneralUpdateBootstrap提供以下能力。
 
 **DownloadTimeOut** Timeout period (unit: second). If this parameter is not specified, the default timeout period is 30 seconds.
 
-**Drive **Whether to enable the driver upgrade function.
+**Drive** Whether to enable the driver upgrade function.
 
 **WillMessage** Whether open note function, if you want to start needs to be synchronized to deploy 'GeneralUpdate. SystemService' service.
 

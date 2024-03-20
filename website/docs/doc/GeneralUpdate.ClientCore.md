@@ -236,7 +236,7 @@ GeneralClientBootstrap提供以下能力。
 | ------------------------------------------------------------ |
 | **MainUpdateUrl** string Update check api address.           |
 | **AppType** int 1:ClientApp 2:UpdateApp                      |
-| **UpdateUrl ** string Update check api address.              |
+| **UpdateUrl** string Update check api address.               |
 | **AppName**  string Need to start the name of the app.       |
 | **MainAppName** string Need to start the name of the app.    |
 | **Format** string Update package file format(Defult format is Zip). |
@@ -246,16 +246,16 @@ GeneralClientBootstrap提供以下能力。
 | **UpdateVersions** List VersionInfo Version information that needs to be updated. |
 | **Encoding** Encoding The encoding format for file operations. |
 | **DownloadTimeOut** int Time-out event for file download.    |
-| **AppSecretKey **string application key.                     |
+| **AppSecretKey** string application key.                     |
 | **ClientVersion** string Client current version.             |
 | **LastVersion** string The latest version.                   |
-| **InstallPath **string installation path (for update file logic). |
-| **TempPath **string Download file temporary storage path (for update file logic). |
+| **InstallPath** string installation path (for update file logic). |
+| **TempPath** string Download file temporary storage path (for update file logic). |
 | **ProcessBase64** string Configuration parameters for upgrading the terminal program. |
 | **Platform** string The platform to which the current strategy belongs. |
 | **BlackFiles** List string Files in the blacklist will skip the update. |
 | **BlackFormats** List string File formats in the blacklist will skip the update. |
-| **DriveEnabled **bool Whether to enable the driver upgrade function. |
+| **DriveEnabled** bool Whether to enable the driver upgrade function. |
 | **WillMessageEnabled** bool Whether open note function, if you want to start needs to be synchronized to deploy 'GeneralUpdate. SystemService' service. |
 
 
@@ -266,8 +266,8 @@ GeneralClientBootstrap提供以下能力。
 | ------------------------------------------------------------ |
 | **AppType** int 1:ClientApp 2:UpdateApp                      |
 | **AppName**  string Need to start the name of the app.       |
-| **AppSecretKey **string application key.                     |
-| **ClientVersion ** string Client current version.            |
+| **AppSecretKey** string application key.                     |
+| **ClientVersion** string Client current version.             |
 | **UpdateUrl** string Update check api address.               |
 | **UpdateLogUrl** string Update log web address.              |
 | **InstallPath** string installation path (for update file logic). |
@@ -284,7 +284,7 @@ GeneralClientBootstrap提供以下能力。
 | **Encoding**  Compress encoding.                             |
 | **MainApp** Main program name.                               |
 | **DownloadTimeOut** Timeout period (unit: second). If this parameter is not specified, the default timeout period is 30 seconds. |
-| **Drive **Whether to enable the driver upgrade function.     |
+| **Drive** Whether to enable the driver upgrade function.     |
 | **WillMessage** Whether open note function, if you want to start needs to be synchronized to deploy 'GeneralUpdate. SystemService' service. |
 
 
