@@ -1,8 +1,11 @@
 name: pages-deploy
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
+    paths:
+      - 'website/'
 jobs:
   build:
     name: Build
