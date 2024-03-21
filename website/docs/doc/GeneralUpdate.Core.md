@@ -188,7 +188,7 @@ GeneralUpdateBootstrap提供以下能力。
 
 **BlackFormats** List string File formats in the blacklist will skip the update.
 
-**DriveEnabled **bool Whether to enable the driver upgrade function.
+**DriveEnabled** bool Whether to enable the driver upgrade function.
 
 **WillMessageEnabled** bool Whether open note function, if you want to start needs to be synchronized to deploy 'GeneralUpdate. SystemService' service.
 
