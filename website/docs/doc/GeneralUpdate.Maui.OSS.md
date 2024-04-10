@@ -80,11 +80,11 @@ GeneralUpdateOSS提供以下能力。
 
 #### 方法
 
-| Method                       |                                              |
-| ---------------------------- | -------------------------------------------- |
-| Start()                      | Starting an OSS update for android platform. |
-| AddListenerDownloadProcess() | Monitor download progress.                   |
-| AddListenerException()       | Listen for internal exception information.   |
+| Method                       |                             |
+| ---------------------------- | --------------------------- |
+| Start()                      | 开始针对安卓平台的OSS更新。 |
+| AddListenerDownloadProcess() | 监控下载进度。              |
+| AddListenerException()       | 监听内部异常信息。          |
 
 
 
@@ -108,7 +108,7 @@ GeneralUpdateOSS提供以下能力。
 
 **方法**
 
-Starting an OSS update for android platform.
+开始针对安卓平台的OSS更新。
 
 ```c#
 public static async Task Start<TStrategy>(ParamsAndroid parameter) where TStrategy : AbstractStrategy, new();
@@ -132,7 +132,7 @@ ParamsAndroid 安卓平台的跟新配置参数，详细内容参考本文档  �
 
 **方法**
 
-Monitor download progress.
+监控下载进度。
 
 ```c#
 public static void AddListenerDownloadProcess(Action<object, OSSDownloadArgs> callbackAction);
@@ -166,7 +166,7 @@ callbackAction Action<object, OSSDownloadArgs>
 
 **方法**
 
-Listen for internal exception information.
+监听内部异常信息。
 
 ```c#
 public static void AddListenerException(Action<object, ExceptionEventArgs> callbackAction);

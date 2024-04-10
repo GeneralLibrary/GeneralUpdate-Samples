@@ -219,8 +219,8 @@ GeneralClientBootstrap提供以下能力。
 | Config()                               | 更新相关内容配置参数，url 服务器地址及 端口号, appSecretKey客户端唯一标识用于 区分产品分支。 |
 | GetOption()                            | 获取更新配置。                                               |
 | Strategy()                             | 设置当前更新策略，例如：如果是Windows 平台则使用WindowsStrategy， linux...mac...android以此类推。 |
-| SetCustomSkipOption()                  | Let the user decide whether to update in the state of non-mandatory update. |
-| AddCustomOption()                      | Add an asynchronous custom operation. In theory, any custom operation can be done. It is recommended to register the environment check method to ensure that there are normal dependencies and environments after the update is completed. |
+| SetCustomSkipOption()                  | 让用户在非强制更新的状态下决定是否进行更新。                 |
+| AddCustomOption()                      | 添加一个异步的自定义操作。理论上，任何自定义操作都可以完成。建议注册环境检查方法，以确保更新完成后存在正常的依赖和环境。 |
 | AddListenerMultiAllDownloadCompleted() | 完成所有的下载任务通知。                                     |
 | AddListenerMultiDownloadProgress()     | 单个或多个更新包下载通知事件。                               |
 | AddListenerMultiDownloadCompleted()    | 单个或多个更新包下载完成事件。                               |
@@ -234,45 +234,43 @@ GeneralClientBootstrap提供以下能力。
 
 | 属性                                                         |
 | ------------------------------------------------------------ |
-| **MainUpdateUrl** string Update check api address.           |
+| **MainUpdateUrl** string 更新检查api地址。                   |
 | **AppType** int 1:ClientApp 2:UpdateApp                      |
-| **UpdateUrl** string Update check api address.               |
-| **AppName**  string Need to start the name of the app.       |
-| **MainAppName** string Need to start the name of the app.    |
-| **Format** string Update package file format(Defult format is Zip). |
-| **IsUpgradeUpdate** bool Whether an update is required to upgrade the application. |
-| **IsMainUpdate** bool Whether the main application needs to be updated. |
-| **UpdateLogUrl** string Update log web address.              |
-| **UpdateVersions** List VersionInfo Version information that needs to be updated. |
-| **Encoding** Encoding The encoding format for file operations. |
-| **DownloadTimeOut** int Time-out event for file download.    |
-| **AppSecretKey** string application key.                     |
-| **ClientVersion** string Client current version.             |
-| **LastVersion** string The latest version.                   |
-| **InstallPath** string installation path (for update file logic). |
-| **TempPath** string Download file temporary storage path (for update file logic). |
-| **ProcessBase64** string Configuration parameters for upgrading the terminal program. |
-| **Platform** string The platform to which the current strategy belongs. |
-| **BlackFiles** List string Files in the blacklist will skip the update. |
-| **BlackFormats** List string File formats in the blacklist will skip the update. |
-| **DriveEnabled** bool Whether to enable the driver upgrade function. |
-| **WillMessageEnabled** bool Whether open note function, if you want to start needs to be synchronized to deploy 'GeneralUpdate. SystemService' service. |
-
-
+| **UpdateUrl** string Update 更新检查api地址。                |
+| **AppName**  string 需要启动应用程序的名称。                 |
+| **MainAppName** string 需要启动主应用程序的名称。            |
+| **Format** string 更新包文件格式（默认格式为Zip）。          |
+| **IsUpgradeUpdate** bool 是否需要更新来升级应用程序。        |
+| **IsMainUpdate** bool 主应用程序是否需要更新。               |
+| **UpdateLogUrl** string 更新日志网页地址。                   |
+| **UpdateVersions** List 需要更新的版本信息VersionInfo。      |
+| **Encoding** Encoding 文件操作的编码格式。                   |
+| **DownloadTimeOut** int 下载超时时间。                       |
+| **AppSecretKey** string 应用程序密钥，需要和服务器约定好。   |
+| **ClientVersion** string 客户端当前版本号。                  |
+| **LastVersion** string 最新版本号。                          |
+| **InstallPath** string 安装路径（用于更新文件逻辑）。        |
+| **TempPath** string 下载文件临时存储路径（用于更新文件逻辑）。 |
+| **ProcessBase64** string 升级终端程序的配置参数。            |
+| **Platform** string 当前策略所属的平台。（Windows\linux\Mac） |
+| **BlackFiles** List 黑名单中的文件将跳过更新。               |
+| **BlackFormats** 黑名单中的文件格式将跳过更新。              |
+| **DriveEnabled** bool 是否启用驱动升级功能。                 |
+| **WillMessageEnabled** bool 是否开启遗言功能，如果想要启动需要同步部署'GeneralUpdate. SystemService'服务。 |
 
 ### 🌴Configinfo
 
-| **属性**                                                     |
-| ------------------------------------------------------------ |
-| **AppType** int 1:ClientApp 2:UpdateApp                      |
-| **AppName**  string Need to start the name of the app.       |
-| **AppSecretKey** string application key.                     |
-| **ClientVersion** string Client current version.             |
-| **UpdateUrl** string Update check api address.               |
-| **UpdateLogUrl** string Update log web address.              |
-| **InstallPath** string installation path (for update file logic). |
-| **MainUpdateUrl** string  Update check api address.          |
-| **MainAppName** string  Client app name.                     |
+| **属性**                                              |
+| ----------------------------------------------------- |
+| **AppType** int 1:ClientApp 2:UpdateApp               |
+| **AppName**  string 需要启动应用程序的名称。          |
+| **AppSecretKey** string 应用程序密钥。                |
+| **ClientVersion** string 客户端当前版本。             |
+| **UpdateUrl** string 更新检查api地址。                |
+| **UpdateLogUrl** string 更新日志网页地址。            |
+| **InstallPath** string 安装路径（用于更新文件逻辑）。 |
+| **MainUpdateUrl** string  更新检查api地址。           |
+| **MainAppName** string  主客户端应用名称              |
 
 
 
@@ -280,12 +278,12 @@ GeneralClientBootstrap提供以下能力。
 
 | **枚举**                                                     |
 | ------------------------------------------------------------ |
-| **Format** Update the file format of the package.            |
-| **Encoding**  Compress encoding.                             |
-| **MainApp** Main program name.                               |
-| **DownloadTimeOut** Timeout period (unit: second). If this parameter is not specified, the default timeout period is 30 seconds. |
-| **Drive** Whether to enable the driver upgrade function.     |
-| **WillMessage** Whether open note function, if you want to start needs to be synchronized to deploy 'GeneralUpdate. SystemService' service. |
+| **Format** 更新包的文件格式。                                |
+| **Encoding**  压缩编码。                                     |
+| **MainApp** 主程序名称。                                     |
+| **DownloadTimeOut** 超时时间（单位：秒）。如果未指定此参数，则默认超时时间为30秒。 |
+| **Drive** 是否启用驱动升级功能。                             |
+| **WillMessage** 是否开启遗言功能，如果想要启动需要同步部署'GeneralUpdate. SystemService'服务。 |
 
 
 
@@ -396,11 +394,11 @@ Configinfo
 
 **info** Configinfo 客户端相关参数类。
 
-**url** string Remote server address.
+**url** string 远程服务器地址。
 
 **appSecretKey** string  application key(与服务端约定好的密钥，用于区分客户端进行版本管理或指定客户端推送升级).
 
-**appName** string The updater name does not need to contain an extension.
+**appName** string 更新程序的名称不需要包含扩展名。
 
 
 
@@ -481,7 +479,7 @@ func Func<Task<bool>>  注入一个Task异步的自定义回调函数。
 
 **方法**
 
-Add an asynchronous custom operation. In theory, any custom operation can be done. It is recommended to register the environment check method to ensure that there are normal dependencies and environments after the update is completed.
+添加一个异步的自定义操作。理论上，任何自定义操作都可以完成。建议注册环境检查方法，以确保更新完成后存在正常的依赖和环境。
 
 ```c#
 public GeneralClientBootstrap AddCustomOption(List<Func<bool>> funcs);

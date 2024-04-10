@@ -146,51 +146,31 @@ GeneralUpdateBootstrap提供以下能力。
 
 **属性**
 
-**MainUpdateUrl** string Update check api address.
-
-**AppType** int 1:ClientApp 2:UpdateApp
-
-**UpdateUrl** string Update check api address.
-
-**AppName**  string Need to start the name of the app.
-
-**MainAppName** string Need to start the name of the app.
-
-**Format** string Update package file format(Defult format is Zip).
-
-**IsUpgradeUpdate** bool Whether an update is required to upgrade the application.
-
-**IsMainUpdate** bool Whether the main application needs to be updated.
-
-**UpdateLogUrl** string Update log web address.
-
-**UpdateVersions** List VersionInfo Version information that needs to be updated.
-
-**Encoding** Encoding The encoding format for file operations.
-
-**DownloadTimeOut** int Time-out event for file download.
-
-**AppSecretKey** string application key.
-
-**ClientVersion** string Client current version.
-
-**LastVersion** string The latest version.
-
-**InstallPath**string installation path (for update file logic).
-
-**TempPath** string Download file temporary storage path (for update file logic).
-
-**ProcessBase64** string Configuration parameters for upgrading the terminal program.
-
-**Platform** string The platform to which the current strategy belongs.
-
-**BlackFiles** List string Files in the blacklist will skip the update.
-
-**BlackFormats** List string File formats in the blacklist will skip the update.
-
-**DriveEnabled** bool Whether to enable the driver upgrade function.
-
-**WillMessageEnabled** bool Whether open note function, if you want to start needs to be synchronized to deploy 'GeneralUpdate. SystemService' service.
+| 属性                                                         |
+| ------------------------------------------------------------ |
+| **MainUpdateUrl** string 更新检查api地址。                   |
+| **AppType** int 1:ClientApp 2:UpdateApp                      |
+| **UpdateUrl** string Update 更新检查api地址。                |
+| **AppName**  string 需要启动应用程序的名称。                 |
+| **MainAppName** string 需要启动主应用程序的名称。            |
+| **Format** string 更新包文件格式（默认格式为Zip）。          |
+| **IsUpgradeUpdate** bool 是否需要更新来升级应用程序。        |
+| **IsMainUpdate** bool 主应用程序是否需要更新。               |
+| **UpdateLogUrl** string 更新日志网页地址。                   |
+| **UpdateVersions** List 需要更新的版本信息VersionInfo。      |
+| **Encoding** Encoding 文件操作的编码格式。                   |
+| **DownloadTimeOut** int 下载超时时间。                       |
+| **AppSecretKey** string 应用程序密钥，需要和服务器约定好。   |
+| **ClientVersion** string 客户端当前版本号。                  |
+| **LastVersion** string 最新版本号。                          |
+| **InstallPath** string 安装路径（用于更新文件逻辑）。        |
+| **TempPath** string 下载文件临时存储路径（用于更新文件逻辑）。 |
+| **ProcessBase64** string 升级终端程序的配置参数。            |
+| **Platform** string 当前策略所属的平台。（Windows\linux\Mac） |
+| **BlackFiles** List 黑名单中的文件将跳过更新。               |
+| **BlackFormats** 黑名单中的文件格式将跳过更新。              |
+| **DriveEnabled** bool 是否启用驱动升级功能。                 |
+| **WillMessageEnabled** bool 是否开启遗言功能，如果想要启动需要同步部署'GeneralUpdate. SystemService'服务。 |
 
 
 
@@ -198,17 +178,17 @@ GeneralUpdateBootstrap提供以下能力。
 
 **枚举**
 
-**Format** Update the file format of the package.
+**Format** 更新包的文件格式。
 
-**Encoding**  Compress encoding.
+**Encoding**  压缩编码。
 
-**MainApp** Main program name.
+**MainApp** 主程序名称。
 
-**DownloadTimeOut** Timeout period (unit: second). If this parameter is not specified, the default timeout period is 30 seconds.
+**DownloadTimeOut** 超时时间（单位：秒）。如果未指定此参数，则默认超时时间为30秒。
 
-**Drive** Whether to enable the driver upgrade function.
+**Drive** 是否启用驱动升级功能。
 
-**WillMessage** Whether open note function, if you want to start needs to be synchronized to deploy 'GeneralUpdate. SystemService' service.
+**WillMessage** 是否开启遗言功能，如果想要启动需要同步部署'GeneralUpdate. SystemService'服务。
 
 
 

@@ -126,17 +126,17 @@ public IFactory CreateOperate(OperationType type, string name, string sourcePath
 
 **参数**
 
-**type** Enumeration selects the compressed package format to operate on.(OperationType.GZip , OperationType.G7z)
+**type** 枚举选择操作的压缩包格式。（OperationType.GZip，OperationType.G7z）
 
-**name** Compressed package Name.
+**name** 压缩包名称。
 
-**sourcePath** Source file path.
+**sourcePath** 源文件路径。
 
-**destinationPath** The target path.
+**destinationPath** 目标路径。
 
-**includeBaseDirectory** Whether to include the root directory when packing.
+**includeBaseDirectory** 打包时是否包含根目录。
 
-**encoding** Compressed package encoding format.
+**encoding** 压缩包编码格式。
 
 
 

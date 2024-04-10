@@ -86,10 +86,10 @@ GeneralUpdateOSS提供以下能力。
 
 #### 方法
 
-| Method                 |                                            |
-| ---------------------- | ------------------------------------------ |
-| Start()                | Starting an OSS update .                   |
-| AddListenerException() | Listen for internal exception information. |
+| Method                 |                        |
+| ---------------------- | ---------------------- |
+| Start()                | 启动OSS更新。          |
+| AddListenerException() | 监听组件内部异常信息。 |
 
 
 
@@ -127,7 +127,7 @@ ParamsOSS 更新配置参数，详细内容参考本文档🌴ParamsOSS。
 
 **参数**
 
-**parameter** ParamsOSS安卓平台的跟新配置参数。
+**parameter** ParamsOSS 安卓平台的跟新配置参数。
 
 **upgradeAppName** 需要升级的应用名称。
 
@@ -137,7 +137,7 @@ ParamsOSS 更新配置参数，详细内容参考本文档🌴ParamsOSS。
 
 **方法**
 
-Monitor download progress.
+监听下载进度。
 
 ```c#
 public static void AddListenerDownloadProcess(Action<object, OSSDownloadArgs> callbackAction);
@@ -171,7 +171,7 @@ callbackAction Action<object, OSSDownloadArgs>
 
 **方法**
 
-Listen for internal exception information.
+监听组件内部异常。
 
 ```c#
 public static void AddListenerException(Action<object, ExceptionEventArgs> callbackAction);

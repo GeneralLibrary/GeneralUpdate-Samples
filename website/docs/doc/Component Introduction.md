@@ -58,7 +58,13 @@ sidebar_position: 1
 
 
 
-### 2.统一语言（Unifying Language）
+### 2.使用引导
+
+![](imgs/bootstrap.jpg)
+
+
+
+### 3.统一语言（Unifying Language）
 
 在开始使用GeneralUpdate之前我们需要先知道体系中的一些基础概念。
 
@@ -81,7 +87,7 @@ sidebar_position: 1
 
 
 
-### 3.GeneralUpdate提供什么？
+### 4.GeneralUpdate提供什么？
 
 ##### 组件功能
 
@@ -152,7 +158,7 @@ sc delete GeneralUpdate.SystemService
 
 
 
-### 4.GeneralUpdate支持什么？
+### 5.GeneralUpdate支持什么？
 
 ##### .NET框架
 
@@ -210,7 +216,7 @@ sc delete GeneralUpdate.SystemService
 
 这是一个绝佳的机会，不仅可以推动技术的进步，也可以提高您的品牌知名度和社区影响力。我们相信，您的赞助将会对这个开源项目产生深远的影响。此外所有的赞助将用于购买GeneralUpdate实物周边产品奖励给项目贡献代码的社区伙伴，如果有实际贡献的小伙伴可以联系下方邮箱与我取得联系。
 
-个人能力有限，目前项目的大小已经超出个人维护的精力范围之外设计维护实属不易，期待您的积极参与，让我们携手共创未来！
+目前项目的大小已经超出个人维护的精力范围之外设计维护实属不易，期待您的积极参与，让我们携手共创未来！
 
 谢谢！
 

@@ -82,7 +82,7 @@ DifferentialCore提供增量识别，生成二进制补丁、补丁还原、设�
 
 **方法**
 
-Generate patch file [Cannot contain files with the same name but different extensions] .
+生成补丁文件[不能包含文件名相同但扩展名不同的文件]。
 
 ```c#
 public async Task Clean(string sourcePath, string targetPath, string patchPath = null);
@@ -90,11 +90,11 @@ public async Task Clean(string sourcePath, string targetPath, string patchPath =
 
 **参数**
 
-**sourcePath** Previous version folder path .
+**sourcePath** 上一个版本的文件夹路径。
 
-**targetPath** Recent version folder path.
+**targetPath** 最近版本的文件夹路径。
 
-**patchPath** Store discovered incremental update files in a temporary directory .
+**patchPath** 将发现的增量更新文件存储在临时目录中。
 
 
 
@@ -102,7 +102,7 @@ public async Task Clean(string sourcePath, string targetPath, string patchPath =
 
 **方法**
 
-Apply patch [Cannot contain files with the same name but different extensions] .
+应用补丁[不能包含文件名相同但扩展名不同的文件]。
 
 ```c#
 public async Task Dirty(string appPath, string patchPath);
@@ -110,9 +110,9 @@ public async Task Dirty(string appPath, string patchPath);
 
 **参数**
 
-**appPath** Client application directory .
+**appPath** 客户端应用程序目录。
 
-**patchPath** Patch file path.
+**patchPath** 补丁文件路径。
 
 
 
@@ -128,9 +128,9 @@ public void SetBlocklist(List<string> blackFiles, List<string> blackFileFormats)
 
 **参数**
 
-**blackFiles** A collection of blacklist files that are skipped when updated.
+**blackFiles** 更新时跳过的黑名单文件的集合。
 
-**blackFileFormats** A collection of blacklist file name extensions that are skipped on update.
+**blackFileFormats** 更新时跳过的黑名单文件名扩展名的集合。
 
 
 
