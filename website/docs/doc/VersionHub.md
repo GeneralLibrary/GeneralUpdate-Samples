@@ -74,7 +74,7 @@ VersionHub的单例实例对象（线程安全双检索实现的单例模式）�
 
 **方法**
 
-Subscribe to the latest version.
+订阅推送最新版本信息.
 
 ```c#
 public void Subscribe(string url, string name, Action<TParameter> receiveMessageCallback, Action<string> onlineMessageCallback = null, Action<string> reconnectedCallback = null);
@@ -110,7 +110,7 @@ reconnectedCallback Action<string> 接收是否重新连接服务端的回调函
 
 **方法**
 
-Send message to server.[Not recommended for now]
+向服务器发送消息。[暂不推荐使用]
 
 ```c#
 public async Task Send(string msg);
