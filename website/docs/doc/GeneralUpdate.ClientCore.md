@@ -430,7 +430,7 @@ option UpdateOption<T> 具体枚举内容参考本文档中的 🍵UpdateOption�
 
 **方法**
 
-指定更新策略。
+根据不同的操作系统平台，指定更新策略。
 
 ```c#
 public virtual TBootstrap Strategy<T>() where T : TStrategy, new();
@@ -448,7 +448,7 @@ T
 
 **方法**
 
-Let the user decide whether to update in the state of non-mandatory update.
+让用户决定是否在非强制更新状态下进行更新。
 
 ```c#
 public GeneralClientBootstrap SetCustomSkipOption(Func<bool> func);

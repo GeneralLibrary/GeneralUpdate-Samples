@@ -59,7 +59,7 @@ NuGet\Install-Package GeneralUpdate.ClientCore -Version 1.0.0
 ```c#
 Task.Run(async () =>
 {
-    var url = "http://192.168.50.203";
+    var url = "http://192.168.xxx.xxx";
     var apk = "com.companyname.generalupdate.ossclient.apk";
     var authority = "com.generalupdate.oss.fileprovider";
     var currentVersion = "1.0.0.0";
@@ -111,7 +111,7 @@ GeneralUpdateOSS提供以下能力。
 
 **方法**
 
-Starting an OSS update.
+启动OSS更新。
 
 ```c#
 public static async Task Start(ParamsOSS configParams, string upgradeAppName = "GeneralUpdate.Upgrade");
