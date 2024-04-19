@@ -168,8 +168,6 @@ sc delete GeneralUpdate.SystemService
 | .NET 5 ... to last version | 支持     |
 | .NET Framework 4.6.1       | 支持     |
 
-
-
 ##### UI框架
 
 | UI框架名称        | 是否支持              |
@@ -181,14 +179,6 @@ sc delete GeneralUpdate.SystemService
 | WinUI             | 待验证，等待反馈      |
 | Console（控制台） | 支持                  |
 | Winform           | 支持                  |
-
-
-
-##### 服务端框架
-
-| 服务端框架 | 是否支持 |
-| ---------- | -------- |
-| ASP.NET    | 待验证   |
 
 
 
