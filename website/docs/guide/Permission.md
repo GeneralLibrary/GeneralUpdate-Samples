@@ -4,6 +4,8 @@ sidebar_position: 1
 
 ### Permission 权限
 
+#### （1）Windows平台
+
 ![](imgs\UAC.png)
 
 在使用GeneralUpdate实现自动升级的时候，如果更新目录在C盘实现文件替换或打文件补丁时会出现权限问题。又因为windows11操作系统推出在C盘特定的目录相比之前推出的windows的操作系统加强了权限管理。
