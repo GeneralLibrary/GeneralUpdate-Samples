@@ -52,5 +52,8 @@ npm -i
 
 # build local docs
 docs:dev
+
+# local run website
+npm run start
 ```
 
