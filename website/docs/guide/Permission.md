@@ -73,7 +73,7 @@ REG ADD "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v Cons
 
 
 
-参考内容：
+参考资料：
 
 - https://learn.microsoft.com/zh-cn/windows/security/application-security/application-control/user-account-control/how-it-works
 - https://blog.walterlv.com/post/windows-user-account-control.html
