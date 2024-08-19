@@ -10,4 +10,4 @@ hide_table_of_contents: true
 
 - https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website
 
-如果需要补充文档可以提交代码至以上仓库。
+如果需要补充文档可以提交代码至以上仓库，如有合作意向可以通过仓库issue或邮件联系我。
