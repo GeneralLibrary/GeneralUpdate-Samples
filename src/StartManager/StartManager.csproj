@@ -10,4 +10,8 @@
         <InvariantGlobalization>true</InvariantGlobalization>
     </PropertyGroup>
 
+    <ItemGroup>
+      <None Remove="build.bat" />
+    </ItemGroup>
+
 </Project>

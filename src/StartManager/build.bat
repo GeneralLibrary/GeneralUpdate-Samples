@@ -1,6 +1,6 @@
 @echo off
 REM 设置解决方案文件路径
-set SOLUTION_PATH=ClientSample.sln
+set SOLUTION_PATH=StartManager.sln
 
 REM 切换到解决方案所在的目录
 cd /d %~dp0
