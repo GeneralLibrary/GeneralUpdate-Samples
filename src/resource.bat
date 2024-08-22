@@ -22,6 +22,7 @@ REM Copy files from Client, Server, Upgrade to app directory
 xcopy "%BASE_DIR%Client\bin\Release\net8.0\*" "%BASE_DIR%run\app\" /s /e /y
 xcopy "%BASE_DIR%Server\bin\Release\net8.0\*" "%BASE_DIR%run\app\" /s /e /y
 xcopy "%BASE_DIR%Upgrade\bin\Release\net8.0\*" "%BASE_DIR%run\app\" /s /e /y
+xcopy "%BASE_DIR%FileService\*" "%BASE_DIR%run\app\" /s /e /y
 
 REM Create test.txt files with specified content
 echo 123456 > "%BASE_DIR%run\files\old\test.txt"

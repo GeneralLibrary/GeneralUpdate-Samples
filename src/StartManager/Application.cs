@@ -4,29 +4,22 @@ namespace StartManager;
 
 public class Application
 {
+    public static void StartFileServer() => Start("hfs.exe", GetAppDirectory());
     
-    public static void StartFileServer()
-    {
-        var name = "hfs.exe";
-    }
+    public static void StartClient() => Start("ClientSample.exe", GetAppDirectory());
     
-    public static void StartClient()
-    {
-        var name = "ClientSample.exe";
-    }
+    public static void StartServer() => Start("ServerSample.exe", GetAppDirectory());
     
-    public static void StartServer()
-    {
-        var name = "ServerSample.exe";
-    }
-    
-    public static void StartUpgrade()
-    {
-        var name = "UpgradeSample.exe";
-    }
+    public static void Reset() => Start("resource.bat", GetParent());
 
-    public static void Reset()
+    private static string GetAppDirectory() => Path.Combine(GetParent(), "run", "app");
+
+    private static string GetParent()
     {
+        var currentDirectory = Directory.GetCurrentDirectory();
+        int indexOfSrc = currentDirectory.IndexOf("src", StringComparison.OrdinalIgnoreCase);
+        string truncatedPath = currentDirectory.Substring(0, indexOfSrc + "src".Length);
+        return truncatedPath;
     }
 
     private static void Start(string appName, string path)

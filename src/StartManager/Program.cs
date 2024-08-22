@@ -5,22 +5,25 @@ class Program
     static void Main(string[] args)
     {
         bool exit = false;
-        ShowMenu();
         while (!exit)
         {
+            ShowMenu();
             string input = Console.ReadLine();
             switch (input)
             {
                 case "1":
-                    Option1();
+                    Application.Reset();
                     break;
                 case "2":
-                    Option2();
+                    Application.StartFileServer();
                     break;
                 case "3":
-                    Option3();
+                    Application.StartServer();
                     break;
                 case "4":
+                    Application.StartClient();
+                    break;
+                case "E":
                     exit = true;
                     break;
                 default:
@@ -33,28 +36,11 @@ class Program
     static void ShowMenu()
     {
         Console.WriteLine("请选择一个选项：");
-        Console.WriteLine("1. 启动服务端");
-        Console.WriteLine("2. 启动客户端");
-        Console.WriteLine("3. 还原");
-        Console.WriteLine("4. 退出");
+        Console.WriteLine("1. 还原run目录");
+        Console.WriteLine("2. 启动文件服务端");
+        Console.WriteLine("3. 启动服务端");
+        Console.WriteLine("4. 启动客户端");
+        Console.WriteLine("E. 退出");
         Console.Write("输入你的选择: ");
-    }
-
-    static void Option1()
-    {
-        Console.WriteLine("你选择了选项1");
-        // 在这里添加选项1的逻辑
-    }
-
-    static void Option2()
-    {
-        Console.WriteLine("你选择了选项2");
-        // 在这里添加选项2的逻辑
-    }
-
-    static void Option3()
-    {
-        Console.WriteLine("你选择了选项3");
-        // 在这里添加选项3的逻辑
     }
 }
