@@ -1,11 +1,11 @@
 @echo off
+
+call "%~dp0process.bat"
+
 REM 保存初始目录
 set InitialDir=%CD%
 
-echo Starting hfs.exe...
-start "" .\FileService\hfs.exe
-echo hfs.exe has been started.
-
+cd /d %InitialDir%
 echo Running Server.bat
 call .\Server\build.bat
 echo .\Server\build.bat completed
@@ -27,7 +27,9 @@ echo .\Client\build.bat completed
 
 echo All scripts completed.
 
-REM 使用 timeout 命令进行2秒倒计时
+call "%~dp0resource.bat"
+
+REM 使用 timeout 命令进行3秒倒计时
 timeout /t 3 /nobreak >nul
 
 cd /d %InitialDir%
