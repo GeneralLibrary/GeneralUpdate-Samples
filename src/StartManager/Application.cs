@@ -11,7 +11,7 @@ public class Application
     public static void StartServer() => Start("ServerSample.exe", GetAppDirectory());
     
     public static void Reset() => Start("resource.bat", GetParent());
-
+    
     private static string GetAppDirectory() => Path.Combine(GetParent(), "run", "app");
 
     private static string GetParent()
