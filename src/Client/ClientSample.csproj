@@ -7,4 +7,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="build.bat" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GeneralUpdate.ClientCore" Version="2.12.10" />
+  </ItemGroup>
+
 </Project>
