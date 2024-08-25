@@ -11,4 +11,8 @@
     <None Remove="build.bat" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="GeneralUpdate.Core" Version="4.14.21" />
+  </ItemGroup>
+
 </Project>
