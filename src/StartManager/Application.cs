@@ -24,6 +24,12 @@ public class Application
 
     private static void Start(string appName, string path)
     {
+        if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+        {
+            Console.WriteLine($"路径无效: {path}");
+            return;
+        }
+
         Process[] runningProcesses = Process.GetProcessesByName(appName);
         foreach (var process in runningProcesses)
         {

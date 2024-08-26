@@ -9,10 +9,22 @@
 
   <ItemGroup>
     <None Remove="build.bat" />
+    <None Remove="ClientSample.Desktop\**" />
+    <None Remove="ClientSample\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="GeneralUpdate.ClientCore" Version="2.12.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="ClientSample.Desktop\**" />
+    <Compile Remove="ClientSample\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="ClientSample.Desktop\**" />
+    <EmbeddedResource Remove="ClientSample\**" />
   </ItemGroup>
 
 </Project>

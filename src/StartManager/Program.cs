@@ -13,7 +13,7 @@ class Program
             {
                 case "1":
                     Application.StartFileServer();
-                    break;
+                    break; 
                 case "2":
                     Application.StartServer();
                     break;

@@ -1,9 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-//ClientStrategy该更新策略将完成1.自动升级组件自更新 2.启动更新组件 3.配置好ClientParameter无需再像之前的版本写args数组进程通讯了。
-//generalClientBootstrap.Config(baseUrl, "B8A7FADD-386C-46B0-B283-C9F963420C7C").
-
-using System.Text;
+﻿using System.Text;
 using GeneralUpdate.ClientCore;
 using GeneralUpdate.Core.Bootstrap;
 using GeneralUpdate.Core.Domain.Entity;
@@ -12,9 +7,10 @@ using GeneralUpdate.Core.Events.CommonArgs;
 using GeneralUpdate.Core.Events.MultiEventArgs;
 using GeneralUpdate.Core.Strategys.PlatformWindows;
 
+//ClientStrategy该更新策略将完成1.自动升级组件自更新 2.启动更新组件 3.配置好ClientParameter无需再像之前的版本写args数组进程通讯了。
+//generalClientBootstrap.Config(baseUrl, "B8A7FADD-386C-46B0-B283-C9F963420C7C").
 
 var baseUrl = "127.0.0.1";
-
 var configinfo = GetWindowsConfigInfo();
 var generalClientBootstrap = await new GeneralClientBootstrap()
 //单个或多个更新包下载通知事件
@@ -72,7 +68,7 @@ Configinfo GetWindowsConfigInfo()
   //本机的客户端程序应用地址
   config.InstallPath = @"D:\packet\source";
   //更新公告网页
-  config.UpdateLogUrl = "https://www.baidu.com/";
+  config.UpdateLogUrl = "https://www.justerzhu.cn/";
   //客户端当前版本号
   config.ClientVersion = "1.1.1.1";
   //客户端类型：1.主程序客户端 2.更新组件
@@ -126,6 +122,7 @@ void OnMultiDownloadStatistics(object sender, MultiDownloadStatisticsEventArgs e
   //e.Remaining 剩余下载时间
   //e.Speed 下载速度
   //e.Version 当前下载的版本信息
+  Console.WriteLine($"{e.Version} download speed {e.Speed} bytes/s. Remaining {e.Remaining}");
 }
 
 void OnMultiDownloadProgressChanged(object sender, MultiDownloadProgressChangedEventArgs e)
@@ -136,34 +133,28 @@ void OnMultiDownloadProgressChanged(object sender, MultiDownloadProgressChangedE
   //e.Version 当前下载的版本信息
   //e.Type 当前正在执行的操作  1.ProgressType.Check 检查版本信息中 2.ProgressType.Donwload 正在下载当前版本 3. ProgressType.Updatefile 更新当前版本 4. ProgressType.Done更新完成 5.ProgressType.Fail 更新失败
   //e.BytesReceived 已下载大小
-  DispatchMessage($"{e.ProgressPercentage}%");
-  //MyProgressBar.ProgressTo(e.ProgressValue, 100, Easing.Default);
+  Console.WriteLine($"{e.ProgressPercentage}%");
 }
 
 void OnException(object sender, ExceptionEventArgs e)
 {
-  //DispatchMessage(e.Exception.Message);
+  Console.WriteLine(e.Exception.Message);
 }
 
 void OnMultiAllDownloadCompleted(object sender, MultiAllDownloadCompletedEventArgs e)
 {
   //e.FailedVersions; 如果出现下载失败则会把下载错误的版本、错误原因统计到该集合当中。
-  DispatchMessage($"Is all download completed {e.IsAllDownloadCompleted}.");
+  Console.WriteLine($"Is all download completed {e.IsAllDownloadCompleted}.");
 }
 
 void OnMultiDownloadCompleted(object sender, MultiDownloadCompletedEventArgs e)
 {
   var info = e.Version as VersionInfo;
-  DispatchMessage($"{info.Name} download completed.");
+  Console.WriteLine($"{info.Name} download completed.");
 }
 
 void OnMultiDownloadError(object sender, MultiDownloadErrorEventArgs e)
 {
   var info = e.Version as VersionInfo;
-  DispatchMessage($"{info.Name} error!");
-}
-
-void DispatchMessage(string message)
-{
-    //ShowMessage(message);
+  Console.WriteLine($"{info.Name} error!");
 }

@@ -9,10 +9,22 @@
 
   <ItemGroup>
     <None Remove="build.bat" />
+    <None Remove="UpgradeSample.Desktop\**" />
+    <None Remove="UpgradeSample\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="GeneralUpdate.Core" Version="4.14.21" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="UpgradeSample.Desktop\**" />
+    <Compile Remove="UpgradeSample\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="UpgradeSample.Desktop\**" />
+    <EmbeddedResource Remove="UpgradeSample\**" />
   </ItemGroup>
 
 </Project>

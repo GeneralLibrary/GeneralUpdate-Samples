@@ -28,7 +28,7 @@ Task.Run(async () =>
     .LaunchTaskAsync();
 });
 
- static void OnMultiDownloadStatistics(object sender, MultiDownloadStatisticsEventArgs e)
+static void OnMultiDownloadStatistics(object sender, MultiDownloadStatisticsEventArgs e)
 {
     Console.WriteLine($" {e.Speed} , {e.Remaining.ToShortTimeString()}");
 }
@@ -55,24 +55,24 @@ Task.Run(async () =>
     }
 }
 
- static void OnMultiDownloadCompleted(object sender, MultiDownloadCompletedEventArgs e)
+static void OnMultiDownloadCompleted(object sender, MultiDownloadCompletedEventArgs e)
 {
-    //var info = e.Version as GeneralUpdate.Core.Domain.Entity.VersionInfo;
-    //Console.WriteLine($"{info.Name} download completed.");
+    var info = e.Version as GeneralUpdate.Core.Domain.Entity.VersionInfo;
+    Console.WriteLine($"{info.Name} download completed.");
 }
 
- static void OnMultiAllDownloadCompleted(object sender, MultiAllDownloadCompletedEventArgs e)
+static void OnMultiAllDownloadCompleted(object sender, MultiAllDownloadCompletedEventArgs e)
 {
     Console.WriteLine($"AllDownloadCompleted {e.IsAllDownloadCompleted}");
 }
 
- static void OnMultiDownloadError(object sender, MultiDownloadErrorEventArgs e)
+static void OnMultiDownloadError(object sender, MultiDownloadErrorEventArgs e)
 {
-    //var info = e.Version as GeneralUpdate.Core.Domain.Entity.VersionInfo;
-    //Console.WriteLine($"{info.Name},{e.Exception.Message}.");
+    var info = e.Version as GeneralUpdate.Core.Domain.Entity.VersionInfo;
+    Console.WriteLine($"{info.Name},{e.Exception.Message}.");
 }
 
- static void OnException(object sender, ExceptionEventArgs e)
+static void OnException(object sender, ExceptionEventArgs e)
 {
     Console.WriteLine($"{e.Exception.Message}");
 }
