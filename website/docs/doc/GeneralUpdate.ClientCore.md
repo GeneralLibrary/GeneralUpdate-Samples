@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 4
 ---
 
 ### 定义
@@ -19,7 +19,7 @@ public class GeneralClientBootstrap : AbstractBootstrap<GeneralClientBootstrap, 
 nuget安装
 
 ```shell
-NuGet\Install-Package GeneralUpdate.ClientCore -Version 1.0.0
+NuGet\Install-Package GeneralUpdate.ClientCore -Version 3.0.0
 ```
 
 
@@ -31,39 +31,50 @@ NuGet\Install-Package GeneralUpdate.ClientCore -Version 1.0.0
 以下示例定义方法，包含GeneralClientBootstrap使用。
 
 ```c#
-//ClientStrategy该更新策略将完成1.自动升级组件自更新 2.启动更新组件 3.配置好ClientParameter无需再像之前的版本写args数组进程通讯了。
-//generalClientBootstrap.Config(baseUrl, "B8A7FADD-386C-46B0-B283-C9F963420C7C").
-var configinfo = GetWindowsConfigInfo();
-var generalClientBootstrap = await new GeneralClientBootstrap()
-//单个或多个更新包下载通知事件
-.AddListenerMultiDownloadProgress(OnMultiDownloadProgressChanged)
-//单个或多个更新包下载速度、剩余下载事件、当前下载版本信息通知事件
-.AddListenerMultiDownloadStatistics(OnMultiDownloadStatistics)
-//单个或多个更新包下载完成
-.AddListenerMultiDownloadCompleted(OnMultiDownloadCompleted)
-//完成所有的下载任务通知
-.AddListenerMultiAllDownloadCompleted(OnMultiAllDownloadCompleted)
-//下载过程出现的异常通知
-.AddListenerMultiDownloadError(OnMultiDownloadError)
-//整个更新过程出现的任何问题都会通过这个事件通知
-.AddListenerException(OnException)
-.Config(configinfo)
-.Option(UpdateOption.DownloadTimeOut, 60)
-.Option(UpdateOption.Encoding, Encoding.Default)
-.Option(UpdateOption.Format, Format.ZIP)
-//开启驱动更新
-//.Option(UpdateOption.Drive, true)
-//开启遗言功能，需要部署GeneralUpdate.SystemService Windows服务。
-.Option(UpdateOption.WillMessage, true)
-.Strategy<WindowsStrategy>()
-//注入一个func让用户决定是否跳过本次更新，如果是强制更新则不生效
-//.SetCustomSkipOption(ShowCustomOption)
-//注入一个自定义方法集合，该集合会在更新启动前执行。执行自定义方法列表如果出现任何异常，将通过异常订阅通知。（推荐在更新之前检查当前软件环境）
-//.AddCustomOption(new List<Func<bool>>() { () => Check1(), () => Check2() })
-//默认黑名单文件： { "Newtonsoft.Json.dll" } 默认黑名单文件扩展名： { ".patch", ".7z", ".zip", ".rar", ".tar" , ".json" }
-//如果不需要扩展，需要重新传入黑名单集合来覆盖。
-//.SetBlacklist(GetBlackFiles(), GetBlackFormats())
-.LaunchTaskAsync();
+try
+{
+      Console.WriteLine($"主程序初始化，{DateTime.Now}！");
+      Console.WriteLine("当前运行目录：" + Thread.GetDomain().BaseDirectory);
+      await Task.Delay(2000);
+      var configinfo = new Configinfo
+      {
+            //configinfo.UpdateLogUrl = "https://www.****.com";
+            ReportUrl = "http://127.0.0.1:5000/Upgrade/Report",
+            UpdateUrl = "http://127.0.0.1:5000/Upgrade/Verification",
+            AppName = "GeneralUpdate.Upgrad.exe",
+            MainAppName = "GeneralUpdate.Client.exe",
+            InstallPath = Thread.GetDomain().BaseDirectory,
+            //configinfo.Bowl = "Generalupdate.CatBowl.exe";
+            //当前客户端的版本号
+            ClientVersion = "1.0.0.0",
+            //当前升级端的版本号
+            UpgradeClientVersion = "1.0.0.0",
+            //产品id
+            ProductId = "2d974e2a-31e6-4887-9bb1-b4689e98c***",
+            //应用密钥
+            AppSecretKey = "dfeb5833-975e-4afb-88f1-6278ee9*****"
+       };
+       _ = await new GeneralClientBootstrap() //单个或多个更新包下载通知事件
+       //单个或多个更新包下载速度、剩余下载事件、当前下载版本信息通知事件
+       .AddListenerMultiDownloadStatistics(OnMultiDownloadStatistics)
+       //单个或多个更新包下载完成
+       .AddListenerMultiDownloadCompleted(OnMultiDownloadCompleted)
+       //完成所有的下载任务通知
+       .AddListenerMultiAllDownloadCompleted(OnMultiAllDownloadCompleted)
+       //下载过程出现的异常通知
+       .AddListenerMultiDownloadError(OnMultiDownloadError)
+       //整个更新过程出现的任何问题都会通过这个事件通知
+       .AddListenerException(OnException)
+       .SetConfig(configinfo)
+       .Option(UpdateOption.DownloadTimeOut, 60)
+       .Option(UpdateOption.Encoding, Encoding.UTF8)
+       .LaunchAsync();
+       Console.WriteLine($"主程序已启动，{DateTime.Now}！");
+}
+catch (Exception e)
+{
+     Console.WriteLine(e.Message + "\n" + e.StackTrace);
+}
 
 private List<string> GetBlackFiles()
 {
@@ -80,57 +91,6 @@ private List<string> GetBlackFormats()
 }
 
 /// <summary>
-/// 获取Windows平台所需的配置参数
-/// </summary>
-/// <returns></returns>
-private Configinfo GetWindowsConfigInfo()
-{
-  //该对象用于主程序客户端与更新组件进程之间交互用的对象
-  var config = new Configinfo();
-  //本机的客户端程序应用地址
-  config.InstallPath = @"D:\packet\source";
-  //更新公告网页
-  config.UpdateLogUrl = "https://www.baidu.com/";
-  //客户端当前版本号
-  config.ClientVersion = "1.1.1.1";
-  //客户端类型：1.主程序客户端 2.更新组件
-  config.AppType = AppType.UpgradeApp;
-  //指定应用密钥，用于区分客户端应用
-  config.AppSecretKey = "B8A7FADD-386C-46B0-B283-C9F963420C7C";
-  //更新组件更新包下载地址
-  config.UpdateUrl = $"{baseUrl}/versions/{config.AppType}/{config.ClientVersion}/{config.AppSecretKey}";
-  //更新程序exe名称
-  config.AppName = "GeneralUpdate.Core";
-  //主程序客户端exe名称
-  config.MainAppName = "GeneralUpdate.ClientCore";
-  //主程序信息
-  var mainVersion = "1.1.1.1";
-  //主程序客户端更新包下载地址
-  config.MainUpdateUrl = $"{baseUrl}/versions/{AppType.ClientApp}/{mainVersion}/{config.AppSecretKey}";
-  return config;
-}
-
-/// <summary>
-/// 获取Android平台所需要的参数
-/// </summary>
-/// <returns></returns>
-private Configinfo GetAndroidConfigInfo()
-{
-  var config = new Configinfo();
-  config.InstallPath = System.Threading.Thread.GetDomain().BaseDirectory;
-  //主程序客户端当前版本号
-  config.ClientVersion = "1.0.0.0"; //VersionTracking.Default.CurrentVersion.ToString();
-  config.AppType = AppType.ClientApp;
-  config.AppSecretKey = "41A54379-C7D6-4920-8768-21A3468572E5";
-  //主程序客户端exe名称
-  config.MainAppName = "GeneralUpdate.ClientCore";
-  //主程序信息
-  var mainVersion = "1.1.1.1";
-  config.MainUpdateUrl = $"{baseUrl}/versions/{AppType.ClientApp}/{mainVersion}/{config.AppSecretKey}";
-  return config;
-}
-
-/// <summary>
 /// 让用户决定是否跳过本次更新
 /// </summary>
 /// <returns></returns>
@@ -144,18 +104,11 @@ private void OnMultiDownloadStatistics(object sender, MultiDownloadStatisticsEve
   //e.Remaining 剩余下载时间
   //e.Speed 下载速度
   //e.Version 当前下载的版本信息
-}
-
-private void OnMultiDownloadProgressChanged(object sender, MultiDownloadProgressChangedEventArgs e)
-{
   //e.TotalBytesToReceive 当前更新包需要下载的总大小
   //e.ProgressValue 当前进度值
   //e.ProgressPercentage 当前进度的百分比
   //e.Version 当前下载的版本信息
-  //e.Type 当前正在执行的操作  1.ProgressType.Check 检查版本信息中 2.ProgressType.Donwload 正在下载当前版本 3. ProgressType.Updatefile 更新当前版本 4. ProgressType.Done更新完成 5.ProgressType.Fail 更新失败
   //e.BytesReceived 已下载大小
-  DispatchMessage($"{e.ProgressPercentage}%");
-  //MyProgressBar.ProgressTo(e.ProgressValue, 100, Easing.Default);
 }
 
 private void OnException(object sender, ExceptionEventArgs e)
@@ -180,11 +133,6 @@ private void OnMultiDownloadError(object sender, MultiDownloadErrorEventArgs e)
   var info = e.Version as VersionInfo;
   DispatchMessage($"{info.Name} error!");
 }
-
-private void DispatchMessage(string message)
-{
-    ShowMessage(message);
-}
 ```
 
 
@@ -193,18 +141,10 @@ private void DispatchMessage(string message)
 
 GeneralClientBootstrap提供以下能力。
 
-#### 构造函数
-
-| Constructors             |                                    |
-| ------------------------ | ---------------------------------- |
-| GeneralClientBootstrap() | 当前GeneralUpdateBootstrap构造函数 |
-| base:AbstractBootstrap() | 父类AbstractBootstrap构造函数      |
-
 #### 属性
 
 | Properties   |                                                            |
 | ------------ | ---------------------------------------------------------- |
-| Packet       | 更新包信息                                                 |
 | UpdateOption | 更新操作配置设置枚举                                       |
 | Configinfo   | 客户端相关参数类（AppType、AppName、AppSecretKey等字段）。 |
 
@@ -218,11 +158,9 @@ GeneralClientBootstrap提供以下能力。
 | Option()                               | 设置更新配置。                                               |
 | Config()                               | 更新相关内容配置参数，url 服务器地址及 端口号, appSecretKey客户端唯一标识用于 区分产品分支。 |
 | GetOption()                            | 获取更新配置。                                               |
-| Strategy()                             | 设置当前更新策略，例如：如果是Windows 平台则使用WindowsStrategy， linux...mac...android以此类推。 |
 | SetCustomSkipOption()                  | 让用户在非强制更新的状态下决定是否进行更新。                 |
 | AddCustomOption()                      | 添加一个异步的自定义操作。理论上，任何自定义操作都可以完成。建议注册环境检查方法，以确保更新完成后存在正常的依赖和环境。 |
 | AddListenerMultiAllDownloadCompleted() | 完成所有的下载任务通知。                                     |
-| AddListenerMultiDownloadProgress()     | 单个或多个更新包下载通知事件。                               |
 | AddListenerMultiDownloadCompleted()    | 单个或多个更新包下载完成事件。                               |
 | AddListenerMultiDownloadError()        | 监听每个版本下载异常的事件                                   |
 | AddListenerMultiDownloadStatistics()   | 单个或多个更新包下载速度、剩余下载事 件、当前下载版本信息通知事件。 |
@@ -280,10 +218,7 @@ GeneralClientBootstrap提供以下能力。
 | ------------------------------------------------------------ |
 | **Format** 更新包的文件格式。                                |
 | **Encoding**  压缩编码。                                     |
-| **MainApp** 主程序名称。                                     |
 | **DownloadTimeOut** 超时时间（单位：秒）。如果未指定此参数，则默认超时时间为30秒。 |
-| **Drive** 是否启用驱动升级功能。                             |
-| **WillMessage** 是否开启遗言功能，如果想要启动需要同步部署'GeneralUpdate. SystemService'服务。 |
 
 
 
@@ -426,24 +361,6 @@ option UpdateOption<T> 具体枚举内容参考本文档中的 🍵UpdateOption�
 
 
 
-### 🌼Strategy()
-
-**方法**
-
-根据不同的操作系统平台，指定更新策略。
-
-```c#
-public virtual TBootstrap Strategy<T>() where T : TStrategy, new();
-```
-
-**参数类型**
-
-T 
-
-设置符合当前操作系统的更新策略，例如：Windows操作系统使用WindowsStrategy。
-
-
-
 ### 🌼SetCustomSkipOption()
 
 **方法**
@@ -537,28 +454,6 @@ callbackAction Action<object, MultiAllDownloadCompletedEventArgs>
 ```
 
 监听所有更新版本下载完成的事件回传参数。
-
-
-
-### 🌼AddListenerMultiDownloadProgress()
-
-**方法**
-
-```c#
-public TBootstrap AddListenerMultiDownloadProgress(Action<object, MultiDownloadProgressChangedEventArgs> callbackAction);
-```
-
-
-
-**参数类型**
-
-**sender** object 
-
-操作句柄。
-
-**args** MultiDownloadProgressChangedEventArgs 
-
-进度通知参数。
 
 
 

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 6
+sidebar_position: 9
 ---
 
 ### 定义
@@ -27,7 +27,7 @@ public sealed class GeneralClientOSS
 nuget安装
 
 ```shell
-NuGet\Install-Package GeneralUpdate.ClientCore -Version 1.0.0
+NuGet\Install-Package GeneralUpdate.ClientCore -Version 3.0.0
 ```
 
 
@@ -66,7 +66,7 @@ Task.Run(async () =>
     var versionFileName = "version.json";
     GeneralClientOSS.AddListenerDownloadProcess(OnOSSDownload);
     GeneralClientOSS.AddListenerException(OnException);
-    await GeneralClientOSS.Start<Strategy>(new ParamsOSS(url, apk, authority, currentVersion, versionFileName));
+    await GeneralClientOSS.Start(new ParamsOSS(url, apk, authority, currentVersion, versionFileName));
 });
 ```
 
@@ -130,74 +130,6 @@ ParamsOSS 更新配置参数，详细内容参考本文档🌴ParamsOSS。
 **parameter** ParamsOSS 安卓平台的跟新配置参数。
 
 **upgradeAppName** 需要升级的应用名称。
-
-
-
-### 🌼AddListenerDownloadProcess()
-
-**方法**
-
-监听下载进度。
-
-```c#
-public static void AddListenerDownloadProcess(Action<object, OSSDownloadArgs> callbackAction);
-```
-
-
-
-**参数类型**
-
-**sender** object 
-
-操作句柄。
-
-**args** OSSDownloadArgs
-
-下载进度通知参数。
-
-
-
-**参数**
-
-```c#
-callbackAction Action<object, OSSDownloadArgs> 
-```
-
-监听当前版本下载进度事件回传参数。
-
-
-
-### 🌼AddListenerException()
-
-**方法**
-
-监听组件内部异常。
-
-```c#
-public static void AddListenerException(Action<object, ExceptionEventArgs> callbackAction);
-```
-
-
-
-**参数类型**
-
-**sender** object 
-
-操作句柄。
-
-**args** ExceptionEventArgs
-
-更新异常参数。
-
-
-
-**参数**
-
-```c#
-callbackAction Action<object, ExceptionEventArgs> 
-```
-
-监听当前版本下载进度事件回传参数。
 
 
 

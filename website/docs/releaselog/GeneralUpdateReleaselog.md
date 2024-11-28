@@ -9,6 +9,72 @@ tags: [log]
 
 
 
+## 📍2024-11-28
+
+- 更新所有组件C#语法均升级至C#13。
+
+- 优化、重构、精简代码，以最少的代码实现功能降低代码阅读难度。
+
+- 简化了GeneralClientBootstrap的传入参数复杂度。
+
+- 移除Strategys参数设置，内置在组件内可自推断所在操作系统平台切换更新策略，开发者无需再关心更新策略设置。
+
+- 新增驱动更新、备份、安装功能。
+
+- 优化了自动升级流程，更新状态的四种工作流：
+
+  1.客户端需要升级、升级端需要升级 
+
+  2.客户端不需要升级、升级端不需要升级 
+
+  3.客户端不需要升级、升级端需要升级 
+
+  4.客户端需要升级、升级端不需要升级
+
+- 如果更新失败的版本将会存储在本地，回滚之后再遇到失败版本则跳过更新。
+
+- GeneralUpdate的OSS功能目前仅支持windows，仅支持zip压缩格式。
+
+- 新增GeneralUpdate.Bowl组件
+
+- GeneralUpdate.Bowl包含回滚、监测、导出dump功能（由于Linux星球充满未知和不确定性，GeneralUpdate.Bowl暂时留在Windows星球生活）。
+
+- 新增GeneralUpdate.Common组件
+
+- 移除GeneralUpdate.Zip组件
+
+- 移除GeneralUpdate.AspnetCore组件
+
+- 移除MultiDownloadProgressChangedEvent，将该事件的通知内容合并至MultiDownloadStatisticsEvent。
+
+- 移除遗言功能，由GeneralUpdate.Bowl代替。
+
+- 移除7z压缩格式支持，仅支持zip压缩格式。
+
+- 移除ProgressType几种工作模式通知事件参数。
+
+- 更新组件内所有Hash值相关校验、生成均为SHA256算法，移除MD5算法。
+
+- 新增更新前备份当前程序所有文件内容。
+
+- 支持Ubuntu操作系统。
+
+- 兼容并支持AOT编译，移除或重构所有不利于AOT编译或使用的代码。
+
+- 所有组件统一共享一个版本号，不再各自维护单独的版本号。
+
+- 更新Sample示例更新，使用bat脚本一键生成。
+
+- 修复了若干issue中提出的bug。
+
+- 转移GeneralUpdate.Maui.OSS和GeneralUpdate.OSS类库至新仓库GeneralUpdate.Maui。
+
+- GeneralUpdate.Differential移除GeneralUpdate.Zip引用，并且移除所有压缩包处理能力。
+
+- 新增升级流程上报服务器升级状态，升级状态为待更新、更新失败、更新成功。
+
+
+
 ## 📍2023-08-05
 
 在企业产品发布到市场之前需要对功能进行测试，在大部分公司里自动升级功能不像产品功能一样有需求文档或者业务说明等文档。通常的要求就是能正常升级公司产品或能增量更新节约流量即可。这时候对测试经验不足的人员来说测试不充分或者大家都没有考虑到将会造成很多麻烦。（这里只是提供一种测试的思路，并非专业测试指导请辩证看待）

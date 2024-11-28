@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 5
 ---
 
 ### 定义
@@ -19,7 +19,7 @@ public class GeneralUpdateBootstrap : AbstractBootstrap<GeneralUpdateBootstrap, 
 nuget安装
 
 ```shell
-NuGet\Install-Package GeneralUpdate.Core -Version 1.0.0
+NuGet\Install-Package GeneralUpdate.Core -Version 3.0.0
 ```
 
 
@@ -31,58 +31,43 @@ NuGet\Install-Package GeneralUpdate.Core -Version 1.0.0
 以下示例定义方法，包含GeneralUpdateBootstrap使用方法。
 
 ```c#
-Task.Run(async () =>
+try
 {
-    var bootStrap = await new GeneralUpdateBootstrap()
-    //单个或多个更新包下载通知事件
-    .AddListenerMultiDownloadProgress(OnMultiDownloadProgressChanged)
-    //单个或多个更新包下载速度、剩余下载事件、当前下载版本信息通知事件
-    .AddListenerMultiDownloadStatistics(OnMultiDownloadStatistics)
-    //单个或多个更新包下载完成
-    .AddListenerMultiDownloadCompleted(OnMultiDownloadCompleted)
-    //完成所有的下载任务通知
-    .AddListenerMultiAllDownloadCompleted(OnMultiAllDownloadCompleted)
-    //下载过程出现的异常通知
-    .AddListenerMultiDownloadError(OnMultiDownloadError)
-    //整个更新过程出现的任何问题都会通过这个事件通知
-    .AddListenerException(OnException)
-    .Strategy<WindowsStrategy>()
-    .Option(UpdateOption.Encoding, Encoding.Default)
-    .Option(UpdateOption.DownloadTimeOut, 60)
-    .Option(UpdateOption.Format, Format.ZIP)
-    .LaunchTaskAsync();
-});
+     Console.WriteLine($"升级程序初始化，{DateTime.Now}！");
+     Console.WriteLine("当前运行目录：" + Thread.GetDomain().BaseDirectory);
+     await Task.Delay(2000);
+     await new GeneralUpdateBootstrap()
+     //单个或多个更新包下载速度、剩余下载事件、当前下载版本信息通知事件
+     .AddListenerMultiDownloadStatistics(OnMultiDownloadStatistics)
+     //单个或多个更新包下载完成
+     .AddListenerMultiDownloadCompleted(OnMultiDownloadCompleted)
+     //完成所有的下载任务通知
+     .AddListenerMultiAllDownloadCompleted(OnMultiAllDownloadCompleted)
+     //下载过程出现的异常通知
+     .AddListenerMultiDownloadError(OnMultiDownloadError)
+     //整个更新过程出现的任何问题都会通过这个事件通知
+     .AddListenerException(OnException)
+     //设置字段映射表，用于解析所有驱动包的信息的字符串
+     //.SetFieldMappings(fieldMappingsCN)
+     //是否开启驱动更新
+     //.Option(UpdateOption.Drive, true)
+     .LaunchAsync();
+     Console.WriteLine($"升级程序已启动，{DateTime.Now}！");
+}
+catch (Exception e)
+{
+     Console.WriteLine(e.Message + "\n" + e.StackTrace);
+}
 
 private static void OnMultiDownloadStatistics(object sender, MultiDownloadStatisticsEventArgs e)
 {
     Console.WriteLine($" {e.Speed} , {e.Remaining.ToShortTimeString()}");
-}
-
-private static void OnMultiDownloadProgressChanged(object sender, MultiDownloadProgressChangedEventArgs e)
-{
-    switch (e.Type)
-    {
-        case ProgressType.Check:
-            break;
-
-        case ProgressType.Download:
-            Console.WriteLine($" {Math.Round(e.ProgressValue * 100, 2)}% ， Receivedbyte：{e.BytesReceived}M ，Totalbyte：{e.TotalBytesToReceive}M");
-            break;
-
-        case ProgressType.Updatefile:
-            break;
-
-        case ProgressType.Done:
-            break;
-
-        case ProgressType.Fail:
-            break;
-    }
+    Console.WriteLine($" {Math.Round(e.ProgressValue * 100, 2)}% ， Receivedbyte：{e.BytesReceived}M ，Totalbyte：{e.TotalBytesToReceive}M");
 }
 
 private static void OnMultiDownloadCompleted(object sender, MultiDownloadCompletedEventArgs e)
 {
-    //var info = e.Version as GeneralUpdate.Core.Domain.Entity.VersionInfo;
+    //var info = e.Version as VersionInfo;
     //Console.WriteLine($"{info.Name} download completed.");
 }
 
@@ -93,7 +78,7 @@ private static void OnMultiAllDownloadCompleted(object sender, MultiAllDownloadC
 
 private static void OnMultiDownloadError(object sender, MultiDownloadErrorEventArgs e)
 {
-    //var info = e.Version as GeneralUpdate.Core.Domain.Entity.VersionInfo;
+    //var info = e.Version as VersionInfo;
     //Console.WriteLine($"{info.Name},{e.Exception.Message}.");
 }
 
@@ -125,52 +110,17 @@ GeneralUpdateBootstrap提供以下能力。
 
 #### 方法
 
-| Method                                 |                              |
-| -------------------------------------- | ---------------------------- |
-| LaunchTaskAsync()                      | Task异步启动更新             |
-| LaunchAsync()                          | 启动更新                     |
-| SetBlacklist()                         | 设置黑名单                   |
-| Option()                               | 设置更新配置。               |
-| GetOption()                            | 获取更新配置。               |
-| Strategy()                             | 更新策略                     |
-| AddListenerMultiAllDownloadCompleted() | 监听所有更新版本下载完成事件 |
-| AddListenerMultiDownloadProgress()     | 监听每个版本下载的进度       |
-| AddListenerMultiDownloadCompleted()    | 监听每个版本下载完成事件     |
-| AddListenerMultiDownloadError()        | 监听每个版本下载异常的事件   |
-| AddListenerMultiDownloadStatistics()   | 监听每个版本下载统计信息事件 |
-| AddListenerException()                 | 监听更新组件内部的所有异常   |
-
-
-
-### 🌴Packet
-
-**属性**
-
-| 属性                                                         |
-| ------------------------------------------------------------ |
-| **MainUpdateUrl** string 更新检查api地址。                   |
-| **AppType** int 1:ClientApp 2:UpdateApp                      |
-| **UpdateUrl** string Update 更新检查api地址。                |
-| **AppName**  string 需要启动应用程序的名称。                 |
-| **MainAppName** string 需要启动主应用程序的名称。            |
-| **Format** string 更新包文件格式（默认格式为Zip）。          |
-| **IsUpgradeUpdate** bool 是否需要更新来升级应用程序。        |
-| **IsMainUpdate** bool 主应用程序是否需要更新。               |
-| **UpdateLogUrl** string 更新日志网页地址。                   |
-| **UpdateVersions** List 需要更新的版本信息VersionInfo。      |
-| **Encoding** Encoding 文件操作的编码格式。                   |
-| **DownloadTimeOut** int 下载超时时间。                       |
-| **AppSecretKey** string 应用程序密钥，需要和服务器约定好。   |
-| **ClientVersion** string 客户端当前版本号。                  |
-| **LastVersion** string 最新版本号。                          |
-| **InstallPath** string 安装路径（用于更新文件逻辑）。        |
-| **TempPath** string 下载文件临时存储路径（用于更新文件逻辑）。 |
-| **ProcessBase64** string 升级终端程序的配置参数。            |
-| **Platform** string 当前策略所属的平台。（Windows\linux\Mac） |
-| **BlackFiles** List 黑名单中的文件将跳过更新。               |
-| **BlackFormats** 黑名单中的文件格式将跳过更新。              |
-| **DriveEnabled** bool 是否启用驱动升级功能。                 |
-| **WillMessageEnabled** bool 是否开启遗言功能，如果想要启动需要同步部署'GeneralUpdate. SystemService'服务。 |
+| Method                                 |                                       |
+| -------------------------------------- | ------------------------------------- |
+| LaunchTaskAsync()                      | Task异步启动更新                      |
+| LaunchAsync()                          | 启动更新                              |
+| Option()                               | 设置更新配置。                        |
+| GetOption()                            | 获取更新配置。                        |
+| AddListenerMultiAllDownloadCompleted() | 监听所有更新版本下载完成事件          |
+| AddListenerMultiDownloadCompleted()    | 监听每个版本下载完成事件              |
+| AddListenerMultiDownloadError()        | 监听每个版本下载异常的事件            |
+| AddListenerMultiDownloadStatistics()   | 监听每个版本下载统计信息\下载进度事件 |
+| AddListenerException()                 | 监听更新组件内部的所有异常            |
 
 
 
@@ -178,17 +128,7 @@ GeneralUpdateBootstrap提供以下能力。
 
 **枚举**
 
-**Format** 更新包的文件格式。
-
-**Encoding**  压缩编码。
-
-**MainApp** 主程序名称。
-
-**DownloadTimeOut** 超时时间（单位：秒）。如果未指定此参数，则默认超时时间为30秒。
-
 **Drive** 是否启用驱动升级功能。
-
-**WillMessage** 是否开启遗言功能，如果想要启动需要同步部署'GeneralUpdate. SystemService'服务。
 
 
 
@@ -296,24 +236,6 @@ option  UpdateOption<T> 具体枚举内容参考本文档中的 🍵UpdateOption
 
 
 
-### 🌼Strategy()
-
-**方法**
-
-指定更新策略。
-
-```c#
-public virtual TBootstrap Strategy<T>() where T : TStrategy, new();
-```
-
-**参数类型**
-
-T 
-
-设置符合当前操作系统的更新策略，例如：Windows操作系统使用WindowsStrategy。
-
-
-
 ### 🌼AddListenerMultiAllDownloadCompleted()
 
 **方法**
@@ -343,38 +265,6 @@ callbackAction Action<object, MultiAllDownloadCompletedEventArgs>
 ```
 
 监听所有更新版本下载完成的事件回传参数。
-
-
-
-### 🌼AddListenerMultiDownloadProgress()
-
-**方法**
-
-```c#
-public TBootstrap AddListenerMultiDownloadProgress(Action<object, MultiDownloadProgressChangedEventArgs> callbackAction);
-```
-
-
-
-**参数类型**
-
-**sender** object 
-
-操作句柄。
-
-**args** MultiDownloadProgressChangedEventArgs 
-
-进度通知参数。
-
-
-
-**参数**
-
-```
-callbackAction Action<object, MultiDownloadProgressChangedEventArgs> 
-```
-
-监听每个版本下载进度事件回传参数。
 
 
 

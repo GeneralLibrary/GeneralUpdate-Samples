@@ -1,5 +1,5 @@
 ---
-sidebar_position: 8
+sidebar_position: 11
 ---
 
 ### 简介
@@ -8,8 +8,8 @@ sidebar_position: 8
 
 - 仓库地址：
 
-  https://gitee.com/GeneralLibrary/GeneralUpdate.Tools
-  https://github.com/GeneralLibrary/GeneralUpdate.Tools
+  - https://gitee.com/GeneralLibrary/GeneralUpdate.Tools
+  - https://github.com/GeneralLibrary/GeneralUpdate.Tools
 
 
 

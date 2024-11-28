@@ -151,16 +151,6 @@ const config = {
         darkTheme: prismThemes.dracula,
       },
     }),
-  headTags: [
-      {
-        tagName: 'script',
-        attributes: {
-          async: true,
-          src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3450324887026774',
-          crossorigin: 'anonymous',
-      },
-    },
-  ],
 };
 
 export default config;
