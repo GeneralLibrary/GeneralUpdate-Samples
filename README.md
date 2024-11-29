@@ -4,16 +4,22 @@
 
 The GeneralUpdate twin project provides code examples for Quick Start.
 
-| Directory    | Note                                                         |
-| ------------ | ------------------------------------------------------------ |
-| client       | Client-side sample code                                      |
-| file service | File server emulation tool                                   |
-| server       | Server-side sample code, written using minimal API           |
-| upgrade      | Sample code on the upgrade assistant                         |
-| oss          | Sample code for OSS functions, including Windows and Android |
-| packet       | Update the package test directory                            |
-| dlls         | A list of DLLs for the generalupdate test version            |
-| website      | Generalupdate official website source code                   |
+| Directory | Note                                               |
+| --------- | -------------------------------------------------- |
+| client    | Client-side sample code                            |
+| server    | Server-side sample code, written using minimal API |
+| upgrade   | Sample code on the upgrade assistant               |
+| website   | Generalupdate official website source code         |
+
+
+
+## ✨Quick Start
+
+Find and double-click start.cmd to immediately experience the automatic upgrade.
+
+```shell
+...\GeneralUpdate-Samples\src\start.cmd
+```
 
 
 
