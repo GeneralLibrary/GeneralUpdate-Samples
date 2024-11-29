@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set "processes=ClientSample.exe ServerSample.exe UpgradeSample.exe hfs.exe StartManager.exe"
+set "processes=ClientSample.exe ServerSample.exe UpgradeSample.exe StartManager.exe"
 
 for %%p in (%processes%) do (
     echo Checking for process %%p ...

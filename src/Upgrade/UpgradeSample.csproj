@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="GeneralUpdate.Core" Version="4.14.21" />
+    <PackageReference Include="GeneralUpdate.Core" Version="4.14.22" />
   </ItemGroup>
 
   <ItemGroup>

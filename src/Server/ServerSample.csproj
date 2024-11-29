@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GeneralUpdate.AspNetCore" Version="1.4.1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Remove="C:\Users\zhuzh\.nuget\packages\generalupdate.aspnetcore\1.4.1\contentFiles\any\netstandard2.0\GeneralUpdate.ico" />
     <Content Remove="ServerSample\**" />
   </ItemGroup>
@@ -18,6 +14,12 @@
   <ItemGroup>
     <None Remove="build.bat" />
     <None Remove="ServerSample\**" />
+    <None Update="packages\packet_20241125233523804_1.0.0.1.zip">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="wwwroot\packages\packet_20241125233523804_1.0.0.1.zip">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +33,10 @@
   <ItemGroup>
     <_ContentIncludedByDefault Remove="ServerSample\obj\project.assets.json" />
     <_ContentIncludedByDefault Remove="ServerSample\obj\ServerSample.csproj.nuget.dgspec.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>

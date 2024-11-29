@@ -34,6 +34,7 @@ timeout /t 3 /nobreak >nul
 
 cd /d %InitialDir%
 echo Running StartManager
-start "" .\StartManager\bin\Release\net8.0\StartManager.exe
+cd /d .\run\app
+start "" StartManager.exe
 
 exit

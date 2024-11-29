@@ -8,16 +8,13 @@ class Program
         while (!exit)
         {
             ShowMenu();
-            string input = Console.ReadLine();
+            var input = Console.ReadLine();
             switch (input)
             {
                 case "1":
-                    Application.StartFileServer();
-                    break; 
-                case "2":
                     Application.StartServer();
-                    break;
-                case "3":
+                    Console.WriteLine("3秒后启动客户端");
+                    Thread.Sleep(3000);
                     Application.StartClient();
                     break;
                 case "R":
@@ -36,9 +33,7 @@ class Program
     static void ShowMenu()
     {
         Console.WriteLine("请选择一个选项：");
-        Console.WriteLine("1. 启动文件服务端");
-        Console.WriteLine("2. 启动服务端");
-        Console.WriteLine("3. 启动客户端");
+        Console.WriteLine("1. 开始升级");
         Console.WriteLine("R. 初始化run目录");
         Console.WriteLine("E. 退出");
         Console.Write("输入你的选择: ");

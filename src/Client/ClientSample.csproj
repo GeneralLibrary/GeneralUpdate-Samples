@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="GeneralUpdate.ClientCore" Version="2.12.10" />
+    <PackageReference Include="GeneralUpdate.ClientCore" Version="2.12.11" />
   </ItemGroup>
 
   <ItemGroup>
