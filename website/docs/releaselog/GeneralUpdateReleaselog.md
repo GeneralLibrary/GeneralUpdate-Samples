@@ -35,9 +35,11 @@ tags: [log]
 
 - GeneralUpdate的OSS功能目前仅支持windows，仅支持zip压缩格式。
 
+- 移除GeneralUpdateOSS通知所有事件。
+
 - 新增GeneralUpdate.Bowl组件
 
-- GeneralUpdate.Bowl包含回滚、监测、导出dump功能（由于Linux星球充满未知和不确定性，GeneralUpdate.Bowl暂时留在Windows星球生活）。
+- GeneralUpdate.Bowl包含回滚、监测、导出dump功能（Only windows，linux会陆续开放）。
 
 - 新增GeneralUpdate.Common组件
 
@@ -53,6 +55,8 @@ tags: [log]
 
 - 移除ProgressType几种工作模式通知事件参数。
 
+- 移除VersionHub，由UpgradeHubService替代（推送功能）。
+
 - 更新组件内所有Hash值相关校验、生成均为SHA256算法，移除MD5算法。
 
 - 新增更新前备份当前程序所有文件内容。
@@ -61,7 +65,7 @@ tags: [log]
 
 - 兼容并支持AOT编译，移除或重构所有不利于AOT编译或使用的代码。
 
-- 所有组件统一共享一个版本号，不再各自维护单独的版本号。
+- 所有组件版本号跟随.NET Core的框架版本号。并且统一共享一个版本号，不再各自维护单独的版本号。
 
 - 更新Sample示例更新，使用bat脚本一键生成。
 
