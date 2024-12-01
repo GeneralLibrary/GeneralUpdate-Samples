@@ -4,16 +4,14 @@ sidebar_position: 11
 
 ### 简介
 
-工具使用.NET WPF(.NET 8)进行开发，目前只支持windows桌面端使用。
+工具使用.NET WPF(.NET 8)进行开发，目前只支持Windows / Linux(Ubuntu) 桌面端使用。
 
 - 仓库地址：
 
   - https://gitee.com/GeneralLibrary/GeneralUpdate.Tools
   - https://github.com/GeneralLibrary/GeneralUpdate.Tools
 
-
-
-![](imgs/packet_tool.png)
+![](imgs\tool.png)
 
 
 
@@ -34,7 +32,5 @@ Source path：表示上一个版本的文件夹路径。
 Target path：表示当前版本文件夹路径。
 
 Patch path：表示最终生成差分包的路径。
-
-Is Publish：如果勾选则将生成好的差分包通过HTTP上传，并自动在数据库插入本次发布的版本信息。
 
 Build：通过递归比对Source path和Target path文件夹下所有的工程文件（DLL，exe...等），通过二进制差分检查、增量检查分析出需要更新的文件列表按照文件夹结构，打包更新包。
