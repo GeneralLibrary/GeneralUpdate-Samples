@@ -2,6 +2,16 @@
 sidebar_position: 3
 ---
 
+#### 背景故事
+
+![](imgs\bowl.jpg)
+
+Bowl是作者Juster养的一只橘猫，为什么给橘猫或组件起名成”碗“。因为橘猫容易胖，Juster希望它一次只吃一小碗就取名叫小碗。在GeneralUpdate的体系如果在升级过程中遭遇了重创，Bowl这时会挺身而出将残局恢复如初并分析失败原因。
+
+![](imgs\mybowl.jpg)
+
+
+
 ### 定义
 
 命名空间：GeneralUpdate.Bowl
@@ -21,16 +31,6 @@ nuget安装
 ```shell
 NuGet\Install-Package GeneralUpdate.Bowl -Version 3.0.0
 ```
-
-
-
-#### 背景故事
-
-![](imgs\bowl.jpg)
-
-Bowl是作者Juster养的一只橘猫，为什么给橘猫或组件起名成”碗“。因为橘猫容易胖，Juster希望它一次只吃一小碗就取名叫小碗。在GeneralUpdate的体系如果在升级过程中遭遇了重创，Bowl这时会挺身而出将残局恢复如初并分析失败原因。
-
-![](imgs\mybowl.jpg)
 
 
 
