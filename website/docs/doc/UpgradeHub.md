@@ -10,7 +10,7 @@ sidebar_position: 7
 
 
 
-VersionHub是基于SignalR实现的推送更新版本信息的机制，可以实现一对一和一对多的推送。
+UpgradeHubService是基于SignalR实现的推送更新版本信息的机制，可以实现一对一和一对多的推送。
 
 ```c#
 public class UpgradeHubService : IUpgradeHubService
@@ -19,7 +19,7 @@ public class UpgradeHubService : IUpgradeHubService
 nuget安装
 
 ```shell
-NuGet\Install-Package GeneralUpdate.ClientCore -Version 3.0.0
+NuGet\Install-Package GeneralUpdate.ClientCore -Version 1.0.0
 ```
 
 
