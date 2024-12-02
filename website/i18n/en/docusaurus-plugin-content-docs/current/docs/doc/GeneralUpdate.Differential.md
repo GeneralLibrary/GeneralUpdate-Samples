@@ -1,115 +1,101 @@
----
-sidebar_position: 6
----
+### Definition
 
-### 定义
+Namespace: GeneralUpdate.Differential
 
-命名空间：GeneralUpdate.Differential
-
-程序集：GeneralUpdate.Differential.dll
+Assembly: GeneralUpdate.Differential.dll
 
 
 
-该组件提供文件的二进制差分补丁文件生成（算法），文件增量识别（版本差异）、删除文件识别（版本差异）、黑名单、补丁还原等能力。
+This component provides capabilities for generating binary differential patch files (algorithm), file increment identification (version differences), deleted file identification (version differences), blacklisting, patch restoration, and more.
 
 ```c#
 public sealed class DifferentialCore
 ```
 
-nuget安装
+NuGet Installation
 
 ```shell
 NuGet\Install-Package GeneralUpdate.Differential -Version 3.0.0
 ```
 
+### Example
 
-
-### 示例
-
-以下示例定义方法，以包含增量识别，生成二进制补丁、补丁还原、设置黑名单示例GeneralUpdate.Tools项目中的打包工具也是强依赖此组件。
+The following example defines methods for increment identification, generating binary patches, patch restoration, and setting blacklists. The packaging tool in the GeneralUpdate.Tools project also strongly depends on this component.
 
 ```c#
-//增量识别，生成二进制补丁
+// Increment identification, generating binary patches
 public async Task TestDifferentialClean()
 {
-    //上一个版本的客户端文件夹路径
+    // Path to the previous version's client folder
     var path1 = "D:\\packet\\source";
-    //最新版本客户端文件夹路径
+    // Path to the latest version's client folder
     var path2 = "D:\\packet\\target";
-    //补丁文件生成路径
+    // Path for generating patch files
     var path3 = "D:\\packet\\patchs";
     await DifferentialCore.Instance.Clean(path1, path2, path3);
 }
 
-//补丁还原
+// Patch restoration
 public async Task TestDifferentialDirty()
 {
-    //当前版本的客户端文件夹路径
+    // Path to the current version's client folder
     var path1 = "D:\\packet\\source";
-    //补丁文件生成路径
+    // Path for generating patch files
     var path2 = "D:\\packet\\patchs";
     await DifferentialCore.Instance.Dirty(path1, path2);
 }
 ```
 
+### Annotations
 
+DifferentialCore provides capabilities for increment identification, generating binary patches, patch restoration, and setting blacklists.
 
-### 注解
+#### Methods
 
-DifferentialCore提供增量识别，生成二进制补丁、补丁还原、设置黑名单能力。
-
-#### 方法
-
-| 名称    | 类型 | 备注                                                 |
-| ------- | ---- | ---------------------------------------------------- |
-| Clean() | 方法 | 增量识别，删除文件识别，生成二进制补丁文件           |
-| Dirty() | 方法 | 补丁还原（将补丁打到旧的客户端文件上达到更新的目的） |
-
-
+| Name    | Type   | Description                                                  |
+| ------- | ------ | ------------------------------------------------------------ |
+| Clean() | Method | Increment identification, deleted file identification, and generating binary patch files |
+| Dirty() | Method | Patch restoration (applying patches to old client files to achieve updates) |
 
 ### 🌼Clean()
 
-**方法**
+**Method**
 
-生成补丁文件[不能包含文件名相同但扩展名不同的文件]。
+Generate patch files [cannot include files with the same name but different extensions].
 
 ```c#
 public async Task Clean(string sourcePath, string targetPath, string patchPath = null);
 ```
 
-**参数**
+**Parameters**
 
-**sourcePath** 上一个版本的文件夹路径。
+**sourcePath** Path to the previous version's folder.
 
-**targetPath** 最近版本的文件夹路径。
+**targetPath** Path to the latest version's folder.
 
-**patchPath** 将发现的增量更新文件存储在临时目录中。
-
-
+**patchPath** Directory to store the discovered incremental update files temporarily.
 
 ### 🌼Dirty()
 
-**方法**
+**Method**
 
-应用补丁[不能包含文件名相同但扩展名不同的文件]。
+Apply patches [cannot include files with the same name but different extensions].
 
 ```c#
 public async Task Dirty(string appPath, string patchPath);
 ```
 
-**参数**
+**Parameters**
 
-**appPath** 客户端应用程序目录。
+**appPath** Client application directory.
 
-**patchPath** 补丁文件路径。
+**patchPath** Path to the patch files.
 
+### Applicable to
 
-
-### 适用于
-
-| 产品           | 版本          |
+| Product        | Versions      |
 | -------------- | ------------- |
-| .NET           | 5、6、7、8、9 |
+| .NET           | 5, 6, 7, 8, 9 |
 | .NET Framework | 4.6.1         |
 | .NET Standard  | 2.0           |
 | .NET Core      | 2.0           |

@@ -2,37 +2,35 @@
 sidebar_position: 10
 ---
 
-### 定义
+### Definition
 
-命名空间：GeneralUpdate.Maui.OSS
+Namespace: GeneralUpdate.Maui.OSS
 
-程序集：GeneralUpdate.Maui.OSS.dll
+Assembly: GeneralUpdate.Maui.OSS.dll
 
 
 
-GeneralUpdate.Maui.OSS组件用来实现.NET MAUI更新的机制，目前只支持安卓平台的自动升级。
+The GeneralUpdate.Maui.OSS component is used to implement the update mechanism for .NET MAUI, currently only supporting automatic upgrades on the Android platform.
 
 ```c#
 public sealed class GeneralUpdateOSS
 ```
 
-nuget安装
+NuGet Installation
 
 ```shell
 NuGet\Install-Package GeneralUpdate.Maui.OSS -Version 1.0.0
 ```
 
+### Example
 
-
-### 示例
-
-​                                           ![](imgs/maui_android_upgrade.png)
+![](imgs/maui_android_upgrade.png)
 
 ![](imgs/oss_maui_flow.png)
 
-1.准备version.json版本信息配置文件，更新文件（update.apk）更新文件就直接是新版本的apk了 (或.abb)。 
+1. Prepare the version.json configuration file and the update file (update.apk), which is the new version of the apk (or .abb).
 
-2.Client启动时直接请求OSS服务器或文件服务器，下载version.json文件。
+2. When the client starts, it directly requests the OSS server or file server to download the version.json file.
 
 ```json
 { 
@@ -44,11 +42,9 @@ NuGet\Install-Package GeneralUpdate.Maui.OSS -Version 1.0.0
 } 
 ```
 
-3.下载到本地之后解析版本信息内容，判断是否需要更新。 4.需要更新则下载update.apk。 5.下载完成之后执行安装，这一步就交给了安卓操作系统执行。执行完成之后运行新版本app。
+3. After downloading locally, parse the version information content to determine if an update is needed. 4. If an update is needed, download update.apk. 5. After the download is complete, execute the installation, which is handled by the Android operating system. After execution, run the new version of the app.
 
-
-
-以下示例定义方法，包含GeneralUpdateOSS使用方法。
+The following example defines methods, including how to use GeneralUpdateOSS.
 
 ```c#
 Task.Run(async () =>
@@ -64,141 +60,115 @@ Task.Run(async () =>
 });
 ```
 
+### Annotations
 
+GeneralUpdateOSS provides the following capabilities.
 
-### 注解
+#### Properties
 
-GeneralUpdateOSS提供以下能力。
+| Properties    | Description                                           |
+| ------------- | ----------------------------------------------------- |
+| ParamsAndroid | Update configuration parameters for Android platform. |
 
-#### 属性
+#### Methods
 
-| Properties    |                          |
-| ------------- | ------------------------ |
-| ParamsAndroid | 安卓平台的跟新配置参数。 |
-
-
-
-#### 方法
-
-| Method                       |                             |
-| ---------------------------- | --------------------------- |
-| Start()                      | 开始针对安卓平台的OSS更新。 |
-| AddListenerDownloadProcess() | 监控下载进度。              |
-| AddListenerException()       | 监听内部异常信息。          |
-
-
+| Method                       | Description                                |
+| ---------------------------- | ------------------------------------------ |
+| Start()                      | Start the OSS update for Android platform. |
+| AddListenerDownloadProcess() | Monitor download progress.                 |
+| AddListenerException()       | Listen for internal exception information. |
 
 ### 🌴ParamsAndroid
 
-**属性**
+**Properties**
 
-**Url** string http的api服务端请求地址。
+**Url**: string - The API server request address.
 
-**Apk** string 安卓apk名称。
+**Apk**: string - The Android apk name.
 
-**CurrentVersion** string 当前版本。
+**CurrentVersion**: string - The current version.
 
-**Authority** string  apk作者。
+**Authority**: string - The apk author.
 
-**VersionFileName** string 版本文件名称。
-
-
+**VersionFileName**: string - The version file name.
 
 ### 🌼Start()
 
-**方法**
+**Method**
 
-开始针对安卓平台的OSS更新。
+Start the OSS update for the Android platform.
 
 ```c#
 public static async Task Start<TStrategy>(ParamsAndroid parameter) where TStrategy : AbstractStrategy, new();
 ```
 
+**Parameter Type**
 
+ParamsAndroid: Update configuration parameters for the Android platform. For detailed content, refer to this document 🌴ParamsAndroid.
 
-**参数类型**
+**Parameter**
 
-ParamsAndroid 安卓平台的跟新配置参数，详细内容参考本文档  🌴ParamsAndroid。
-
-
-
-**参数**
-
-**parameter** ParamsAndroid 安卓平台的跟新配置参数。
-
-
+**parameter**: ParamsAndroid - Update configuration parameters for the Android platform.
 
 ### 🌼AddListenerDownloadProcess()
 
-**方法**
+**Method**
 
-监控下载进度。
+Monitor download progress.
 
 ```c#
 public static void AddListenerDownloadProcess(Action<object, OSSDownloadArgs> callbackAction);
 ```
 
+**Parameter Type**
 
+**sender**: object 
 
-**参数类型**
+Operation handle.
 
-**sender** object 
+**args**: OSSDownloadArgs
 
-操作句柄。
+Download progress notification parameters.
 
-**args** OSSDownloadArgs
-
-下载进度通知参数。
-
-
-
-**参数**
+**Parameter**
 
 ```c#
 callbackAction Action<object, OSSDownloadArgs> 
 ```
 
-监听当前版本下载进度事件回传参数。
-
-
+Listen for current version download progress event callback parameters.
 
 ### 🌼AddListenerException()
 
-**方法**
+**Method**
 
-监听内部异常信息。
+Listen for internal exception information.
 
 ```c#
 public static void AddListenerException(Action<object, ExceptionEventArgs> callbackAction);
 ```
 
+**Parameter Type**
 
+**sender**: object 
 
-**参数类型**
+Operation handle.
 
-**sender** object 
+**args**: ExceptionEventArgs
 
-操作句柄。
+Update exception parameters.
 
-**args** ExceptionEventArgs
-
-更新异常参数。
-
-
-
-**参数**
+**Parameter**
 
 ```c#
 callbackAction Action<object, ExceptionEventArgs> 
 ```
 
-监听当前版本下载进度事件回传参数。
+Listen for current version download progress event callback parameters.
 
+### Applies to
 
-
-### 适用于
-
-| 产品      | 版本             |
+| Product   | Version          |
 | --------- | ---------------- |
-| .NET      | 7、8、9          |
+| .NET      | 7, 8, 9          |
 | .NET MAUI | .NET 8 - Android |

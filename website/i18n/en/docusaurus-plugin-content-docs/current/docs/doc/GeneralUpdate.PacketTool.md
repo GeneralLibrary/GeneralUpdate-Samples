@@ -2,35 +2,31 @@
 sidebar_position: 11
 ---
 
-### 简介
+### Introduction
 
-工具使用.NET WPF(.NET 8)进行开发，目前只支持Windows / Linux(Ubuntu) 桌面端使用。
+The tool is developed using .NET WPF (.NET 8) and currently supports desktop usage on Windows and Linux (Ubuntu) platforms.
 
-- 仓库地址：
+- Repository Links:
 
   - https://gitee.com/GeneralLibrary/GeneralUpdate.Tools
   - https://github.com/GeneralLibrary/GeneralUpdate.Tools
 
-![](imgs\tool.png)
+![](imgs/tool.png)
 
+#### Features Provided
 
+| Feature                             | Supported | Remarks                                                      |
+| ----------------------------------- | --------- | ------------------------------------------------------------ |
+| Delta Update Package Generation     | Yes       | Compares the previous version with the current version to identify files that need updating or new files added. |
+| Automatic Upload of Update Packages | Yes       | Automatically uploads the generated delta update package to the server. |
+| Editable Selection of Delta Files   | Yes       | Allows visual inspection of the contents of the delta package and selection of files for packaging. |
 
-#### 提供功能
+#### Usage Example
 
-| 功能               | 支持 | 备注                                                         |
-| ------------------ | ---- | ------------------------------------------------------------ |
-| 差分更新包生成     | 是   | 根据上一个版本和当前版本进行对比找出需要更新的文件或新添加文件。 |
-| 自动上传更新包     | 是   | 将生成好的差分更新包自动上传至服务器。                       |
-| 可编辑选择差分文件 | 是   | 可视化查看差分包的打包内容，并可选择打包文件。               |
+Source path: Represents the folder path of the previous version.
 
+Target path: Represents the folder path of the current version.
 
+Patch path: Represents the path where the final delta package is generated.
 
-#### 使用示例
-
-Source path：表示上一个版本的文件夹路径。
-
-Target path：表示当前版本文件夹路径。
-
-Patch path：表示最终生成差分包的路径。
-
-Build：通过递归比对Source path和Target path文件夹下所有的工程文件（DLL，exe...等），通过二进制差分检查、增量检查分析出需要更新的文件列表按照文件夹结构，打包更新包。
+Build: Recursively compares all project files (DLL, exe, etc.) in the Source path and Target path folders. It analyzes the list of files that need updating using binary delta checks and incremental checks, and then packages the update package according to the folder structure.

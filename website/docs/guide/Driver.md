@@ -2,42 +2,42 @@
 sidebar_position: 3
 ---
 
-### Driver 驱动
+### Driver
 
-#### （1）Windows平台
+#### (1) Windows Platform
 
-##### 驱动安装
+##### Driver Installation
 
-本组件内置使用的驱动安装工具为微软自带的工具PnPutil.exe或使用setupapi.dll来实现。
+The tool used for driver installation in this component is the Microsoft built-in tool PnPutil.exe or setupapi.dll.
 
-驱动安装时需要注意的问题有两点：
+There are two key points to note when installing drivers:
 
-| 名称 | 说明                               |
-| ---- | ---------------------------------- |
-| 安装 | 驱动证书安装，需要在驱动之前安装。 |
-| 版本 | 区分x86 , x64版本。                |
+| Name    | Description                                                  |
+| ------- | ------------------------------------------------------------ |
+| Install | Driver certificate installation should occur before the driver installation. |
+| Version | Differentiate between x86 and x64 versions.                  |
 
-**PnPUtil实现：**
+**PnPUtil Implementation:**
 
-PnPUtil是一个命令行实用程序，它可以用来管理Windows的驱动程序商店。你可以使用它来添加、删除和列出驱动程序。
+PnPUtil is a command line utility that can be used to manage the Windows driver store. You can use it to add, delete, and list drivers.
 
-以下是如何使用PnPUtil来安装驱动程序的步骤：
+Here are the steps to install drivers using PnPUtil:
 
-1. 打开命令提示符（以管理员身份）。
+1. Open Command Prompt as an administrator.
 
-2. 导航到包含驱动程序的INF文件的目录。
+2. Navigate to the directory containing the driver's INF file.
 
-3. 运行以下命令：
+3. Run the following command:
 
-   `pnputil /add-driver <INF文件名>`
+   `pnputil /add-driver <INF file name>`
 
-   例如，如果你的INF文件名为`mydriver.inf`，那么你应该运行`pnputil /add-driver mydriver.inf`。
+   For example, if your INF file name is `mydriver.inf`, you should run `pnputil /add-driver mydriver.inf`.
 
-4. PnPUtil将会添加驱动程序到驱动程序商店，并尝试为任何匹配的设备安装驱动程序。
+4. PnPUtil will add the driver to the driver store and attempt to install the driver for any matching devices.
 
-注意，PnPUtil需要管理员权限才能运行。
+Note that PnPUtil requires administrator privileges to run.
 
-在C#中，你可以使用System.Diagnostics.Process类来运行PnPUtil。以下是一个例子：
+In C#, you can use the System.Diagnostics.Process class to run PnPUtil. Here is an example:
 
 ```c#
 using System.Diagnostics;
@@ -51,7 +51,7 @@ public class Program
         Process process = new Process();
         process.StartInfo.FileName = "pnputil.exe";
         process.StartInfo.Arguments = "/add-driver " + infPath;
-        process.StartInfo.Verb = "runas";  // 运行为管理员
+        process.StartInfo.Verb = "runas";  // Run as administrator
         process.Start();
 
         process.WaitForExit();
@@ -59,9 +59,7 @@ public class Program
 }
 ```
 
-
-
-**setupapi.dll实现：**
+**setupapi.dll Implementation:**
 
 ```c#
 using System;
@@ -69,7 +67,7 @@ using System.Runtime.InteropServices;
 
 public class Program
 {
-    // 定义 SetupCopyOEMInf 函数的 P/Invoke 签名
+    // Define the P/Invoke signature for the SetupCopyOEMInf function
     [DllImport("setupapi.dll", EntryPoint = "SetupCopyOEMInf", SetLastError = true)]
     public static extern bool SetupCopyOEMInf(
         string SourceInfFileName,
@@ -95,28 +93,24 @@ public class Program
 }
 ```
 
+##### Driver Certificate
 
+This component uses Windows certificate management tools (CertMgr.exe) or the X509Store class in the .NET framework.
 
-##### 驱动证书
+**CertMgr.exe Implementation:**
 
-本组件内置使用Windows的证书管理工具（CertMgr.exe）或者使用.NET框架中的X509Store类来实现。
+`CertMgr.exe` is a command line tool that is part of the Microsoft .NET Framework. You can find it in the .NET Framework installation directory.
 
-**CertMgr.exe实现：**
-
-`CertMgr.exe` 是一个命令行工具，它是微软的.NET Framework的一部分。你可以在.NET Framework的安装目录中找到它。
-
-对于大多数系统，它的位置通常是在以下目录之一：
+For most systems, it is typically located in one of the following directories:
 
 - `C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Bin`
 - `C:\Program Files\Microsoft SDKs\Windows\v7.0A\Bin`
 
-如果你找不到它，你可以使用Windows的搜索功能来搜索`CertMgr.exe`。
+If you cannot find it, you can use Windows search to locate `CertMgr.exe`.
 
-注意，`CertMgr.exe`是一个命令行工具，你需要在命令提示符或PowerShell中运行它。你也可以在你的C#代码中使用`System.Diagnostics.Process.Start()`方法来调用它。
+Note that `CertMgr.exe` is a command line tool and must be run in Command Prompt or PowerShell. You can also call it in your C# code using the `System.Diagnostics.Process.Start()` method.
 
-
-
-**X509Store实现：**
+**X509Store Implementation:**
 
 ```c#
 using System;
@@ -128,19 +122,18 @@ public class Example
     {
         string CertificatePath = "Path to your certificate file";
 
-        // 创建一个新的X509证书实例
+        // Create a new X509 certificate instance
         X509Certificate2 certificate = new X509Certificate2(CertificatePath);
 
-        // 打开当前用户的个人证书存储区
+        // Open the current user's personal certificate store
         X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
 
-        // 将新证书添加到存储区
+        // Add the new certificate to the store
         store.Open(OpenFlags.ReadWrite);
         store.Add(certificate);
 
         store.Close();
     }
 }
-
 ```
 

@@ -2,35 +2,36 @@
 sidebar_position: 6
 ---
 
-### System infomation 系统信息
+### System Information
 
-#### （1）Windows平台
+#### (1) Windows Platform
 
-当更新失败时，并不清楚是因为操作系统的原因还是其他原因导致的启动失败。这个时候可以使用PsInfo导出当前操作系统的信息，供开发人员进行问题排查。*PsInfo* 是一个命令行工具，它可用于收集有关本地或远程 Windows NT/2000 系统的关键信息，包括安装类型、内核版本、已注册的组织和所有者、处理器数量及其类型、物理内存量、系统的安装日期以及到期日期（如果为试用版）。
+When an update fails, it might not be clear whether the failure is due to the operating system or other reasons. In such cases, you can use PsInfo to export information about the current operating system, which can help developers troubleshoot the issue. *PsInfo* is a command-line tool that can be used to collect critical information about local or remote Windows NT/2000 systems, including installation type, kernel version, registered organization and owner, number and type of processors, amount of physical memory, system installation date, and expiration date (if it is a trial version).
 
-#### 使用 PsInfo
+#### Using PsInfo
 
-默认情况下，*PsInfo* 会显示本地系统的信息。 指定远程计算机名称以从远程系统获取信息。 由于 *PsInfo* 依赖于远程注册表访问来获取其数据，因此远程系统必须运行远程注册表服务，并且运行 *PsInfo* 的帐户必须有权访问远程注册表的 HKLM\System 部分。
+By default, *PsInfo* displays information about the local system. Specify a remote computer name to retrieve information from a remote system. Since *PsInfo* relies on remote registry access to gather its data, the remote system must have the remote registry service running, and the account running *PsInfo* must have access to the HKLM\System section of the remote registry.
 
-为了帮助自动更新 Service Pack，*PsInfo* 会返回系统的 Service Pack 数的值（例如 0 表示无 Service Pack，1 表示 SP 1 等）。
+To assist in automating Service Pack updates, *PsInfo* returns the system's Service Pack number (e.g., 0 for no Service Pack, 1 for SP 1, etc.).
 
-**用法: psinfo [[\\computer[,computer[,..] | @file [-u user
-[-p psswd]]] [-h] [-s] [-d] [-c [-t delimiter]] [filter]**
+**Usage: psinfo [[\\computer[,computer[,..] | @file [-u user [-p psswd]]] [-h] [-s] [-d] [-c [-t delimiter]] [filter]**
 
-| 参数           | 说明                                                         |
-| :------------- | :----------------------------------------------------------- |
-| **\\computer** | 在指定的远程计算机上执行命令。 如果省略计算机名称，则命令在本地系统上运行，如果指定通配符 (\\*)，则命令将在当前域中的所有计算机上运行。 |
-| **@file**      | 在指定的文本文件中列出的每台计算机上运行命令。               |
-| **-u**         | 指定登录远程计算机的可选用户名。                             |
-| **-p**         | 指定用户名的可选密码。 如果省略此内容，系统将提示你输入隐藏密码。 |
-| **-h**         | 显示已安装的修补程序的列表。                                 |
-| **-s**         | 显示已安装的应用程序的列表。                                 |
-| **-d**         | 显示磁盘卷信息。                                             |
-| **-c**         | 以 CSV 格式打印。                                            |
-| **-t**         | -c 选项的默认分隔符为逗号，但可以使用指定的字符替代。        |
-| **filter**     | Psinfo 将仅显示与筛选器匹配的字段的数据。 例如，“psinfo service”仅列出 service pack 字段。 |
+| Parameter      | Description                                                  |
+| -------------- | ------------------------------------------------------------ |
+| **\\computer** | Execute the command on the specified remote computer(s). If the computer name is omitted, the command runs on the local system. If a wildcard (\\*) is specified, the command runs on all computers in the current domain. |
+| **@file**      | Run the command on each computer listed in the specified text file. |
+| **-u**         | Specify an optional username for logging onto the remote computer. |
+| **-p**         | Specify an optional password for the username. If omitted, you will be prompted to enter a hidden password. |
+| **-h**         | Show a list of installed hotfixes.                           |
+| **-s**         | Show a list of installed applications.                       |
+| **-d**         | Show disk volume information.                                |
+| **-c**         | Print in CSV format.                                         |
+| **-t**         | The default delimiter for the -c option is a comma, but you can specify a different character. |
+| **filter**     | PsInfo will only display data for fields that match the filter. For example, "psinfo service" will only list the service pack field. |
 
-#### 示例输出
+#### Example Output
+
+When you run PsInfo, it will output information about the system in a structured format. This information can be used to diagnose and address any issues that may arise during the update process.
 
 ```c#
 C:\> psinfo \\development -h -d
@@ -81,4 +82,4 @@ Sysinternals - www.sysinternals.com
 
 
 
-官方文档：https://learn.microsoft.com/zh-cn/sysinternals/downloads/psinfo
+References：https://learn.microsoft.com/zh-cn/sysinternals/downloads/psinfo
