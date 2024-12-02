@@ -9,29 +9,27 @@ tags: [quikstart]
 
 ## Step1
 
-在Github上下载Sample仓库，使用示例前请确保本地安装了.NET 8的运行环境。
+Download the Sample repository from GitHub. Before using the sample, make sure you have .NET 8 runtime environment installed locally.
 
 - https://github.com/GeneralLibrary/GeneralUpdate-Samples
 
-仓库目录内容如下：
+The repository directory contents are as follows:
 
 ![](imgs\content.png)
 
-| 名称         | 说明                             |
-| ------------ | -------------------------------- |
-| Client       | 主客户端示例程序                 |
-| Server       | 服务端示例程序                   |
-| StartManager | 更新流程控制台                   |
-| Upgrade      | 升级端示例程序                   |
-| process.bat  | 无需关注                         |
-| resource.bat | 无需关注                         |
-| start.cmd    | 启动更新示例的脚本，一切从它开始 |
-
-
+| Name         | Description                                                  |
+| ------------ | ------------------------------------------------------------ |
+| Client       | Main client sample program                                   |
+| Server       | Server sample program                                        |
+| StartManager | Update process console                                       |
+| Upgrade      | Upgrade client sample program                                |
+| process.bat  | Not required for attention                                   |
+| resource.bat | Not required for attention                                   |
+| start.cmd    | Script to start the update sample, everything begins with this |
 
 ## Step2
 
-找到文件目录，并双击（每次启动start.cmd脚本都会重置本地目录所以无需手动管理文件目录）：
+Locate the file directory and double-click (the start.cmd script resets the local directory each time it is launched, so manual directory management is unnecessary):
 
 ```shell
 ...\GeneralUpdate-Samples\src\start.cmd
@@ -41,7 +39,7 @@ tags: [quikstart]
 
 
 
-如下图所示，自动开始编译并拷贝所有相关项目的bin目录到app目录下：
+The automatic process will begin compiling and copying all related project bin directories to the app directory:
 
 ```
 ...\GeneralUpdate-Samples\src\run\app
@@ -51,13 +49,13 @@ tags: [quikstart]
 
 
 
-这时候就会出现StartManager.exe的界面，所有的选项均为字面意思，我们先别着急输入1这时候先看看app目录更新之前的装备后续方便我们验证更新结果。
+At this point, the StartManager.exe interface will appear. All options are self-explanatory. Before entering option 1, let's first examine the app directory to verify the pre-update setup, which will help us confirm the update results later.
 
 ![](imgs\manager.png)
 
 
 
-我们进入到app目录之后，可以看到这是没有升级之前的目录。
+Upon entering the app directory, you will see the setup prior to the upgrade.
 
 ![](imgs\rundir.png)
 
@@ -65,20 +63,20 @@ tags: [quikstart]
 
 ## Step3
 
-检查完app目录之后：
+After checking the app directory:
 
-- 输入选项1然后回车
-- 服务端示例程序启动
-- 主客户端示例程序启动，开始请求更新（主客户端程序更新完成之后会自动关闭）。
+- Enter option 1 and press Enter
+- The server sample program will start
+- The main client sample program will start, initiating the update request (once the main client program update is complete, it will close automatically).
 
 ![](imgs\upgrade.png)
 
 
 
-看到主客户端程序自动关闭，我们再去检查一下run\app目录。会发现多了一个备份目录“app-1.0.0.0”和一个“Congratulations on the update.txt”。
+Once the main client program closes automatically, check the run\app directory again. You will notice a new backup directory named "app-1.0.0.0" and a file named "Congratulations on the update.txt".
 
 ![](imgs\rundir2.png)
 
-看到这里代表您已经成功的完成了一次升级，Congratulations！
+Seeing this indicates that you have successfully completed an upgrade. Congratulations!
 
 ![](imgs\result.png)

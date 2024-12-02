@@ -2,41 +2,39 @@
 sidebar_position: 5
 ---
 
-### System log 系统日志
+### System Log
 
-升级失败时可能会出现运行启动失败、驱动安装失败等问题。那么可以使用Sysmon工具导出系统事件日志。*系统监视器* (*Sysmon*) 是一项 Windows 系统服务，也是一个设备驱动程序，一旦安装在系统上，就会在系统重新启动后一直驻留，以监视系统活动并将其记录到 Windows 事件日志中。 它提供有关进程创建、网络连接和文件创建时间更改的详细信息。 通过使用 [Windows 事件收集](https://msdn.microsoft.com/library/windows/desktop/bb427443(v=vs.85).aspx)或 [SIEM](https://en.wikipedia.org/wiki/security_information_and_event_management) 代理收集生成的事件，然后对事件进行分析，你可识别恶意或异常活动，并了解入侵者和恶意软件如何在网络上运行。 该服务作为[受保护的进程](https://learn.microsoft.com/windows/win32/services/protecting-anti-malware-services-#system-protected-process)运行，从而禁止广泛的用户模式交互。
+When an upgrade fails, issues such as startup failures or driver installation failures may occur. The Sysmon tool can be used to export system event logs. *System Monitor* (*Sysmon*) is a Windows system service and device driver that, once installed on a system, remains resident across system reboots to monitor and log system activity to the Windows event log. It provides detailed information about process creations, network connections, and file creation time changes. By using [Windows Event Collection](https://msdn.microsoft.com/library/windows/desktop/bb427443(v=vs.85).aspx) or [SIEM](https://en.wikipedia.org/wiki/security_information_and_event_management) agents to collect the generated events, and then analyzing these events, you can identify malicious or anomalous activity and understand how intruders and malware operate on your network. The service runs as a [protected process](https://learn.microsoft.com/windows/win32/services/protecting-anti-malware-services-#system-protected-process), preventing broad user-mode interaction.
 
+### Sysmon Features Overview
 
+*Sysmon* includes the following features:
 
-### Sysmon 功能概述
+- Logs processes created with their full command line, along with their parent process.
+- Logs hashes of process image files using SHA1 (default), MD5, SHA256, or IMPHASH.
+- Supports multiple hashes used simultaneously.
+- Includes a process GUID in process creation events to allow correlation of events even when Windows reuses process IDs.
+- Includes a session GUID in each event to allow correlation of events on the same logon session.
+- Logs the loading of drivers or DLLs with their signatures and hashes.
+- Logs raw read access attempts to disks and volumes.
+- (Optional) Logs network connections, including source process, IP addresses, port numbers, hostnames, and port names for each connection.
+- Detects file creation time changes to determine the true creation time of a file. Modifying file creation timestamps is a common malware tactic to hide its tracks.
+- Automatically reloads configuration if changes are made to the registry.
+- Performs rule filtering to dynamically include or exclude certain events.
+- Generates events at the start of the process to capture activities performed by sophisticated kernel-mode malware. 
 
-*Sysmon* 包括以下功能：
-
-- 记录当前进程和父进程中使用完整命令行创建的进程。
-- 记录使用 SHA1（默认）、MD5、SHA256 或 IMPHASH 的进程映像文件的哈希。
-- 可以同时使用多个哈希。
-- 在进程内创建事件之中包含一个进程 GUID，当 Windows 重新使用进程 ID 时，允许事件的相关性。
-- 在每个事件中包含会话 GUID，允许同一登录会话上事件的相关性。
-- 记录驱动程序或 DLL 的加载及其签名与哈希。
-- 记录磁盘和卷的原始读取访问打开次数。
-- （可选）记录网络连接，包括每个连接的源进程、IP 地址、端口数量、主机名和端口名称。
-- 检测文件创建时间的更改，以了解文件真正创建的时间。 修改文件创建时间戳是恶意软件惯用的伎俩来掩盖其轨道。
-- 如果注册表中发生更改，则自动化重新加载配置。
-- 进行规则筛选以动态包含或不包含某些事件。
-- 在启动进程之初生成事件，以捕获相当复杂的内核模式恶意软件进行的活动。
-
-
-
-#### （1）Windows平台
-
-下载地址： https://download.sysinternals.com/files/Sysmon.zip
+Sysmon can be a valuable tool for monitoring system activities and diagnosing issues that arise during system updates or when troubleshooting security incidents.
 
 
 
-#### （2）Linux平台
+#### （1）Windows
 
-下载地址：https://github.com/Sysinternals/SysmonForLinux
+address： https://download.sysinternals.com/files/Sysmon.zip
 
 
 
-官方文档：https://learn.microsoft.com/zh-cn/sysinternals/downloads/sysmon
+#### （2）Linux
+
+address：https://github.com/Sysinternals/SysmonForLinux
+
+doc：https://learn.microsoft.com/zh-cn/sysinternals/downloads/sysmon

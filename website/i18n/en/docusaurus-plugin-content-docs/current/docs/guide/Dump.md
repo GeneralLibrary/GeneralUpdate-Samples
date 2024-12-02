@@ -2,13 +2,13 @@
 sidebar_position: 4
 ---
 
-### Dump 转储文件
+### Dump Files
 
-在自动升级的过程中如果更新失败，或程序更新完成之后运行崩溃都可以使用ProcDump工具辅助导出dump文件。ProcDump 是一个命令行实用工具，其主要用途是监视应用程序的 CPU 峰值，并在出现峰值期间生成故障转储，管理员或开发人员可以使用这些转储来确定出现峰值的原因。 ProcDump 还支持挂起窗口监视（使用与 Windows 和任务管理器使用的窗口挂起相同的定义）、未处理的异常监视，并且可以根据系统性能计数器的值生成转储。 它还可用作可嵌入到其他脚本中的常规进程转储实用工具。
+During the process of automatic updates, if an update fails or if the program crashes after the update, you can use the ProcDump tool to help export dump files. ProcDump is a command-line utility primarily used to monitor an application's CPU spikes and generate crash dumps during these spikes. Administrators or developers can use these dumps to determine the cause of the spikes. ProcDump also supports hung window monitoring (using the same definition as Windows and Task Manager), unhandled exception monitoring, and can generate dumps based on system performance counter values. It can also be used as a general-purpose process dump utility that can be embedded into other scripts.
 
-##### （1）Windows平台
+##### (1) Windows Platform
 
-C#实现调用：
+C# Implementation for Calling ProcDump:
 
 ```c#
 using System;
@@ -19,7 +19,7 @@ public class Program
     public static void Main()
     {
         var procDumpPath = @"C:\Path\To\procdump.exe";
-        var processId = 1234; // 您要转储的进程的ID
+        var processId = 1234; // The ID of the process you want to dump
         var dumpFilePath = @"C:\Path\To\dumpfile.dmp";
 
         var startInfo = new ProcessStartInfo
@@ -45,8 +45,6 @@ public class Program
 }
 ```
 
-
-
-参考资料：
+References：
 
 - https://learn.microsoft.com/zh-cn/sysinternals/downloads/procdump
