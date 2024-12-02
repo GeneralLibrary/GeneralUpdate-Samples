@@ -5,7 +5,7 @@ authors: juster
 tags: [log]
 ---
 
-# 📒更新日志
+# 📒Release log
 
 
 

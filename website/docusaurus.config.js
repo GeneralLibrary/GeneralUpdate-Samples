@@ -78,20 +78,20 @@ const config = {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',
             position: 'left',
-            label: '文档',
+            label: 'Doc',
           },
           {
-            label:'生态伙伴',
+            label:'Ecological partners',
             href:'/EcologicalPartners',
             position: 'left'
           },
           {
-            label:'企业合作',
+            label:'Cooperative enterprises',
             href:'/CooperativeEnterprises',
             position: 'left'
           },
           {
-            label:'关于',
+            label:'About',
             href:'/About',
             position: 'left'
           },
