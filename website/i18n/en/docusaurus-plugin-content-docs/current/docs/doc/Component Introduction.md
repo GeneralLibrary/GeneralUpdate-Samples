@@ -8,7 +8,7 @@ sidebar_position: 2
 
 ### 1. What is GeneralUpdate?
 
-GeneralUpdate is an open-source, cross-platform automatic update component based on .NET Standard 2.0. A small star is your greatest support, motivating us to keep updating and maintaining. ENENENENENENEN
+GeneralUpdate is an open-source, cross-platform automatic update component based on .NET Standard 2.0. A small star is your greatest support, motivating us to keep updating and maintaining.
 
 ##### Project Open Source Repository Address
 
@@ -69,7 +69,7 @@ Customized secondary development, technical consultation, open-source project re
 
 Before using GeneralUpdate, we need to understand some basic concepts in the system.
 
- ![](imgs/client_server_upgrade.jpg)
+![](imgs/client_server_upgrade.jpg)
 
 - Client: Refers to your main application, which is the client to be updated. It can also be understood as the company's product.
 - Upgrade: Refers to the upgrade program, which will be an independent process. It needs to be placed in the same directory as the Client and should not be associated with any business or design during use (or coding), maintaining independent reference.
@@ -175,4 +175,4 @@ The size of the project has exceeded the scope of individual maintenance, and de
 
 Thank you!
 
-​                                                                                                                                       Author: Juster     
+​                                                                                                                               Author: Juster

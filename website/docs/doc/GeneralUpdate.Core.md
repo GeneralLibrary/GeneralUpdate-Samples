@@ -1,58 +1,52 @@
----
-sidebar_position: 5
----
+### Definition
 
-### 定义
+Namespace: GeneralUpdate.Core
 
-命名空间：GeneralUpdate.Core
-
-程序集：GeneralUpdate.Core.dll
+Assembly: GeneralUpdate.Core.dll
 
 
 
-GeneralUpdate.Core是最核心的组件之一，提供了大量主要功能。当主程序升级操作完成之后会通过进程 启动并传参的方式调用本组件来完成主程序升级操作。（主要职责更新主程序）
+GeneralUpdate.Core is one of the most essential components, providing a wide range of primary functionalities. Once the main program upgrade operation is completed, this component is invoked through process startup and parameter passing to complete the main program upgrade operation. (Main responsibility is updating the main program)
 
 ```c#
 public class GeneralUpdateBootstrap : AbstractBootstrap<GeneralUpdateBootstrap, IStrategy>
 ```
 
-nuget安装
+NuGet Installation
 
 ```shell
 NuGet\Install-Package GeneralUpdate.Core -Version 3.0.0
 ```
 
-
-
-### 示例
+### Example
 
 ![](imgs/muti_donwload.png)
 
-以下示例定义方法，包含GeneralUpdateBootstrap使用方法。
+The following example defines methods, including the usage of GeneralUpdateBootstrap.
 
 ```c#
 try
 {
-     Console.WriteLine($"升级程序初始化，{DateTime.Now}！");
-     Console.WriteLine("当前运行目录：" + Thread.GetDomain().BaseDirectory);
+     Console.WriteLine($"Upgrade program initialization, {DateTime.Now}!");
+     Console.WriteLine("Current running directory: " + Thread.GetDomain().BaseDirectory);
      await Task.Delay(2000);
      await new GeneralUpdateBootstrap()
-     //单个或多个更新包下载速度、剩余下载事件、当前下载版本信息通知事件
+     // Notification event for download speed, remaining download time, and current version information of single or multiple update packages
      .AddListenerMultiDownloadStatistics(OnMultiDownloadStatistics)
-     //单个或多个更新包下载完成
+     // Completion of download for single or multiple update packages
      .AddListenerMultiDownloadCompleted(OnMultiDownloadCompleted)
-     //完成所有的下载任务通知
+     // Notification for completion of all download tasks
      .AddListenerMultiAllDownloadCompleted(OnMultiAllDownloadCompleted)
-     //下载过程出现的异常通知
+     // Notification for exceptions during the download process
      .AddListenerMultiDownloadError(OnMultiDownloadError)
-     //整个更新过程出现的任何问题都会通过这个事件通知
+     // Any issues during the entire update process will be notified through this event
      .AddListenerException(OnException)
-     //设置字段映射表，用于解析所有驱动包的信息的字符串
+     // Set field mappings for parsing information strings of all driver packages
      //.SetFieldMappings(fieldMappingsCN)
-     //是否开启驱动更新
+     // Enable driver updates
      //.Option(UpdateOption.Drive, true)
      .LaunchAsync();
-     Console.WriteLine($"升级程序已启动，{DateTime.Now}！");
+     Console.WriteLine($"Upgrade program has started, {DateTime.Now}!");
 }
 catch (Exception e)
 {
@@ -88,319 +82,263 @@ private static void OnException(object sender, ExceptionEventArgs e)
 }
 ```
 
+### Annotations
 
+GeneralUpdateBootstrap provides the following capabilities.
 
-### 注解
+#### Constructors
 
-GeneralUpdateBootstrap提供以下能力。
+| Constructors             | Description                                |
+| ------------------------ | ------------------------------------------ |
+| GeneralUpdateBootstrap() | Current GeneralUpdateBootstrap constructor |
+| base:AbstractBootstrap() | Parent class AbstractBootstrap constructor |
 
-#### 构造函数
+#### Properties
 
-| Constructors             |                                    |
-| ------------------------ | ---------------------------------- |
-| GeneralUpdateBootstrap() | 当前GeneralUpdateBootstrap构造函数 |
-| base:AbstractBootstrap() | 父类AbstractBootstrap构造函数      |
+| Properties   | Description                                |
+| ------------ | ------------------------------------------ |
+| Packet       | Update package information                 |
+| UpdateOption | Update operation configuration enumeration |
 
-#### 属性
+#### Methods
 
-| Properties   |                      |
-| ------------ | -------------------- |
-| Packet       | 更新包信息           |
-| UpdateOption | 更新操作配置设置枚举 |
-
-#### 方法
-
-| Method                                 |                                       |
-| -------------------------------------- | ------------------------------------- |
-| LaunchTaskAsync()                      | Task异步启动更新                      |
-| LaunchAsync()                          | 启动更新                              |
-| Option()                               | 设置更新配置。                        |
-| GetOption()                            | 获取更新配置。                        |
-| AddListenerMultiAllDownloadCompleted() | 监听所有更新版本下载完成事件          |
-| AddListenerMultiDownloadCompleted()    | 监听每个版本下载完成事件              |
-| AddListenerMultiDownloadError()        | 监听每个版本下载异常的事件            |
-| AddListenerMultiDownloadStatistics()   | 监听每个版本下载统计信息\下载进度事件 |
-| AddListenerException()                 | 监听更新组件内部的所有异常            |
-
-
+| Method                                 | Description                                                |
+| -------------------------------------- | ---------------------------------------------------------- |
+| LaunchTaskAsync()                      | Asynchronously launch update with Task                     |
+| LaunchAsync()                          | Launch update                                              |
+| Option()                               | Set update configuration                                   |
+| GetOption()                            | Get update configuration                                   |
+| AddListenerMultiAllDownloadCompleted() | Listen for completion of all version downloads             |
+| AddListenerMultiDownloadCompleted()    | Listen for completion of each version download             |
+| AddListenerMultiDownloadError()        | Listen for download errors for each version                |
+| AddListenerMultiDownloadStatistics()   | Listen for download statistics/progress for each version   |
+| AddListenerException()                 | Listen for all internal exceptions in the update component |
 
 ### 🍵UpdateOption
 
-**枚举**
+**Enumeration**
 
-**Drive** 是否启用驱动升级功能。
-
-
+**Drive** Whether to enable driver upgrade functionality.
 
 ### 🌼LaunchTaskAsync()
 
-**方法**
+**Method**
 
-Task异步启动更新。
+Asynchronously launch update with Task.
 
 ```c#
 public Task<GeneralUpdateBootstrap> LaunchTaskAsync();
 ```
 
-
-
 ### 🌼LaunchAsync()
 
-**方法**
+**Method**
 
-启动更新。
+Launch update.
 
 ```c#
 public virtual TBootstrap LaunchAsync();
 ```
 
-
-
 ### 🌼SetBlacklist()
 
-**方法**
+**Method**
 
-设置更新时会忽略的黑名单信息，避免特殊文件二进制差分更新时无法使用导致更新失败。
+Set information for blacklisted items to be ignored during updates to avoid failures due to special files not being usable in binary differential updates.
 
 ```c#
 public virtual TBootstrap SetBlacklist(List<string> files = null, List<string> fileFormats = null);
 ```
 
-
-
-**参数类型**
+**Parameter Types**
 
 ```c#
-List<string> 黑名单信息集合。
+List<string> Collection of blacklist information.
 ```
 
-
-
-**参数**
+**Parameters**
 
 ```c#
-files List<string> 黑名单文件名称集合。
+files List<string> Collection of blacklisted file names.
 
-fileFormats List<string> 黑名单文件后缀集合。
+fileFormats List<string> Collection of blacklisted file extensions.
 ```
-
-
 
 ### 🌼Option()
 
-**方法**
+**Method**
 
-设置更新配置。
+Set update configuration.
 
 ```c#
 public virtual TBootstrap Option<T>(UpdateOption<T> option, T value);
 ```
 
+**Parameter Types**
 
+T The type for setting update operations in UpdateOption.
 
-**参数类型**
-
-T 要设置更新操作UpdateOption。
-
-
-
-**参数**
+**Parameters**
 
 ```c#
-option UpdateOption<T> 配置动作枚举。
+option UpdateOption<T> Configuration action enumeration.
 
-value T 需要设置的值，值类型根据UpdateOption枚举来。
+value T The value to be set, with the type determined by the UpdateOption enumeration.
 ```
-
-
 
 ### 🌼GetOption()
 
-**方法**
+**Method**
 
 ```c#
 public virtual T GetOption<T>(UpdateOption<T> option);
 ```
 
-**参数类型**
+**Parameter Types**
 
-T 根据UpdateOption枚举获取结果。
+T Result obtained based on UpdateOption enumeration.
 
-
-
-**参数**
+**Parameters**
 
 ```c#
-option  UpdateOption<T> 具体枚举内容参考本文档中的 🍵UpdateOption。
+option  UpdateOption<T> Refer to 🍵UpdateOption in this document for specific enumeration content.
 ```
-
-
 
 ### 🌼AddListenerMultiAllDownloadCompleted()
 
-**方法**
+**Method**
 
 ```c#
 public TBootstrap AddListenerMultiAllDownloadCompleted(Action<object, MultiAllDownloadCompletedEventArgs> callbackAction);
 ```
 
-
-
-**参数类型**
+**Parameter Types**
 
 **sender** object
 
-操作句柄。
+Operation handle.
 
 **args** MultiAllDownloadCompletedEventArgs 
 
-所有版本下载完成通知参数。
+Parameters for notification of completion of all version downloads.
 
-
-
-**参数**
+**Parameters**
 
 ```c#
 callbackAction Action<object, MultiAllDownloadCompletedEventArgs> 
 ```
 
-监听所有更新版本下载完成的事件回传参数。
-
-
+Parameters for the event callback when all update versions have been downloaded.
 
 ### 🌼AddListenerMultiDownloadCompleted()
 
-**方法**
+**Method**
 
 ```c#
 public TBootstrap AddListenerMultiDownloadCompleted(Action<object, MultiDownloadCompletedEventArgs> callbackAction);
 ```
 
-
-
-**参数类型**
+**Parameter Types**
 
 sender object 
 
-操作句柄。
+Operation handle.
 
 MultiDownloadCompletedEventArgs
 
-监听每个版本更新包下载完成回传参数。
+Parameters for the callback when each version update package download is completed.
 
-
-
-**参数**
+**Parameters**
 
 ```c#
 callbackAction Action<object, MultiDownloadCompletedEventArgs>
 ```
 
-监听每个版本下载异常回传参数。
-
-
+Parameters for the callback when each version download encounters an error.
 
 ### 🌼AddListenerMultiDownloadError()
 
-**方法**
+**Method**
 
 ```c#
 public TBootstrap AddListenerMultiDownloadError(Action<object, MultiDownloadErrorEventArgs> callbackAction);
 ```
 
-
-
-**参数类型**
+**Parameter Types**
 
 **sender** object 
 
-操作句柄。
+Operation handle.
 
 **args** MultiDownloadErrorEventArgs
 
-下载异常通知参数。
+Parameters for download error notifications.
 
-
-
-**参数**
+**Parameters**
 
 ```c#
 callbackAction Action<object, MultiDownloadErrorEventArgs>
 ```
 
-监听每个版本下载异常回传参数。
-
-
+Parameters for the callback when each version download encounters an error.
 
 ### 🌼AddListenerMultiDownloadStatistics()
 
-**方法**
+**Method**
 
 ```c#
 public TBootstrap AddListenerMultiDownloadStatistics(Action<object, MultiDownloadStatisticsEventArgs> callbackAction);
 ```
 
-
-
-**参数类型**
+**Parameter Types**
 
 **sender** object 
 
-操作句柄。
+Operation handle.
 
 **args** MultiDownloadStatisticsEventArgs
 
-下载信息统计（下载速度、下载大小等）参数。
+Parameters for download statistics (download speed, download size, etc.).
 
-
-
-**参数**
+**Parameters**
 
 ```c#
 callbackAction Action<object, MultiDownloadStatisticsEventArgs>
 ```
 
-监听每个版本下载统计信息事件。
-
-
+Parameters for the event callback for download statistics for each version.
 
 ### 🌼AddListenerException()
 
-**方法**
+**Method**
 
 ```c#
 public TBootstrap AddListenerException(Action<object, ExceptionEventArgs> callbackAction);
 ```
 
-
-
-**参数类型**
+**Parameter Types**
 
 **sender** object 
 
-操作句柄。
+Operation handle.
 
 **args** ExceptionEventArgs
 
-异常参数。
+Exception parameters.
 
-
-
-**参数**
+**Parameters**
 
 ```c#
 callbackAction Action<object, ExceptionEventArgs>
 ```
 
-监听更新组件内部的所有异常。
+Parameters for the callback for all internal exceptions in the update component.
 
+### Applicable to
 
-
-### 适用于
-
-| 产品           | 版本          |
+| Product        | Versions      |
 | -------------- | ------------- |
-| .NET           | 5、6、7、8、9 |
+| .NET           | 5, 6, 7, 8, 9 |
 | .NET Framework | 4.6.1         |
 | .NET Standard  | 2.0           |
 | .NET Core      | 2.0           |

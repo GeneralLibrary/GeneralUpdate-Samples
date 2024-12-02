@@ -1,42 +1,38 @@
 ---
+
 sidebar_position: 3
+
 ---
 
-#### 背景故事
+#### Background Story
 
 ![](imgs\bowl.jpg)
 
-Bowl是作者Juster养的一只橘猫，为什么给橘猫或组件起名成”碗“。因为橘猫容易胖，Juster希望它一次只吃一小碗就取名叫小碗。在GeneralUpdate的体系如果在升级过程中遭遇了重创，Bowl这时会挺身而出将残局恢复如初并分析失败原因。
+Bowl is an orange cat owned by the author Juster. The reason for naming an orange cat or component "Bowl" is because orange cats tend to get fat easily. Juster hopes it will eat only a small bowl at a time, hence the name "Little Bowl." In the GeneralUpdate system, if the upgrade process encounters significant issues, Bowl will step in to restore the situation and analyze the reasons for failure.
 
 ![](imgs\mybowl.jpg)
 
+### Definition
 
+Namespace: GeneralUpdate.Bowl
 
-### 定义
+Assembly: GeneralUpdate.Bowl.dll
 
-命名空间：GeneralUpdate.Bowl
-
-程序集：GeneralUpdate.Bowl.dll
-
-
-
-该组件在升级流程结束之前启动的一个独立进程，它在流程结束之前去启动主客户端应用程序并监控是否正常运行。
+This component is an independent process launched before the end of the upgrade process. It starts the main client application and monitors its normal operation before the process ends.
 
 ```c#
 public sealed class Bowl
 ```
 
-nuget安装
+NuGet Installation
 
 ```shell
 NuGet\Install-Package GeneralUpdate.Bowl -Version 3.0.0
 ```
 
+### Example
 
-
-### 示例
-
-以下示例定义方法，包含Bowl使用。
+The following example defines a method that includes the use of Bowl.
 
 ```c#
 var installPath = AppDomain.CurrentDomain.BaseDirectory;
@@ -54,31 +50,25 @@ var processInfo = new MonitorParameter
 Bowl.Launch(processInfo);
 ```
 
+### Capture
 
+If a crash is detected, the following files will be generated in the running directory:
 
-### 捕获
+- 📒 Dump file (1.0.0.*_fail.dmp)
+- 📒 Upgrade package version information (1.0.0.*_fail.json)
+- 📒 Driver information (driverInfo.txt)
+- 📒 Operating system/hardware information (systeminfo.txt)
+- 📒 System event log (systemlog.evtx)
 
-如果监控到崩溃闪退将会在运行目录下生成：
-
-- 📒Dump文件（1.0.0.*_fail.dmp）
-- 📒升级包版本信息（1.0.0.*_fail.json）
-- 📒驱动信息（driverInfo.txt）
-- 📒操作系统信息/硬件信息（systeminfo.txt）
-- 📒系统事件日志（systemlog.evtx）
-
-导出到“fail”目录下并根据版本号区分文件夹。
+These will be exported to the "fail" directory, categorized by version number.
 
 ![](imgs\crash.jpg)
 
-
-
-#### (1)x.0.0.*_fail.dmp
+#### (1) x.0.0.*_fail.dmp
 
 ![](imgs\dump.png)
 
-
-
-#### (2)x.0.0.*_fail.json
+#### (2) x.0.0.*_fail.json
 
 ```json
 {
@@ -120,13 +110,10 @@ Bowl.Launch(processInfo);
 }
 ```
 
-
-
-#### (3)driverInfo.txt
+#### (3) driverInfo.txt
 
 ```json
-
-模块名       显示名称               描述                   驱动程序类型  启动模式   状态       状态       接受停止    接受暂停     分页缓冲池 代码(字节) BSS(字  链接日期               路径                                             Init(字节)
+Module Name   Display Name            Description               Driver Type  Start Mode   State       Status       Accept Stop    Accept Pause     Paged Pool Code(Bytes) BSS(Bytes) Link Date               Path                                             Init(Bytes)
 ============ ====================== ====================== ============= ========== ========== ========== =========== ============ ========== ========== ======= ====================== ================================================ ==========   
 360AntiAttac 360Safe Anti Attack Se 360Safe Anti Attack Se Kernel        System     Running    OK         TRUE        FALSE        4,096      36,864     0       9/29/2022 3:45:03 PM   C:\Windows\system32\Drivers\360AntiAttack64.sys  4,096     
 360AntiHacke 360Safe Anti Hacker Se 360Safe Anti Hacker Se Kernel        System     Running    OK         TRUE        FALSE        4,096      139,264    0       11/27/2023 3:43:37 PM  C:\Windows\system32\Drivers\360AntiHacker64.sys  8,192     
@@ -137,145 +124,132 @@ Bowl.Launch(processInfo);
 //...
 ```
 
-
-
-#### (4)systeminfo.txt
+#### (4) systeminfo.txt
 
 ```json
-
-主机名:           ****
-OS 名称:          Microsoft Windows 11 专业版
-OS 版本:          10.0.2*** Build 22***
-OS 制造商:        Microsoft Corporation
-OS 配置:          独立工作站
-OS 构建类型:      Multiprocessor Free
-注册的所有人:      ****@outlook.com
-注册的组织:       
-产品 ID:          ****-80000-***00-A****
-初始安装日期:     11/16/2023, 9:56:28 PM
-系统启动时间:     11/26/2024, 9:37:51 PM
-系统制造商:       ASUS
-系统型号:         System Product Name
-系统类型:         x64-based PC
-处理器:           安装了 1 个处理器。
+Host Name:           ****
+OS Name:          Microsoft Windows 11 Pro
+OS Version:          10.0.2*** Build 22***
+OS Manufacturer:        Microsoft Corporation
+OS Configuration:          Standalone Workstation
+OS Build Type:      Multiprocessor Free
+Registered Owner:      ****@outlook.com
+Registered Organization:       
+Product ID:          ****-80000-***00-A****
+Original Install Date:     11/16/2023, 9:56:28 PM
+System Boot Time:     11/26/2024, 9:37:51 PM
+System Manufacturer:       ASUS
+System Model:         System Product Name
+System Type:         x64-based PC
+Processor(s):           Installed 1 Processor(s).
                   [01]: Intel** Family * Model *** Stepping * GenuineIntel ~**** Mhz
-BIOS 版本:        American Megatrends Inc. 1402, 4/1/2022
-Windows 目录:     C:\Windows
-系统目录:         C:\Windows\system32
-启动设备:         \Device\Ha*****olume1
-系统区域设置:     zh-cn;中文(中国)
-输入法区域设置:   zh-cn;中文(中国)
-时区:             (UTC+08:00) **，**，*******，****
-物理内存总量:     16,194 MB
-可用的物理内存:   1,795 MB
-虚拟内存: 最大值: 25,410 MB
-虚拟内存: 可用:   9,438 MB
-虚拟内存: 使用中: 15,972 MB
-页面文件位置:     D:\****file.sys
-域:               WORKGROUP
-登录服务器:       \\****
-修补程序:         安装了 6 个修补程序。
+BIOS Version:        American Megatrends Inc. 1402, 4/1/2022
+Windows Directory:     C:\Windows
+System Directory:         C:\Windows\system32
+Boot Device:         \Device\Ha*****olume1
+System Locale:     zh-cn;Chinese (China)
+Input Locale:   zh-cn;Chinese (China)
+Time Zone:             (UTC+08:00) **，**，*******，****
+Total Physical Memory:     16,194 MB
+Available Physical Memory:   1,795 MB
+Virtual Memory: Max Size: 25,410 MB
+Virtual Memory: Available:   9,438 MB
+Virtual Memory: In Use: 15,972 MB
+Page File Location(s):     D:\****file.sys
+Domain:               WORKGROUP
+Logon Server:       \\****
+Hotfix(s)::       6 Hotfix(s) Installed.
                   [01]: KB504****
                   [02]: KB502****
                   [03]: KB503****
                   [04]: KB503****
                   [05]: KB504****
                   [06]: KB504****
-网卡:             安装了 3 个 NIC。
+Network Card(s):             3 NIC(s) Installed.
                   [01]: Intel(R) Ethernet Connection (**) I***-V
-                      连接名:      以太网
-                      启用 DHCP:   是
-                      DHCP 服务器: 192.168.**.**
-                      IP 地址
+                      Connection Name:      Ethernet
+                      DHCP Enabled:   Yes
+                      DHCP Server: 192.168.**.**
+                      IP Address
                         [01]: 192.168.**.**
                         [02]: ***::2640:***:****:****
                   [02]: VMware Virtual Ethernet Adapter for VMnet1
-                      连接名:      VMware Network Adapter VMnet1
-                      启用 DHCP:   是
-                      DHCP 服务器: 192.168.**.**
-                      IP 地址
+                      Connection Name:      VMware Network Adapter VMnet1
+                      DHCP Enabled:   Yes
+                      DHCP Server: 192.168.**.**
+                      IP Address
                         [01]: 192.168.**.**
                         [02]: ***::9b3:***,***:****
                   [03]: VMware Virtual Ethernet Adapter for VMnet8
-                      连接名:      VMware Network Adapter VMnet8
-                      启用 DHCP:   是
-                      DHCP 服务器: 192.168.**.**
-                      IP 地址
+                      Connection Name:      VMware Network Adapter VMnet8
+                      DHCP Enabled:   Yes
+                      DHCP Server: 192.168.**.**
+                      IP Address
                         [01]: 192.***,***:****
                         [02]: fe80::***:***:***:****
-Hyper-V 要求:     已检测到虚拟机监控程序。将不显示 Hyper-V 所需的功能。
+Hyper-V Requirements:     A hypervisor has been detected. Features required for Hyper-V will not be displayed.
 
 //...
 ```
 
-
-
-#### (5)systemlog.evtx
+#### (5) systemlog.evtx
 
 ![](imgs\evtx.png)
 
+### Notes
 
+Bowl provides runtime monitoring capabilities and exports relevant error information.
 
-### 注解
+#### Methods
 
-Bowl提供运行监控功能，并导出相关错误信息 。
-
-
-
-#### 方法
-
-| Method   |          |
-| -------- | -------- |
-| Launch() | 启动监控 |
-
-
+| Method   | Description      |
+| -------- | ---------------- |
+| Launch() | Start monitoring |
 
 ### 🌼Launch()
 
-**启动函数**
+**Launch Function**
 
 ```c#
 Launch(MonitorParameter? monitorParameter = null);
 ```
 
-**参数**
+**Parameters**
 
 ```c#
 public class MonitorParameter
 {   
-    //被监控的目录
+    // Directory being monitored
     public string TargetPath { get; set; }
     
-    //捕获的异常信息导出到的目录
+    // Directory where captured exception information is exported
     public string FailDirectory { get; set; }
     
-    //备份目录
+    // Backup directory
     public string BackupDirectory { get; set; }
     
-    //监控进程名称或者进程id
+    // Name or ID of the process being monitored
     public string ProcessNameOrId { get; set; }
  
-    //dump文件名
+    // Dump file name
     public string DumpFileName { get; set; }
     
-    //升级包版本信息（.json）文件名
+    // Upgrade package version information (.json) file name
     public string FailFileName { get; set; }
 
     /// <summary>
     /// Upgrade: upgrade mode. This mode is primarily used in conjunction with GeneralUpdate for internal use. Please do not modify it arbitrarily when the default mode is activated.
-    /// Normal: Normal mode,This mode can be used independently to monitor a single program. If the program crashes, it will export the crash information.
+    /// Normal: Normal mode, This mode can be used independently to monitor a single program. If the program crashes, it will export the crash information.
     /// </summary>
     public string WorkModel { get; set; } = "Upgrade";
 }
 ```
 
+### Applicable To
 
-
-### 适用于
-
-| 产品           | 版本          |
+| Product        | Version       |
 | -------------- | ------------- |
-| .NET           | 5、6、7、8、9 |
+| .NET           | 5, 6, 7, 8, 9 |
 | .NET Framework | 4.6.1         |
 | .NET Standard  | 2.0           |
 | .NET Core      | 2.0           |

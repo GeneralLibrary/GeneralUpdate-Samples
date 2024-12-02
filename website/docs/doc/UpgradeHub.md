@@ -2,48 +2,46 @@
 sidebar_position: 7
 ---
 
-### 定义
+### Definition
 
-命名空间：GeneralUpdate.ClientCore.Hubs
+Namespace: GeneralUpdate.ClientCore.Hubs
 
-程序集：GeneralUpdate.ClientCore.dll
+Assembly: GeneralUpdate.ClientCore.dll
 
 
 
-UpgradeHubService是基于SignalR实现的推送更新版本信息的机制，可以实现一对一和一对多的推送。
+The `UpgradeHubService` is a mechanism based on SignalR for pushing updated version information. It supports both one-to-one and one-to-many push notifications.
 
 ```c#
 public class UpgradeHubService : IUpgradeHubService
 ```
 
-nuget安装
+NuGet Installation
 
 ```shell
 NuGet\Install-Package GeneralUpdate.ClientCore -Version 1.0.0
 ```
 
+### Example
 
-
-### 示例
-
-以下示例定义方法，包含VersionHub使用。
+The following example defines methods that include the use of `VersionHub`.
 
 ```c#
-//1.常规使用方式
+//1. General usage
 var hub = new UpgradeHubService("http://localhost:5000/UpgradeHub"
                 , null,"dfeb5833-975e-4afb-88f1-6278ee9aeff6");
     hub.AddListenerReceive((message) =>
     {
-        //message目前限定为Packet对象的json字符串
+        // The message is currently limited to a JSON string of the Packet object
         Debug.WriteLine(message);
     });
 await hub.StartAsync();
 
-//2.在拥有依赖注入能力的项目中也可以依赖注入，例如：Prism
+//2. In projects with dependency injection capability, you can also use dependency injection, for example: Prism
 protected override void RegisterTypes(IContainerRegistry containerRegistry)
 {
     // Register Services
-    ontainerRegistry.Register<IUpgradeHubService, UpgradeHubService>();
+    containerRegistry.Register<IUpgradeHubService, UpgradeHubService>();
 }
 
 public MainWindowViewModel(IUpgradeHubService service) 
@@ -53,67 +51,55 @@ public MainWindowViewModel(IUpgradeHubService service)
 }
 ```
 
-**（1）点对点推送**
+**(1) Point-to-point push**
 
 ![](imgs/maui_windows_push_version.png)
 
-
-
-**（2）一次推送更新给多个客户端**
+**(2) Push updates to multiple clients at once**
 
 ![push_version_mutil](imgs/push_version_mutil.png)
 
+### Notes
 
+`UpgradeHubService` provides the functionality to receive server push messages.
 
-### 注解
+#### Methods
 
-UpgradeHubService提供接收服务器推送消息功能。
-
-
-
-#### 方法
-
-| Method                   |                                    |
-| ------------------------ | ---------------------------------- |
-| AddListenerReceive()     | 实时订阅服务端推送的最新版本信息。 |
-| AddListenerOnline()      | 在线、离线监听通知                 |
-| AddListenerReconnected() | 重新连接通知                       |
-| AddListenerClosed()      | 关闭连接通知                       |
-| StartAsync()             | 开启连接                           |
-| StopAsync()              | 暂停连接                           |
-| DisposeAsync()           | 释放Hub对象实例                    |
-
-
+| Method                   | Description                                                  |
+| ------------------------ | ------------------------------------------------------------ |
+| AddListenerReceive()     | Subscribe to the latest version info pushed by the server in real-time. |
+| AddListenerOnline()      | Listen for online and offline notifications                  |
+| AddListenerReconnected() | Notification for reconnection                                |
+| AddListenerClosed()      | Notification for connection closure                          |
+| StartAsync()             | Start the connection                                         |
+| StopAsync()              | Pause the connection                                         |
+| DisposeAsync()           | Release the Hub object instance                              |
 
 ### 🌼UpgradeHubService()
 
-**构造函数**
+**Constructor**
 
-Hub构造函数初始化。
+Initializes the Hub constructor.
 
 ```c#
 UpgradeHubService(string url, string? token = null, string? appkey = null)
 ```
 
-
-
-**参数**
+**Parameters**
 
 ```c#
-url string Hub的订阅地址。
+url string The subscription address of the Hub.
 
-token string Id4的认证流程所需要用到的token字符串。
+token string The token string used in the Id4 authentication process.
 
-appkey string 客户端密钥，唯一标识推荐值为Guid，可随机生成。
+appkey string The client key, uniquely identified, recommended value is a Guid, which can be randomly generated.
 ```
 
+### Applicable to
 
-
-### 适用于
-
-| 产品           | 版本          |
+| Product        | Version       |
 | -------------- | ------------- |
-| .NET           | 5、6、7、8、9 |
+| .NET           | 5, 6, 7, 8, 9 |
 | .NET Framework | 4.6.1         |
 | .NET Standard  | 2.0           |
 | .NET Core      | 2.0           |
