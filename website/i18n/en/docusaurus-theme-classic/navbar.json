@@ -1,0 +1,30 @@
+{
+  "title": {
+    "message": "GeneralLibrary",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "GeneralLibrary Logo",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.文档": {
+    "message": "文档",
+    "description": "Navbar item with label 文档"
+  },
+  "item.label.生态伙伴": {
+    "message": "生态伙伴",
+    "description": "Navbar item with label 生态伙伴"
+  },
+  "item.label.企业合作": {
+    "message": "企业合作",
+    "description": "Navbar item with label 企业合作"
+  },
+  "item.label.关于": {
+    "message": "关于",
+    "description": "Navbar item with label 关于"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

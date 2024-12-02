@@ -20,8 +20,8 @@ const config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  organizationName: 'GeneralLibrary', // Usually your GitHub org/user name.
+  projectName: 'GeneralLibrary', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -34,10 +34,12 @@ const config = {
     locales: ['zh','en'],
     localeConfigs: {
       zh: {
-        htmlLang: 'zh-GB',
+        label: '中文',
+        direction: 'ltr',
       },
       en: {
-        htmlLang: 'en-GB',
+        label: 'English',
+        direction: 'ltr',
       }
     }
   },
@@ -99,7 +101,8 @@ const config = {
             href: 'https://github.com/GeneralLibrary',
             label: 'GitHub',
             position: 'right',
-          },{
+          },
+          {
             type: 'localeDropdown',
             position: 'right',
           }
@@ -121,17 +124,9 @@ const config = {
             title: 'Community',
             items: [
               {
-                label: 'Stack Overflow',
+                label: 'GitHub',
                 href: 'https://github.com/GeneralLibrary',
-              },
-              {
-                label: 'Discord',
-                href: 'https://github.com/GeneralLibrary',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://github.com/GeneralLibrary',
-              },
+              }
             ],
           },
           {

@@ -1,0 +1,38 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.tutorialSidebar.category.Doc": {
+    "message": "Doc",
+    "description": "The label for category Doc in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Doc.link.generated-index.description": {
+    "message": "GeneralUpdate开源项目在线文档.",
+    "description": "The generated-index page description for category Doc in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Guide": {
+    "message": "Guide",
+    "description": "The label for category Guide in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Guide.link.generated-index.description": {
+    "message": "指南.",
+    "description": "The generated-index page description for category Guide in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Quik start": {
+    "message": "Quik start",
+    "description": "The label for category Quik start in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Quik start.link.generated-index.description": {
+    "message": "Quik start.",
+    "description": "The generated-index page description for category Quik start in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Release log": {
+    "message": "Release log",
+    "description": "The label for category Release log in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Release log.link.generated-index.description": {
+    "message": "发布日志.",
+    "description": "The generated-index page description for category Release log in sidebar tutorialSidebar"
+  }
+}
