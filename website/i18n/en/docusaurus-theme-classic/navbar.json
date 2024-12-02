@@ -26,5 +26,21 @@
   "item.label.GitHub": {
     "message": "GitHub",
     "description": "Navbar item with label GitHub"
+  },
+  "item.label.Doc": {
+    "message": "Doc",
+    "description": "Navbar item with label Doc"
+  },
+  "item.label.Ecological partners": {
+    "message": "Ecological partners",
+    "description": "Navbar item with label Ecological partners"
+  },
+  "item.label.Cooperative enterprises": {
+    "message": "Cooperative enterprises",
+    "description": "Navbar item with label Cooperative enterprises"
+  },
+  "item.label.About": {
+    "message": "About",
+    "description": "Navbar item with label About"
   }
 }

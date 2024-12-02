@@ -6,29 +6,29 @@ const FeatureList = [
   {
     title: 'GeneralUpdate',
     Svg: require('@site/static/img/upgrade.svg').default,
-    description: (
-      <>
-        帮助你的客户端应用以最快最小的资源的占用完成自动升级！
-      </>
-    ),
+    //description: (
+    //  <>
+    //    帮助你的客户端应用以最快最小的资源的占用完成自动升级！
+    //  </>
+    //),
   },
   {
     title: 'GeneralUpdate Tools',
     Svg: require('@site/static/img/packet.svg').default,
-    description: (
-      <>
-        打包工具帮助您发布更新补丁包文件！
-      </>
-    ),
+    //description: (
+    //  <>
+    //    打包工具帮助您发布更新补丁包文件！
+    //  </>
+    //),
   },
   {
     title: 'GeneralUpdate Samples',
     Svg: require('@site/static/img/samples.svg').default,
-    description: (
-      <>
-        快速启动，更快的了解项目如何使用！
-      </>
-    ),
+    //description: (
+    //  <>
+    //    快速启动，更快的了解项目如何使用！
+    //  </>
+    //),
   },
 ];
 

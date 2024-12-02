@@ -8,8 +8,8 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'GeneralLibrary',
-  tagline: 'This is a technology from an alien planet.',
+  title: 'Team General',
+  //tagline: 'This is a technology from an alien planet.',
   favicon: 'img/general.ico',
 
   // Set the production url of your site here

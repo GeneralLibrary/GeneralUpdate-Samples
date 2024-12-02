@@ -4,10 +4,7 @@ description: 我的问候页面描述
 hide_table_of_contents: true
 ---
 
-# 关于
+# About
 
-本网站开源仓库： 
-
+Website repository:
 - https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website
-
-如果需要补充文档可以提交代码至以上仓库，如有合作意向可以通过仓库issue或邮件联系我。
