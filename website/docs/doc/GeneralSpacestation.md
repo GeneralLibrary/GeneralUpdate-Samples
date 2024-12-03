@@ -69,10 +69,6 @@ Technologies involved in the introduction (including but not limited to operatin
 
 
 
-## Software Registration
-
-![](imgs\ruanzhu.png)
-
 ## Contact Us
 
 Below are the contact details for enterprise inquiries, quotations, and business cooperation (please indicate your purpose when adding as a friend, casual chat is declined, adding on WeChat is recommended).

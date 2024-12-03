@@ -67,12 +67,6 @@ GeneralLibrary团队针对企业级应用开发了GeneralSpacestation服务，�
 
 ![](imgs\corporateclient2.png)
 
-
-
-## 软著登记
-
-![](imgs\ruanzhu.png)
-
 ## 联系我们
 
 以下是企业咨询、报价、商务合作联系方式（加好友请注明来意拒绝闲聊，推荐加微信）。
