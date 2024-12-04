@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -12,6 +13,8 @@ namespace Client.Avalonia;
 
 public partial class App : Application
 {
+    public static IServiceProvider? ServiceProvider { get; private set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -21,18 +24,15 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
         services.AddSingleton<IDownloadService, MockDownloadService>();
-        services.AddTransient<MainWindowViewModel>();
-        var serviceProvider = new DefaultServiceProviderFactory().CreateServiceProvider(services);
+        services.AddTransient<MainViewViewModel>();
+        ServiceProvider = new DefaultServiceProviderFactory().CreateServiceProvider(services);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = serviceProvider.GetRequiredService<MainWindowViewModel>()
-            };
+            desktop.MainWindow = new MainWindow();
         }
 
         base.OnFrameworkInitializationCompleted();
