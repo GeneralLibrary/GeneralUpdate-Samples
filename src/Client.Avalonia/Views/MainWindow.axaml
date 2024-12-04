@@ -92,6 +92,7 @@
                 <ToggleSwitch
                     Name="StartButton"
                     Padding="8"
+                    IsChecked="{Binding IsUpdating}"
                     Theme="{StaticResource ButtonToggleSwitch}"
                     Command="{Binding StartCommand}">
                     <ToolTip.Tip>
