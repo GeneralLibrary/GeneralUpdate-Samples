@@ -9,7 +9,6 @@
         Icon="/Assets/avalonia-logo.ico"
         RequestedThemeVariant="Dark"
         Width="800" Height="450"
-        Background="{DynamicResource SemiBackground3Color}"
         Title="{Binding Statistics.Version,StringFormat='General Update {0} 版本更新'}">
     <Window.Resources>
         <ResourceDictionary>
@@ -27,9 +26,18 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" MinWidth="550">
-        <Image
-            Margin="30"
-            Source="../Assets/GeneralUpdate.png" Width="150" Height="150" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Image
+                Margin="30"
+                Width="150"
+                Height="150"
+                Source="/Assets/GeneralUpdate.png" />
+            <Image
+                Margin="30"
+                Width="150"
+                Height="150"
+                Source="{SvgImage /Assets/Semi.svg}" />
+        </StackPanel>
 
         <SelectableTextBlock
             HorizontalAlignment="Center"
@@ -43,7 +51,7 @@
         <Panel>
             <SelectableTextBlock
                 HorizontalAlignment="Left"
-                Text="{Binding Statistics.Speed, StringFormat='下载速度：{0}'}" />
+                Text="{Binding Statistics.Speed, StringFormat='下载速度：{0:F2} MB/s'}" />
             <SelectableTextBlock
                 HorizontalAlignment="Center">
                 <Run Text="已下载：" />
@@ -75,14 +83,14 @@
         </ProgressBar>
         <Border
             Padding="10"
-            Background="{DynamicResource SemiBackground3Color}"
+            Background="{DynamicResource SemiBackground0Color}"
             Theme="{StaticResource CardBorder}">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
                 <Button
                     Name="StopButton"
                     Padding="8"
                     Theme="{StaticResource BorderlessButton}"
-                    Classes="Tertiary"
+                    Classes="Danger"
                     ToolTip.Tip="停止"
                     Command="{Binding StopCommand}">
                     <PathIcon
@@ -92,7 +100,7 @@
                 <ToggleSwitch
                     Name="StartButton"
                     Padding="8"
-                    IsChecked="{Binding IsUpdating}"
+                    IsChecked="{Binding IsDownloading}"
                     Theme="{StaticResource ButtonToggleSwitch}"
                     Command="{Binding StartCommand}">
                     <ToolTip.Tip>
@@ -117,7 +125,7 @@
                     Padding="8"
                     Theme="{StaticResource BorderlessButton}"
                     Classes="Tertiary"
-                    ToolTip.Tip="重新开始"
+                    ToolTip.Tip="重新下载"
                     Command="{Binding RestartCommand}">
                     <PathIcon
                         Theme="{StaticResource InnerPathIcon}"

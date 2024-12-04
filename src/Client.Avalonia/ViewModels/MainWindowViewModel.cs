@@ -10,11 +10,13 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     [ObservableProperty] private DownloadStatistics _statistics;
 
-    [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(StartCommand))]
-    private bool _isCompleted;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(StopCommand))]
+    [NotifyPropertyChangedFor(nameof(IsDownloading), nameof(IsCompleted))]
+    private DownloadStatus _status;
 
-    [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(StopCommand))]
-    private bool _isUpdating;
+    public bool IsDownloading => Status is DownloadStatus.Downloading;
+    public bool IsCompleted => Status is DownloadStatus.Completed;
 
     private readonly DispatcherTimer _timer;
     private readonly Random _random;
@@ -24,12 +26,13 @@ public partial class MainWindowViewModel : ViewModelBase
         Statistics = new DownloadStatistics
         {
             Version = "11.2.2",
-            Speed = "0MB/s",
+            Speed = 0,
             Remaining = TimeSpan.Zero,
             TotalBytesToReceive = 1024 * 1024 * 10,
             BytesReceived = 1024 * 1024 * 0,
             ProgressPercentage = 0
         };
+        Status = DownloadStatus.NotStarted;
 
         _timer = new DispatcherTimer
         {
@@ -42,7 +45,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     #region Buttons
 
-    private bool CanStart => !IsCompleted;
+    private bool CanStart => Status is DownloadStatus.NotStarted or DownloadStatus.Downloading or DownloadStatus.Paused;
 
     [RelayCommand(CanExecute = nameof(CanStart))]
     private void Start()
@@ -50,25 +53,28 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!_timer.IsEnabled)
         {
             _timer.Start();
-            IsUpdating = true;
+            Status = DownloadStatus.Downloading;
         }
         else
         {
             _timer.Stop();
-            IsUpdating = false;
+            Status = DownloadStatus.Paused;
+            Statistics.Speed = 0;
+            Statistics.Remaining = TimeSpan.Zero;
         }
     }
 
-    [RelayCommand(CanExecute = nameof(IsUpdating))]
+    private bool CanStop => Status is DownloadStatus.Downloading or DownloadStatus.Paused;
+
+    [RelayCommand(CanExecute = nameof(CanStop))]
     private void Stop()
     {
         _timer.Stop();
+        Status = DownloadStatus.NotStarted;
         Statistics.BytesReceived = 0;
         Statistics.ProgressPercentage = 0;
-        Statistics.Speed = "0 MB/s";
+        Statistics.Speed = 0;
         Statistics.Remaining = TimeSpan.Zero;
-        IsCompleted = false;
-        IsUpdating = false;
         OnPropertyChanged(nameof(Statistics));
     }
 
@@ -100,7 +106,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Statistics.ProgressPercentage = (double)received / total * 100;
 
             var currentSpeed = increment / _timer.Interval.TotalSeconds;
-            Statistics.Speed = $"{currentSpeed / 1024 / 1024:F2} MB/s";
+            Statistics.Speed = currentSpeed / 1024 / 1024;
 
             var remainingBytes = total - received;
             Statistics.Remaining = TimeSpan.FromSeconds(remainingBytes / currentSpeed);
@@ -110,8 +116,9 @@ public partial class MainWindowViewModel : ViewModelBase
             if (received >= total)
             {
                 _timer.Stop();
-                IsUpdating = false;
-                IsCompleted = true;
+                Status = DownloadStatus.Completed;
+                Statistics.Speed = 0;
+                Statistics.Remaining = TimeSpan.Zero;
             }
         }
     }
@@ -123,7 +130,7 @@ public partial class DownloadStatistics : ObservableObject
     private object? _version;
 
     [ObservableProperty] [Description("下载速度")]
-    private string? _speed;
+    private double _speed;
 
     [ObservableProperty] [Description("剩余下载时间")]
     private TimeSpan _remaining;
@@ -139,4 +146,13 @@ public partial class DownloadStatistics : ObservableObject
 
     public double BytesReceivedInMB => (double)BytesReceived / 1024 / 1024;
     public double TotalBytesToReceiveInMB => (double)TotalBytesToReceive / 1024 / 1024;
+}
+
+[Flags]
+public enum DownloadStatus
+{
+    NotStarted,
+    Downloading,
+    Paused,
+    Completed
 }
