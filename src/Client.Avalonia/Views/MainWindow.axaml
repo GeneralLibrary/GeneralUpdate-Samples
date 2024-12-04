@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:converters="clr-namespace:Avalonia.Controls.Converters;assembly=Avalonia.Controls"
         xmlns:cvt="clr-namespace:Client.Avalonia.Converters"
+        xmlns:services="clr-namespace:Client.Avalonia.Services"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Client.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -18,9 +19,6 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Design.DataContext>
-        <vm:MainWindowViewModel />
-    </Design.DataContext>
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" MinWidth="550">
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
             <Image
@@ -63,7 +61,8 @@
                 HorizontalAlignment="Right"
                 IsVisible="{Binding Status,
                  Converter={StaticResource EnumToBooleanConverter},
-                  ConverterParameter={x:Static vm:DownloadStatus.Downloading}}"
+                  ConverterParameter={x:Static services:DownloadStatus.Downloading},
+                   Mode=OneWay}"
                 Text="{Binding Statistics.Remaining, StringFormat='剩余时间：{0:mm\\:ss}'}" />
             <SelectableTextBlock
                 HorizontalAlignment="Right"
@@ -76,7 +75,8 @@
             ShowProgressText="True"
             Classes.Success="{Binding Status,
              Converter={StaticResource EnumToBooleanConverter},
-              ConverterParameter={x:Static vm:DownloadStatus.Completed}}"
+              ConverterParameter={x:Static services:DownloadStatus.Completed},
+               Mode=OneWay}"
             Value="{Binding Statistics.ProgressPercentage}">
             <ProgressBar.Styles>
                 <Style Selector="ProgressBar">
@@ -110,7 +110,8 @@
                     Padding="8"
                     IsChecked="{Binding  Status,
                      Converter={StaticResource EnumToBooleanConverter},
-                      ConverterParameter={x:Static vm:DownloadStatus.Downloading}}"
+                      ConverterParameter={x:Static services:DownloadStatus.Downloading},
+                       Mode=OneWay}"
                     Theme="{StaticResource ButtonToggleSwitch}"
                     Command="{Binding StartCommand}">
                     <ToolTip.Tip>

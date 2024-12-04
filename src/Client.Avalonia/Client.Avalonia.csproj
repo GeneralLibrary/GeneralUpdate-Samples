@@ -9,7 +9,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Models\"/>
         <AvaloniaResource Include="Assets\**"/>
     </ItemGroup>
 
@@ -23,6 +22,7 @@
         </PackageReference>
         <PackageReference Include="Avalonia.Svg" Version="11.2.0.2" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
         <PackageReference Include="Semi.Avalonia" Version="11.2.1.1" />
     </ItemGroup>
 </Project>
