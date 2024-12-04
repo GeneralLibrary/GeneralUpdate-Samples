@@ -146,8 +146,8 @@ public partial class DownloadStatistics : ObservableObject
 [Flags]
 public enum DownloadStatus
 {
-    NotStarted,
-    Downloading,
-    Paused,
-    Completed
+    [Description("未开始")] NotStarted,
+    [Description("下载中")] Downloading,
+    [Description("已暂停")] Paused,
+    [Description("已完成")] Completed
 }

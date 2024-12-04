@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:converters="clr-namespace:Avalonia.Controls.Converters;assembly=Avalonia.Controls"
+        xmlns:cvt="clr-namespace:Client.Avalonia.Converters"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Client.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -47,6 +48,7 @@
             <SelectableTextBlock
                 HorizontalAlignment="Left"
                 Text="{Binding Statistics.Speed, StringFormat='下载速度：{0:F2} MB/s'}" />
+
             <SelectableTextBlock
                 HorizontalAlignment="Center">
                 <Run Text="已下载：" />
@@ -57,9 +59,18 @@
             </SelectableTextBlock>
 
             <SelectableTextBlock
+                Name="RemainingTimeTextBlock"
                 HorizontalAlignment="Right"
+                IsVisible="{Binding Status,
+                 Converter={StaticResource EnumToBooleanConverter},
+                  ConverterParameter={x:Static vm:DownloadStatus.Downloading}}"
                 Text="{Binding Statistics.Remaining, StringFormat='剩余时间：{0:mm\\:ss}'}" />
+            <SelectableTextBlock
+                HorizontalAlignment="Right"
+                IsVisible="{Binding !#RemainingTimeTextBlock.IsVisible}"
+                Text="{Binding Status,Converter={x:Static cvt:EnumConverter.EnumToDescriptionConverter}}" />
         </Panel>
+
         <ProgressBar
             Name="Bar"
             ShowProgressText="True"
