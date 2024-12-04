@@ -10,7 +10,7 @@
         RequestedThemeVariant="Dark"
         Width="800" Height="450"
         Background="{DynamicResource SemiBackground3Color}"
-        Title="Client.Avalonia">
+        Title="{Binding Statistics.Version,StringFormat='General Update {0} 版本更新'}">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -26,18 +26,39 @@
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" MinWidth="500">
+        <Image
+            Margin="30"
+            Source="../Assets/GeneralUpdate.png" Width="150" Height="150" />
+
         <SelectableTextBlock
             HorizontalAlignment="Center"
             FontSize="20"
             FontWeight="Bold">
+            <Run Text="General Update" />
             <Run Text="{Binding Statistics.Version}" />
-            <Run Text="版本更新中..." />
+            <Run Text="版本更新" />
         </SelectableTextBlock>
 
+        <Panel>
+            <SelectableTextBlock
+                HorizontalAlignment="Left"
+                Text="{Binding Statistics.Speed, StringFormat='下载速度：{0}'}" />
+            <SelectableTextBlock
+                HorizontalAlignment="Center">
+                <Run Text="已下载：" />
+                <Run Text="{Binding Statistics.BytesReceived, StringFormat='\{0:N0}'}" />
+                <Run Text="/" />
+                <Run Text="{Binding Statistics.TotalBytesToReceive, StringFormat='\{0:N0}'}" />
+                <Run Text="bytes" />
+            </SelectableTextBlock>
+
+            <SelectableTextBlock
+                HorizontalAlignment="Right"
+                Text="{Binding Statistics.Remaining, StringFormat='剩余时间：{0:mm\\:ss}'}" />
+        </Panel>
         <ProgressBar
             Name="Bar"
-            Width="400"
             ShowProgressText="True"
             Classes.Success="{Binding IsCompleted}"
             Value="{Binding Statistics.ProgressPercentage}">
@@ -103,12 +124,5 @@
                 </Button>
             </StackPanel>
         </Border>
-        <StackPanel Spacing="5">
-            <SelectableTextBlock Text="{Binding Statistics.Speed, StringFormat='下载速度：{0}'}" />
-            <SelectableTextBlock Text="{Binding Statistics.Remaining, StringFormat='剩余时间：{0:mm\\:ss}'}" />
-            <SelectableTextBlock Text="{Binding Statistics.BytesReceived, StringFormat='已下载：{0:N0} bytes'}" />
-            <SelectableTextBlock Text="{Binding Statistics.TotalBytesToReceive, StringFormat='总大小：{0:N0} bytes'}" />
-            <SelectableTextBlock Text="{Binding Statistics.ProgressPercentage, StringFormat='下载进度：{0:F2}%'}" />
-        </StackPanel>
     </StackPanel>
 </Window>

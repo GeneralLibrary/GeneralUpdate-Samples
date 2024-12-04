@@ -23,7 +23,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         Statistics = new DownloadStatistics
         {
-            Version = "1.0.0",
+            Version = "11.2.2",
             Speed = "0MB/s",
             Remaining = TimeSpan.Zero,
             TotalBytesToReceive = 1024 * 1024 * 10,
