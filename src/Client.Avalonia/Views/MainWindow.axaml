@@ -26,7 +26,7 @@
     <Design.DataContext>
         <vm:MainWindowViewModel />
     </Design.DataContext>
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" MinWidth="500">
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" MinWidth="550">
         <Image
             Margin="30"
             Source="../Assets/GeneralUpdate.png" Width="150" Height="150" />
@@ -47,10 +47,10 @@
             <SelectableTextBlock
                 HorizontalAlignment="Center">
                 <Run Text="已下载：" />
-                <Run Text="{Binding Statistics.BytesReceived, StringFormat='\{0:N0}'}" />
+                <Run Text="{Binding Statistics.BytesReceivedInMB, StringFormat='\{0:F2}'}" />
                 <Run Text="/" />
-                <Run Text="{Binding Statistics.TotalBytesToReceive, StringFormat='\{0:N0}'}" />
-                <Run Text="bytes" />
+                <Run Text="{Binding Statistics.TotalBytesToReceiveInMB, StringFormat='\{0:F2}'}" />
+                <Run Text="MB" />
             </SelectableTextBlock>
 
             <SelectableTextBlock

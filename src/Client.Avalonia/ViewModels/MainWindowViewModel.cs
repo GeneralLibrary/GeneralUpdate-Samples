@@ -40,6 +40,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _random = new Random();
     }
 
+    #region Buttons
+
     private bool CanStart => !IsCompleted;
 
     [RelayCommand(CanExecute = nameof(CanStart))]
@@ -77,6 +79,9 @@ public partial class MainWindowViewModel : ViewModelBase
         Start();
     }
 
+    #endregion
+
+
     private void UpdateProgress(object? sender, EventArgs e)
     {
         var received = Statistics.BytesReceived;
@@ -95,7 +100,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Statistics.ProgressPercentage = (double)received / total * 100;
 
             var currentSpeed = increment / _timer.Interval.TotalSeconds;
-            Statistics.Speed = $"{currentSpeed / 1024 / 1024:F1} MB/s";
+            Statistics.Speed = $"{currentSpeed / 1024 / 1024:F2} MB/s";
 
             var remainingBytes = total - received;
             Statistics.Remaining = TimeSpan.FromSeconds(remainingBytes / currentSpeed);
@@ -123,12 +128,15 @@ public partial class DownloadStatistics : ObservableObject
     [ObservableProperty] [Description("剩余下载时间")]
     private TimeSpan _remaining;
 
-    [ObservableProperty] [Description("已下载大小")]
+    [ObservableProperty] [Description("总大小")] [NotifyPropertyChangedFor(nameof(TotalBytesToReceiveInMB))]
     private long _totalBytesToReceive;
 
-    [ObservableProperty] [Description("总大小")]
+    [ObservableProperty] [Description("已下载大小")] [NotifyPropertyChangedFor(nameof(BytesReceivedInMB))]
     private long _bytesReceived;
 
     [ObservableProperty] [Description("进度百分比")]
     private double _progressPercentage;
+
+    public double BytesReceivedInMB => (double)BytesReceived / 1024 / 1024;
+    public double TotalBytesToReceiveInMB => (double)TotalBytesToReceive / 1024 / 1024;
 }
