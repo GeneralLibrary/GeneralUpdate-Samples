@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Client.Avalonia.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,10 +10,11 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        var provider = App.ServiceProvider;
-        if (provider is not null)
-        {
-            DataContext = provider.GetRequiredService<MainViewViewModel>();
-        }
+    }
+
+    protected override void OnLoaded(RoutedEventArgs e)
+    {
+        base.OnLoaded(e);
+        DataContext = App.ServiceProvider?.GetRequiredService<MainViewViewModel>();
     }
 }

@@ -1,3 +1,7 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Notifications;
 using Client.Avalonia.Models;
 using Client.Avalonia.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,6 +12,7 @@ namespace Client.Avalonia.ViewModels;
 public partial class MainViewViewModel : ViewModelBase
 {
     private readonly IDownloadService _downloadService;
+    private readonly WindowNotificationManager _notificationManager;
 
     [ObservableProperty] private DownloadStatistics _statistics;
 
@@ -17,8 +22,11 @@ public partial class MainViewViewModel : ViewModelBase
     public MainViewViewModel(IDownloadService downloadService)
     {
         _downloadService = downloadService;
+        _notificationManager = new WindowNotificationManager(ResolveDefaultTopLevel());
+
         _downloadService.ProgressChanged += stats => Statistics = stats;
         _downloadService.StatusChanged += status => Status = status;
+        _downloadService.StatusChanged += OnDownloadCompleted;
 
         Statistics = _downloadService.CurrentStatistics;
         Status = _downloadService.Status;
@@ -40,4 +48,23 @@ public partial class MainViewViewModel : ViewModelBase
     private void Restart() => _downloadService.Restart();
 
     #endregion
+
+    private void OnDownloadCompleted(DownloadStatus status)
+    {
+        if (status is not DownloadStatus.Completed) return;
+        _notificationManager.Show(new Notification(
+            "更新完成",
+            $"已更新到最新版本，版本号：{Statistics.Version}",
+            NotificationType.Success));
+    }
+
+    private static TopLevel? ResolveDefaultTopLevel()
+    {
+        return Application.Current?.ApplicationLifetime switch
+        {
+            IClassicDesktopStyleApplicationLifetime desktop => desktop.MainWindow,
+            ISingleViewApplicationLifetime singleView => TopLevel.GetTopLevel(singleView.MainView),
+            _ => null
+        };
+    }
 }
