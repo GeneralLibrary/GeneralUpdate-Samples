@@ -2,13 +2,20 @@
 using System.ComponentModel;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace Client.Avalonia.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
     [ObservableProperty] private DownloadStatistics _statistics;
-    [ObservableProperty] private bool _isCompleted;
+
+    [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(StartCommand))]
+    private bool _isCompleted;
+
+    [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(StopCommand))]
+    private bool _isUpdating;
+
     private readonly DispatcherTimer _timer;
     private readonly Random _random;
 
@@ -29,9 +36,45 @@ public partial class MainWindowViewModel : ViewModelBase
             Interval = TimeSpan.FromMilliseconds(1000)
         };
         _timer.Tick += UpdateProgress;
-        _timer.Start();
 
         _random = new Random();
+    }
+
+    private bool CanStart => !IsCompleted;
+
+    [RelayCommand(CanExecute = nameof(CanStart))]
+    private void Start()
+    {
+        if (!_timer.IsEnabled)
+        {
+            _timer.Start();
+            IsUpdating = true;
+        }
+        else
+        {
+            _timer.Stop();
+            IsUpdating = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(IsUpdating))]
+    private void Stop()
+    {
+        _timer.Stop();
+        Statistics.BytesReceived = 0;
+        Statistics.ProgressPercentage = 0;
+        Statistics.Speed = "0 MB/s";
+        Statistics.Remaining = TimeSpan.Zero;
+        IsCompleted = false;
+        IsUpdating = false;
+        OnPropertyChanged(nameof(Statistics));
+    }
+
+    [RelayCommand]
+    private void Restart()
+    {
+        Stop();
+        Start();
     }
 
     private void UpdateProgress(object? sender, EventArgs e)
@@ -62,6 +105,7 @@ public partial class MainWindowViewModel : ViewModelBase
             if (received >= total)
             {
                 _timer.Stop();
+                IsUpdating = false;
                 IsCompleted = true;
             }
         }

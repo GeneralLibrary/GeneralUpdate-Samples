@@ -7,7 +7,21 @@
         x:Class="Client.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
+        RequestedThemeVariant="Dark"
+        Width="800" Height="450"
+        Background="{DynamicResource SemiBackground3Color}"
         Title="Client.Avalonia">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="../Themes/ToggleSwitch.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <StreamGeometry x:Key="IconPlay">M 5 2.90101 C 5 2.09583 5.90303 1.62081 6.56653 2.07697 L 19.8014 11.1759 C 20.3794 11.5733 20.3794 12.4267 19.8014 12.824 L 6.56653 21.923 C 5.90303 22.3792 5 21.9041 5 21.0989 V 2.90101 Z</StreamGeometry>
+            <StreamGeometry x:Key="IconPause">M4.5 4.75C4.5 3.23122 5.73122 2 7.25 2C8.76878 2 10 3.23122 10 4.75V19.25C10 20.7688 8.76878 22 7.25 22C5.73122 22 4.5 20.7688 4.5 19.25V4.75ZM14 4.75C14 3.23122 15.2312 2 16.75 2C18.2688 2 19.5 3.23122 19.5 4.75V19.25C19.5 20.7688 18.2688 22 16.75 22C15.2312 22 14 20.7688 14 19.25V4.75Z</StreamGeometry>
+            <StreamGeometry x:Key="IconStop">M3 6C3 4.34315 4.34315 3 6 3H18C19.6569 3 21 4.34315 21 6V18C21 19.6569 19.6569 21 18 21H6C4.34315 21 3 19.6569 3 18V6Z</StreamGeometry>
+            <StreamGeometry x:Key="IconRestart">M4.5 2C3.67157 2 3 2.67157 3 3.5V20.5C3 21.3284 3.67157 22 4.5 22C5.32843 22 6 21.3284 6 20.5V3.5C6 2.67157 5.32843 2 4.5 2ZM8.00083 11.2137L19.3822 2.27115C20.0384 1.75562 21.0001 2.22303 21.0001 3.05746V20.9425C21.0001 21.777 20.0384 22.2444 19.3822 21.7289L8.00083 12.7863C7.49126 12.3859 7.49126 11.6141 8.00083 11.2137Z</StreamGeometry>
+        </ResourceDictionary>
+    </Window.Resources>
 
     <Design.DataContext>
         <vm:MainWindowViewModel />
@@ -16,10 +30,13 @@
         <SelectableTextBlock
             HorizontalAlignment="Center"
             FontSize="20"
-            FontWeight="Bold"
-            Text="版本更新中..." />
+            FontWeight="Bold">
+            <Run Text="{Binding Statistics.Version}" />
+            <Run Text="版本更新中..." />
+        </SelectableTextBlock>
 
         <ProgressBar
+            Name="Bar"
             Width="400"
             ShowProgressText="True"
             Classes.Success="{Binding IsCompleted}"
@@ -35,14 +52,63 @@
                 </Style>
             </ProgressBar.Styles>
         </ProgressBar>
-
+        <Border
+            Padding="10"
+            Background="{DynamicResource SemiBackground3Color}"
+            Theme="{StaticResource CardBorder}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                <Button
+                    Name="StopButton"
+                    Padding="8"
+                    Theme="{StaticResource BorderlessButton}"
+                    Classes="Tertiary"
+                    ToolTip.Tip="停止"
+                    Command="{Binding StopCommand}">
+                    <PathIcon
+                        Theme="{StaticResource InnerPathIcon}"
+                        Data="{StaticResource IconStop}" />
+                </Button>
+                <ToggleSwitch
+                    Name="StartButton"
+                    Padding="8"
+                    Theme="{StaticResource ButtonToggleSwitch}"
+                    Command="{Binding StartCommand}">
+                    <ToolTip.Tip>
+                        <Panel>
+                            <TextBlock Text="下载" IsVisible="{Binding !$parent[ToggleSwitch].IsChecked}" />
+                            <TextBlock Text="暂停" IsVisible="{Binding $parent[ToggleSwitch].IsChecked}" />
+                        </Panel>
+                    </ToolTip.Tip>
+                    <ToggleSwitch.OffContent>
+                        <PathIcon
+                            Theme="{StaticResource InnerPathIcon}"
+                            Data="{StaticResource IconPlay}" />
+                    </ToggleSwitch.OffContent>
+                    <ToggleSwitch.OnContent>
+                        <PathIcon
+                            Theme="{StaticResource InnerPathIcon}"
+                            Data="{StaticResource IconPause}" />
+                    </ToggleSwitch.OnContent>
+                </ToggleSwitch>
+                <Button
+                    Name="RestartButton"
+                    Padding="8"
+                    Theme="{StaticResource BorderlessButton}"
+                    Classes="Tertiary"
+                    ToolTip.Tip="重新开始"
+                    Command="{Binding RestartCommand}">
+                    <PathIcon
+                        Theme="{StaticResource InnerPathIcon}"
+                        Data="{StaticResource IconRestart}" />
+                </Button>
+            </StackPanel>
+        </Border>
         <StackPanel Spacing="5">
-            <SelectableTextBlock Text="{Binding Statistics.Version}" FontWeight="Bold" FontSize="16" />
-            <SelectableTextBlock Text="{Binding Statistics.Speed, StringFormat='下载速度: {0}'}" />
-            <SelectableTextBlock Text="{Binding Statistics.Remaining, StringFormat='剩余时间: {0:mm\\:ss}'}" />
-            <SelectableTextBlock Text="{Binding Statistics.BytesReceived, StringFormat='已下载: {0:N0} bytes'}" />
-            <SelectableTextBlock Text="{Binding Statistics.TotalBytesToReceive, StringFormat='总大小: {0:N0} bytes'}" />
-            <SelectableTextBlock Text="{Binding Statistics.ProgressPercentage, StringFormat='下载进度: {0:F2}%'}" />
+            <SelectableTextBlock Text="{Binding Statistics.Speed, StringFormat='下载速度：{0}'}" />
+            <SelectableTextBlock Text="{Binding Statistics.Remaining, StringFormat='剩余时间：{0:mm\\:ss}'}" />
+            <SelectableTextBlock Text="{Binding Statistics.BytesReceived, StringFormat='已下载：{0:N0} bytes'}" />
+            <SelectableTextBlock Text="{Binding Statistics.TotalBytesToReceive, StringFormat='总大小：{0:N0} bytes'}" />
+            <SelectableTextBlock Text="{Binding Statistics.ProgressPercentage, StringFormat='下载进度：{0:F2}%'}" />
         </StackPanel>
     </StackPanel>
 </Window>
