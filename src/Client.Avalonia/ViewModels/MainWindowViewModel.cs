@@ -10,13 +10,14 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private DownloadStatistics _statistics;
     [ObservableProperty] private bool _isCompleted;
     private readonly DispatcherTimer _timer;
+    private readonly Random _random;
 
     public MainWindowViewModel()
     {
         Statistics = new DownloadStatistics
         {
             Version = "1.0.0",
-            Speed = "1MB/s",
+            Speed = "0MB/s",
             Remaining = TimeSpan.Zero,
             TotalBytesToReceive = 1024 * 1024 * 10,
             BytesReceived = 1024 * 1024 * 0,
@@ -29,22 +30,36 @@ public partial class MainWindowViewModel : ViewModelBase
         };
         _timer.Tick += UpdateProgress;
         _timer.Start();
+
+        _random = new Random();
     }
 
     private void UpdateProgress(object? sender, EventArgs e)
     {
-        if (Statistics.BytesReceived < Statistics.TotalBytesToReceive)
+        var received = Statistics.BytesReceived;
+        var total = Statistics.TotalBytesToReceive;
+        if (received < total)
         {
-            Statistics.BytesReceived += 1024 * 1024;
-            Statistics.ProgressPercentage =
-                (double)Statistics.BytesReceived / Statistics.TotalBytesToReceive * 100;
+            var increment = _random.Next(1024 * 1024 * 2, 1024 * 1024 * 3);
+            received += increment;
 
-            Statistics.Remaining = TimeSpan.FromSeconds(
-                (Statistics.TotalBytesToReceive - Statistics.BytesReceived) / (1024 * 1024));
+            if (received > total)
+            {
+                received = total;
+            }
+
+            Statistics.BytesReceived = received;
+            Statistics.ProgressPercentage = (double)received / total * 100;
+
+            var currentSpeed = increment / _timer.Interval.TotalSeconds;
+            Statistics.Speed = $"{currentSpeed / 1024 / 1024:F1} MB/s";
+
+            var remainingBytes = total - received;
+            Statistics.Remaining = TimeSpan.FromSeconds(remainingBytes / currentSpeed);
 
             OnPropertyChanged(nameof(Statistics));
 
-            if (Statistics.BytesReceived >= Statistics.TotalBytesToReceive)
+            if (received >= total)
             {
                 _timer.Stop();
                 IsCompleted = true;
