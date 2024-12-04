@@ -10,13 +10,8 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     [ObservableProperty] private DownloadStatistics _statistics;
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(StopCommand))]
-    [NotifyPropertyChangedFor(nameof(IsDownloading), nameof(IsCompleted))]
+    [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(StopCommand))]
     private DownloadStatus _status;
-
-    public bool IsDownloading => Status is DownloadStatus.Downloading;
-    public bool IsCompleted => Status is DownloadStatus.Completed;
 
     private readonly DispatcherTimer _timer;
     private readonly Random _random;

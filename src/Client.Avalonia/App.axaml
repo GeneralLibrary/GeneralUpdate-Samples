@@ -10,4 +10,13 @@
     <Application.Styles>
         <semi:SemiTheme Locale="zh-CN" />
     </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Client.Avalonia/Themes/Resources/_index.axaml" />
+                <ResourceInclude Source="avares://Client.Avalonia/Themes/Controls/_index.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 </Application>
