@@ -5,6 +5,10 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpgradeSample", "UpgradeSample.csproj", "{ECAB29C6-2EA8-458A-B822-DC0A4BDA93EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upgrade.Avalonia", "..\Upgrade.Avalonia\Upgrade.Avalonia.csproj", "{B4686D5A-AB50-49B7-8AFB-E8F5FCC596E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Avalonia", "..\Common.Avalonia\Common.Avalonia.csproj", "{6E557C80-481A-4AED-BB4F-D2ECEECDDFE7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,13 @@ Global
 		{ECAB29C6-2EA8-458A-B822-DC0A4BDA93EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ECAB29C6-2EA8-458A-B822-DC0A4BDA93EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ECAB29C6-2EA8-458A-B822-DC0A4BDA93EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4686D5A-AB50-49B7-8AFB-E8F5FCC596E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4686D5A-AB50-49B7-8AFB-E8F5FCC596E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4686D5A-AB50-49B7-8AFB-E8F5FCC596E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4686D5A-AB50-49B7-8AFB-E8F5FCC596E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E557C80-481A-4AED-BB4F-D2ECEECDDFE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {6E557C80-481A-4AED-BB4F-D2ECEECDDFE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {6E557C80-481A-4AED-BB4F-D2ECEECDDFE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {6E557C80-481A-4AED-BB4F-D2ECEECDDFE7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
