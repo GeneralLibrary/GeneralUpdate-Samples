@@ -6,13 +6,14 @@ using Common.Avalonia.Models;
 using Common.Avalonia.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Ursa.Controls;
 
 namespace Upgrade.Avalonia.ViewModels;
 
 public partial class MainViewViewModel : ViewModelBase
 {
     private readonly IDownloadService _downloadService;
-    private readonly WindowNotificationManager _notificationManager;
+    private readonly WindowToastManager _notificationManager;
 
     [ObservableProperty] private DownloadStatistics _statistics;
 
@@ -22,7 +23,7 @@ public partial class MainViewViewModel : ViewModelBase
     public MainViewViewModel(IDownloadService downloadService)
     {
         _downloadService = downloadService;
-        _notificationManager = new WindowNotificationManager(ResolveDefaultTopLevel());
+        _notificationManager = new WindowToastManager(ResolveDefaultTopLevel());
 
         _downloadService.ProgressChanged += stats => Statistics = stats;
         _downloadService.StatusChanged += status => Status = status;
@@ -51,10 +52,10 @@ public partial class MainViewViewModel : ViewModelBase
 
     private void OnDownloadCompleted()
     {
-        _notificationManager.Show(new Notification(
-            "更新完成",
-            $"已更新到最新版本，版本号：{Statistics.Version}",
-            NotificationType.Success));
+        _notificationManager.Show(
+            new Toast($"已更新到最新版本，版本号：{Statistics.Version}"),
+            type: NotificationType.Success,
+            classes: ["Light"]);
     }
 
     private static TopLevel? ResolveDefaultTopLevel()

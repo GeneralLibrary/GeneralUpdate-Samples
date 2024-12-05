@@ -6,6 +6,7 @@
              xmlns:vm="clr-namespace:Upgrade.Avalonia.ViewModels"
              xmlns:services="clr-namespace:Common.Avalonia.Services;assembly=Common.Avalonia"
              xmlns:cvt="clr-namespace:Common.Avalonia.Converters;assembly=Common.Avalonia"
+             xmlns:u="https://irihi.tech/ursa"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Upgrade.Avalonia.Views.MainView"
              x:DataType="vm:MainViewViewModel">
@@ -16,18 +17,45 @@
     </UserControl.Resources>
 
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" MinWidth="550">
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <Image
-                Margin="30"
+        <Panel>
+            <ProgressBar
+                Name="Bar"
+                Theme="{DynamicResource ProgressRing}"
+                Width="200"
+                Height="200"
+                Classes.Success="{Binding Status,
+             Converter={StaticResource EnumToBooleanConverter},
+              ConverterParameter={x:Static services:DownloadStatus.Completed},
+               Mode=OneWay}"
+                Value="{Binding Statistics.ProgressPercentage}">
+                <ProgressBar.Styles>
+                    <Style Selector="ProgressBar">
+                        <Setter Property="Transitions">
+                            <Transitions>
+                                <DoubleTransition Easing="CubicEaseInOut" Property="Value" Duration="0:0:0.3" />
+                                <BrushTransition Property="Foreground" Duration="0:0:0.3" />
+                            </Transitions>
+                        </Setter>
+                    </Style>
+                </ProgressBar.Styles>
+            </ProgressBar>
+            <u:Avatar
                 Width="150"
                 Height="150"
-                Source="/Assets/GeneralUpdate.png" />
-            <Image
-                Margin="30"
-                Width="150"
-                Height="150"
-                Source="{SvgImage /Assets/Ursa.svg}" />
-        </StackPanel>
+                Opacity="{Binding Statistics.ProgressPercentage, 
+                Converter={x:Static cvt:ProgressConverter.ProgressToOpacityConverter}}"
+                Source="/Assets/GeneralUpdate.png">
+                <u:Avatar.Styles>
+                    <Style Selector="Image">
+                        <Setter Property="Transitions">
+                            <Transitions>
+                                <DoubleTransition Easing="CubicEaseInOut" Property="Opacity" Duration="0:0:0.3" />
+                            </Transitions>
+                        </Setter>
+                    </Style>
+                </u:Avatar.Styles>
+            </u:Avatar>
+        </Panel>
 
         <SelectableTextBlock
             HorizontalAlignment="Center"
@@ -66,25 +94,7 @@
                 Text="{Binding Status,Converter={x:Static cvt:EnumConverter.EnumToDescriptionConverter}}" />
         </Panel>
 
-        <ProgressBar
-            Name="Bar"
-            ShowProgressText="True"
-            Classes.Success="{Binding Status,
-             Converter={StaticResource EnumToBooleanConverter},
-              ConverterParameter={x:Static services:DownloadStatus.Completed},
-               Mode=OneWay}"
-            Value="{Binding Statistics.ProgressPercentage}">
-            <ProgressBar.Styles>
-                <Style Selector="ProgressBar">
-                    <Setter Property="Transitions">
-                        <Transitions>
-                            <DoubleTransition Easing="CubicEaseInOut" Property="Value" Duration="0:0:0.3" />
-                            <BrushTransition Property="Foreground" Duration="0:0:0.3" />
-                        </Transitions>
-                    </Setter>
-                </Style>
-            </ProgressBar.Styles>
-        </ProgressBar>
+
         <Border
             Padding="10"
             Background="{DynamicResource SemiBackground0Color}"

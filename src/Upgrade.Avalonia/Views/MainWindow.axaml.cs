@@ -1,11 +1,11 @@
-using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Microsoft.Extensions.DependencyInjection;
 using Upgrade.Avalonia.ViewModels;
+using Ursa.Controls;
 
 namespace Upgrade.Avalonia.Views;
 
-public partial class MainWindow : Window
+public partial class MainWindow : UrsaWindow
 {
     public MainWindow()
     {
