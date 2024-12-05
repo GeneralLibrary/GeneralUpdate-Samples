@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:converters="clr-namespace:Avalonia.Controls.Converters;assembly=Avalonia.Controls"
              xmlns:vm="clr-namespace:Client.Avalonia.ViewModels"
-             xmlns:services="clr-namespace:Client.Avalonia.Services"
-             xmlns:cvt="clr-namespace:Client.Avalonia.Converters"
+             xmlns:services="clr-namespace:Common.Avalonia.Services;assembly=Common.Avalonia"
+             xmlns:cvt="clr-namespace:Common.Avalonia.Converters;assembly=Common.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Client.Avalonia.Views.MainView"
              x:DataType="vm:MainViewViewModel">

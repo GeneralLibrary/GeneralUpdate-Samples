@@ -1,9 +1,8 @@
-using System;
 using System.ComponentModel;
 using System.Reflection;
 using Avalonia.Data.Converters;
 
-namespace Client.Avalonia.Converters;
+namespace Common.Avalonia.Converters;
 
 public static class EnumConverter
 {

@@ -1,8 +1,7 @@
-using System;
 using System.ComponentModel;
-using Client.Avalonia.Models;
+using Common.Avalonia.Models;
 
-namespace Client.Avalonia.Services;
+namespace Common.Avalonia.Services;
 
 public interface IDownloadService
 {

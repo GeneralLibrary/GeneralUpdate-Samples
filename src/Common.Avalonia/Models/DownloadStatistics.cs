@@ -1,8 +1,7 @@
-using System;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Client.Avalonia.Models;
+namespace Common.Avalonia.Models;
 
 public partial class DownloadStatistics : ObservableObject
 {

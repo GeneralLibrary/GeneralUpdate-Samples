@@ -1,8 +1,7 @@
-using System;
 using Avalonia.Threading;
-using Client.Avalonia.Models;
+using Common.Avalonia.Models;
 
-namespace Client.Avalonia.Services;
+namespace Common.Avalonia.Services;
 
 public class MockDownloadService : IDownloadService
 {

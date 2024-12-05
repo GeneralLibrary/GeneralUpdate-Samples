@@ -4,9 +4,9 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
-using Client.Avalonia.Services;
 using Client.Avalonia.ViewModels;
 using Client.Avalonia.Views;
+using Common.Avalonia.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Client.Avalonia;
