@@ -10,6 +10,7 @@
         Icon="/Assets/avalonia-logo.ico"
         RequestedThemeVariant="Dark"
         Width="800" Height="450"
+        WindowStartupLocation="CenterScreen"
         Title="General Update 客户端">
     <views:MainView />
 </Window>
