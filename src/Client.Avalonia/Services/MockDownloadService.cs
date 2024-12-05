@@ -8,6 +8,7 @@ public class MockDownloadService : IDownloadService
 {
     public event Action<DownloadStatistics>? ProgressChanged;
     public event Action<DownloadStatus>? StatusChanged;
+    public event Action? DownloadCompleted;
 
     private readonly DispatcherTimer _timer;
     private readonly Random _random;
@@ -93,6 +94,7 @@ public class MockDownloadService : IDownloadService
         {
             _timer.Stop();
             UpdateStatus(DownloadStatus.Completed);
+            DownloadCompleted?.Invoke();
         }
     }
 

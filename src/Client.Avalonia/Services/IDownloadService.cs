@@ -8,6 +8,7 @@ public interface IDownloadService
 {
     event Action<DownloadStatistics> ProgressChanged;
     event Action<DownloadStatus> StatusChanged;
+    event Action DownloadCompleted;
 
     DownloadStatistics CurrentStatistics { get; }
     DownloadStatus Status { get; }

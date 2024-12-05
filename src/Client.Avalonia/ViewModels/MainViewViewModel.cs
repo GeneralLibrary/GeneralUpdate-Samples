@@ -26,7 +26,7 @@ public partial class MainViewViewModel : ViewModelBase
 
         _downloadService.ProgressChanged += stats => Statistics = stats;
         _downloadService.StatusChanged += status => Status = status;
-        _downloadService.StatusChanged += OnDownloadCompleted;
+        _downloadService.DownloadCompleted += OnDownloadCompleted;
 
         Statistics = _downloadService.CurrentStatistics;
         Status = _downloadService.Status;
@@ -49,9 +49,8 @@ public partial class MainViewViewModel : ViewModelBase
 
     #endregion
 
-    private void OnDownloadCompleted(DownloadStatus status)
+    private void OnDownloadCompleted()
     {
-        if (status is not DownloadStatus.Completed) return;
         _notificationManager.Show(new Notification(
             "更新完成",
             $"已更新到最新版本，版本号：{Statistics.Version}",
