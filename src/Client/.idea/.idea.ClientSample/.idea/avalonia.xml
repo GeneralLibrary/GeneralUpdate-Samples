@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AvaloniaProject">
+    <option name="projectPerEditor">
+      <map>
+        <entry key="../Client.Avalonia/App.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+        <entry key="../Client.Avalonia/Themes/Controls/ToggleSwitch.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+        <entry key="../Client.Avalonia/Themes/Controls/_index.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+        <entry key="../Client.Avalonia/Themes/Resources/Icon.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+        <entry key="../Client.Avalonia/Themes/Shared/Palette.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+        <entry key="../Client.Avalonia/Themes/Shared/_index.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+        <entry key="../Client.Avalonia/Themes/ToggleSwitch.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+        <entry key="../Client.Avalonia/Views/MainView.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+        <entry key="../Client.Avalonia/Views/MainWindow.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+        <entry key="../Common.Avalonia/Themes/Controls/ToggleSwitch.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+        <entry key="../Common.Avalonia/Themes/Controls/_index.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+        <entry key="../Common.Avalonia/Themes/Resources/Icon.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+        <entry key="../Common.Avalonia/Themes/Resources/_index.axaml" value="../Client.Avalonia/Client.Avalonia.csproj" />
+      </map>
+    </option>
+  </component>
+</project>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AvaloniaProject">
+    <option name="projectPerEditor">
+      <map>
+        <entry key="../Common.Avalonia/Themes/Controls/ToggleSwitch.axaml" value="../Upgrade.Avalonia/Upgrade.Avalonia.csproj" />
+        <entry key="../Common.Avalonia/Themes/Controls/_index.axaml" value="../Upgrade.Avalonia/Upgrade.Avalonia.csproj" />
+        <entry key="../Common.Avalonia/Themes/Resources/Icon.axaml" value="../Upgrade.Avalonia/Upgrade.Avalonia.csproj" />
+        <entry key="../Common.Avalonia/Themes/Resources/_index.axaml" value="../Upgrade.Avalonia/Upgrade.Avalonia.csproj" />
+        <entry key="../Upgrade.Avalonia/App.axaml" value="../Upgrade.Avalonia/Upgrade.Avalonia.csproj" />
+        <entry key="../Upgrade.Avalonia/Views/MainView.axaml" value="../Upgrade.Avalonia/Upgrade.Avalonia.csproj" />
+        <entry key="../Upgrade.Avalonia/Views/MainWindow.axaml" value="../Upgrade.Avalonia/Upgrade.Avalonia.csproj" />
+      </map>
+    </option>
+  </component>
+</project>

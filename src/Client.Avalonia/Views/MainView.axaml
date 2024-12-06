@@ -1,0 +1,144 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:converters="clr-namespace:Avalonia.Controls.Converters;assembly=Avalonia.Controls"
+             xmlns:vm="clr-namespace:Client.Avalonia.ViewModels"
+             xmlns:services="clr-namespace:Common.Avalonia.Services;assembly=Common.Avalonia"
+             xmlns:cvt="clr-namespace:Common.Avalonia.Converters;assembly=Common.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Client.Avalonia.Views.MainView"
+             x:DataType="vm:MainViewViewModel">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:EnumToBoolConverter x:Key="EnumToBooleanConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" MinWidth="550">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Image
+                Margin="30"
+                Width="150"
+                Height="150"
+                Source="/Assets/GeneralUpdate.png" />
+            <Image
+                Margin="30"
+                Width="150"
+                Height="150"
+                Source="{SvgImage /Assets/Semi.svg}" />
+        </StackPanel>
+
+        <SelectableTextBlock
+            HorizontalAlignment="Center"
+            FontSize="20"
+            FontWeight="Bold">
+            <Run Text="General Update" />
+            <Run Text="{Binding Statistics.Version}" />
+            <Run Text="版本更新" />
+        </SelectableTextBlock>
+
+        <Panel>
+            <SelectableTextBlock
+                HorizontalAlignment="Left"
+                Text="{Binding Statistics.Speed, StringFormat='下载速度：{0:F2} MB/s'}" />
+
+            <SelectableTextBlock
+                HorizontalAlignment="Center">
+                <Run Text="已下载：" />
+                <Run Text="{Binding Statistics.BytesReceivedInMB, StringFormat='\{0:F2}'}" />
+                <Run Text="/" />
+                <Run Text="{Binding Statistics.TotalBytesToReceiveInMB, StringFormat='\{0:F2}'}" />
+                <Run Text="MB" />
+            </SelectableTextBlock>
+
+            <SelectableTextBlock
+                Name="RemainingTimeTextBlock"
+                HorizontalAlignment="Right"
+                IsVisible="{Binding Status,
+                 Converter={StaticResource EnumToBooleanConverter},
+                  ConverterParameter={x:Static services:DownloadStatus.Downloading},
+                   Mode=OneWay}"
+                Text="{Binding Statistics.Remaining, StringFormat='剩余时间：{0:mm\\:ss}'}" />
+            <SelectableTextBlock
+                HorizontalAlignment="Right"
+                IsVisible="{Binding !#RemainingTimeTextBlock.IsVisible}"
+                Text="{Binding Status,Converter={x:Static cvt:EnumConverter.EnumToDescriptionConverter}}" />
+        </Panel>
+
+        <ProgressBar
+            Name="Bar"
+            ShowProgressText="True"
+            Classes.Success="{Binding Status,
+             Converter={StaticResource EnumToBooleanConverter},
+              ConverterParameter={x:Static services:DownloadStatus.Completed},
+               Mode=OneWay}"
+            Value="{Binding Statistics.ProgressPercentage}">
+            <ProgressBar.Styles>
+                <Style Selector="ProgressBar">
+                    <Setter Property="Transitions">
+                        <Transitions>
+                            <DoubleTransition Easing="CubicEaseInOut" Property="Value" Duration="0:0:0.3" />
+                            <BrushTransition Property="Foreground" Duration="0:0:0.3" />
+                        </Transitions>
+                    </Setter>
+                </Style>
+            </ProgressBar.Styles>
+        </ProgressBar>
+        <Border
+            Padding="10"
+            Background="{DynamicResource SemiBackground0Color}"
+            Theme="{StaticResource CardBorder}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                <Button
+                    Name="StopButton"
+                    Padding="8"
+                    Theme="{StaticResource BorderlessButton}"
+                    Classes="Danger"
+                    ToolTip.Tip="停止"
+                    Command="{Binding StopCommand}">
+                    <PathIcon
+                        Theme="{StaticResource InnerPathIcon}"
+                        Data="{StaticResource IconStop}" />
+                </Button>
+                <ToggleSwitch
+                    Name="StartButton"
+                    Padding="8"
+                    IsChecked="{Binding  Status,
+                     Converter={StaticResource EnumToBooleanConverter},
+                      ConverterParameter={x:Static services:DownloadStatus.Downloading},
+                       Mode=OneWay}"
+                    Theme="{StaticResource ButtonToggleSwitch}"
+                    Command="{Binding StartCommand}">
+                    <ToolTip.Tip>
+                        <Panel>
+                            <TextBlock Text="下载" IsVisible="{Binding !$parent[ToggleSwitch].IsChecked}" />
+                            <TextBlock Text="暂停" IsVisible="{Binding $parent[ToggleSwitch].IsChecked}" />
+                        </Panel>
+                    </ToolTip.Tip>
+                    <ToggleSwitch.OffContent>
+                        <PathIcon
+                            Theme="{StaticResource InnerPathIcon}"
+                            Data="{StaticResource IconPlay}" />
+                    </ToggleSwitch.OffContent>
+                    <ToggleSwitch.OnContent>
+                        <PathIcon
+                            Theme="{StaticResource InnerPathIcon}"
+                            Data="{StaticResource IconPause}" />
+                    </ToggleSwitch.OnContent>
+                </ToggleSwitch>
+                <Button
+                    Name="RestartButton"
+                    Padding="8"
+                    Theme="{StaticResource BorderlessButton}"
+                    Classes="Tertiary"
+                    ToolTip.Tip="重新下载"
+                    Command="{Binding RestartCommand}">
+                    <PathIcon
+                        Theme="{StaticResource InnerPathIcon}"
+                        Data="{StaticResource IconRestart}" />
+                </Button>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>
