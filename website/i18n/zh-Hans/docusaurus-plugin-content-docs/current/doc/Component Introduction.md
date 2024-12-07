@@ -8,7 +8,7 @@ sidebar_position: 2
 
 ### 1.GeneralUpdate是什么？
 
-GeneralUpdate是一款基于.NET Standard2.0开源多平台自动升级组件。一个小小star是您对我最大的支持，让我们保持更新维护的动力。选择了中文语言！！！！
+GeneralUpdate是一款基于.NET Standard2.0开源多平台自动升级组件。一个小小star是您对我最大的支持，让我们保持更新维护的动力。
 
 #####  本项目开源仓库地址
 
