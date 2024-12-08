@@ -7,6 +7,14 @@ tags: [quikstart]
 
 
 
+## Sample UI
+
+![](imgs\sampleclient.png)
+
+![](imgs\sampleupgrade.png)
+
+
+
 ## Step1
 
 Download the Sample repository from GitHub. Before using the sample, make sure you have .NET 8 runtime environment installed locally.
