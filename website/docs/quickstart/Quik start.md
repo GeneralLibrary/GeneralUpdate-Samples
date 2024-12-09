@@ -9,6 +9,11 @@ tags: [quikstart]
 
 ## Sample UI
 
+Address：
+
+- https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Client/ClientSample.sln
+- https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/UpgradeSample.sln
+
 ![](imgs\sampleclient.png)
 
 ![](imgs\sampleupgrade.png)

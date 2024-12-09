@@ -38,10 +38,9 @@ Sample Project Address GeneralUpdate-Samples
 
 ##### Help Documentation #####
 
-- Video Tutorial: https://www.bilibili.com/video/BV1aX4y137dd
+- Video Tutorial: https://www.bilibili.com/video/BV1c8iyYZE7P
 - Official Website: https://www.justerzhu.cn/
-- Quick Start: https://mp.weixin.qq.com/s/pRKPFe3eC0NSqv9ixXEiTg
-- Usage Tutorial Video: https://www.bilibili.com/video/BV1FT4y1Y7hV
+- Quick Start: https://www.justerzhu.cn/docs/quickstart/quikstart
 - Help Documentation & Official Website Source Repository: https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website/doc
 
 ##### Communication and Exchange

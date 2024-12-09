@@ -39,10 +39,9 @@ MAUI GeneralUpdate.Maui
 
 ##### 帮助文档 #####
 
-- 讲解视频： https://www.bilibili.com/video/BV1aX4y137dd
+- 讲解视频： https://www.bilibili.com/video/BV1c8iyYZE7P
 - 官方网站： https://www.justerzhu.cn/
-- 快速启动： https://mp.weixin.qq.com/s/pRKPFe3eC0NSqv9ixXEiTg
-- 使用教程视频：https://www.bilibili.com/video/BV1FT4y1Y7hV
+- 快速启动： https://www.justerzhu.cn/docs/quickstart/quikstart
 - 帮助文档&官方网站源码仓库：https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website/doc
 
 ##### 沟通交流
