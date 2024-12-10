@@ -4,12 +4,17 @@
 
 The GeneralUpdate twin project provides code examples for Quick Start.
 
-| Directory | Note                                               |
-| --------- | -------------------------------------------------- |
-| client    | Client-side sample code                            |
-| server    | Server-side sample code, written using minimal API |
-| upgrade   | Sample code on the upgrade assistant               |
-| website   | Generalupdate official website source code         |
+| Directory | Note                                                         |
+| --------- | ------------------------------------------------------------ |
+| client    | Client-side sample code                                      |
+| server    | Server-side sample code, written using minimal API           |
+| upgrade   | Sample code on the upgrade assistant                         |
+| bowl      | Process crash monitoring, exporting relevant crash information. |
+| diff      | Differential patch generation debugging example.             |
+| OSS       | OSS upgrade demonstration with AOT support.                  |
+| push      | Example of receiving an update push with AOT support.        |
+| compress  | Compression capability debugging.                            |
+| website   | Generalupdate official website source code                   |
 
 
 
