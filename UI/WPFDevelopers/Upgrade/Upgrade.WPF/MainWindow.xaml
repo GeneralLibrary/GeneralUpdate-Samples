@@ -1,0 +1,25 @@
+﻿<wd:Window
+    x:Class="Upgrade.WPF.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Upgrade.WPF"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wd="https://github.com/WPFDevelopersOrg/WPFDevelopers"
+    Title="General Update 客户端演示"
+    Width="800"
+    Height="450"
+    Icon="GeneralUpdate.png"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+    <Grid>
+        <wd:NotifyIcon Name="WpfNotifyIcon" Title="General Update 客户端演示" />
+        <Button
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            wd:ElementHelper.CornerRadius="3"
+            Click="BtnUpgrade1_Click"
+            Content="Upgrade Window "
+            Style="{StaticResource WD.PrimaryButton}" />
+    </Grid>
+</wd:Window>
