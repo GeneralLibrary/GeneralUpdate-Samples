@@ -5,10 +5,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClientSample", "ClientSample.csproj", "{F90306BE-A032-4C38-BE1A-7E1CAFEFB633}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client.Avalonia", "..\Client.Avalonia\Client.Avalonia.csproj", "{217AA2C2-EC7C-40FC-B34C-A1FFCF006CFB}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Avalonia", "..\Common.Avalonia\Common.Avalonia.csproj", "{6E557C80-481A-4AED-BB4F-D2ECEECDDFE7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,13 +18,5 @@ Global
 		{F90306BE-A032-4C38-BE1A-7E1CAFEFB633}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F90306BE-A032-4C38-BE1A-7E1CAFEFB633}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F90306BE-A032-4C38-BE1A-7E1CAFEFB633}.Release|Any CPU.Build.0 = Release|Any CPU
-		{217AA2C2-EC7C-40FC-B34C-A1FFCF006CFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{217AA2C2-EC7C-40FC-B34C-A1FFCF006CFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{217AA2C2-EC7C-40FC-B34C-A1FFCF006CFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{217AA2C2-EC7C-40FC-B34C-A1FFCF006CFB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6E557C80-481A-4AED-BB4F-D2ECEECDDFE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6E557C80-481A-4AED-BB4F-D2ECEECDDFE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6E557C80-481A-4AED-BB4F-D2ECEECDDFE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6E557C80-481A-4AED-BB4F-D2ECEECDDFE7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

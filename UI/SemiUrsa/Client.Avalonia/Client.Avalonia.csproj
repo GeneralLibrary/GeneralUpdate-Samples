@@ -27,6 +27,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Common.Avalonia\Common.Avalonia.csproj"/>
+      <ProjectReference Include="..\Common.Avalonia\Common.Avalonia.csproj" />
     </ItemGroup>
 </Project>
