@@ -12,81 +12,42 @@
     BorderBrush="Transparent"
     BorderThickness="0"
     Icon="/GeneralUpdate.png"
-    NoChrome="True"
     ResizeMode="NoResize"
     TitleBackground="{DynamicResource WD.BackgroundSolidColorBrush}"
     TitleHeight="30"
     WindowStartupLocation="CenterScreen"
     WindowStyle="ToolWindow"
     mc:Ignorable="d">
-    <wd:Window.TitleBar>
-        <Grid Height="40" VerticalAlignment="Center">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" MinWidth="30" />
-            </Grid.ColumnDefinitions>
-            <Image
-                Width="20"
-                Height="20"
-                Margin="4,0"
-                Source="/GeneralUpdate.png" />
-            <TextBlock
-                Grid.Column="1"
-                VerticalAlignment="Center"
-                FontSize="14"
-                Foreground="{StaticResource WD.SecondaryTextSolidColorBrush}"
-                IsHitTestVisible="False"
-                Text="General Update 01 客户端升级" />
-            <Button
-                x:Name="CloseButton"
-                Grid.Column="2"
-                Width="30"
-                Height="30"
-                HorizontalAlignment="Right"
-                Click="CloseButton_Click"
-                Style="{StaticResource WD.WindowButtonStyle}"
-                ToolTip="关闭">
-                <wd:PathIcon
-                    Width="10"
-                    Height="10"
-                    Kind="WindowClose" />
-            </Button>
-        </Grid>
-    </wd:Window.TitleBar>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="20" />
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <Border
-            Grid.Row="1"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center">
-            <wd:SmallPanel>
-                <!--<Image
-                    x:Name="PART_Image"
-                    Width="100"
-                    Height="100"
-                    Source="/GeneralUpdate.png"
-                    Stretch="Uniform" />-->
-                <wd:BreathLamp
-                    Width="140"
-                    Height="140"
-                    GradientStopColor1="#FF00cec9"
-                    GradientStopColor2="#2000cec9"
-                    IsLampStart="True"
-                    LampEffect="Streamer">
-                    <Ellipse Width="100" Height="100">
-                        <Ellipse.Fill>
-                            <ImageBrush ImageSource="pack://application:,,,/GeneralUpdate.png" />
-                        </Ellipse.Fill>
-                    </Ellipse>
-                </wd:BreathLamp>
-                <wd:CircularProgressBar x:Name="PART_Slider" Value="{Binding ElementName=CirularSlider, Path=Value}" />
-            </wd:SmallPanel>
-        </Border>
+        <Grid Grid.Row="1">
+            <wd:BreathLamp
+                Width="150"
+                Height="150"
+                GradientStopColor1="#FF00cec9"
+                GradientStopColor2="#2000cec9"
+                IsLampStart="True"
+                LampEffect="Streamer" />
+            <Image
+                x:Name="PART_Image"
+                Width="110"
+                Height="110"
+                Source="/GeneralUpdate.png"
+                Stretch="Uniform" />
+            <wd:CircleProgressBar
+                x:Name="PART_Slider"
+                Width="120"
+                Height="120"
+                Padding="3,3,0,0"
+                BorderThickness="20"
+                IsRound="True"
+                Value="{Binding ElementName=CirularSlider, Path=Value}" />
+        </Grid>
+
         <Grid
             Grid.Row="2"
             Margin="0,0,0,30"
