@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using Upgrade.WPF.Views;
+using WPFDevelopers.Helpers;
 using MessageBox = WPFDevelopers.Controls.MessageBox;
 
 namespace Upgrade.WPF
@@ -17,7 +18,7 @@ namespace Upgrade.WPF
 
         private void BtnUpgrade1_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            new UpgradeWindow().ShowDialog();
+            new UpgradeWindow().MaskShowDialog();
         }
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {

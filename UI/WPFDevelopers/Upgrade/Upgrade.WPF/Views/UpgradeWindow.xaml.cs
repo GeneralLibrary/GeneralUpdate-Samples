@@ -22,10 +22,6 @@ namespace Upgrade.WPF.Views
             StartDownload();
         }
 
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
         private async void StartDownload()
         {
             for (double i = 0; i <= 100; i += 1)
