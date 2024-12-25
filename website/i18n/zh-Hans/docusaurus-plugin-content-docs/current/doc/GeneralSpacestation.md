@@ -44,8 +44,8 @@ GeneralLibrary团队针对企业级应用开发了GeneralSpacestation服务，�
 
 | 技术           | 备注                                                | 详情                                                         |
 | -------------- | --------------------------------------------------- | ------------------------------------------------------------ |
-| .NET Core 9    | 微软公司旗下最新免费开源框架（MIT License）         | https://dotnet.microsoft.com/zh-cn/download/dotnet/9.0       |
-| C#13           | 微软公司旗下最新版本开源开发语言之一（MIT License） | https://dotnet.microsoft.com/zh-cn/languages/csharp          |
+| .NET 9         | 微软公司旗下最新免费开源框架（MIT License）         | https://dotnet.microsoft.com/zh-cn/download/dotnet/9.0       |
+| C# 13          | 微软公司旗下最新版本开源开发语言之一（MIT License） | https://dotnet.microsoft.com/zh-cn/languages/csharp          |
 | Aavalonia      | Aavalonia团队的跨平台开源UI框架（MIT License）      | https://avaloniaui.net/                                      |
 | Prism.Avalonia | PrismLibrary团队项目结构框架（MIT License）         | https://github.com/AvaloniaCommunity/Prism.Avalonia          |
 | Semi.Avalonia  | irihi团队开源UI控件库框架（MIT License）            | https://www.irihi.tech/                                      |
