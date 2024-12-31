@@ -99,7 +99,7 @@
                     Command="{Binding StopCommand}">
                     <PathIcon
                         Theme="{StaticResource InnerPathIcon}"
-                        Data="{StaticResource IconStop}" />
+                        Data="{StaticResource SemiIconStop}" />
                 </Button>
                 <ToggleSwitch
                     Name="StartButton"
@@ -119,12 +119,12 @@
                     <ToggleSwitch.OffContent>
                         <PathIcon
                             Theme="{StaticResource InnerPathIcon}"
-                            Data="{StaticResource IconPlay}" />
+                            Data="{StaticResource SemiIconPlay}" />
                     </ToggleSwitch.OffContent>
                     <ToggleSwitch.OnContent>
                         <PathIcon
                             Theme="{StaticResource InnerPathIcon}"
-                            Data="{StaticResource IconPause}" />
+                            Data="{StaticResource SemiIconPause}" />
                     </ToggleSwitch.OnContent>
                 </ToggleSwitch>
                 <Button
@@ -136,7 +136,7 @@
                     Command="{Binding RestartCommand}">
                     <PathIcon
                         Theme="{StaticResource InnerPathIcon}"
-                        Data="{StaticResource IconRestart}" />
+                        Data="{StaticResource SemiIconRestart}" />
                 </Button>
             </StackPanel>
         </Border>

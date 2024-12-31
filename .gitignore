@@ -192,3 +192,6 @@ FakesAssemblies/
 *.v5
 *.bin
 *.v6.1
+
+.idea/
+.vs/
