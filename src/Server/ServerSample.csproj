@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="C:\Users\zhuzh\.nuget\packages\generalupdate.aspnetcore\1.4.1\contentFiles\any\netstandard2.0\GeneralUpdate.ico" />
     <Content Remove="ServerSample\**" />
   </ItemGroup>
 
