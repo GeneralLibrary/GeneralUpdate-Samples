@@ -19,7 +19,7 @@ public class MockDownloadService : IDownloadService
     {
         CurrentStatistics = new DownloadStatistics
         {
-            Version = "11.2.2",
+            Version = "11.2.3",
             Speed = 0,
             Remaining = TimeSpan.Zero,
             TotalBytesToReceive = 1024 * 1024 * 10,
