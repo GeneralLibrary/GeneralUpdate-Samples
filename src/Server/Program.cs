@@ -3,6 +3,8 @@ using ServerSample.DTOs;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
+string packageName = "packet_20250102230201638_1.0.0.1";
+
 app.MapPost("/Report", (ReportDTO request) =>
 {
     return HttpResponseDTO<bool>.Success(true,"has update.");
@@ -10,17 +12,17 @@ app.MapPost("/Report", (ReportDTO request) =>
 
 app.MapPost("/Verification", (VerifyDTO request) =>
 {
-    var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "packages", "packet_20241125233523804_1.0.0.1.zip");
+    var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "packages", $"{packageName}.zip");
     var packet = new FileInfo(filePath);
     var result = new List<VerificationResultDTO>
     {
         new VerificationResultDTO
         {
             RecordId = 1,
-            Name = "packet_20241125233523804_1.0.0.1",
-            Hash = "6c1ef824df2443b95e93c51d91de1c77447884602da2275a182a610a9429a835",
+            Name = packageName,
+            Hash = "ad1a85a9169ca0083ab54ba390e085c56b9059efc3ca8aa1ec9ed857683cc4b1",
             ReleaseDate = DateTime.Now,
-            Url = "http://localhost:5000/packages/packet_20241125233523804_1.0.0.1.zip",
+            Url = $"http://localhost:5000/packages/{packageName}.zip",
             Version = "1.0.0.1",
             AppType = 1,
             Platform = 1,

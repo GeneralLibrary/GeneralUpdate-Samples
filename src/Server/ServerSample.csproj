@@ -13,10 +13,10 @@
   <ItemGroup>
     <None Remove="build.bat" />
     <None Remove="ServerSample\**" />
-    <None Update="packages\packet_20241125233523804_1.0.0.1.zip">
+    <None Update="packages\packet_20250102230201638_1.0.0.1.zip">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="wwwroot\packages\packet_20241125233523804_1.0.0.1.zip">
+    <None Include="wwwroot\packages\packet_20250102230201638_1.0.0.1.zip">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
