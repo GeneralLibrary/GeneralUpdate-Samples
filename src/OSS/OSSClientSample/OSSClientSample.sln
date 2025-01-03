@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OSSClientSample", "OSSClientSample.csproj", "{2892673E-5A89-4523-8005-F11DB3C96E40}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OSSClientSample", "OSSClientSample.csproj", "{AAA0E4B3-4807-43B8-8DB6-8EA6AA57A53F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -8,9 +8,9 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2892673E-5A89-4523-8005-F11DB3C96E40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2892673E-5A89-4523-8005-F11DB3C96E40}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2892673E-5A89-4523-8005-F11DB3C96E40}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2892673E-5A89-4523-8005-F11DB3C96E40}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAA0E4B3-4807-43B8-8DB6-8EA6AA57A53F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAA0E4B3-4807-43B8-8DB6-8EA6AA57A53F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAA0E4B3-4807-43B8-8DB6-8EA6AA57A53F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAA0E4B3-4807-43B8-8DB6-8EA6AA57A53F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

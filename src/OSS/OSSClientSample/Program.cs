@@ -2,10 +2,13 @@
 using GeneralUpdate.ClientCore;
 using GeneralUpdate.Common.Shared.Object;
 
-var paramsOSS = new GlobalConfigInfoOSS();
-paramsOSS.Url = "http://192.168.50.203/versions.json";
-paramsOSS.CurrentVersion = "1.0.0.0";
-paramsOSS.VersionFileName = "versions.json";
-paramsOSS.AppName = "GeneralUpdate.Client.exe";
-paramsOSS.Encoding = Encoding.UTF8.WebName;
-GeneralClientOSS.Start(paramsOSS);
+var paramsOSS = new GlobalConfigInfoOSS
+{
+    Url = "http://localhost:5000/packages/versions.json",
+    CurrentVersion = "1.0.0.0",
+    VersionFileName = "versions.json",
+    AppName = "OSSClientSample.exe",
+    Encoding = Encoding.UTF8.WebName
+};
+
+await GeneralClientOSS.Start(paramsOSS, "OSSUpgradeSample.exe");

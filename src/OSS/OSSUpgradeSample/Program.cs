@@ -8,4 +8,11 @@
  * 
  * Typically, GeneralClientOSS and GeneralUpdateOSS appear as a pair.
  */
-GeneralUpdateOSS.Start();
+try
+{
+    await GeneralUpdateOSS.Start();
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.Message);
+}

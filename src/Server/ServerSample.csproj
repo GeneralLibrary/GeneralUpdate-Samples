@@ -8,6 +8,12 @@
 
   <ItemGroup>
     <Content Remove="ServerSample\**" />
+    <Content Update="wwwroot\packages\versions.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\packages\packet_20250102230201638_1.0.0.1.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
