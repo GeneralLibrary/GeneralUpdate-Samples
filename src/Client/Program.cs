@@ -9,14 +9,13 @@ try
 {
     Console.WriteLine($"主程序初始化，{DateTime.Now}！");
     Console.WriteLine("当前运行目录：" + Thread.GetDomain().BaseDirectory);
-    await Task.Delay(2000);
     var configinfo = new Configinfo
     {
         //configinfo.UpdateLogUrl = "https://www.baidu.com";
-        ReportUrl = "http://127.0.0.1:5000/Report",
-        UpdateUrl = "http://127.0.0.1:5000/Verification",
-        AppName = "GeneralUpdate.Upgrad.exe",
-        MainAppName = "GeneralUpdate.Client.exe",
+        ReportUrl = "http://127.0.0.1:5000/Upgrade/Report",
+        UpdateUrl = "http://127.0.0.1:5000/Upgrade/Verification",
+        AppName = "UpgradeSample.exe",
+        MainAppName = "ClientSample.exe",
         InstallPath = Thread.GetDomain().BaseDirectory,
         //configinfo.Bowl = "Generalupdate.CatBowl.exe";
         //当前客户端的版本号
@@ -44,6 +43,7 @@ try
         .Option(UpdateOption.Encoding, Encoding.Default)
         .LaunchAsync();
     Console.WriteLine($"主程序已启动，{DateTime.Now}！");
+    await Task.Delay(2000);
 }
 catch (Exception e)
 {

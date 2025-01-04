@@ -5,12 +5,12 @@ var app = builder.Build();
 
 string packageName = "packet_20250102230201638_1.0.0.1";
 
-app.MapPost("/Report", (ReportDTO request) =>
+app.MapPost("/Upgrade/Report", (ReportDTO request) =>
 {
     return HttpResponseDTO<bool>.Success(true,"has update.");
 });
 
-app.MapPost("/Verification", (VerifyDTO request) =>
+app.MapPost("/Upgrade/Verification", (VerifyDTO request) =>
 {
     var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "packages", $"{packageName}.zip");
     var packet = new FileInfo(filePath);
