@@ -19,7 +19,7 @@ public class UpgradeHubService : IUpgradeHubService
 NuGet Installation
 
 ```shell
-NuGet\Install-Package GeneralUpdate.ClientCore -Version 1.0.0
+NuGet\Install-Package GeneralUpdate.ClientCore -Version 9.1.0
 ```
 
 ### Example

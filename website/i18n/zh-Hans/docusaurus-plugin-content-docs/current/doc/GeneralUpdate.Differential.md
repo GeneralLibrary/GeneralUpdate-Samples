@@ -19,7 +19,7 @@ public sealed class DifferentialCore
 nuget安装
 
 ```shell
-NuGet\Install-Package GeneralUpdate.Differential -Version 3.0.0
+NuGet\Install-Package GeneralUpdate.Differential -Version 9.1.0
 ```
 
 

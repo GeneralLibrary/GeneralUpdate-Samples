@@ -4,14 +4,6 @@ sidebar_position: 3
 
 ---
 
-#### Background Story
-
-![](imgs\bowl.jpg)
-
-Bowl is an orange cat owned by the author Juster. The reason for naming an orange cat or component "Bowl" is because orange cats tend to get fat easily. Juster hopes it will eat only a small bowl at a time, hence the name "Little Bowl." In the GeneralUpdate system, if the upgrade process encounters significant issues, Bowl will step in to restore the situation and analyze the reasons for failure.
-
-![](imgs\mybowl.jpg)
-
 ### Definition
 
 Namespace: GeneralUpdate.Bowl
@@ -27,7 +19,7 @@ public sealed class Bowl
 NuGet Installation
 
 ```shell
-NuGet\Install-Package GeneralUpdate.Bowl -Version 3.0.0
+NuGet\Install-Package GeneralUpdate.Bowl -Version 9.1.0
 ```
 
 ### Example

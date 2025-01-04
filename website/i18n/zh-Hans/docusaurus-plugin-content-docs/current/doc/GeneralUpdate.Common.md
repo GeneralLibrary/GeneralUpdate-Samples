@@ -15,5 +15,5 @@ sidebar_position: 8
 nuget安装
 
 ```shell
-NuGet\Install-Package GeneralUpdate.Common -Version 3.0.0
+NuGet\Install-Package GeneralUpdate.Common -Version 9.1.0
 ```

@@ -7,6 +7,15 @@ tags: [log]
 
 # 📒Release log
 
+## 📍2025-01-04 9.1.0
+
+- Add a feature to skip specified folders (specified parameters will be passed through Client and Upgrade).
+- Add Scheme and Token parameters to the HTTP request headers.
+- Fix the issue of OSS Samples failing to update.
+- Modify the OSS feature to not delete the update package upon completion.
+- Fix the issue in Samples where only the Client updates, not the Upgrade. (The looping update occurred because the local version number was not changed)
+- Upgrade all Samples from version 9.0.0 to 9.1.0.
+
 
 
 ## 📍2024-11-28

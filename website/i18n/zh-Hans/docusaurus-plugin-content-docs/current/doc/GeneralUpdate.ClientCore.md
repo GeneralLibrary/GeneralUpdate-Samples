@@ -19,7 +19,7 @@ public class GeneralClientBootstrap : AbstractBootstrap<GeneralClientBootstrap, 
 nuget安装
 
 ```shell
-NuGet\Install-Package GeneralUpdate.ClientCore -Version 3.0.0
+NuGet\Install-Package GeneralUpdate.ClientCore -Version 9.1.0
 ```
 
 
@@ -194,7 +194,6 @@ GeneralClientBootstrap提供以下能力。
 | **BlackFiles** List 黑名单中的文件将跳过更新。               |
 | **BlackFormats** 黑名单中的文件格式将跳过更新。              |
 | **DriveEnabled** bool 是否启用驱动升级功能。                 |
-| **WillMessageEnabled** bool 是否开启遗言功能，如果想要启动需要同步部署'GeneralUpdate. SystemService'服务。 |
 
 ### 🌴Configinfo
 

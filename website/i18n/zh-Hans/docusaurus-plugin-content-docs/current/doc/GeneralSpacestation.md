@@ -54,9 +54,6 @@ GeneralLibrary团队针对企业级应用开发了GeneralSpacestation服务，�
 | DDD            | 当下流行的架构\设计模式                             | https://learn.microsoft.com/zh-cn/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/ |
 | MVVM           | 当下流行的架构\设计模式                             | https://learn.microsoft.com/zh-cn/dotnet/architecture/maui/mvvm |
 | AOT            | GeneralUpdate所有组件全线支持、兼容AOT编译          | https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/ |
-| Linux (Ubuntu) | 本产品全线支持Linux操作系统                         | https://cn.ubuntu.com/                                       |
-| Windows        | 支持win7以上版本的操作系统                          | https://support.microsoft.com/zh-cn/welcometowindows         |
-| LoongOS        | 国产（龙芯）操作系统（新世界）                      | https://www.loongson.cn/system/loongos                       |
 | ......         | ......                                              |                                                              |
 
 

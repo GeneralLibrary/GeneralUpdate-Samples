@@ -11,5 +11,5 @@ This component primarily serves as a library for the infrastructure and shared c
 NuGet Installation
 
 ```shell
-NuGet\Install-Package GeneralUpdate.Common -Version 3.0.0
+NuGet\Install-Package GeneralUpdate.Common -Version 9.1.0
 ```

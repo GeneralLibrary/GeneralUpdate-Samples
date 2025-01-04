@@ -27,7 +27,7 @@ public sealed class GeneralClientOSS
 nuget安装
 
 ```shell
-NuGet\Install-Package GeneralUpdate.ClientCore -Version 3.0.0
+NuGet\Install-Package GeneralUpdate.ClientCore -Version 9.1.0
 ```
 
 
@@ -54,20 +54,46 @@ NuGet\Install-Package GeneralUpdate.ClientCore -Version 3.0.0
 
 
 
-以下示例定义方法，包含GeneralClientOSS使用方法。
+以下示例定义方法，包含GeneralClientOSS、GeneralUpdateOSS 使用示例：
 
 ```c#
-Task.Run(async () =>
+using System.Text;
+using GeneralUpdate.ClientCore;
+using GeneralUpdate.Common.Shared.Object;
+
+var paramsOSS = new GlobalConfigInfoOSS
 {
-    var url = "http://192.168.xxx.xxx";
-    var apk = "com.companyname.generalupdate.ossclient.apk";
-    var authority = "com.generalupdate.oss.fileprovider";
-    var currentVersion = "1.0.0.0";
-    var versionFileName = "version.json";
-    GeneralClientOSS.AddListenerDownloadProcess(OnOSSDownload);
-    GeneralClientOSS.AddListenerException(OnException);
-    await GeneralClientOSS.Start(new ParamsOSS(url, apk, authority, currentVersion, versionFileName));
-});
+    Url = "http://localhost:5000/packages/versions.json",
+    CurrentVersion = "1.0.0.0",
+    VersionFileName = "versions.json",
+    AppName = "OSSClientSample.exe",
+    Encoding = Encoding.UTF8.WebName
+};
+
+await GeneralClientOSS.Start(paramsOSS, "OSSUpgradeSample.exe");
+```
+
+
+
+```
+using GeneralUpdate.Core;
+
+/*
+ * GeneralUpdateOSS will by default read the JSON content of GlobalConfigInfoOSS stored in the system environment variables by GeneralClientOSS
+ * , and developers do not need to be concerned with the entire process.
+ * 
+ * Environment.GetEnvironmentVariable("GlobalConfigInfoOSS", EnvironmentVariableTarget.User);
+ * 
+ * Typically, GeneralClientOSS and GeneralUpdateOSS appear as a pair.
+ */
+try
+{
+    await GeneralUpdateOSS.Start();
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.Message);
+}
 ```
 
 

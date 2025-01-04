@@ -54,9 +54,6 @@ Technologies involved in the introduction (including but not limited to operatin
 | DDD            | Popular architecture/design pattern                          | https://learn.microsoft.com/zh-cn/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/ |
 | MVVM           | Popular architecture/design pattern                          | https://learn.microsoft.com/zh-cn/dotnet/architecture/maui/mvvm |
 | AOT            | Full support for AOT compilation across all GeneralUpdate components | https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/ |
-| Linux (Ubuntu) | Full support for Linux operating systems                     | https://cn.ubuntu.com/                                       |
-| Windows        | Supports operating systems from Windows 7 onwards            | https://support.microsoft.com/zh-cn/welcometowindows         |
-| LoongOS        | Domestic (Loongson) operating system (New World)             | https://www.loongson.cn/system/loongos                       |
 | ......         | ......                                                       |                                                              |
 
 
