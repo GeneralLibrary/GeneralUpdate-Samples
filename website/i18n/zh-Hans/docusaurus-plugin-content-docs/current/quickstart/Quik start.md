@@ -32,15 +32,16 @@ tags: [quikstart]
 
 ![](imgs\content.png)
 
-| 名称         | 说明                             |
-| ------------ | -------------------------------- |
-| Client       | 主客户端示例程序                 |
-| Server       | 服务端示例程序                   |
-| StartManager | 更新流程控制台                   |
-| Upgrade      | 升级端示例程序                   |
-| process.bat  | 无需关注                         |
-| resource.bat | 无需关注                         |
-| start.cmd    | 启动更新示例的脚本，一切从它开始 |
+| 名称          | 说明                  |
+| ------------- | --------------------- |
+| Client        | 主客户端示例程序      |
+| Server        | 服务端示例程序        |
+| StartManager  | 更新流程控制台        |
+| Upgrade       | 升级端示例程序        |
+| process.bat   | 无需关注              |
+| resource.bat  | 无需关注              |
+| start.cmd     | 启动更新示例的脚本    |
+| oss_start.cmd | 启动OSS更新示例的脚本 |
 
 
 
@@ -63,12 +64,6 @@ tags: [quikstart]
 ```
 
 ![](imgs\build.png)
-
-
-
-这时候就会出现StartManager.exe的界面，所有的选项均为字面意思，我们先别着急输入1这时候先看看app目录更新之前的装备后续方便我们验证更新结果。
-
-![](imgs\manager.png)
 
 
 

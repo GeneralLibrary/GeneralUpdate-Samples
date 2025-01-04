@@ -32,15 +32,18 @@ The repository directory contents are as follows:
 
 ![](imgs\content.png)
 
-| Name         | Description                                                  |
-| ------------ | ------------------------------------------------------------ |
-| Client       | Main client sample program                                   |
-| Server       | Server sample program                                        |
-| StartManager | Update process console                                       |
-| Upgrade      | Upgrade client sample program                                |
-| process.bat  | Not required for attention                                   |
-| resource.bat | Not required for attention                                   |
-| start.cmd    | Script to start the update sample, everything begins with this |
+| Name          | Description                           |
+| ------------- | ------------------------------------- |
+| Client        | Main client sample program            |
+| Server        | Server sample program                 |
+| StartManager  | Update process console                |
+| Upgrade       | Upgrade client sample program         |
+| process.bat   | Not required for attention            |
+| resource.bat  | Not required for attention            |
+| start.cmd     | Script to start the update sample     |
+| oss_start.cmd | Script to start the update OSS sample |
+
+
 
 ## Step2
 
@@ -61,12 +64,6 @@ The automatic process will begin compiling and copying all related project bin d
 ```
 
 ![](imgs\build.png)
-
-
-
-At this point, the StartManager.exe interface will appear. All options are self-explanatory. Before entering option 1, let's first examine the app directory to verify the pre-update setup, which will help us confirm the update results later.
-
-![](imgs\manager.png)
 
 
 
