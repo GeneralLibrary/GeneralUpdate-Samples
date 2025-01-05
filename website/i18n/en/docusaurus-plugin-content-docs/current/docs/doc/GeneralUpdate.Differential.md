@@ -2,7 +2,7 @@
 
 Namespace: GeneralUpdate.Differential
 
-Assembly: GeneralUpdate.Differential.dll
+Assembly: GeneralUpdate.Core.dll
 
 
 
@@ -15,7 +15,7 @@ public sealed class DifferentialCore
 NuGet Installation
 
 ```shell
-NuGet\Install-Package GeneralUpdate.Differential -Version 9.1.0
+NuGet\Install-Package GeneralUpdate.Core -Version 9.1.2
 ```
 
 ### Example

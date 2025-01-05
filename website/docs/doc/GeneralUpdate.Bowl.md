@@ -19,7 +19,7 @@ public sealed class Bowl
 NuGet Installation
 
 ```shell
-NuGet\Install-Package GeneralUpdate.Bowl -Version 9.1.0
+NuGet\Install-Package GeneralUpdate.Bowl -Version 9.1.2
 ```
 
 ### Example

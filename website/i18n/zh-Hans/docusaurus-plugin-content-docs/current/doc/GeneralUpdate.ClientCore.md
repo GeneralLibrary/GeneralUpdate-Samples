@@ -19,7 +19,7 @@ public class GeneralClientBootstrap : AbstractBootstrap<GeneralClientBootstrap, 
 nuget安装
 
 ```shell
-NuGet\Install-Package GeneralUpdate.ClientCore -Version 9.1.0
+NuGet\Install-Package GeneralUpdate.ClientCore -Version 9.1.2
 ```
 
 

@@ -6,7 +6,7 @@ sidebar_position: 6
 
 命名空间：GeneralUpdate.Differential
 
-程序集：GeneralUpdate.Differential.dll
+程序集：GeneralUpdate.Core.dll
 
 
 
@@ -19,7 +19,7 @@ public sealed class DifferentialCore
 nuget安装
 
 ```shell
-NuGet\Install-Package GeneralUpdate.Differential -Version 9.1.0
+NuGet\Install-Package GeneralUpdate.Core -Version 9.1.2
 ```
 
 

@@ -19,7 +19,7 @@ public class GeneralUpdateBootstrap : AbstractBootstrap<GeneralUpdateBootstrap, 
 nuget安装
 
 ```shell
-NuGet\Install-Package GeneralUpdate.Core -Version 9.1.0
+NuGet\Install-Package GeneralUpdate.Core -Version 9.1.2
 ```
 
 
