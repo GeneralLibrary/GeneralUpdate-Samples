@@ -9,6 +9,15 @@ tags: [log]
 
 
 
+## 📍2025-01-05 Version 9.1.2
+
+- Fixed the issue where updates would continue despite hash verification exceptions.
+- Removed the references of the Common and Differential components from Bowl / ClientCore / Core to resolve the DLL usage issue during mutual upgrades.
+
+- Note: The Common and Differential components will only be updated and iterated within the GeneralUpdate solution and will no longer be updated on the NuGet platform. The capabilities provided by the Common and Differential components will continue to exist in the Bowl / ClientCore / Core components through code file references. Developers no longer need to worry about whether the Common and Differential components are referenced.
+
+
+
 ## 📍2025-01-04 9.1.0
 
 - Add a feature to skip specified folders (specified parameters will be passed through Client and Upgrade).

@@ -9,6 +9,15 @@ tags: [log]
 
 
 
+## 📍2025-01-05 9.1.2
+
+- 修复hash校验异常继续执行更新问题
+- 解除Common组件和Differential组件与Bowl / ClientCore / Core引用，解决相互升级出现dll占用问题。
+
+- 说明Common和Differential仅存在于GeneralUpdate解决方案中更新迭代，不再更新至Nuget平台。Common组件和Differential组件所有用的能力通过代码文件引用的方式继续存在于Bowl / ClientCore / Core组件中。开发者无需再关心Common和Differential组件是否引用。
+
+
+
 ## 📍2025-01-04 9.1.0
 
 - 添加屏蔽指定文件夹跳过功能（指定参数会流转Client、Upgrade）。
