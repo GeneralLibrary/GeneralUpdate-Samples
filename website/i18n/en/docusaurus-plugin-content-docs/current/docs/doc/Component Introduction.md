@@ -10,6 +10,12 @@ sidebar_position: 2
 
 GeneralUpdate is an open-source cross-platform application automatic update component based on .NET Standard 2.0 and licensed under the MIT license.
 
+| Github               | Gitee               | GitCode               |
+| -------------------- | ------------------- | --------------------- |
+| ![](imgs\github.png) | ![](imgs\gitee.png) | ![](imgs\gitcode.jpg) |
+
+
+
 ## 2. What does GeneralUpdate offer?
 
 ##### Component Features

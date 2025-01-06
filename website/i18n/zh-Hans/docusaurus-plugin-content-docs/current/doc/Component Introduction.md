@@ -12,6 +12,10 @@ sidebar_position: 2
 
 GeneralUpdate是一款基于.NET Standard2.0 MIT协议开源的跨平台应用程序自动升级组件。
 
+| Github               | Gitee               | GitCode               |
+| -------------------- | ------------------- | --------------------- |
+| ![](imgs\github.png) | ![](imgs\gitee.png) | ![](imgs\gitcode.jpg) |
+
 
 
 ## 2. GeneralUpdate提供什么？
