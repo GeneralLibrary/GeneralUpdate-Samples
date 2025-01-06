@@ -1,4 +1,13 @@
 @echo off
+
+git remote -v
+
+set /p commitmessage=Git commit message:
+
+git add .
+
+git commit -m "%commitMessage%"
+
 echo Pushing to default remote repository...
 git push
 if %errorlevel% neq 0 (
