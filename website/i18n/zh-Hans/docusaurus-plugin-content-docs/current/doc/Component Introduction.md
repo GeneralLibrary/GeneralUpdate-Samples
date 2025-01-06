@@ -6,89 +6,15 @@ sidebar_position: 2
 
 ![](imgs\GeneralUpdate_h2.png)
 
-### 1.GeneralUpdate是什么？
+## 1. GeneralUpdate是什么？
 
-GeneralUpdate是一款基于.NET Standard2.0开源多平台自动升级组件。一个小小star是您对我最大的支持，让我们保持更新维护的动力。
+**更新无限，升级无界。**
 
-#####  本项目开源仓库地址
-
-- https://github.com/GeneralLibrary/GeneralUpdate
-- https://gitee.com/GeneralLibrary/GeneralUpdate
-
-##### 相关开源项目仓库地址
-
-当前项目GeneralUpdate
-
-- https://github.com/GeneralLibrary/GeneralUpdate
-- https://gitee.com/GeneralLibrary/GeneralUpdate
-
-MAUI GeneralUpdate.Maui
-
-- https://github.com/GeneralLibrary/GeneralUpdate.Maui
-
-打包工具项目地址GeneralUpdate.Tools
-
-- https://github.com/GeneralLibrary/GeneralUpdate.Tools
-- https://gitee.com/GeneralLibrary/GeneralUpdate.Tools
-
-示例项目地址GeneralUpdate-Samples
-
-- https://github.com/GeneralLibrary/GeneralUpdate-Samples
-
-- https://gitee.com/GeneralLibrary/GeneralUpdate-Samples
-
-##### 帮助文档 #####
-
-- 讲解视频： https://www.bilibili.com/video/BV1c8iyYZE7P
-- 官方网站： https://www.justerzhu.cn/
-- 快速启动： https://www.justerzhu.cn/docs/quickstart/quikstart
-- 帮助文档&官方网站源码仓库：https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website/doc
-
-##### 沟通交流
-
-本开源项目目前遵循MIT开源协议开源，可免费用于商用。在免费沟通渠道会不定期回答各位开发者的 问题。所有的社区捐赠将用于开源项目的发展建设。代码贡献者将会用捐赠资金进行奖励。
-
-- 免费问题解答： https://github.com/GeneralLibrary/GeneralUpdate/issues
-- 免费技术交流： .NET技术交流群 341349660
-- 开源项目使用讨论：GeneralUpdate交流群 748744489
-- 关于开源项目一对一问答需付费咨询。 
+GeneralUpdate是一款基于.NET Standard2.0 MIT协议开源的跨平台应用程序自动升级组件。
 
 
 
-### 商务合作
-
-定制化二次开发，技术咨询，开源项目打赏以下是企业咨询、报价、商务合作联系方式（加好友请注明来意拒绝闲聊，推荐加微信）。
-
-![](imgs\contact.png)
-
-
-
-
-
-### 2.统一语言（Unifying Language）
-
-在开始使用GeneralUpdate之前我们需要先知道体系中的一些基础概念。
-
-​                                                    ![](imgs/client_server_upgrade.jpg)
-
-- Client：是指你的主应用程序，是被更新的客户端。也可理解为是公司的产品。 
-- Upgrade:是指升级程序，它将是一个独立的进程。需要和Client放在同一级目录下，在使用（或编码） 的过程中不可以和任何业务或设计关联、必须保持独立引用。 
-- Server:是指服务端应用（ASP.NET）将提供版本更新信息交互、版本验证功能。 
-- GeneralUpdate.Tool：是本开源项目提供的打包工具，用于生成更新包(7z和zip)。
-- UpdatePacket：顾名思义就是更新包，更新包里的内容都是新旧版本中具有文件内容差异补丁 （.pacth）或新增文件。
--  SQL : 目前sql脚本是基于Mysql数据库生成
-
-
-
-#### 版本号执行标准
-
-- Nuget版本管理参考标准：https://docs.microsoft.com/zh-cn/nuget/concepts/package-versioning 
-- 应用程序集版本管理参考标准：https://docs.microsoft.com/zh-cn/dotnet/standard/assembly/versioning （被组件更新的客户端程序，说通俗点就是你公司的产品；组件的操作将按照这个标准执行。） 
-- 每次迭代除了更新AssemblyInfo中的版本号，还需要修改DLL文件的版本号。
-
-
-
-### 3.GeneralUpdate提供什么？
+## 2. GeneralUpdate提供什么？
 
 ##### 组件功能
 
@@ -113,19 +39,7 @@ MAUI GeneralUpdate.Maui
 
 
 
-##### 打包工具
-
-GeneralUpdate.PacketTool使用.NET 8编写的桌面端打包程序。https://github.com/GeneralLibrary/GeneralUpdate.Tools
-
-| 功能               | 支持   | 备注                                                         |
-| ------------------ | ------ | ------------------------------------------------------------ |
-| 差分更新包生成     | 是     | 根据上一个版本和当前版本进行对比找出需要更新的文件或新添加文件。 |
-| 自动上传更新包     | 开发中 | 将生成好的差分更新包自动上传至服务器。                       |
-| 可编辑选择差分文件 | 开发中 | 可视化查看差分包的打包内容，并可选择打包文件。               |
-
-
-
-### 5.GeneralUpdate支持什么？
+## 3.GeneralUpdate支持什么？
 
 ##### .NET框架
 
@@ -137,31 +51,93 @@ GeneralUpdate.PacketTool使用.NET 8编写的桌面端打包程序。https://git
 
 ##### UI框架
 
-| UI框架名称 | 是否支持              |
-| ---------- | --------------------- |
-| WPF        | 支持                  |
-| UWP        | 商店模式下不可更新    |
-| MAUI       | 目前仅支持Android平台 |
-| Avalonia   | 支持                  |
-| WinUI      | 支持                  |
-| Console    | 支持                  |
-| WinForms   | 支持                  |
+| UI框架名称 | 是否支持              | 适配贡献者 |
+| ---------- | --------------------- | ---------- |
+| WPF        | 支持                  | JusterZhu  |
+| UWP        | 商店模式下不可更新    | lindexi    |
+| MAUI       | 目前仅支持Android平台 | JusterZhu  |
+| Avalonia   | 支持                  | JusterZhu  |
+| WinUI      | 支持                  | JusterZhu  |
+| Console    | 支持                  | JusterZhu  |
+| WinForms   | 支持                  | JusterZhu  |
 
 ##### 操作系统
 
-| 操作系统名称       | 是否支持 |
-| ------------------ | -------- |
-| Windows            | 支持     |
-| Linux              | 支持     |
-| Android            | 支持     |
-| 麒麟V10(飞腾S2500) | 支持     |
-| 麒麟V10(x64)       | 支持     |
-| Ubuntu             | 支持     |
-| 龙芯(Loongnix)     | 待验证   |
+| 操作系统名称                  | 是否支持 | 适配贡献者                         |
+| ----------------------------- | -------- | ---------------------------------- |
+| Windows                       | 支持     | JusterZhu                          |
+| Linux                         | 支持     | JusterZhu                          |
+| Android                       | 支持     | JusterZhu                          |
+| 麒麟V10(飞腾S2500)            | 支持     | 溦                                 |
+| 麒麟V10(飞腾FT-2000)          | 支持     | 姚圣伟                             |
+| 麒麟V10(x64)                  | 支持     | 溦                                 |
+| Ubuntu                        | 支持     | JusterZhu                          |
+| 华为欧拉(EulerOS-鲲鹏Kunpeng) | 支持     | 姚圣伟                             |
+| 龙芯(Loongnix LoongArch)      | 支持     | Avalonia中文社区（董彬 Rabbitism） |
+| Apple Mac (M1)                | 支持     | JusterZhu                          |
 
 
 
-### 赞助一下
+## 4.仓库
+
+| 名称                  | 说明                 | 仓库                                                         |
+| --------------------- | -------------------- | ------------------------------------------------------------ |
+| GeneralUpdate         | 自动更新             | https://github.com/GeneralLibrary/GeneralUpdate<br />https://gitee.com/GeneralLibrary/GeneralUpdate |
+| GeneralUpdate.Maui    | Maui自动更新（安卓） | https://github.com/GeneralLibrary/GeneralUpdate.Maui         |
+| GeneralUpdate.Tools   | 更新补丁包制作工具   | https://github.com/GeneralLibrary/GeneralUpdate.Tools<br />https://gitee.com/GeneralLibrary/GeneralUpdate.Tools |
+| GeneralUpdate-Samples | 使用示例             | https://github.com/GeneralLibrary/GeneralUpdate-Samples<br />https://gitee.com/GeneralLibrary/GeneralUpdate-Samples |
+
+
+
+### 5.统一语言
+
+​                                                    ![](imgs/client_server_upgrade.jpg)
+
+在开始使用GeneralUpdate之前我们需要先知道体系中的一些基础概念，同时请下载GeneralUpdate-Samples仓库到本地并进入`..\GeneralUpdate-Samples\src`目录下对照查看便于理解。
+
+| 名称                | 说明                                                         | 解释                                                         |
+| ------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Client              | 被更新的客户端。                                             | 你想更新QQ那么QQ就是Client。                                 |
+| Upgrade             | 升级程序是一个独立的进程。需要和Client放在同一级目录下，在使用（或编码） 的过程中不可以和任何业务或设计关联、必须保持独立引用。 | QQ 无法在运行时更新自身的文件，这时候Upgrade来完成这件事情。 |
+| Packet              | 更新补丁包                                                   | 经常玩游戏的玩家会经常听到“补丁”的概念，补丁的作用通常用于更新游戏中的一些漏洞或者游戏内容，那么在这里也有同样的概念。更新补丁包里的内容是新旧版本中具有文件内容差异或新增文件、需要删除的文件。 |
+| Server              | 服务端应用                                                   | 提供版本更新信息管理、补丁包管理、版本验证功能。（在Samples中只提供了简单示例并不能满足这些功能，需要企业或个人开发者自行实现或购买GeneralSpacestation服务）。 |
+| GeneralUpdate.Tools | 更新补丁包制作工具                                           | 是本开源项目提供的打包工具，用于生成更新补丁包(.zip文件格式)。 |
+
+##### 快速启动
+
+- 快速启动： https://www.justerzhu.cn/docs/quickstart/quikstart
+
+- 讲解视频： https://www.bilibili.com/video/BV1c8iyYZE7P
+- 官方网站： https://www.justerzhu.cn/
+- 帮助文档&官方网站源码仓库：https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website/doc
+
+##### 版本号执行标准
+
+- Nuget版本管理参考标准：https://docs.microsoft.com/zh-cn/nuget/concepts/package-versioning 
+- 应用程序集版本管理参考标准：https://docs.microsoft.com/zh-cn/dotnet/standard/assembly/versioning
+
+
+
+## 6.沟通交流
+
+在免费沟通渠道会不定期回答各位开发者的问题。所有的社区捐赠将用于开源项目的发展建设。代码贡献者将会用捐赠资金进行奖励。
+
+- 免费问题解答： https://github.com/GeneralLibrary/GeneralUpdate/issues
+- 免费技术交流： .NET技术交流群 341349660
+- 免费开源项目使用讨论：GeneralUpdate交流群 748744489
+- E-Mail：zhuzhen723723@outlook.com
+- 由于单独沟通人数过多作者时间精力有限，一对一解答需付费咨询。讨论群或issue提问大家都能看到避免重复回答问题。
+- 本开源项目需要在官网上建立企业墙，如果有企业在项目中有使用本项目并且想上墙进行免费宣传可以联系作者。
+
+
+
+##### 商务合作
+
+定制化二次开发，技术咨询，开源项目打赏以下是企业咨询、报价、商务合作、企业墙联系方式（加好友请注明来意拒绝闲聊，推荐加微信）。
+
+![](imgs\contact.png)
+
+##### 赞助一下
 
 尊敬的赞助者：
 
