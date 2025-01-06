@@ -1,6 +1,6 @@
 ---
-slug: Sample UI
-title: GeneralUpdate
+slug: sampleui
+title: UI
 authors: juster
 tags: [sampleui]
 ---
