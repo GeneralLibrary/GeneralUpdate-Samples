@@ -79,7 +79,7 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 | GeneralUpdate.Tools   | Update Patch Creation Tool       | https://github.com/GeneralLibrary/GeneralUpdate.Tools<br />https://gitee.com/GeneralLibrary/GeneralUpdate.Tools |
 | GeneralUpdate-Samples | Usage Examples                   | https://github.com/GeneralLibrary/GeneralUpdate-Samples<br />https://gitee.com/GeneralLibrary/GeneralUpdate-Samples |
 
-### 5. Unified Language
+## 5. Unified Language
 
 ![](imgs/client_server_upgrade.jpg)
 

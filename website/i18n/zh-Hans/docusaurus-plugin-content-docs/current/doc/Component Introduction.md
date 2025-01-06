@@ -89,7 +89,7 @@ GeneralUpdate是一款基于.NET Standard2.0 MIT协议开源的跨平台应用�
 
 
 
-### 5.统一语言
+## 5.统一语言
 
 ​                                                    ![](imgs/client_server_upgrade.jpg)
 

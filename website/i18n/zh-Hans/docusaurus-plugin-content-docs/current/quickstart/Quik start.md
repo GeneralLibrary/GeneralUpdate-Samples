@@ -7,21 +7,6 @@ tags: [quikstart]
 
 
 
-
-
-## 示例 UI
-
-仓库地址：
-
-- https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Client/ClientSample.sln
-- https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/UpgradeSample.sln
-
-![](imgs\sampleclient.png)
-
-![](imgs\sampleupgrade.png)
-
-
-
 ## Step1
 
 在Github上下载Sample仓库，使用示例前请确保本地安装了.NET 8的运行环境。
