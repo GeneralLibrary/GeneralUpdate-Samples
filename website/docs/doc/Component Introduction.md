@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-![](D:\github_project\GeneralUpdate-Samples\website\i18n\en\docusaurus-plugin-content-docs\current\docs\doc\imgs\GeneralUpdate_h2.png)
+![](imgs\GeneralUpdate_h2.png)
 
 ## 1. What is GeneralUpdate?
 
