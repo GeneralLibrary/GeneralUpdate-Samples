@@ -4,29 +4,25 @@ sidebar_position: 11
 
 ### Introduction
 
-The tool is developed using .NET WPF (.NET 8) and currently supports desktop usage on Windows and Linux (Ubuntu) platforms.
+![](imgs\tool.png)
 
-- Repository Links:
+The tool is developed using Avalonia and supports Windows / Linux / Mac desktop use only.
 
-  - https://gitee.com/GeneralLibrary/GeneralUpdate.Tools
-  - https://github.com/GeneralLibrary/GeneralUpdate.Tools
+| Repository Address                                    |
+| ----------------------------------------------------- |
+| https://gitee.com/GeneralLibrary/GeneralUpdate.Tools  |
+| https://github.com/GeneralLibrary/GeneralUpdate.Tools |
 
-![](imgs/tool.png)
-
-#### Features Provided
-
-| Feature                         | Supported | Remarks                                                      |
-| ------------------------------- | --------- | ------------------------------------------------------------ |
-| Delta Update Package Generation | Yes       | Compares the previous version with the current version to identify files that need updating or new files added. |
-
-
+| Feature             | Supported | Remarks                                                      |
+| ------------------- | --------- | ------------------------------------------------------------ |
+| Differential Update | Yes       | Compares the previous version with the current version to find files that need updating or files that are newly added or deleted. |
 
 #### Description
 
-| Name        | Note                                                         |
+| Name        | Remarks                                                      |
 | ----------- | ------------------------------------------------------------ |
-| Source path | Represents the folder path of the previous version.          |
-| Target path | Represents the folder path of the current version.           |
-| Patch path  | Represents the path where the final delta package is generated. |
-| Build       | Recursively compares all project files (DLL, exe, etc.) in the Source path and Target path folders. It analyzes the list of files that need updating using binary delta checks and incremental checks, and then packages the update package according to the folder structure. |
-| Clear       | Clear the current input content.                             |
+| Source path | Indicates the folder path of the previous version.           |
+| Target path | Indicates the folder path of the current version.            |
+| Patch path  | Indicates the path where the final update patch package will be generated. |
+| Build       | Recursively compares all project files (DLL, exe, etc.) under the Source path and Target path folders, and packages the update package based on a binary differential check and incremental check analysis of the file list that needs updating according to the folder structure. |
+| Clear       | Clears the current input content.                            |

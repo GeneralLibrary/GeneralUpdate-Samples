@@ -4,24 +4,18 @@ sidebar_position: 11
 
 ### 简介
 
-工具使用.NET WPF(.NET 8)进行开发，目前只支持Windows / Linux(Ubuntu) 桌面端使用。
-
-- 仓库地址：
-
-  - https://gitee.com/GeneralLibrary/GeneralUpdate.Tools
-  - https://github.com/GeneralLibrary/GeneralUpdate.Tools
-
 ![](imgs\tool.png)
 
+工具使用Avalonia进行开发，只支持Windows / Linux / Mac  桌面端使用。
 
-
-#### 提供功能
+| 仓库地址                                              |
+| ----------------------------------------------------- |
+| https://gitee.com/GeneralLibrary/GeneralUpdate.Tools  |
+| https://github.com/GeneralLibrary/GeneralUpdate.Tools |
 
 | 功能           | 支持 | 备注                                                         |
 | -------------- | ---- | ------------------------------------------------------------ |
-| 差分更新包生成 | 是   | 根据上一个版本和当前版本进行对比找出需要更新的文件或新添加文件。 |
-
-
+| 差分更新包生成 | 是   | 根据上一个版本和当前版本进行对比，找出需要更新的文件或新添加、删除文件。 |
 
 #### 说明
 
@@ -29,6 +23,6 @@ sidebar_position: 11
 | ----------- | ------------------------------------------------------------ |
 | Source path | 表示上一个版本的文件夹路径。                                 |
 | Target path | 表示当前版本文件夹路径。                                     |
-| Patch path  | 表示最终生成差分包的路径。                                   |
+| Patch path  | 表示最终生成更新补丁包的路径。                               |
 | Build       | 通过递归比对Source path和Target path文件夹下所有的工程文件（DLL，exe...等），通过二进制差分检查、增量检查分析出需要更新的文件列表按照文件夹结构，打包更新包。 |
 | Clear       | 清除当前输入的内容。                                         |
