@@ -23,7 +23,11 @@ The GeneralUpdate twin project provides code examples for Quick Start.
 Find and double-click start.cmd to immediately experience the automatic upgrade.
 
 ```shell
+//start.cmd to initiate standard update.
 ...\GeneralUpdate-Samples\src\start.cmd
+
+//oss_start.cmd to initiate minimal update.
+...\GeneralUpdate-Samples\src\oss_start.cmd
 ```
 
 
