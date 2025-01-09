@@ -12,7 +12,7 @@
 | X: https://x.com/JusterZhuz                                  |
 | Reddit: https://www.reddit.com/user/Cold_One188/             |
 | Product hunt: https://www.producthunt.com/@juster_zhu        |
-| Stackover flow: https://stackoverflow.com/users/11280381/juster-zhu |
+| Stackoverflow: https://stackoverflow.com/users/11280381/juster-zhu |
 
 
 
