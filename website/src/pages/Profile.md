@@ -1,3 +1,9 @@
+---
+title: My profile
+description: My profile
+hide_table_of_contents: true
+---
+
 ![](imgs\photo.jpg)
 
 | My profile                                                   |
