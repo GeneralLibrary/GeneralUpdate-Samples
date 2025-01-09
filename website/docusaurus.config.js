@@ -96,6 +96,11 @@ const config = {
             position: 'left'
           },
           {
+            label:'Profile',
+            href:'/Profile',
+            position: 'left'
+          },
+          {
             href: 'https://github.com/GeneralLibrary',
             label: 'GitHub',
             position: 'right',
