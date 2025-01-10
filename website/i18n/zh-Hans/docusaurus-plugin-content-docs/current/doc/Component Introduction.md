@@ -79,6 +79,7 @@ GeneralUpdate是一款基于.NET Standard2.0 MIT协议开源的跨平台应用�
 | 华为欧拉(EulerOS-鲲鹏Kunpeng) | 支持     | 姚圣伟                             |
 | 龙芯(Loongnix LoongArch)      | 支持     | Avalonia中文社区（董彬 Rabbitism） |
 | Apple Mac (M1)                | 支持     | JusterZhu                          |
+| 统信UOS                       | 支持     | JusterZhu                          |
 
 
 

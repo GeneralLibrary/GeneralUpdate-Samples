@@ -75,6 +75,7 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 | Huawei EulerOS (Kunpeng)      | Yes       | Yao Shengwei                                    |
 | Loongson (Loongnix LoongArch) | Yes       | Avalonia Chinese Community (Dong Bin Rabbitism) |
 | Apple Mac (M1)                | Yes       | JusterZhu                                       |
+| UOS                           | Yes       | JusterZhu                                       |
 
 ## 4. Repositories
 
