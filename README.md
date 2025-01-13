@@ -1,8 +1,6 @@
-# ✨GeneralUpdate-Samples
+# GeneralUpdate-Samples
 
-![](imgs\GeneralUpdate_h.png)
-
-The GeneralUpdate twin project provides code examples for Quick Start.
+The GeneralUpdate-Samples project provides code examples for Quick Start.
 
 | Directory | Note                                                         |
 | --------- | ------------------------------------------------------------ |
@@ -18,7 +16,7 @@ The GeneralUpdate twin project provides code examples for Quick Start.
 
 
 
-## ✨Quick Start
+## Quick Start
 
 Find and double-click start.cmd to immediately experience the automatic upgrade.
 
@@ -32,22 +30,7 @@ Find and double-click start.cmd to immediately experience the automatic upgrade.
 
 
 
-## ✨Open source address
-
-- https://github.com/GeneralLibrary/GeneralUpdate-Samples
-- https://gitee.com/GeneralTeam/GeneralUpdate-Samples
-
-
-
-## ✨The parent project
-
-- https://github.com/GeneralLibrary/GeneralUpdate
-
-- https://gitee.com/GeneralLibrary/GeneralUpdate
-
-
-
-## ✨Website
+## Website
 
 IDE : Visual Sutdio Code
 
