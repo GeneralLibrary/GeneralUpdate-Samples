@@ -7,6 +7,19 @@ tags: [log]
 
 # 📒更新日志
 
+## 📍2025-01-13 9.1.4
+
+- 修复Environment.SetEnvironmentVariable函数带来的执行缓慢问题。
+- 在黑名单中添加了以下ClientCore 和 Core共同引用的文件（整个打包、升级流程都不会操作这些文件）：
+
+```c#
+"Microsoft.Bcl.AsyncInterfaces.dll",
+"System.Collections.Immutable.dll", 
+"System.IO.Pipelines.dll", 
+"System.Text.Encodings.Web.dll",
+"System.Text.Json.dll"
+```
+
 
 
 ## 📍2025-01-05 9.1.2

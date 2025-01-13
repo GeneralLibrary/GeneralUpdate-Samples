@@ -7,6 +7,19 @@ tags: [log]
 
 # 📒Release log
 
+## 📍2025-01-13 9.1.4
+
+- Fix the execution slowness issue caused by the `Environment.SetEnvironmentVariable` function.
+- Added the following files common to ClientCore and Core to the blacklist (these files will not be operated on during the entire packaging and upgrade process):
+
+```c#
+"Microsoft.Bcl.AsyncInterfaces.dll",
+"System.Collections.Immutable.dll", 
+"System.IO.Pipelines.dll", 
+"System.Text.Encodings.Web.dll",
+"System.Text.Json.dll"
+```
+
 
 
 ## 📍2025-01-05 Version 9.1.2
