@@ -7,6 +7,12 @@ tags: [log]
 
 # 📒Release log
 
+## 📍2025-01-13 9.1.5
+
+- Fix the issue with incorrect value retrieval for LastVersion.
+
+
+
 ## 📍2025-01-13 9.1.4
 
 - Fix the execution slowness issue caused by the `Environment.SetEnvironmentVariable` function.
