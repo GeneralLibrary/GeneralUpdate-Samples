@@ -3,6 +3,7 @@ using ServerSample.DTOs;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
+int count = 0;
 string packageName = "packet_20250102230201638_1.0.0.1";
 
 app.MapPost("/Upgrade/Report", (ReportDTO request) =>
@@ -12,6 +13,12 @@ app.MapPost("/Upgrade/Report", (ReportDTO request) =>
 
 app.MapPost("/Upgrade/Verification", (VerifyDTO request) =>
 {
+    count++;
+    if (count > 2)
+    {
+        return HttpResponseDTO<IEnumerable<VerificationResultDTO>>.Success(null,"Upgrade completed.");
+    }
+
     var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "packages", $"{packageName}.zip");
     var packet = new FileInfo(filePath);
     var result = new List<VerificationResultDTO>
