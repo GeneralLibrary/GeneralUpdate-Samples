@@ -79,12 +79,14 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 
 ## 4. Repositories
 
-| Name                  | Description                      | Repository                                                   |
-| --------------------- | -------------------------------- | ------------------------------------------------------------ |
-| GeneralUpdate         | Automatic Updates                | https://github.com/GeneralLibrary/GeneralUpdate<br />https://gitee.com/GeneralLibrary/GeneralUpdate |
-| GeneralUpdate.Maui    | Maui Automatic Updates (Android) | https://github.com/GeneralLibrary/GeneralUpdate.Maui         |
-| GeneralUpdate.Tools   | Update Patch Creation Tool       | https://github.com/GeneralLibrary/GeneralUpdate.Tools<br />https://gitee.com/GeneralLibrary/GeneralUpdate.Tools |
-| GeneralUpdate-Samples | Usage Examples                   | https://github.com/GeneralLibrary/GeneralUpdate-Samples<br />https://gitee.com/GeneralLibrary/GeneralUpdate-Samples |
+| Name                  | Description                | Address                                                      |
+| --------------------- | -------------------------- | ------------------------------------------------------------ |
+| GeneralUpdate         | Automatic Updates          | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate) |
+| GeneralUpdate.Maui    | Maui Updates (Android)     | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate.Maui)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate.Maui)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate-Maui) |
+| GeneralUpdate.Tools   | Update Patch Creation Tool | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate.Tools)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate.Tools)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate-Tools) |
+| GeneralUpdate-Samples | Usage Examples             | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate-Samples)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate-Samples)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate-Samples) |
+
+
 
 ## 5. Unified Language
 
