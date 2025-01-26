@@ -27,7 +27,7 @@ public sealed class GeneralClientOSS
 NuGet Installation
 
 ```shell
-NuGet\Install-Package GeneralUpdate.ClientCore -Version 9.1.2
+NuGet\Install-Package GeneralUpdate.ClientCore -Version x.x.x
 ```
 
 

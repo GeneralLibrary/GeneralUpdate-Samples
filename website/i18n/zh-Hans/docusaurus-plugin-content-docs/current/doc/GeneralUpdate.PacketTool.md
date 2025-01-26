@@ -10,7 +10,6 @@ sidebar_position: 11
 
 | 仓库地址                                              |
 | ----------------------------------------------------- |
-| https://gitee.com/GeneralLibrary/GeneralUpdate.Tools  |
 | https://github.com/GeneralLibrary/GeneralUpdate.Tools |
 
 | 功能           | 支持 | 备注                                                         |

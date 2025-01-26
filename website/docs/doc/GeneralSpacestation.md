@@ -1,8 +1,9 @@
 ---
 sidebar_position: 1
+
 ---
 
-![](imgs\GeneralUpdate_h2.png)
+![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/GeneralUpdate_h2.png)
 
 ## Product Introduction
 
@@ -24,47 +25,33 @@ The entire service includes the following:
 
 ## Features
 
-### Tools Module Display
+### GeneralUpdate.Admin Display
 
-![](imgs\generalspacestation.png)
+![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/generalspacestation.png)
 
-### Upgrade Module Display
+![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/generalspacestation2.png)
 
-![](imgs\generalspacestation2.png)
+
+
+## GeneralSpacestation
+
+![](imgs/GeneralSpacestation_server.png)
 
 
 
 ## Solution
 
-![](imgs\solution2.png)
+![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/solution2.png)
 
-![](imgs\solution.png)
-
-Technologies involved in the introduction (including but not limited to operating systems, frameworks, languages, open-source components, etc.):
-
-| Technology     | Remarks                                                      | Details                                                      |
-| -------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| .NET Core 9    | Latest free open-source framework by Microsoft (MIT License) | https://dotnet.microsoft.com/zh-cn/download/dotnet/9.0       |
-| C#13           | One of the latest versions of Microsoft's open-source development languages (MIT License) | https://dotnet.microsoft.com/zh-cn/languages/csharp          |
-| Avalonia       | Cross-platform open-source UI framework by the Avalonia team (MIT License) | https://avaloniaui.net/                                      |
-| Prism.Avalonia | Project structure framework by PrismLibrary team (MIT License) | https://github.com/AvaloniaCommunity/Prism.Avalonia          |
-| Semi.Avalonia  | Open-source UI control library framework by the irihi team (MIT License) | https://www.irihi.tech/                                      |
-| ASP.NET Core   | Latest server-side framework by Microsoft (MIT License)      | https://dotnet.microsoft.com/zh-cn/apps/aspnet               |
-| MySQL          | Commercial-friendly database by Oracle                       | https://www.mysql.com/cn/                                    |
-| DDD            | Popular architecture/design pattern                          | https://learn.microsoft.com/zh-cn/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/ |
-| MVVM           | Popular architecture/design pattern                          | https://learn.microsoft.com/zh-cn/dotnet/architecture/maui/mvvm |
-| AOT            | Full support for AOT compilation across all GeneralUpdate components | https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/ |
-| ......         | ......                                                       |                                                              |
+![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/solution.png)
 
 
 
 ## Corporate Clients
 
-![](imgs\corporateclient1.png)
+![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/corporateclient1.png)
 
-![](imgs\corporateclient2.png)
-
-
+![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/corporateclient2.png)
 
 ## Contact Us
 

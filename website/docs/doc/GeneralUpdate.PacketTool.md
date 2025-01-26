@@ -10,7 +10,6 @@ The tool is developed using Avalonia and supports Windows / Linux / Mac desktop 
 
 | Repository Address                                    |
 | ----------------------------------------------------- |
-| https://gitee.com/GeneralLibrary/GeneralUpdate.Tools  |
 | https://github.com/GeneralLibrary/GeneralUpdate.Tools |
 
 | Feature             | Supported | Remarks                                                      |
