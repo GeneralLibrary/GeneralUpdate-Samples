@@ -3,7 +3,7 @@ sidebar_position: 1
 
 ---
 
-![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/GeneralUpdate_h2.png)
+![](imgs/GeneralUpdate_h2.png)
 
 ## Product Introduction
 
@@ -27,9 +27,9 @@ The entire service includes the following:
 
 ### GeneralUpdate.Admin Display
 
-![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/generalspacestation.png)
+![](imgs/generalspacestation.png)
 
-![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/generalspacestation2.png)
+![](imgs/generalspacestation2.png)
 
 
 
@@ -41,17 +41,17 @@ The entire service includes the following:
 
 ## Solution
 
-![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/solution2.png)
+![](imgs/solution2.png)
 
-![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/solution.png)
+![](imgs/solution.png)
 
 
 
 ## Corporate Clients
 
-![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/corporateclient1.png)
+![](imgs/corporateclient1.png)
 
-![](D:/github_project/GeneralUpdate-Samples/website/i18n/en/docusaurus-plugin-content-docs/current/docs/doc/imgs/corporateclient2.png)
+![](imgs/corporateclient2.png)
 
 ## Contact Us
 
