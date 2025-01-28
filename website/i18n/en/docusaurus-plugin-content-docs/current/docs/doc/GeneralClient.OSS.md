@@ -24,12 +24,6 @@ The GeneralClientOSS class is another update mechanism. Unlike GeneralClientBoot
 public sealed class GeneralClientOSS
 ```
 
-NuGet Installation
-
-```shell
-NuGet\Install-Package GeneralUpdate.ClientCore -Version x.x.x
-```
-
 
 
 ### Example
@@ -112,10 +106,9 @@ GeneralUpdateOSS provides the following capabilities.
 
 #### Methods
 
-| Method                 | Description                                                 |
-| ---------------------- | ----------------------------------------------------------- |
-| Start()                | Start the OSS update.                                       |
-| AddListenerException() | Listen for internal exception information of the component. |
+| Method  | Description           |
+| ------- | --------------------- |
+| Start() | Start the OSS update. |
 
 
 

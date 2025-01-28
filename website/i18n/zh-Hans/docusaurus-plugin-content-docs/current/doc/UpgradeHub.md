@@ -16,12 +16,6 @@ UpgradeHubService是基于SignalR实现的推送更新版本信息的机制，�
 public class UpgradeHubService : IUpgradeHubService
 ```
 
-nuget安装
-
-```shell
-NuGet\Install-Package GeneralUpdate.ClientCore -Version x.x.x
-```
-
 
 
 ### 示例

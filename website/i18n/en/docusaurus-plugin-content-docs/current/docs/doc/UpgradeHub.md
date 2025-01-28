@@ -16,11 +16,7 @@ The `UpgradeHubService` is a mechanism based on SignalR for pushing updated vers
 public class UpgradeHubService : IUpgradeHubService
 ```
 
-NuGet Installation
 
-```shell
-NuGet\Install-Package GeneralUpdate.ClientCore -Version x.x.x
-```
 
 ### Example
 

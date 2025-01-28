@@ -24,12 +24,6 @@ GeneralClientOSS类是另外一种更新机制与GeneralClientBootstrap不同的
 public sealed class GeneralClientOSS
 ```
 
-nuget安装
-
-```shell
-NuGet\Install-Package GeneralUpdate.ClientCore -Version 9.1.2
-```
-
 
 
 ### 示例
@@ -112,10 +106,9 @@ GeneralUpdateOSS提供以下能力。
 
 #### 方法
 
-| Method                 |                        |
-| ---------------------- | ---------------------- |
-| Start()                | 启动OSS更新。          |
-| AddListenerException() | 监听组件内部异常信息。 |
+| Method  |               |
+| ------- | ------------- |
+| Start() | 启动OSS更新。 |
 
 
 

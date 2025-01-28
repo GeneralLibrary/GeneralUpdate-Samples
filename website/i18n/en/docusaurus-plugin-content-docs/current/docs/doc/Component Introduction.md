@@ -14,6 +14,8 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 | -------------------- | ------------------- | --------------------- |
 | ![](imgs\github.png) | ![](imgs\gitee.png) | ![](imgs\gitcode.jpg) |
 
+[If your company is currently using or planning to use [the product/service] and encountering any issues, or if you need assistance with selection, you are very welcome to join our discussion group for communication. The contact information can be found at the bottom of this page. Developers, if you encounter urgent tasks, please explain the situation in advance, and your inquiries will be prioritized for resolution.]
+
 
 
 ## 2. What does GeneralUpdate offer?

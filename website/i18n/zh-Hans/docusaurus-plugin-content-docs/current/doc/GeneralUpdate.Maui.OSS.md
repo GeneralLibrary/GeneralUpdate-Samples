@@ -16,12 +16,6 @@ GeneralUpdate.Maui.OSS组件用来实现.NET MAUI更新的机制，目前只支�
 public sealed class GeneralUpdateOSS
 ```
 
-nuget安装
-
-```shell
-NuGet\Install-Package GeneralUpdate.Maui.OSS -Version 1.0.0
-```
-
 
 
 ### 示例

@@ -16,12 +16,6 @@ sidebar_position: 6
 public sealed class DifferentialCore
 ```
 
-nuget安装
-
-```shell
-NuGet\Install-Package GeneralUpdate.Core -Version 9.1.2
-```
-
 
 
 ### 示例

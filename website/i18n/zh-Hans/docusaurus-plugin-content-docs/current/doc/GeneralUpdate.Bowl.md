@@ -16,12 +16,6 @@ sidebar_position: 3
 public sealed class Bowl
 ```
 
-nuget安装
-
-```shell
-NuGet\Install-Package GeneralUpdate.Bowl -Version 9.1.2
-```
-
 
 
 ### 示例
