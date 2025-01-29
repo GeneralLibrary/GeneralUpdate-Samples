@@ -14,8 +14,6 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 | -------------------- | ------------------- | --------------------- |
 | ![](imgs\github.png) | ![](imgs\gitee.png) | ![](imgs\gitcode.jpg) |
 
-[If your company is currently using or planning to use [the product/service] and encountering any issues, or if you need assistance with selection, you are very welcome to join our discussion group for communication. The contact information can be found at the bottom of this page. Developers, if you encounter urgent tasks, please explain the situation in advance, and your inquiries will be prioritized for resolution.]
-
 
 
 ## 2. What does GeneralUpdate offer?
@@ -92,7 +90,7 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 
 ## 5. Unified Language
 
-![](imgs/client_server_upgrade.jpg)
+![](D:\github_project\GeneralUpdate-Samples\website\i18n\en\docusaurus-plugin-content-docs\current\docs\doc\imgs\client_server_upgrade.jpg)
 
 Before starting to use GeneralUpdate, we need to understand some basic concepts in the system. Please download the GeneralUpdate-Samples repository and navigate to the `..\GeneralUpdate-Samples\src` directory for better understanding.
 
@@ -133,7 +131,7 @@ In the free communication channels, questions from developers are answered perio
 
 For customized secondary development, technical consultation, and open-source project sponsorship, see the contact information for corporate inquiries, quotations, business cooperation, and corporate wall (please specify your purpose when adding, idle chats are refused, WeChat is recommended).
 
-![](imgs\contact.png)
+![](D:\github_project\GeneralUpdate-Samples\website\i18n\en\docusaurus-plugin-content-docs\current\docs\doc\imgs\contact.png)
 
 ##### Sponsorship
 

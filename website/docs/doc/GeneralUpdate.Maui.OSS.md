@@ -16,7 +16,11 @@ The GeneralUpdate.Maui.OSS component is used to implement the update mechanism f
 public sealed class GeneralUpdateOSS
 ```
 
+NuGet Installation
 
+```shell
+NuGet\Install-Package GeneralUpdate.Maui.OSS -Version 1.0.0
+```
 
 ### Example
 
