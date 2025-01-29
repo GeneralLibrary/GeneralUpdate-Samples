@@ -20,7 +20,7 @@ public class GeneralClientBootstrap : AbstractBootstrap<GeneralClientBootstrap, 
 
 ### Example
 
-GeneralClientBootstrap uses code examples [View](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Client/Program.cs)。
+GeneralClientBootstrap uses code examples [[View]](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Client/Program.cs)。
 
 ![](imgs/muti_donwload.png)
 
@@ -86,26 +86,26 @@ GeneralClientBootstrap provides the following capabilities.
 
 ### 🌴Configinfo
 
-| **属性**             | 类型   | 注释                                                         |
+Certainly! Here's the translated content:
+
+| **Attribute**        | Type   | Notes                                                        |
 | -------------------- | ------ | ------------------------------------------------------------ |
-| UpdateUrl            | string | 更新检查api地址。                                            |
-| ReportUrl            | string | 上报更新状态api地址。                                        |
-| AppName              | string | 需要启动应用程序的名称。                                     |
-| MainAppName          | string | 需要启动主应用程序的名称。                                   |
-| UpdateLogUrl         | string | 更新日志网页地址。                                           |
-| AppSecretKey         | string | 应用程序密钥，需要和服务端约定好验证身份和分支。             |
-| ClientVersion        | string | 客户端当前版本号。                                           |
-| UpgradeClientVersion | string | 升级端当前版本号。                                           |
-| InstallPath          | string | 安装路径（用于更新文件逻辑）。                               |
-| BlackFiles           | List   | 黑名单中的文件将跳过更新。                                   |
-| BlackFormats         | List   | 黑名单中的文件格式将跳过更新。                               |
-| SkipDirectorys       | List   | 跳过不需要更新的文件夹目录。                                 |
-| ProductId            | string | 当前产品分支的唯一id。                                       |
-| Bowl                 | string | Bowl监控进程路径，更新完成之后启动Bowl监控客户端是否正常启动。如果启动后异常会捕捉异常信息。 |
-| Scheme               | string | 用于HTTP请求传入token进行身份验证。                          |
-| Token                | string | 用于HTTP请求传入token进行身份验证。                          |
-
-
+| UpdateUrl            | string | API address for update checks.                               |
+| ReportUrl            | string | API address for reporting update status.                     |
+| AppName              | string | Name of the application that needs to be launched.           |
+| MainAppName          | string | Name of the main application that needs to be launched.      |
+| UpdateLogUrl         | string | Web address for the update log.                              |
+| AppSecretKey         | string | Application secret key, agreed upon with the server for authentication and branching. |
+| ClientVersion        | string | Current version number of the client.                        |
+| UpgradeClientVersion | string | Current version number of the upgrade client.                |
+| InstallPath          | string | Installation path (used for update file logic).              |
+| BlackFiles           | List   | Files in the blacklist will be skipped during updates.       |
+| BlackFormats         | List   | File formats in the blacklist will be skipped during updates. |
+| SkipDirectorys       | List   | Directory paths to be skipped that do not require updates.   |
+| ProductId            | string | Unique ID of the current product branch.                     |
+| Bowl                 | string | Path to the Bowl monitoring process, which starts after updates to check if the Bowl client starts normally. If an exception occurs after starting, the exception information will be captured. |
+| Scheme               | string | Used for passing a token in HTTP requests for authentication. |
+| Token                | string | Token used in HTTP requests for authentication.              |
 
 ### 🍵UpdateOption
 

@@ -1,7 +1,5 @@
 ---
-
 sidebar_position: 3
-
 ---
 
 ### Definition
@@ -16,11 +14,7 @@ This component is an independent process launched before the end of the upgrade 
 public sealed class Bowl
 ```
 
-NuGet Installation
 
-```shell
-NuGet\Install-Package GeneralUpdate.Bowl -Version 9.1.2
-```
 
 ### Example
 

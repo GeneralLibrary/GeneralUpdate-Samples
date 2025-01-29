@@ -1,3 +1,7 @@
+---
+sidebar_position: 5
+---
+
 ### Definition
 
 Namespace: GeneralUpdate.Core
@@ -16,7 +20,7 @@ public class GeneralUpdateBootstrap : AbstractBootstrap<GeneralUpdateBootstrap, 
 
 ### Example
 
-GeneralUpdateBootstrap uses code examples [View](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/Program.cs)。
+GeneralUpdateBootstrap uses code examples [[View]](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/Program.cs)。
 
 ![](imgs/muti_donwload.png)
 

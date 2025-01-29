@@ -1,3 +1,7 @@
+---
+sidebar_position: 6
+---
+
 ### Definition
 
 Namespace: GeneralUpdate.Differential
@@ -12,11 +16,7 @@ This component provides capabilities for generating binary differential patch fi
 public sealed class DifferentialCore
 ```
 
-NuGet Installation
 
-```shell
-NuGet\Install-Package GeneralUpdate.Core -Version 9.1.2
-```
 
 ### Example
 
