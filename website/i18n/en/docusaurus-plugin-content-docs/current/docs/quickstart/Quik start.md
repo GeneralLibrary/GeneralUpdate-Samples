@@ -7,21 +7,6 @@ tags: [quikstart]
 
 
 
-## Sample UI
-
-Address：
-
-- https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Client/ClientSample.sln
-- https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/UpgradeSample.sln
-
-![](imgs\sampleclient.png)
-
-![](imgs\sampleupgrade.png)
-
-
-
-
-
 ## Step1
 
 Download the Sample repository from GitHub. Before using the sample, make sure you have .NET 8 runtime environment installed locally.
