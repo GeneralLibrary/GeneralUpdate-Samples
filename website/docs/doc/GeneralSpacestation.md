@@ -1,9 +1,8 @@
 ---
 sidebar_position: 1
-
 ---
 
-![](imgs/GeneralUpdate_h2.png)
+![](imgs\GeneralUpdate_h2.png)
 
 ## Product Introduction
 
@@ -27,31 +26,31 @@ The entire service includes the following:
 
 ### GeneralUpdate.Admin Display
 
-![](imgs/generalspacestation.png)
+![](imgs\generalspacestation.png)
 
-![](imgs/generalspacestation2.png)
+![](imgs\generalspacestation2.png)
 
 
 
 ### GeneralSpacestation
 
-![](imgs/GeneralSpacestation_server.png)
+![](imgs\GeneralSpacestation_server.png)
 
 
 
 ## Solution
 
-![](imgs/solution2.png)
+![](imgs\solution2.png)
 
-![](imgs/solution.png)
+![](imgs\solution.png)
 
 
 
 ## Corporate Clients
 
-![](imgs/corporateclient1.png)
+![](imgs\corporateclient1.png)
 
-![](imgs/corporateclient2.png)
+![](imgs\corporateclient2.png)
 
 ## Contact Us
 
