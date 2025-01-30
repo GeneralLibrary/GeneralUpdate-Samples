@@ -19,7 +19,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 8.0.x
         
     - name: Restore dependencies ServerSample.sln
       run: dotnet restore ./src/Server/ServerSample.sln
+
+    - name: Restore dependencies ClientSample.sln
+      run: dotnet restore ./src/Client/ClientSample.sln
+
+    - name: Restore dependencies UpgradeSample.sln
+      run: dotnet restore ./src/Upgrade/UpgradeSample.sln
