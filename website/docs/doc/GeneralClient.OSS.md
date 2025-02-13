@@ -28,13 +28,31 @@ public sealed class GeneralClientOSS
 
 ### Example
 
+| Description                 | Address                                                      |
+| --------------------------- | ------------------------------------------------------------ |
+| Address of code example     | [Enter](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/OSS) |
+| Hashing algorithm (sha256)  | [Enter](https://github.com/GeneralLibrary/GeneralUpdate/blob/master/src/c%23/GeneralUpdate.Core/Pipeline/HashMiddleware.cs) |
+| Test script (oss_start.cmd) | [Enter](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src) |
+
 #### OSS Process
 
 ![](imgs/oss_flow.png)
 
 1. Prepare the version.json configuration file and update files (update.zip) just like in previous packaging methods.
 
-![](imgs/oss_version_json.png)
+```json
+[
+  {
+    "PacketName": "packet_20250102230201638_1.0.0.1",
+    "Hash": "ad1a85a9169ca0083ab54ba390e085c56b9059efc3ca8aa1ec9ed857683cc4b1",
+    "Version": "1.0.0.1",
+    "Url": "http://localhost:5000/packages/packet_20250102230201638_1.0.0.1.zip",
+    "PubTime": "2025-01-02T23:48:21"
+  }
+]
+```
+
+
 
 2. When the Client starts, it directly requests the OSS server or file server to download the version.json file.
 
@@ -49,6 +67,8 @@ public sealed class GeneralClientOSS
 
 
 The following example defines methods, including the usage of GeneralClientOSS , GeneralUpdateOSS.
+
+GeneralClientOSS :
 
 ```c#
 using System.Text;
@@ -67,7 +87,7 @@ var paramsOSS = new GlobalConfigInfoOSS
 await GeneralClientOSS.Start(paramsOSS, "OSSUpgradeSample.exe");
 ```
 
-
+GeneralUpdateOSS :
 
 ```
 using GeneralUpdate.Core;
@@ -89,67 +109,6 @@ catch (Exception ex)
     Console.WriteLine(ex.Message);
 }
 ```
-
-
-
-### Annotation
-
-GeneralUpdateOSS provides the following capabilities.
-
-#### Properties
-
-| Properties | Description                          |
-| ---------- | ------------------------------------ |
-| ParamsOSS  | OSS update configuration parameters. |
-
-
-
-#### Methods
-
-| Method                 | Description                                                 |
-| ---------------------- | ----------------------------------------------------------- |
-| Start()                | Start the OSS update.                                       |
-| AddListenerException() | Listen for internal exception information of the component. |
-
-
-
-### 🌴ParamsOSS
-
-**Properties**
-
-**Url** string: HTTP API server request address.
-
-**AppName** string: Application name.
-
-**CurrentVersion** string: Current version.
-
-**VersionFileName** string: Version file name.
-
-
-
-### 🌼Start()
-
-**Method**
-
-Start the OSS update.
-
-```c#
-public static async Task Start(ParamsOSS configParams, string upgradeAppName = "GeneralUpdate.Upgrade");
-```
-
-
-
-**Parameter Types**
-
-ParamsOSS: Update configuration parameters, detailed content can be found in this document under 🌴ParamsOSS.
-
-
-
-**Parameters**
-
-**parameter** ParamsOSS: Update configuration parameters for the Android platform.
-
-**upgradeAppName**: Name of the application to be upgraded.
 
 
 

@@ -12,7 +12,7 @@ sidebar_position: 9
 
 **OSS**
 
-OSS的全称是对象存储服务（Object Storage Service），做服务端技术栈开发的小伙伴肯定对这个不陌生在 各大云服务器厂商都会提供类似的服务,说简单点就是一个文件服务器。例如：阿里云OSS、腾讯云COS、华 为云OBS，其实它们只是名字不一样功能服务都差不多。然后本更新组件新功能的实现思路非常相似那么就 选择了OSS来为该功能命名，而且方便开发者一眼能get到这个功能的作用（需要使用组件 GeneralUpdate.ClientCore、GeneralUpdate.Core）。
+OSS的全称是对象存储服务（Object Storage Service），做服务端技术栈开发的小伙伴肯定对这个不陌生在 各大云服务器厂商都会提供类似的服务,说简单点就是一个文件服务器。例如：阿里云OSS、腾讯云COS、华为云OBS，其实它们只是名字不一样功能服务都差不多。然后本更新组件新功能的实现思路非常相似那么就 选择了OSS来为该功能命名，而且方便开发者一眼能get到这个功能的作用（需要使用组件 GeneralUpdate.ClientCore、GeneralUpdate.Core）。
 
 
 
@@ -28,13 +28,31 @@ public sealed class GeneralClientOSS
 
 ### 示例
 
+| 说明                      | 地址                                                         |
+| ------------------------- | ------------------------------------------------------------ |
+| 代码示例地址              | [进入](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/OSS) |
+| 哈希算法（sha256）        | [进入](https://github.com/GeneralLibrary/GeneralUpdate/blob/master/src/c%23/GeneralUpdate.Core/Pipeline/HashMiddleware.cs) |
+| 测试脚本（oss_start.cmd） | [进入](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src) |
+
+
+
 #### OSS流程
 
 ![](imgs/oss_flow.png)
 
 1.准备version.json版本信息配置文件，更新文件（update.zip）更新文件和之前的打包方式一样。
 
-![](imgs/oss_version_json.png)
+```json
+[
+  {
+    "PacketName": "packet_20250102230201638_1.0.0.1",
+    "Hash": "ad1a85a9169ca0083ab54ba390e085c56b9059efc3ca8aa1ec9ed857683cc4b1",
+    "Version": "1.0.0.1",
+    "Url": "http://localhost:5000/packages/packet_20250102230201638_1.0.0.1.zip",
+    "PubTime": "2025-01-02T23:48:21"
+  }
+]
+```
 
 2.Client启动时直接请求OSS服务器或文件服务器，下载version.json文件。 
 
@@ -49,6 +67,8 @@ public sealed class GeneralClientOSS
 
 
 以下示例定义方法，包含GeneralClientOSS、GeneralUpdateOSS 使用示例：
+
+GeneralClientOSS：
 
 ```c#
 using System.Text;
@@ -68,6 +88,8 @@ await GeneralClientOSS.Start(paramsOSS, "OSSUpgradeSample.exe");
 ```
 
 
+
+GeneralUpdateOSS：
 
 ```
 using GeneralUpdate.Core;
@@ -89,66 +111,6 @@ catch (Exception ex)
     Console.WriteLine(ex.Message);
 }
 ```
-
-
-
-### 注解
-
-GeneralUpdateOSS提供以下能力。
-
-#### 属性
-
-| Properties |                   |
-| ---------- | ----------------- |
-| ParamsOSS  | OSS更新配置参数。 |
-
-
-
-#### 方法
-
-| Method  |               |
-| ------- | ------------- |
-| Start() | 启动OSS更新。 |
-
-
-
-### 🌴ParamsOSS
-
-**属性**
-
-**Url** string http的api服务端请求地址。
-
-**AppName** string 应用名称。
-
-**CurrentVersion** string 当前版本。
-
-**VersionFileName** string 版本文件名称。
-
-
-
-### 🌼Start()
-
-**方法**
-
-启动OSS更新。
-
-```c#
-public static async Task Start(ParamsOSS configParams, string upgradeAppName = "GeneralUpdate.Upgrade");
-```
-
-
-
-**参数类型**
-
-ParamsOSS 更新配置参数，详细内容参考本文档🌴ParamsOSS。
-
-
-
-**参数**
-
-**parameter** ParamsOSS 安卓平台的跟新配置参数。
-
-**upgradeAppName** 需要升级的应用名称。
 
 
 
