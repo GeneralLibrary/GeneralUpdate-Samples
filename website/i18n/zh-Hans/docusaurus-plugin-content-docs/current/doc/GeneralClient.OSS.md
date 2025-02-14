@@ -64,6 +64,16 @@ public sealed class GeneralClientOSS
 
 5.Upgrade更新完成之后把Client启动起来，自我关闭。更新结束。 GeneralUpdateOSS的功能和GeneralUpdateBootstrap功能对比来说，使用的门槛非常低如果公司对自动 更新的要求不高的话可以使用这个功能。一句话概括这个功能就是下载version.json根据文件里的内容去逐 版本下载更新包，下载下来之后直接解压更新就结束了。
 
+6.由于OSS功能没有包含黑名单机制，制作update.zip时需要注意请勿将以下组件内部使用的文件添加到包内，或直接发布成single file避免占用降低更新复杂度。
+
+```json
+"Microsoft.Bcl.AsyncInterfaces.dll",
+"System.Collections.Immutable.dll", 
+"System.IO.Pipelines.dll", 
+"System.Text.Encodings.Web.dll",
+"System.Text.Json.dll"
+```
+
 
 
 以下示例定义方法，包含GeneralClientOSS、GeneralUpdateOSS 使用示例：

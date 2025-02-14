@@ -64,6 +64,17 @@ public sealed class GeneralClientOSS
 
 5. After the Upgrade completes, it starts the Client and self-closes. The update ends. Compared to the GeneralUpdateBootstrap function, the GeneralUpdateOSS function has a very low usage threshold. If the company does not have high requirements for automatic updates, this feature can be used. In summary, this function downloads the version.json and updates based on the content in the file, downloading each version's update package and extracting it to complete the update.
 
+6. Since the OSS functionality does not include a blacklist mechanism, when creating the update.zip, please ensure that the files used internally by the following components are not added to the package, or directly release them as a single file to avoid occupying space and reducing update complexity.
+
+
+```json
+"Microsoft.Bcl.AsyncInterfaces.dll",
+"System.Collections.Immutable.dll", 
+"System.IO.Pipelines.dll", 
+"System.Text.Encodings.Web.dll",
+"System.Text.Json.dll"
+```
+
 
 
 The following example defines methods, including the usage of GeneralClientOSS , GeneralUpdateOSS.
