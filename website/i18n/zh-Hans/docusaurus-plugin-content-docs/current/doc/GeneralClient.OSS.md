@@ -33,6 +33,7 @@ public sealed class GeneralClientOSS
 | 代码示例地址              | [进入](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/OSS) |
 | 哈希算法（sha256）        | [进入](https://github.com/GeneralLibrary/GeneralUpdate/blob/master/src/c%23/GeneralUpdate.Core/Pipeline/HashMiddleware.cs) |
 | 测试脚本（oss_start.cmd） | [进入](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src) |
+| versions.json 制作工具    | [进入](https://github.com/GeneralLibrary/GeneralUpdate.Tools) |
 
 
 
