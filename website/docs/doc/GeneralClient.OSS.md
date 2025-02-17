@@ -33,6 +33,7 @@ public sealed class GeneralClientOSS
 | Address of code example     | [Enter](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/OSS) |
 | Hashing algorithm (sha256)  | [Enter](https://github.com/GeneralLibrary/GeneralUpdate/blob/master/src/c%23/GeneralUpdate.Core/Pipeline/HashMiddleware.cs) |
 | Test script (oss_start.cmd) | [Enter](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src) |
+| versions.json Making tool   | [Enter](https://github.com/GeneralLibrary/GeneralUpdate.Tools) |
 
 #### OSS Process
 
