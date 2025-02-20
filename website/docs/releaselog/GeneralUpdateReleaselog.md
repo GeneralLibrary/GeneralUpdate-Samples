@@ -7,6 +7,12 @@ tags: [log]
 
 # 📒Release log
 
+## 📍2025-02-20 9.1.6
+
+- Fix OSS to directly terminate the current process when no update is required.
+
+
+
 ## 📍2025-01-14 9.1.5
 
 - Fix the issue with incorrect value retrieval for LastVersion. 
