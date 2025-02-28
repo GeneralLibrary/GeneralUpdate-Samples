@@ -14,7 +14,6 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude Source="avares://Common.Avalonia/Themes/Resources/_index.axaml" />
                 <ResourceInclude Source="avares://Common.Avalonia/Themes/Controls/_index.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
