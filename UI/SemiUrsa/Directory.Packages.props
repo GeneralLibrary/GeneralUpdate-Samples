@@ -1,7 +1,7 @@
 ﻿<Project>
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-        <AvaloniaVersion>11.2.4</AvaloniaVersion>
+        <AvaloniaVersion>11.2.6</AvaloniaVersion>
     </PropertyGroup>
     <ItemGroup>
         <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)"/>
@@ -9,9 +9,9 @@
         <PackageVersion Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)"/>
 
         <PackageVersion Include="Avalonia.Svg" Version="11.2.0.2"/>
-        <PackageVersion Include="Semi.Avalonia" Version="11.2.1.5"/>
-        <PackageVersion Include="Irihi.Ursa" Version="1.9.0"/>
-        <PackageVersion Include="Irihi.Ursa.Themes.Semi" Version="1.9.0"/>
+        <PackageVersion Include="Semi.Avalonia" Version="11.2.1.6"/>
+        <PackageVersion Include="Irihi.Ursa" Version="1.10.0"/>
+        <PackageVersion Include="Irihi.Ursa.Themes.Semi" Version="1.10.0"/>
 
         <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
         <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0"/>
