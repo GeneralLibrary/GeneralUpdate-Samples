@@ -10,9 +10,7 @@
              x:Class="Client.Avalonia.Views.MainView"
              x:DataType="vm:MainViewViewModel">
     <UserControl.Resources>
-        <ResourceDictionary>
-            <converters:EnumToBoolConverter x:Key="EnumToBooleanConverter" />
-        </ResourceDictionary>
+        <converters:EnumToBoolConverter x:Key="EnumToBooleanConverter" />
     </UserControl.Resources>
 
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" MinWidth="550">
@@ -92,23 +90,20 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
                 <Button
                     Name="StopButton"
-                    Padding="8"
-                    Theme="{StaticResource BorderlessButton}"
+                    Theme="{StaticResource IconBorderlessButton}"
                     Classes="Danger"
                     ToolTip.Tip="停止"
-                    Command="{Binding StopCommand}">
-                    <PathIcon
-                        Theme="{StaticResource InnerPathIcon}"
-                        Data="{StaticResource SemiIconStop}" />
-                </Button>
+                    Content="{StaticResource SemiIconStop}"
+                    Command="{Binding StopCommand}" />
                 <ToggleSwitch
                     Name="StartButton"
-                    Padding="8"
                     IsChecked="{Binding  Status,
                      Converter={StaticResource EnumToBooleanConverter},
                       ConverterParameter={x:Static services:DownloadStatus.Downloading},
                        Mode=OneWay}"
-                    Theme="{StaticResource ButtonToggleSwitch}"
+                    Theme="{StaticResource IconBorderlessToggleSwitch}"
+                    OffContent="{StaticResource SemiIconPlay}"
+                    OnContent="{StaticResource SemiIconPause}"
                     Command="{Binding StartCommand}">
                     <ToolTip.Tip>
                         <Panel>
@@ -116,28 +111,14 @@
                             <TextBlock Text="暂停" IsVisible="{Binding $parent[ToggleSwitch].IsChecked}" />
                         </Panel>
                     </ToolTip.Tip>
-                    <ToggleSwitch.OffContent>
-                        <PathIcon
-                            Theme="{StaticResource InnerPathIcon}"
-                            Data="{StaticResource SemiIconPlay}" />
-                    </ToggleSwitch.OffContent>
-                    <ToggleSwitch.OnContent>
-                        <PathIcon
-                            Theme="{StaticResource InnerPathIcon}"
-                            Data="{StaticResource SemiIconPause}" />
-                    </ToggleSwitch.OnContent>
                 </ToggleSwitch>
                 <Button
                     Name="RestartButton"
-                    Padding="8"
-                    Theme="{StaticResource BorderlessButton}"
+                    Theme="{StaticResource IconBorderlessButton}"
                     Classes="Tertiary"
                     ToolTip.Tip="重新下载"
-                    Command="{Binding RestartCommand}">
-                    <PathIcon
-                        Theme="{StaticResource InnerPathIcon}"
-                        Data="{StaticResource SemiIconRestart}" />
-                </Button>
+                    Content="{StaticResource SemiIconRefresh}"
+                    Command="{Binding RestartCommand}" />
             </StackPanel>
         </Border>
     </StackPanel>
