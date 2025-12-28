@@ -46,12 +46,6 @@ The entire service includes the following:
 
 
 
-## Corporate Clients
-
-![](imgs/corporateclient1.png)
-
-![](imgs/corporateclient2.png)
-
 ## Contact Us
 
 Below are the contact details for enterprise inquiries, quotations, and business cooperation (please indicate your purpose when adding as a friend, casual chat is declined, adding on WeChat is recommended).

@@ -46,12 +46,6 @@ GeneralLibrary团队针对企业级应用开发了GeneralSpacestation服务，�
 
 
 
-## 企业客户
-
-![](imgs\corporateclient1.png)
-
-![](imgs\corporateclient2.png)
-
 ## 联系我们
 
 以下是企业咨询、报价、商务合作联系方式（加好友请注明来意拒绝闲聊，推荐加微信）。

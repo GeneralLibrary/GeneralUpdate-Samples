@@ -105,6 +105,7 @@ GeneralClientBootstrap提供以下能力。
 | Bowl                 | string | Bowl监控进程路径，更新完成之后启动Bowl监控客户端是否正常启动。如果启动后异常会捕捉异常信息。 |
 | Scheme               | string | 用于HTTP请求传入token进行身份验证。                          |
 | Token                | string | 用于HTTP请求传入token进行身份验证。                          |
+| Script               | string | 在Linux平台中更新完成之后执行，脚本给文件赋权限。更新之前需要赋权限在引导启动类里可通过GeneralClientBootstrap.AddCustomOption函数注入，函数会在更新前执行。 |
 
 
 
@@ -115,14 +116,16 @@ GeneralClientBootstrap提供以下能力。
 | **Format** 更新包的文件格式。                                |
 | **Encoding**  压缩编码。                                     |
 | **DownloadTimeOut** 超时时间（单位：秒）。如果未指定此参数，则默认超时时间为30秒。 |
+| **Patch** 是否开启二进制差分功能，默认开启，如果设置为false均为覆盖安装。 |
+| **BackUp** 是否开启更新前备份功能，默认开启，如果设置为false则不备份。 |
 
 
 
 ### 适用于
 
-| 产品           | 版本          |
-| -------------- | ------------- |
-| .NET           | 5、6、7、8、9 |
-| .NET Framework | 4.6.1         |
-| .NET Standard  | 2.0           |
-| .NET Core      | 2.0           |
+| 产品           | 版本              |
+| -------------- | ----------------- |
+| .NET           | 5、6、7、8、9、10 |
+| .NET Framework | 4.6.1             |
+| .NET Standard  | 2.0               |
+| .NET Core      | 2.0               |

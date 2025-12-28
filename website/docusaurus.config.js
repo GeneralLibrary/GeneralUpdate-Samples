@@ -8,7 +8,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Team General',
+  title: 'GeneralLibrary',
   //tagline: 'This is a technology from an alien planet.',
   favicon: 'img/general.ico',
 
@@ -79,26 +79,6 @@ const config = {
             sidebarId: 'tutorialSidebar',
             position: 'left',
             label: 'Doc',
-          },
-          {
-            label:'Ecological partners',
-            href:'/EcologicalPartners',
-            position: 'left'
-          },
-          {
-            label:'Cooperative enterprises',
-            href:'/CooperativeEnterprises',
-            position: 'left'
-          },
-          {
-            label:'About',
-            href:'/About',
-            position: 'left'
-          },
-          {
-            label:'Profile',
-            href:'/Profile',
-            position: 'left'
           },
           {
             href: 'https://github.com/GeneralLibrary',
