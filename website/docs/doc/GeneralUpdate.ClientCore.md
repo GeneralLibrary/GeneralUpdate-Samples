@@ -106,6 +106,7 @@ Certainly! Here's the translated content:
 | Bowl                 | string | Path to the Bowl monitoring process, which starts after updates to check if the Bowl client starts normally. If an exception occurs after starting, the exception information will be captured. |
 | Scheme               | string | Used for passing a token in HTTP requests for authentication. |
 | Token                | string | Token used in HTTP requests for authentication.              |
+| Script               | string | This script assigns permissions to files and is executed on the Linux platform after the update is completed. If permissions need to be assigned before the update, this can be injected via the `GeneralClientBootstrap.AddCustomOption` function in the bootstrap startup class, and the function will be executed prior to the update. |
 
 ### 🍵UpdateOption
 
@@ -114,14 +115,16 @@ Certainly! Here's the translated content:
 | **Format** File format of the update package.                |
 | **Encoding** Compression encoding.                           |
 | **DownloadTimeOut** Timeout duration (in seconds). If not specified, the default timeout is 30 seconds. |
+| **Patch** Whether to enable the binary differential update function, which is enabled by default; if set to `false`, a full overwrite installation will be performed instead. |
+| **BackUp** Whether to enable the backup function before update, which is enabled by default; no backup will be performed if set to `false`. |
 
 
 
 ### Applicable To
 
-| Product        | Version       |
-| -------------- | ------------- |
-| .NET           | 5, 6, 7, 8, 9 |
-| .NET Framework | 4.6.1         |
-| .NET Standard  | 2.0           |
-| .NET Core      | 2.0           |
+| Product        | Version          |
+| -------------- | ---------------- |
+| .NET           | 5, 6, 7, 8, 9,10 |
+| .NET Framework | 4.6.1            |
+| .NET Standard  | 2.0              |
+| .NET Core      | 2.0              |
