@@ -8,7 +8,7 @@ sidebar_position: 2
 
 **Updates limitless, upgrades boundless.**
 
-GeneralUpdate is an open-source cross-platform application automatic update component based on .NET Standard 2.0 and licensed under the MIT license.
+GeneralUpdate is an open-source cross-platform application automatic update component based on .NET Standard 2.0 and licensed under the Apache license.
 
 | Github               | Gitee               | GitCode               |
 | -------------------- | ------------------- | --------------------- |
