@@ -8,7 +8,7 @@ using GeneralUpdate.Core;
 try
 {
     Console.WriteLine($"升级程序初始化，{DateTime.Now}！");
-    Console.WriteLine("当前运行目录：" + Context.ScriptDirectory);
+    Console.WriteLine("当前运行目录：" + Thread.GetDomain().BaseDirectory);
     _ = await new GeneralUpdateBootstrap()
         //单个或多个更新包下载速度、剩余下载事件、当前下载版本信息通知事件
         .AddListenerMultiDownloadStatistics(OnMultiDownloadStatistics)
