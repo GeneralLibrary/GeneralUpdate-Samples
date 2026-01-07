@@ -7,6 +7,23 @@ tags: [log]
 
 # 📒Release log
 
+- ### 📍2026-01-06 10.0.0
+
+  - Adapt to .NET 10 upgrade and update the versions of referenced components.
+  - Add scripted execution of GeneralUpdate via `dotnet run x.cs` for .NET 10.
+  - Refactor part of the functions.
+
+
+
+### 📍2026-01-01 9.5.10
+
+- Fix the file occupation issue in `BinaryHandler` caused by `File.Move(_newfilePath, _oldfilePath)`.
+- Fix the null value issue of `Environments.GetEnvironmentVariable("ProcessInfo")` on Linux.
+- Add the function to set executable permissions for updated files on Linux.
+- Refactor part of the functions.
+
+
+
 ## 📍2025-02-20 9.1.6
 
 - Fix OSS to directly terminate the current process when no update is required.

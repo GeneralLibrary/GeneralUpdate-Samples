@@ -7,6 +7,23 @@ tags: [log]
 
 # 📒更新日志
 
+## 📍2026-01-06 10.0.0
+
+- 适配.NET10升级引用组件版本。
+- 新增.NET 10 dotnet run x.cs脚本化运行GeneralUpdate。
+- 重构部分功能。
+
+
+
+## 📍2026-01-01 9.5.10
+
+- 修复BinaryHandler中File.Move(_newfilePath, _oldfilePath);文件占用问题。
+- 修复在 linux 下 Environments.GetEnvironmentVariable("ProcessInfo") 为空问题。
+- 新增在Linux 中给更新后的文件设置可执行程序权限。
+- 重构部分功能。
+
+
+
 ## 📍2025-02-20 9.1.6
 
 - 修复OSS无需更新的时候直接关闭当前进程。
