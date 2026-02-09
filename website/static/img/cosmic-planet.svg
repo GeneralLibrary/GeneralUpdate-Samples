@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Pixel art planet with ring -->
+  <defs>
+    <style>
+      .pixel { shape-rendering: crispEdges; }
+    </style>
+  </defs>
+  <!-- Planet -->
+  <rect class="pixel" x="20" y="16" width="24" height="4" fill="#9b59b6"/>
+  <rect class="pixel" x="16" y="20" width="32" height="4" fill="#9b59b6"/>
+  <rect class="pixel" x="16" y="24" width="32" height="4" fill="#8e44ad"/>
+  <rect class="pixel" x="16" y="28" width="32" height="4" fill="#9b59b6"/>
+  <rect class="pixel" x="16" y="32" width="32" height="4" fill="#8e44ad"/>
+  <rect class="pixel" x="16" y="36" width="32" height="4" fill="#9b59b6"/>
+  <rect class="pixel" x="20" y="40" width="24" height="4" fill="#9b59b6"/>
+  <!-- Ring -->
+  <rect class="pixel" x="8" y="28" width="8" height="4" fill="#e8daef" opacity="0.7"/>
+  <rect class="pixel" x="48" y="28" width="8" height="4" fill="#e8daef" opacity="0.7"/>
+  <rect class="pixel" x="4" y="32" width="12" height="4" fill="#d7bde2" opacity="0.7"/>
+  <rect class="pixel" x="48" y="32" width="12" height="4" fill="#d7bde2" opacity="0.7"/>
+</svg>

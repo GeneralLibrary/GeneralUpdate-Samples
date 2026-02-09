@@ -6,25 +6,94 @@
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #000000; /* 黑色 */
-  --ifm-color-primary-dark: #000000;
-  --ifm-color-primary-darker: #000000;
-  --ifm-color-primary-darkest: #000000;
-  --ifm-color-primary-light: #333333; /* 更浅的黑色 */
-  --ifm-color-primary-lighter: #666666;
-  --ifm-color-primary-lightest: #999999;
+  --ifm-color-primary: #3498db;
+  --ifm-color-primary-dark: #2e86c1;
+  --ifm-color-primary-darker: #2b7db8;
+  --ifm-color-primary-darkest: #236599;
+  --ifm-color-primary-light: #5dade2;
+  --ifm-color-primary-lighter: #6ab6e5;
+  --ifm-color-primary-lightest: #85c5eb;
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --docusaurus-highlighted-code-line-bg: rgba(52, 152, 219, 0.1);
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
-  --ifm-color-primary: #ffffff; /* 白色 */
-  --ifm-color-primary-dark: #eeeeee;
-  --ifm-color-primary-darker: #dddddd;
-  --ifm-color-primary-darkest: #cccccc;
-  --ifm-color-primary-light: #ffffff;
-  --ifm-color-primary-lighter: #ffffff;
-  --ifm-color-primary-lightest: #ffffff;
-  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.3);
+  --ifm-color-primary: #5dade2;
+  --ifm-color-primary-dark: #4aa3de;
+  --ifm-color-primary-darker: #3d9adc;
+  --ifm-color-primary-darkest: #2585cc;
+  --ifm-color-primary-light: #70b7e6;
+  --ifm-color-primary-lighter: #7dbde8;
+  --ifm-color-primary-lightest: #98caed;
+  --docusaurus-highlighted-code-line-bg: rgba(93, 173, 226, 0.2);
+  --ifm-background-color: #0a0420;
+  --ifm-background-surface-color: #1a0f3e;
+}
+
+/* Enhanced dark mode cosmic theme */
+[data-theme='dark'] .navbar {
+  background-color: #0a0420;
+  border-bottom: 2px solid #1a0f3e;
+}
+
+[data-theme='dark'] .footer {
+  background-color: #0a0420;
+  border-top: 2px solid #1a0f3e;
+}
+
+/* Dark mode adjustments for new homepage */
+[data-theme='dark'] .featuresSection {
+  background: linear-gradient(180deg, #1a0f3e 0%, #0a0420 100%);
+}
+
+[data-theme='dark'] .featureCard {
+  background: #1a0f3e;
+  border-color: #5dade2;
+  box-shadow: 8px 8px 0 rgba(93, 173, 226, 0.2);
+}
+
+[data-theme='dark'] .featureCard:hover {
+  box-shadow: 12px 12px 0 rgba(93, 173, 226, 0.3);
+}
+
+[data-theme='dark'] .cardTitle {
+  color: #fff;
+}
+
+[data-theme='dark'] .cardDesc {
+  color: #a8c5e8;
+}
+
+[data-theme='dark'] .sectionTitle {
+  color: #fff;
+}
+
+[data-theme='dark'] .techSection {
+  background: #0a0420;
+}
+
+[data-theme='dark'] .techTitle {
+  color: #fff;
+}
+
+[data-theme='dark'] .techBadge {
+  background: #1a0f3e;
+  box-shadow: 4px 4px 0 rgba(93, 173, 226, 0.2);
+}
+
+[data-theme='dark'] .techBadge:hover {
+  box-shadow: 6px 6px 0 rgba(93, 173, 226, 0.3);
+}
+
+/* Smooth transitions for theme components */
+.cosmicHero,
+.cosmicHero *,
+.featuresSection,
+.featuresSection *,
+.techSection,
+.techSection *,
+.navbar,
+.footer {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }

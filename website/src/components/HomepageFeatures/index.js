@@ -5,7 +5,7 @@ import styles from './styles.module.css';
 const FeatureList = [
   {
     title: 'GeneralUpdate',
-    Svg: require('@site/static/img/upgrade.svg').default,
+    Svg: require('@site/static/img/cosmic-rocket.svg').default,
     //description: (
     //  <>
     //    帮助你的客户端应用以最快最小的资源的占用完成自动升级！
@@ -14,7 +14,7 @@ const FeatureList = [
   },
   {
     title: 'GeneralUpdate Tools',
-    Svg: require('@site/static/img/packet.svg').default,
+    Svg: require('@site/static/img/cosmic-planet.svg').default,
     //description: (
     //  <>
     //    打包工具帮助您发布更新补丁包文件！
@@ -23,7 +23,7 @@ const FeatureList = [
   },
   {
     title: 'GeneralUpdate Samples',
-    Svg: require('@site/static/img/samples.svg').default,
+    Svg: require('@site/static/img/cosmic-star.svg').default,
     //description: (
     //  <>
     //    快速启动，更快的了解项目如何使用！
