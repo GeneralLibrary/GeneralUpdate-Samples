@@ -64,7 +64,7 @@ GeneralUpdate.Extension 提供以下扩展功能。
 
 | 方法                | 说明                                                  |
 | --------------------- | ------------------------------------------------------------ |
-| AddCustomOption()     | 向更新工作流注入自定义异步操作。在更新开始前执行。非常适合环境检查、更新前备份或任何准备任务。返回 Task<bool>，返回 false 将取消更新。 |
+| AddCustomOption()     | 向更新工作流注入自定义异步操作。在更新开始前执行。非常适合环境检查、更新前备份或任何准备任务。返回 Task&lt;bool&gt;，返回 false 将取消更新。 |
 | SetCustomSkipOption() | 允许用户决定是否跳过非强制更新。提供一种显示自定义 UI 以获取用户同意的方法。仅在服务器未强制更新时有效。 |
 | SetBlacklist()        | 定义永远不应更新的文件或文件格式。对于保留用户数据、配置文件或第三方依赖项很有用。 |
 
@@ -110,7 +110,7 @@ GeneralUpdate.Extension 提供以下扩展功能。
 | 属性               | 类型            | 说明                                |
 | ---------------------- | --------------- | ------------------------------------------ |
 | IsAllDownloadCompleted | bool            | 是否所有下载都成功完成|
-| FailedVersions         | List<VersionInfo>| 下载失败的版本列表   |
+| FailedVersions         | List&lt;VersionInfo&gt;| 下载失败的版本列表   |
 
 #### MultiDownloadErrorEventArgs
 
@@ -210,19 +210,19 @@ await new GeneralClientBootstrap()
 var configinfo = new Configinfo
 {
     // ... 其他配置
-    BlackFiles = new List<string> 
+    BlackFiles = new List&lt;string&gt; 
     { 
         "userconfig.json",
         "license.dat",
         "custom.db"
     },
-    BlackFormats = new List<string> 
+    BlackFormats = new List&lt;string&gt; 
     { 
         ".log",
         ".temp",
         ".cache"
     },
-    BlackDirectories = new List<string>
+    BlackDirectories = new List&lt;string&gt;
     {
         "UserData",
         "Plugins\\Custom"
@@ -231,7 +231,7 @@ var configinfo = new Configinfo
 
 // 或使用 SetBlacklist 方法
 await new GeneralClientBootstrap()
-    .SetBlacklist(blackFiles: new List<string> { "config.ini" })
+    .SetBlacklist(blackFiles: new List&lt;string&gt; { "config.ini" })
     .SetConfig(configinfo)
     .LaunchAsync();
 ```
@@ -260,7 +260,7 @@ public class UpdateManager
             ProductId = "your-product-id",
             AppSecretKey = "your-secret-key",
             InstallPath = AppDomain.CurrentDomain.BaseDirectory,
-            BlackFiles = new List<string> { "userdata.db" }
+            BlackFiles = new List&lt;string&gt; { "userdata.db" }
         };
 
         try

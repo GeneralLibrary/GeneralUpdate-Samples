@@ -64,7 +64,7 @@ GeneralUpdate.Extension provides the following extensibility features.
 
 | Method                | Description                                                  |
 | --------------------- | ------------------------------------------------------------ |
-| AddCustomOption()     | Inject custom asynchronous operations into the update workflow. Executed before the update starts. Perfect for environment checks, pre-update backups, or any preparatory tasks. Returns a Task<bool> where false cancels the update. |
+| AddCustomOption()     | Inject custom asynchronous operations into the update workflow. Executed before the update starts. Perfect for environment checks, pre-update backups, or any preparatory tasks. Returns a Task&lt;bool&gt; where false cancels the update. |
 | SetCustomSkipOption() | Allows users to decide whether to skip non-mandatory updates. Provides a way to show custom UI for user consent. Only effective when the server doesn't enforce mandatory updates. |
 | SetBlacklist()        | Define files or file formats that should never be updated. Useful for preserving user data, configuration files, or third-party dependencies. |
 
@@ -110,7 +110,7 @@ Summary of all download tasks.
 | Property               | Type            | Description                                |
 | ---------------------- | --------------- | ------------------------------------------ |
 | IsAllDownloadCompleted | bool            | Whether all downloads completed successfully|
-| FailedVersions         | List<VersionInfo>| List of versions that failed to download   |
+| FailedVersions         | List&lt;VersionInfo&gt;| List of versions that failed to download   |
 
 #### MultiDownloadErrorEventArgs
 
@@ -210,19 +210,19 @@ Exclude specific files or formats from updates:
 var configinfo = new Configinfo
 {
     // ... other configuration
-    BlackFiles = new List<string> 
+    BlackFiles = new List&lt;string&gt; 
     { 
         "userconfig.json",
         "license.dat",
         "custom.db"
     },
-    BlackFormats = new List<string> 
+    BlackFormats = new List&lt;string&gt; 
     { 
         ".log",
         ".temp",
         ".cache"
     },
-    BlackDirectories = new List<string>
+    BlackDirectories = new List&lt;string&gt;
     {
         "UserData",
         "Plugins\\Custom"
@@ -231,7 +231,7 @@ var configinfo = new Configinfo
 
 // Or use the SetBlacklist method
 await new GeneralClientBootstrap()
-    .SetBlacklist(blackFiles: new List<string> { "config.ini" })
+    .SetBlacklist(blackFiles: new List&lt;string&gt; { "config.ini" })
     .SetConfig(configinfo)
     .LaunchAsync();
 ```
@@ -260,7 +260,7 @@ public class UpdateManager
             ProductId = "your-product-id",
             AppSecretKey = "your-secret-key",
             InstallPath = AppDomain.CurrentDomain.BaseDirectory,
-            BlackFiles = new List<string> { "userdata.db" }
+            BlackFiles = new List&lt;string&gt; { "userdata.db" }
         };
 
         try
