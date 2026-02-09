@@ -1012,7 +1012,7 @@ namespace MyProcessSample
 {
     class MyProcess
     {
-        //此段代码来自于msdn
+        // This code is from MSDN
         // Opens the Internet Explorer application.
         void OpenApplication(string myFavoritesPath)
         {

@@ -13,7 +13,7 @@ tags: [sampleui]
 
 
 
-| 仓库地址                                                     |
+| Repository URL                                                     |
 | ------------------------------------------------------------ |
 | https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Client/ClientSample.sln |
 | https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/UpgradeSample.sln |
