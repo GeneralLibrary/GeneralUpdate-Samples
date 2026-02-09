@@ -7,9 +7,9 @@ tags: [sampleui]
 
 ## Sample UI
 
-![](imgs\sampleclient.png)
+![](imgs/sampleclient.png)
 
-![](imgs\sampleupgrade.png)
+![](imgs/sampleupgrade.png)
 
 
 

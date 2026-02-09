@@ -15,7 +15,7 @@ Download the Sample repository from GitHub. Before using the sample, make sure y
 
 The repository directory contents are as follows:
 
-![](imgs\content.png)
+![](imgs/content.png)
 
 | Name          | Description                           |
 | ------------- | ------------------------------------- |
@@ -38,7 +38,7 @@ Locate the file directory and double-click (the start.cmd script resets the loca
 ...\GeneralUpdate-Samples\src\start.cmd
 ```
 
-![](imgs\build.png)
+![](imgs/build.png)
 
 
 
@@ -48,13 +48,13 @@ The automatic process will begin compiling and copying all related project bin d
 ...\GeneralUpdate-Samples\src\run\app
 ```
 
-![](imgs\build.png)
+![](imgs/build.png)
 
 
 
 Upon entering the app directory, you will see the setup prior to the upgrade.
 
-![](imgs\rundir.png)
+![](imgs/rundir.png)
 
 
 
@@ -66,14 +66,14 @@ After checking the app directory:
 - The server sample program will start
 - The main client sample program will start, initiating the update request (once the main client program update is complete, it will close automatically).
 
-![](imgs\upgrade.png)
+![](imgs/upgrade.png)
 
 
 
 Once the main client program closes automatically, check the run\app directory again. You will notice a new backup directory named "app-1.0.0.0" and a file named "Congratulations on the update.txt".
 
-![](imgs\rundir2.png)
+![](imgs/rundir2.png)
 
 Seeing this indicates that you have successfully completed an upgrade. Congratulations!
 
-![](imgs\result.png)
+![](imgs/result.png)
