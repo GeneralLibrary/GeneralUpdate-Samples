@@ -1,8 +1,8 @@
 {
-  "label": "Guide",
+  "label": "Release log",
   "position": 1,
   "link": {
     "type": "generated-index",
-    "description": "指南."
+    "description": "Release log."
   }
 }

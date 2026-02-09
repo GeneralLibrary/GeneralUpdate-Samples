@@ -6,7 +6,7 @@ sidebar_position: 1
 
 #### (1) Windows Platform
 
-![](imgs\UAC.png)
+![](imgs/UAC.png)
 
 When using GeneralUpdate for automatic updates, you may encounter permission issues if the update directory is on the C drive, especially when replacing files or applying patches. With the introduction of Windows 11, permission management for certain directories on the C drive has become more stringent compared to previous Windows operating systems.
 
