@@ -1,11 +1,31 @@
 .features {
   display: flex;
   align-items: center;
-  padding: 2rem 0;
+  padding: 4rem 0;
   width: 100%;
+  background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
 .featureSvg {
-  height: 200px;
-  width: 200px;
+  height: 180px;
+  width: 180px;
+  filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.2));
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transition: transform 0.3s ease;
+}
+
+.featureSvg:hover {
+  transform: scale(1.1) rotate(5deg);
+  filter: drop-shadow(6px 6px 0 rgba(0, 0, 0, 0.3));
+}
+
+/* Pixel art card style */
+.features h3 {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 1.5rem;
+  color: #2c3e50;
 }
