@@ -86,7 +86,14 @@
   box-shadow: 6px 6px 0 rgba(93, 173, 226, 0.3);
 }
 
-/* Smooth transitions */
-* {
+/* Smooth transitions for theme components */
+.cosmicHero,
+.cosmicHero *,
+.featuresSection,
+.featuresSection *,
+.techSection,
+.techSection *,
+.navbar,
+.footer {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }

@@ -20,7 +20,7 @@ function CosmicHero() {
         <Heading as="h1" className={styles.cosmicTitle}>
           {siteConfig.title}
         </Heading>
-        <p className={styles.cosmicSubtitle}>
+        <p className={styles.cosmicSubtitle} aria-label="跨平台自动更新框架 极简 高效 开源">
           🚀 跨平台自动更新框架 · 极简 · 高效 · 开源
         </p>
         <div className={styles.actionButtons}>
