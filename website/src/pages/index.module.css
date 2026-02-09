@@ -1,123 +1,500 @@
 /**
- * CSS files with the .module.css suffix will be treated as CSS modules
- * and scoped locally.
+ * Cosmic Pixel Art Homepage Styles
  */
 
-.heroBanner {
-  padding: 8rem 0;
-  text-align: center;
+/* ============================================
+   COSMIC HERO SECTION
+   ============================================ */
+
+.cosmicHero {
   position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  background: linear-gradient(180deg, #0a0e27 0%, #1a1f3a 50%, #0a0e27 100%);
-  min-height: 450px;
+  background: linear-gradient(180deg, #0a0420 0%, #1a0f3e 50%, #0a0420 100%);
 }
 
-/* Cosmic starfield background */
-.heroBanner::before {
-  content: '';
+.cosmicBackground {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: 
-    radial-gradient(2px 2px at 20% 30%, white, transparent),
-    radial-gradient(2px 2px at 60% 70%, white, transparent),
+  overflow: hidden;
+}
+
+/* Animated starfield */
+.stars {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image:
+    radial-gradient(2px 2px at 10% 20%, white, transparent),
+    radial-gradient(2px 2px at 90% 80%, white, transparent),
     radial-gradient(1px 1px at 50% 50%, white, transparent),
-    radial-gradient(1px 1px at 80% 10%, white, transparent),
-    radial-gradient(2px 2px at 90% 60%, white, transparent),
-    radial-gradient(1px 1px at 33% 80%, white, transparent),
-    radial-gradient(1px 1px at 15% 90%, white, transparent);
-  background-size: 200% 200%;
-  background-position: 0% 0%;
-  animation: twinkle 8s ease-in-out infinite;
-  opacity: 0.6;
-  pointer-events: none;
+    radial-gradient(1px 1px at 30% 70%, white, transparent),
+    radial-gradient(2px 2px at 70% 30%, white, transparent),
+    radial-gradient(1px 1px at 85% 15%, white, transparent),
+    radial-gradient(1px 1px at 20% 90%, white, transparent),
+    radial-gradient(2px 2px at 60% 60%, white, transparent),
+    radial-gradient(1px 1px at 40% 10%, white, transparent),
+    radial-gradient(1px 1px at 15% 45%, white, transparent);
+  background-size: 250% 250%;
+  animation: twinkle 12s ease-in-out infinite;
 }
 
 @keyframes twinkle {
   0%, 100% {
-    opacity: 0.6;
+    opacity: 0.5;
     background-position: 0% 0%;
   }
   50% {
-    opacity: 0.3;
+    opacity: 0.8;
     background-position: 100% 100%;
   }
 }
 
-/* Pixel art moon */
-.heroBanner::after {
+/* Pixel planets */
+.planets {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.planets::before {
   content: '';
   position: absolute;
-  top: 40px;
-  right: 10%;
+  top: 15%;
+  right: 15%;
+  width: 80px;
+  height: 80px;
+  background: #f39c12;
+  box-shadow:
+    0 0 0 8px #f39c12,
+    8px 0 0 8px #f39c12,
+    16px 0 0 8px #f1c40f,
+    24px 0 0 8px #f39c12,
+    0 8px 0 8px #f39c12,
+    8px 8px 0 8px #f1c40f,
+    16px 8px 0 8px #f39c12,
+    24px 8px 0 8px #f39c12;
+  animation: float 6s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+.planets::after {
+  content: '';
+  position: absolute;
+  bottom: 20%;
+  left: 10%;
   width: 60px;
   height: 60px;
-  background: #f39c12;
-  box-shadow: 
-    0 0 0 4px #f39c12,
-    8px 0 0 4px #f39c12,
-    16px 0 0 4px #f39c12,
-    0 8px 0 4px #f39c12,
-    8px 8px 0 4px #f1c40f,
-    16px 8px 0 4px #f39c12,
-    0 16px 0 4px #f39c12,
-    8px 16px 0 4px #f39c12,
-    16px 16px 0 4px #f39c12;
-  opacity: 0.8;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+  background: #9b59b6;
+  box-shadow:
+    0 0 0 6px #9b59b6,
+    6px 0 0 6px #8e44ad,
+    12px 0 0 6px #9b59b6,
+    0 6px 0 6px #8e44ad,
+    6px 6px 0 6px #9b59b6,
+    12px 6px 0 6px #8e44ad;
+  animation: float 8s ease-in-out infinite;
+  animation-delay: 1s;
+  opacity: 0.6;
 }
 
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 4rem 2rem;
-    min-height: 350px;
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
   }
-  
-  .heroBanner::after {
-    width: 40px;
-    height: 40px;
-    box-shadow: 
-      0 0 0 3px #f39c12,
-      6px 0 0 3px #f39c12,
-      12px 0 0 3px #f39c12,
-      0 6px 0 3px #f39c12,
-      6px 6px 0 3px #f1c40f,
-      12px 6px 0 3px #f39c12,
-      0 12px 0 3px #f39c12,
-      6px 12px 0 3px #f39c12,
-      12px 12px 0 3px #f39c12;
+  50% {
+    transform: translateY(-20px) rotate(180deg);
   }
 }
 
-.buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2rem;
+/* Hero content */
+.heroContent {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 2rem;
+  max-width: 900px;
 }
 
-/* Pixel art button style */
-.buttons .button {
+/* Pixel art logo */
+.pixelLogo {
+  margin: 0 auto 2rem;
+  width: 120px;
+  height: 120px;
+  position: relative;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.logoPixel {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 50%, #1a5f8f 100%);
+  box-shadow:
+    0 0 0 8px rgba(52, 152, 219, 0.5),
+    0 0 0 16px rgba(52, 152, 219, 0.3),
+    0 0 0 24px rgba(52, 152, 219, 0.1),
+    inset 8px 8px 16px rgba(0, 0, 0, 0.2),
+    inset -8px -8px 16px rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  position: relative;
+}
+
+.logoPixel::before {
+  content: '⚡';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Title */
+.cosmicTitle {
+  font-size: 4rem;
+  font-weight: 900;
+  color: #fff;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  text-shadow:
+    0 0 20px rgba(52, 152, 219, 0.5),
+    0 0 40px rgba(52, 152, 219, 0.3),
+    4px 4px 0 rgba(0, 0, 0, 0.3);
   font-family: 'Courier New', monospace;
+}
+
+.cosmicSubtitle {
+  font-size: 1.3rem;
+  color: #a8c5e8;
+  margin-bottom: 3rem;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+/* Action buttons */
+.actionButtons {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
   font-weight: bold;
+  padding: 16px 32px;
+  border: 4px solid;
+  text-decoration: none;
   text-transform: uppercase;
   letter-spacing: 2px;
-  border: 4px solid currentColor;
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  transition: transform 0.1s ease;
+  transition: all 0.2s ease;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.buttons .button:hover {
-  transform: translate(-2px, -2px);
+.primaryBtn {
+  background: #3498db;
+  color: #fff;
+  border-color: #2980b9;
   box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.3);
 }
 
-.buttons .button:active {
+.primaryBtn:hover {
+  background: #2980b9;
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
+  color: #fff;
+}
+
+.primaryBtn:active {
   transform: translate(2px, 2px);
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.secondaryBtn {
+  background: transparent;
+  color: #3498db;
+  border-color: #3498db;
+  box-shadow: 6px 6px 0 rgba(52, 152, 219, 0.2);
+}
+
+.secondaryBtn:hover {
+  background: rgba(52, 152, 219, 0.1);
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 rgba(52, 152, 219, 0.3);
+  color: #3498db;
+}
+
+.secondaryBtn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 rgba(52, 152, 219, 0.2);
+}
+
+.btnIcon {
+  font-size: 1.2rem;
+  display: inline-block;
+}
+
+/* ============================================
+   FEATURES SECTION
+   ============================================ */
+
+.featuresSection {
+  padding: 6rem 0;
+  background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.sectionTitle {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #2c3e50;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 1rem;
+  font-family: 'Courier New', monospace;
+}
+
+.titleUnderline {
+  width: 100px;
+  height: 8px;
+  background: linear-gradient(90deg, #3498db, #9b59b6, #e74c3c);
+  margin: 0 auto;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.featureCard {
+  background: #fff;
+  border: 4px solid #2c3e50;
+  padding: 2.5rem;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.1);
+}
+
+.featureCard:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.15);
+  border-color: #3498db;
+}
+
+.cardIcon {
+  font-size: 3.5rem;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.1));
+}
+
+.cardTitle {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: 'Courier New', monospace;
+}
+
+.cardDesc {
+  font-size: 1rem;
+  color: #5a6c7d;
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+.cardArrow {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  font-size: 2rem;
+  color: #3498db;
+  transition: transform 0.3s ease;
+}
+
+.featureCard:hover .cardArrow {
+  transform: translateX(8px);
+}
+
+/* ============================================
+   TECH STACK SECTION
+   ============================================ */
+
+.techSection {
+  padding: 4rem 0 6rem;
+  background: #f8f9fa;
+}
+
+.techTitle {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #2c3e50;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 2.5rem;
+  font-family: 'Courier New', monospace;
+}
+
+.techGrid {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.techBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #fff;
+  border: 3px solid;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.techBadge:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.15);
+}
+
+.techDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media screen and (max-width: 996px) {
+  .cosmicHero {
+    min-height: 80vh;
+  }
+
+  .cosmicTitle {
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+  }
+
+  .cosmicSubtitle {
+    font-size: 1.1rem;
+  }
+
+  .planets::before {
+    width: 50px;
+    height: 50px;
+    box-shadow:
+      0 0 0 5px #f39c12,
+      5px 0 0 5px #f39c12,
+      10px 0 0 5px #f1c40f,
+      15px 0 0 5px #f39c12,
+      0 5px 0 5px #f39c12,
+      5px 5px 0 5px #f1c40f,
+      10px 5px 0 5px #f39c12,
+      15px 5px 0 5px #f39c12;
+  }
+
+  .planets::after {
+    width: 40px;
+    height: 40px;
+    box-shadow:
+      0 0 0 4px #9b59b6,
+      4px 0 0 4px #8e44ad,
+      8px 0 0 4px #9b59b6,
+      0 4px 0 4px #8e44ad,
+      4px 4px 0 4px #9b59b6,
+      8px 4px 0 4px #8e44ad;
+  }
+
+  .pixelLogo {
+    width: 90px;
+    height: 90px;
+  }
+
+  .logoPixel::before {
+    font-size: 36px;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .primaryBtn,
+  .secondaryBtn {
+    width: 100%;
+    max-width: 300px;
+    justify-content: center;
+  }
+
+  .sectionTitle {
+    font-size: 2rem;
+  }
+
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .cosmicTitle {
+    font-size: 2rem;
+  }
+
+  .cosmicSubtitle {
+    font-size: 1rem;
+  }
+
+  .featuresSection {
+    padding: 4rem 0;
+  }
+
+  .techSection {
+    padding: 3rem 0 4rem;
+  }
 }
