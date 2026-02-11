@@ -12,6 +12,10 @@ function CosmicHero() {
       <div className={styles.cosmicBackground}>
         <div className={styles.stars}></div>
         <div className={styles.planets}></div>
+        <div className={styles.satellite}></div>
+        <div className={styles.shootingStar}></div>
+        <div className={styles.shootingStar} style={{ animationDelay: '3s', top: '30%' }}></div>
+        <div className={styles.shootingStar} style={{ animationDelay: '5.5s', top: '60%' }}></div>
       </div>
       <div className={styles.heroContent}>
         <div className={styles.pixelLogo}>
