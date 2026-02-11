@@ -861,26 +861,12 @@
 
 @media screen and (max-width: 768px) {
   .animationContainer {
-    width: 350px;
-    height: 350px;
     transform: scale(0.85);
-  }
-  
-  .spaceship {
-    width: 300px;
-    height: 300px;
   }
 }
 
 @media screen and (max-width: 480px) {
   .animationContainer {
-    width: 280px;
-    height: 280px;
     transform: scale(0.7);
-  }
-  
-  .spaceship {
-    width: 240px;
-    height: 240px;
   }
 }
