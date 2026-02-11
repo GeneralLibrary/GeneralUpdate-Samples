@@ -756,9 +756,27 @@
 }
 
 .whisker:nth-child(3) {
+  top: 16px;
+  left: -16px;
+  transform: rotate(10deg);
+}
+
+.whisker:nth-child(4) {
   top: 0;
   right: -15px;
   transform: rotate(5deg) scaleX(-1);
+}
+
+.whisker:nth-child(5) {
+  top: 8px;
+  right: -18px;
+  transform: rotate(-5deg) scaleX(-1);
+}
+
+.whisker:nth-child(6) {
+  top: 16px;
+  right: -16px;
+  transform: rotate(-10deg) scaleX(-1);
 }
 
 .catBody {

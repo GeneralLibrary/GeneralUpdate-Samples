@@ -113,6 +113,9 @@ export default function SpaceAnimation() {
               <div className={styles.whisker}></div>
               <div className={styles.whisker}></div>
               <div className={styles.whisker}></div>
+              <div className={styles.whisker}></div>
+              <div className={styles.whisker}></div>
+              <div className={styles.whisker}></div>
             </div>
           </div>
         </div>
@@ -180,10 +183,11 @@ export default function SpaceAnimation() {
         </div>
       </div>
 
-      {/* Floating Energy Particles */}
+      {/* Floating Energy Particles - Using CSS custom properties for positioning */}
       <div className={styles.particles}>
         {[...Array(8)].map((_, i) => (
           <div key={i} className={styles.particle} style={{
+            // Custom properties are referenced in CSS as var(--delay), var(--x), var(--y)
             '--delay': `${i * 0.3}s`,
             '--x': `${(i % 4) * 25}%`,
             '--y': `${Math.floor(i / 4) * 50}%`
