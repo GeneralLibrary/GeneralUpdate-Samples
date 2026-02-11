@@ -4,6 +4,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
 import styles from './index.module.css';
+import SpaceAnimation from '@site/src/components/SpaceAnimation';
 
 function CosmicHero() {
   const {siteConfig} = useDocusaurusContext();
@@ -14,8 +15,8 @@ function CosmicHero() {
         <div className={styles.planets}></div>
       </div>
       <div className={styles.heroContent}>
-        <div className={styles.pixelLogo}>
-          <div className={styles.logoPixel}></div>
+        <div className={styles.animationWrapper}>
+          <SpaceAnimation />
         </div>
         <Heading as="h1" className={styles.cosmicTitle}>
           {siteConfig.title}

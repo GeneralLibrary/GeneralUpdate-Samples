@@ -122,6 +122,14 @@
   max-width: 900px;
 }
 
+/* Animation Wrapper */
+.animationWrapper {
+  margin: 0 auto 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 /* Pixel art logo */
 .pixelLogo {
   margin: 0 auto 2rem;
