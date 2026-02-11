@@ -1,667 +1,1002 @@
 /**
- * Space Animation Styles - Pixel Mosaic Sci-fi Style
- * Features astronaut and orange cat transformation animation
+ * Enhanced Space Animation - Detailed Illustrated Style  
+ * Matching reference image with realistic astronaut and orange cat
  */
 
-/* Animation Container */
 .animationContainer {
   position: relative;
-  width: 500px;
-  height: 500px;
+  width: 600px;
+  height: 600px;
   margin: 0 auto;
   overflow: visible;
 }
 
-/* ============================================
-   SPACESHIP BACKGROUND
-   ============================================ */
-
-.spaceship {
+/* Space Portal Background */
+.spacePortal {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  width: 500px;
+  height: 500px;
+}
+
+.portalRing1, .portalRing2, .portalRing3 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: portalPulse 4s ease-in-out infinite;
+}
+
+.portalRing1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, transparent 40%, rgba(138, 43, 226, 0.3) 70%, transparent 100%);
+}
+
+.portalRing2 {
   width: 400px;
   height: 400px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  border-radius: 20px;
-  box-shadow:
-    0 0 0 4px #2a3f5f,
-    0 0 0 8px #1a2a3f,
-    inset 0 0 50px rgba(0, 0, 0, 0.5),
-    0 20px 60px rgba(0, 0, 0, 0.4);
-  z-index: 1;
+  background: radial-gradient(circle, transparent 40%, rgba(75, 0, 130, 0.4) 70%, transparent 100%);
+  animation-delay: 1.3s;
 }
 
-.spaceshipWindow {
-  position: absolute;
-  top: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 120px;
-  height: 80px;
-  background: linear-gradient(180deg, #00d4ff 0%, #0066cc 100%);
-  border-radius: 60px 60px 0 0;
-  box-shadow:
-    inset 0 0 20px rgba(255, 255, 255, 0.3),
-    0 0 30px rgba(0, 212, 255, 0.5);
-  opacity: 0.8;
+.portalRing3 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, transparent 40%, rgba(147, 51, 234, 0.5) 70%, transparent 100%);
+  animation-delay: 2.6s;
 }
 
-.spaceshipPanel {
+.portalCore {
   position: absolute;
-  bottom: 40px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   width: 200px;
-  height: 60px;
-  background: #2a3f5f;
-  border: 3px solid #3a5f8f;
-  border-radius: 8px;
-  box-shadow:
-    inset 0 0 15px rgba(0, 212, 255, 0.3),
-    0 4px 0 rgba(0, 0, 0, 0.3);
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200, 150, 255, 0.4) 0%, rgba(138, 43, 226, 0.2) 50%, transparent 100%);
+  animation: coreGlow 3s ease-in-out infinite;
 }
 
-.spaceshipPanel::before {
-  content: '';
-  position: absolute;
-  top: 10px;
-  left: 20px;
-  width: 30px;
-  height: 10px;
-  background: #00ff88;
-  box-shadow:
-    0 0 10px #00ff88,
-    50px 0 0 #ff3366,
-    50px 0 10px #ff3366,
-    100px 0 0 #00d4ff,
-    100px 0 10px #00d4ff;
-  animation: panelBlink 2s infinite;
+@keyframes portalPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+  50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.5; }
 }
 
-@keyframes panelBlink {
-  0%, 49%, 51%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+@keyframes coreGlow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
 }
 
-/* ============================================
-   ASTRONAUT CHARACTER
-   ============================================ */
-
+/* Astronaut - Detailed realistic design */
 .astronaut {
   position: absolute;
   top: 50%;
-  left: 40%;
+  left: 35%;
   transform: translate(-50%, -50%);
   z-index: 10;
-  width: 120px;
-  height: 180px;
+  width: 160px;
+  height: 220px;
 }
 
-/* Helmet */
 .helmet {
   position: absolute;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #e0e0e0 0%, #b0b0b0 100%);
-  border-radius: 50%;
-  border: 4px solid #808080;
-  box-shadow:
-    inset -10px -10px 20px rgba(0, 0, 0, 0.3),
-    inset 10px 10px 20px rgba(255, 255, 255, 0.3),
-    0 0 20px rgba(255, 255, 255, 0.2);
+  width: 75px;
+  height: 75px;
+  z-index: 5;
+}
+
+.helmetTop {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 50px;
+  background: linear-gradient(135deg, #e8e8e8 0%, #d0d0d0 50%, #b8b8b8 100%);
+  border-radius: 50% 50% 30% 30%;
+  box-shadow: inset -8px -8px 20px rgba(0,0,0,0.25), inset 8px 8px 20px rgba(255,255,255,0.4), 0 5px 20px rgba(0,0,0,0.3);
+}
+
+.helmetBottom {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 75px;
+  height: 35px;
+  background: linear-gradient(180deg, #c0c0c0 0%, #a8a8a8 100%);
+  border-radius: 0 0 40% 40%;
+  box-shadow: inset 0 -4px 8px rgba(0,0,0,0.2), 0 3px 10px rgba(0,0,0,0.2);
 }
 
 .visor {
   position: absolute;
-  top: 15px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 45px;
-  height: 30px;
-  background: linear-gradient(180deg, #00d4ff 0%, #0066cc 100%);
+  width: 60px;
+  height: 45px;
+  background: linear-gradient(180deg, #0099ff 0%, #0066cc 50%, #004d99 100%);
   border-radius: 50%;
-  border: 2px solid #004080;
-  box-shadow:
-    inset 0 -5px 15px rgba(0, 0, 0, 0.5),
-    0 0 15px rgba(0, 212, 255, 0.6);
+  border: 3px solid #2a4858;
+  box-shadow: inset 0 -8px 20px rgba(0,0,0,0.4), inset 0 8px 20px rgba(255,255,255,0.2), 0 0 30px rgba(0,153,255,0.5);
+  overflow: hidden;
 }
 
-.visorGlare {
+.visorReflection {
   position: absolute;
   top: 5px;
-  left: 10px;
-  width: 15px;
-  height: 10px;
-  background: rgba(255, 255, 255, 0.8);
+  left: 8px;
+  width: 25px;
+  height: 18px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.3) 100%);
   border-radius: 50%;
-  filter: blur(2px);
+  filter: blur(3px);
 }
 
-/* Body */
-.body {
+.visorStars {
   position: absolute;
-  top: 60px;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 30% 40%, white 1px, transparent 1px),
+    radial-gradient(circle at 70% 60%, white 1px, transparent 1px);
+  opacity: 0.6;
+}
+
+.helmetRing {
+  position: absolute;
+  bottom: -5px;
   left: 50%;
   transform: translateX(-50%);
-  width: 70px;
-  height: 60px;
-  background: linear-gradient(135deg, #f0f0f0 0%, #c0c0c0 100%);
-  border-radius: 15px;
-  border: 4px solid #a0a0a0;
-  box-shadow:
-    inset -5px -5px 15px rgba(0, 0, 0, 0.3),
-    inset 5px 5px 15px rgba(255, 255, 255, 0.2);
+  width: 80px;
+  height: 15px;
+  background: linear-gradient(90deg, #707070 0%, #909090 50%, #707070 100%);
+  border-radius: 50%;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.3), 0 2px 5px rgba(0,0,0,0.2);
 }
 
-.chestPack {
+.torso {
   position: absolute;
-  top: 15px;
+  top: 70px;
   left: 50%;
   transform: translateX(-50%);
-  width: 40px;
-  height: 30px;
-  background: #2a3f5f;
-  border: 2px solid #3a5f8f;
-  border-radius: 5px;
-  box-shadow:
-    inset 0 0 10px rgba(0, 212, 255, 0.3);
+  width: 90px;
+  height: 75px;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 50%, #d0d0d0 100%);
+  border-radius: 20px 20px 15px 15px;
+  box-shadow: inset -8px -8px 15px rgba(0,0,0,0.2), inset 8px 8px 15px rgba(255,255,255,0.3), 0 8px 20px rgba(0,0,0,0.3);
+  z-index: 3;
 }
 
-.chestPack::before {
+.chestPanel {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 55px;
+  height: 40px;
+  background: linear-gradient(135deg, #1a3a52 0%, #2a5a82 50%, #1a3a52 100%);
+  border-radius: 8px;
+  border: 2px solid #3a7aaa;
+  box-shadow: inset 0 0 15px rgba(0,212,255,0.3), 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.chestPanel::before {
   content: '';
   position: absolute;
   top: 8px;
   left: 10px;
-  width: 5px;
-  height: 5px;
+  width: 8px;
+  height: 8px;
   background: #00ff88;
-  box-shadow:
-    0 0 5px #00ff88,
-    10px 0 0 #00ff88,
-    10px 0 5px #00ff88;
-  animation: chestBlink 1.5s infinite;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #00ff88, 16px 0 0 #ff3366, 16px 0 10px #ff3366;
+  animation: panelLights 2s infinite;
 }
 
-@keyframes chestBlink {
+@keyframes panelLights {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.shoulderLeft, .shoulderRight {
+  position: absolute;
+  top: 5px;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #e8e8e8 0%, #c8c8c8 100%);
+  border-radius: 50%;
+  box-shadow: inset -4px -4px 8px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.shoulderLeft { left: -5px; }
+.shoulderRight { right: -5px; }
+
+.backpack {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 55px;
+  background: linear-gradient(135deg, #d8d8d8 0%, #b8b8b8 100%);
+  border-radius: 12px;
+  box-shadow: inset -4px -4px 10px rgba(0,0,0,0.2), 0 6px 15px rgba(0,0,0,0.3);
+  z-index: -1;
+}
+
+.backpackLight {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  background: #00ff88;
+  border-radius: 50%;
+  box-shadow: 0 0 15px #00ff88;
+  animation: backpackBlink 1.5s infinite;
+}
+
+@keyframes backpackBlink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
 
-/* Right Arm (Raised) */
 .armRight {
   position: absolute;
-  top: 70px;
-  left: -10px;
-  width: 20px;
-  height: 50px;
-  background: linear-gradient(135deg, #f0f0f0 0%, #c0c0c0 100%);
-  border-radius: 10px;
-  border: 3px solid #a0a0a0;
-  transform-origin: top center;
+  top: 75px;
+  left: -15px;
+  z-index: 4;
   animation: armRaise 8s infinite;
 }
 
 @keyframes armRaise {
-  0%, 10% {
-    transform: rotate(-30deg);
-  }
-  15%, 100% {
-    transform: rotate(-120deg);
-  }
+  0%, 10% { transform: rotate(0deg); }
+  15%, 100% { transform: rotate(-130deg); }
 }
 
-.handRight {
+.upperArmRight {
+  width: 22px;
+  height: 48px;
+  background: linear-gradient(135deg, #f0f0f0 0%, #d5d5d5 100%);
+  border-radius: 12px;
+  box-shadow: inset -3px -3px 8px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);
+  position: relative;
+  transform-origin: top center;
+}
+
+.elbowRight {
   position: absolute;
-  bottom: -15px;
+  bottom: -12px;
   left: 50%;
   transform: translateX(-50%);
-  width: 18px;
-  height: 18px;
-  background: #e0e0e0;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
   border-radius: 50%;
-  border: 3px solid #a0a0a0;
+  box-shadow: inset -3px -3px 6px rgba(0,0,0,0.2), 0 3px 6px rgba(0,0,0,0.2);
 }
 
-/* Left Arm (Operating Device) */
+.forearmRight {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 45px;
+  background: linear-gradient(135deg, #f0f0f0 0%, #d5d5d5 100%);
+  border-radius: 10px;
+  box-shadow: inset -3px -3px 8px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.gloveRight {
+  position: absolute;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 22px;
+  background: linear-gradient(135deg, #e8e8e8 0%, #c8c8c8 100%);
+  border-radius: 50%;
+  box-shadow: inset -3px -3px 6px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.finger {
+  position: absolute;
+  top: -8px;
+  width: 6px;
+  height: 10px;
+  background: #d8d8d8;
+  border-radius: 3px;
+}
+
+.finger:nth-child(1) { left: 4px; }
+.finger:nth-child(2) { left: 12px; }
+
+.thumb {
+  position: absolute;
+  right: -6px;
+  top: 2px;
+  width: 7px;
+  height: 9px;
+  background: #d8d8d8;
+  border-radius: 4px;
+  transform: rotate(45deg);
+}
+
 .armLeft {
   position: absolute;
-  top: 70px;
-  right: -10px;
-  width: 20px;
-  height: 50px;
-  background: linear-gradient(135deg, #f0f0f0 0%, #c0c0c0 100%);
-  border-radius: 10px;
-  border: 3px solid #a0a0a0;
-  transform-origin: top center;
+  top: 75px;
+  right: -15px;
+  z-index: 4;
   animation: armOperate 8s infinite;
 }
 
 @keyframes armOperate {
-  0%, 10% {
-    transform: rotate(20deg);
-  }
-  12%, 14% {
-    transform: rotate(25deg);
-  }
-  15%, 100% {
-    transform: rotate(30deg);
-  }
+  0%, 10% { transform: rotate(0deg); }
+  12%, 14% { transform: rotate(15deg); }
+  15%, 100% { transform: rotate(20deg); }
 }
 
-.handLeft {
+.upperArmLeft {
+  width: 22px;
+  height: 48px;
+  background: linear-gradient(135deg, #f0f0f0 0%, #d5d5d5 100%);
+  border-radius: 12px;
+  box-shadow: inset -3px -3px 8px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);
+  position: relative;
+  transform-origin: top center;
+}
+
+.elbowLeft {
   position: absolute;
-  bottom: -15px;
+  bottom: -12px;
   left: 50%;
   transform: translateX(-50%);
-  width: 18px;
-  height: 18px;
-  background: #e0e0e0;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
   border-radius: 50%;
-  border: 3px solid #a0a0a0;
+  box-shadow: inset -3px -3px 6px rgba(0,0,0,0.2), 0 3px 6px rgba(0,0,0,0.2);
 }
 
-/* Wrist Device */
+.forearmLeft {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 45px;
+  background: linear-gradient(135deg, #f0f0f0 0%, #d5d5d5 100%);
+  border-radius: 10px;
+  box-shadow: inset -3px -3px 8px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);
+}
+
 .wristDevice {
   position: absolute;
-  bottom: -5px;
-  right: -25px;
-  width: 30px;
-  height: 20px;
-  background: #2a3f5f;
-  border: 2px solid #3a5f8f;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
-  animation: deviceActivate 8s infinite;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 24px;
+  background: linear-gradient(135deg, #1a3a52 0%, #2a5a82 100%);
+  border-radius: 6px;
+  border: 2px solid #3a7aaa;
+  box-shadow: 0 0 20px rgba(0,212,255,0.5), inset 0 0 10px rgba(0,212,255,0.2);
+  animation: devicePulse 8s infinite;
 }
 
-@keyframes deviceActivate {
-  0%, 10% {
-    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-  }
-  12%, 14% {
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.8), 0 0 30px rgba(0, 212, 255, 0.5);
-  }
-  15%, 100% {
-    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-  }
+@keyframes devicePulse {
+  0%, 10% { box-shadow: 0 0 10px rgba(0,212,255,0.3); }
+  12%, 14% { box-shadow: 0 0 30px rgba(0,212,255,0.8), 0 0 40px rgba(0,255,136,0.5); }
+  15%, 100% { box-shadow: 0 0 10px rgba(0,212,255,0.3); }
+}
+
+.deviceFrame {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border: 1px solid rgba(58,122,170,0.5);
+  border-radius: 4px;
 }
 
 .deviceScreen {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 12px;
-  height: 12px;
-  background: #00d4ff;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3), 0 0 8px #00d4ff;
+  top: 4px;
+  left: 4px;
+  width: 16px;
+  height: 14px;
+  background: linear-gradient(180deg, #00d4ff 0%, #0088cc 100%);
+  border-radius: 3px;
+  box-shadow: inset 0 0 8px rgba(255,255,255,0.3), 0 0 12px #00d4ff;
   animation: screenFlash 8s infinite;
 }
 
 @keyframes screenFlash {
-  0%, 10% {
-    background: #00d4ff;
-  }
-  12% {
-    background: #00ff88;
-  }
-  14% {
-    background: #ff3366;
-  }
-  15%, 100% {
-    background: #00d4ff;
-  }
+  0%, 10% { background: linear-gradient(180deg, #00d4ff 0%, #0088cc 100%); }
+  12% { background: linear-gradient(180deg, #00ff88 0%, #00cc66 100%); }
+  14% { background: linear-gradient(180deg, #ff3366 0%, #cc0033 100%); }
+  15%, 100% { background: linear-gradient(180deg, #00d4ff 0%, #0088cc 100%); }
+}
+
+.screenGlow {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 6px;
+  height: 6px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 50%;
+  filter: blur(2px);
 }
 
 .deviceButton {
   position: absolute;
-  top: 8px;
-  right: 5px;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
   width: 8px;
   height: 8px;
   background: #ff3366;
   border-radius: 50%;
-  box-shadow: 0 0 5px #ff3366;
+  box-shadow: 0 0 8px #ff3366;
   animation: buttonPress 8s infinite;
 }
 
 @keyframes buttonPress {
-  0%, 10% {
-    transform: scale(1);
-    box-shadow: 0 0 5px #ff3366;
-  }
-  12% {
-    transform: scale(0.8);
-    box-shadow: 0 0 15px #ff3366, 0 0 25px #ff3366;
-  }
-  14%, 100% {
-    transform: scale(1);
-    box-shadow: 0 0 5px #ff3366;
-  }
+  0%, 10% { transform: translateY(-50%) scale(1); box-shadow: 0 0 8px #ff3366; }
+  12% { transform: translateY(-50%) scale(0.8); box-shadow: 0 0 20px #ff3366, 0 0 30px #ff3366; }
+  14%, 100% { transform: translateY(-50%) scale(1); box-shadow: 0 0 8px #ff3366; }
 }
 
-/* Legs */
+.deviceStraps {
+  position: absolute;
+  top: -2px;
+  left: -4px;
+  right: -4px;
+  height: 4px;
+  background: #506070;
+  border-radius: 2px;
+}
+
+.deviceStraps::after {
+  content: '';
+  position: absolute;
+  bottom: -24px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #506070;
+  border-radius: 2px;
+}
+
+.gloveLeft {
+  position: absolute;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 22px;
+  background: linear-gradient(135deg, #e8e8e8 0%, #c8c8c8 100%);
+  border-radius: 50%;
+  box-shadow: inset -3px -3px 6px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.waist {
+  position: absolute;
+  top: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 15px;
+  background: linear-gradient(90deg, #c0c0c0 0%, #d8d8d8 50%, #c0c0c0 100%);
+  border-radius: 8px;
+  box-shadow: inset 0 -2px 5px rgba(0,0,0,0.2), 0 3px 8px rgba(0,0,0,0.2);
+  z-index: 2;
+}
+
 .legs {
   position: absolute;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 70px;
-  height: 60px;
+  height: 85px;
+  z-index: 2;
 }
 
-.legLeft,
-.legRight {
+.legLeft, .legRight {
   position: absolute;
   bottom: 0;
-  width: 20px;
-  height: 55px;
-  background: linear-gradient(135deg, #f0f0f0 0%, #c0c0c0 100%);
-  border-radius: 10px;
-  border: 3px solid #a0a0a0;
+  width: 26px;
 }
 
-.legLeft {
-  left: 5px;
+.legLeft { left: 8px; }
+.legRight { right: 8px; }
+
+.thighLeft, .thighRight {
+  width: 26px;
+  height: 40px;
+  background: linear-gradient(135deg, #f0f0f0 0%, #d5d5d5 100%);
+  border-radius: 13px;
+  box-shadow: inset -3px -3px 8px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);
 }
 
-.legRight {
-  right: 5px;
-}
-
-.legLeft::after,
-.legRight::after {
-  content: '';
-  position: absolute;
-  bottom: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 25px;
-  height: 20px;
-  background: #d0d0d0;
+.kneeLeft, .kneeRight {
+  position: relative;
+  width: 22px;
+  height: 18px;
+  margin: -2px auto;
+  background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
   border-radius: 50%;
-  border: 3px solid #a0a0a0;
+  box-shadow: inset -3px -3px 6px rgba(0,0,0,0.2), 0 3px 6px rgba(0,0,0,0.2);
 }
 
-/* ============================================
-   ORANGE CAT CHARACTER
-   ============================================ */
+.shinLeft, .shinRight {
+  width: 24px;
+  height: 35px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #f0f0f0 0%, #d5d5d5 100%);
+  border-radius: 12px;
+  box-shadow: inset -3px -3px 8px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);
+}
 
+.bootLeft, .bootRight {
+  width: 30px;
+  height: 20px;
+  margin: -3px auto 0;
+  background: linear-gradient(135deg, #d8d8d8 0%, #b8b8b8 100%);
+  border-radius: 50% 50% 40% 40%;
+  box-shadow: inset -3px -3px 6px rgba(0,0,0,0.2), 0 5px 10px rgba(0,0,0,0.3);
+}
+
+/* Orange Cat - Realistic */
 .cat {
   position: absolute;
-  top: 58%;
+  top: 52%;
   left: 65%;
   transform: translate(-50%, -50%);
   z-index: 9;
-  width: 80px;
-  height: 100px;
+  width: 110px;
+  height: 120px;
+  animation: catFloat 4s ease-in-out infinite;
 }
 
-/* Cat Head */
+@keyframes catFloat {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+  50% { transform: translate(-50%, -50%) translateY(-10px); }
+}
+
 .catHead {
   position: absolute;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 50px;
-  height: 45px;
-  background: linear-gradient(135deg, #ff9933 0%, #ff7722 100%);
-  border-radius: 40% 40% 45% 45%;
-  border: 3px solid #cc6600;
-  box-shadow:
-    inset -5px -5px 10px rgba(0, 0, 0, 0.2),
-    inset 5px 5px 10px rgba(255, 200, 100, 0.3);
+  width: 65px;
+  height: 60px;
+  z-index: 10;
 }
 
-.catEarLeft,
-.catEarRight {
-  position: absolute;
-  top: -5px;
-  width: 0;
-  height: 0;
-  border-left: 12px solid transparent;
-  border-right: 12px solid transparent;
-  border-bottom: 20px solid #ff9933;
-  filter: drop-shadow(0 0 0 #cc6600);
-}
-
-.catEarLeft {
-  left: 2px;
-  transform: rotate(-10deg);
-}
-
-.catEarRight {
-  right: 2px;
-  transform: rotate(10deg);
-}
-
-.catFace {
+.catSkull {
   position: relative;
   width: 100%;
   height: 100%;
 }
 
-.catEyeLeft,
-.catEyeRight {
+.catForehead {
   position: absolute;
   top: 15px;
-  width: 8px;
-  height: 12px;
-  background: #000;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 55px;
+  height: 45px;
+  background: linear-gradient(135deg, #ff9f40 0%, #ff8825 50%, #ff7710 100%);
+  border-radius: 50% 50% 45% 45%;
+  box-shadow: inset -6px -6px 12px rgba(0,0,0,0.2), inset 6px 6px 12px rgba(255,200,130,0.3), 0 6px 15px rgba(0,0,0,0.2);
+}
+
+.catEarLeft, .catEarRight {
+  position: absolute;
+  top: 5px;
+  width: 22px;
+  height: 28px;
+  background: linear-gradient(135deg, #ff9f40 0%, #ff7710 100%);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.catEarLeft {
+  left: 2px;
+  transform: rotate(-15deg);
+}
+
+.catEarRight {
+  right: 2px;
+  transform: rotate(15deg);
+}
+
+.earInner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 14px;
+  background: linear-gradient(135deg, #ffb870 0%, #ff9f40 100%);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.catFace {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 55px;
+  height: 42px;
+  z-index: 11;
+}
+
+.catEyeLeft, .catEyeRight {
+  position: absolute;
+  top: 8px;
+  width: 14px;
+  height: 16px;
+  background: linear-gradient(180deg, #2a5a3a 0%, #1a4a2a 100%);
   border-radius: 50%;
-  animation: catBlink 4s infinite;
+  box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+  animation: catBlink 5s infinite;
 }
 
 @keyframes catBlink {
-  0%, 95%, 100% {
-    transform: scaleY(1);
-  }
-  97% {
-    transform: scaleY(0.1);
-  }
+  0%, 94%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.1); }
+  98% { transform: scaleY(1); }
 }
 
-.catEyeLeft {
-  left: 12px;
+.catEyeLeft { left: 10px; }
+.catEyeRight { right: 10px; }
+
+.eyePupil {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 10px;
+  background: #000;
+  border-radius: 50%;
 }
 
-.catEyeRight {
-  right: 12px;
+.eyeGleam {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  width: 4px;
+  height: 5px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 50%;
+  filter: blur(1px);
+}
+
+.catMuzzle {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 20px;
+  background: linear-gradient(180deg, #ffb870 0%, #ff9f40 100%);
+  border-radius: 50% 50% 45% 45%;
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.1);
 }
 
 .catNose {
   position: absolute;
-  top: 25px;
+  top: 2px;
   left: 50%;
   transform: translateX(-50%);
   width: 8px;
   height: 6px;
-  background: #ff6699;
-  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: linear-gradient(180deg, #ff6b9d 0%, #ff4d88 100%);
+  border-radius: 50% 50% 40% 40%;
+  box-shadow: inset 0 -1px 2px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1);
 }
 
-/* Cat Body */
+.catMouth {
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 8px;
+  border: 2px solid #885533;
+  border-top: none;
+  border-radius: 0 0 50% 50%;
+  opacity: 0.4;
+}
+
+.catWhiskers {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+}
+
+.whisker {
+  position: absolute;
+  width: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.3) 0%, transparent 100%);
+}
+
+.whisker:nth-child(1) {
+  top: 0;
+  left: -15px;
+  transform: rotate(-5deg);
+}
+
+.whisker:nth-child(2) {
+  top: 8px;
+  left: -18px;
+  transform: rotate(5deg);
+}
+
+.whisker:nth-child(3) {
+  top: 0;
+  right: -15px;
+  transform: rotate(5deg) scaleX(-1);
+}
+
 .catBody {
   position: absolute;
-  top: 40px;
+  top: 50px;
   left: 50%;
   transform: translateX(-50%);
-  width: 55px;
-  height: 40px;
-  background: linear-gradient(135deg, #ff9933 0%, #ff7722 100%);
-  border-radius: 40% 40% 50% 50%;
-  border: 3px solid #cc6600;
-  box-shadow:
-    inset -5px -5px 10px rgba(0, 0, 0, 0.2),
-    inset 5px 5px 10px rgba(255, 200, 100, 0.3);
+  width: 75px;
+  height: 55px;
+  z-index: 8;
 }
 
-/* Cat Legs */
-.catLegs {
+.catChest {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 55px;
-  height: 25px;
+  width: 68px;
+  height: 45px;
+  background: linear-gradient(135deg, #ff9f40 0%, #ff8825 50%, #ff7710 100%);
+  border-radius: 45% 45% 50% 50%;
+  box-shadow: inset -6px -6px 12px rgba(0,0,0,0.2), inset 6px 6px 12px rgba(255,200,130,0.3), 0 8px 15px rgba(0,0,0,0.25);
 }
 
-.catLegLeft,
-.catLegRight {
+.catBelly {
   position: absolute;
-  bottom: 0;
-  width: 15px;
-  height: 25px;
-  background: linear-gradient(135deg, #ff9933 0%, #ff7722 100%);
-  border-radius: 20% 20% 50% 50%;
-  border: 2px solid #cc6600;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 30px;
+  background: linear-gradient(180deg, #ffb870 0%, #ff9f40 100%);
+  border-radius: 50%;
+  box-shadow: inset 0 -3px 8px rgba(0,0,0,0.15);
 }
 
-.catLegLeft {
-  left: 5px;
+.catFur {
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  width: 45px;
+  height: 30px;
+  background-image:
+    linear-gradient(90deg, transparent 48%, rgba(255,119,16,0.2) 50%, transparent 52%),
+    linear-gradient(90deg, transparent 58%, rgba(255,119,16,0.2) 60%, transparent 62%);
+  background-size: 10px 100%;
 }
 
-.catLegRight {
-  right: 5px;
+.catFrontLegs, .catBackLegs {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
 }
 
-/* Cat Tail */
+.catFrontLegs {
+  top: 85px;
+  z-index: 9;
+}
+
+.catBackLegs {
+  top: 80px;
+  z-index: 7;
+}
+
+.catLegFrontLeft, .catLegFrontRight, .catLegBackLeft, .catLegBackRight {
+  position: absolute;
+  width: 16px;
+  height: 32px;
+  background: linear-gradient(180deg, #ff9f40 0%, #ff8825 50%, #ff7710 100%);
+  border-radius: 8px 8px 40% 40%;
+  box-shadow: inset -2px -2px 6px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.catLegFrontLeft { left: 12px; }
+.catLegFrontRight { right: 12px; }
+.catLegBackLeft { left: 8px; }
+.catLegBackRight { right: 8px; }
+
+.catPaw {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 10px;
+  background: linear-gradient(180deg, #ff8825 0%, #ff7710 100%);
+  border-radius: 50%;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+
 .catTail {
   position: absolute;
-  top: 50px;
-  right: -20px;
-  width: 30px;
-  height: 8px;
-  background: linear-gradient(90deg, #ff9933 0%, #ff7722 100%);
-  border-radius: 50%;
-  border: 2px solid #cc6600;
+  top: 65px;
+  right: -15px;
+  width: 45px;
+  height: 12px;
+  z-index: 6;
   transform-origin: left center;
-  animation: tailWag 2s ease-in-out infinite;
+  animation: tailWag 3s ease-in-out infinite;
 }
 
 @keyframes tailWag {
-  0%, 100% {
-    transform: rotate(-10deg);
-  }
-  50% {
-    transform: rotate(10deg);
-  }
+  0%, 100% { transform: rotate(-15deg); }
+  50% { transform: rotate(15deg); }
 }
 
-/* ============================================
-   SCI-FI LIGHT EFFECT
-   ============================================ */
+.tailSegment {
+  position: absolute;
+  width: 18px;
+  height: 12px;
+  background: linear-gradient(90deg, #ff9f40 0%, #ff7710 100%);
+  border-radius: 50%;
+  box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.2);
+}
 
-.lightEffect {
+.tailSegment:nth-child(1) {
+  left: 0;
+  transform: rotate(-5deg);
+}
+
+.tailSegment:nth-child(2) {
+  left: 14px;
+  transform: rotate(5deg);
+}
+
+.tailSegment:nth-child(3) {
+  left: 28px;
+  transform: rotate(15deg);
+  width: 15px;
+}
+
+/* Transformation Effect */
+.transformEffect {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 100px;
-  height: 100px;
+  width: 140px;
+  height: 140px;
   pointer-events: none;
   opacity: 0;
-  animation: lightSequence 8s infinite;
+  animation: transformSequence 8s infinite;
+  z-index: 15;
 }
 
-@keyframes lightSequence {
-  0%, 14% {
-    opacity: 0;
-  }
-  15%, 18% {
-    opacity: 1;
-  }
-  20%, 100% {
-    opacity: 0;
-  }
+@keyframes transformSequence {
+  0%, 14% { opacity: 0; }
+  15%, 20% { opacity: 1; }
+  22%, 100% { opacity: 0; }
 }
 
-.lightRing1,
-.lightRing2,
-.lightRing3 {
+.lightRing1, .lightRing2, .lightRing3 {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  border: 3px solid;
-  animation: ringExpand 1s ease-out infinite;
+  border: 4px solid;
+  animation: ringExpand 1.5s ease-out infinite;
 }
 
 .lightRing1 {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   border-color: #00d4ff;
-  box-shadow: 0 0 20px #00d4ff, inset 0 0 20px #00d4ff;
-  animation-delay: 0s;
+  box-shadow: 0 0 30px #00d4ff, inset 0 0 30px #00d4ff;
 }
 
 .lightRing2 {
-  width: 80px;
-  height: 80px;
+  width: 110px;
+  height: 110px;
   border-color: #00ff88;
-  box-shadow: 0 0 20px #00ff88, inset 0 0 20px #00ff88;
-  animation-delay: 0.2s;
+  box-shadow: 0 0 30px #00ff88, inset 0 0 30px #00ff88;
+  animation-delay: 0.3s;
 }
 
 .lightRing3 {
-  width: 100px;
-  height: 100px;
+  width: 140px;
+  height: 140px;
   border-color: #ff3366;
-  box-shadow: 0 0 20px #ff3366, inset 0 0 20px #ff3366;
-  animation-delay: 0.4s;
+  box-shadow: 0 0 30px #ff3366, inset 0 0 30px #ff3366;
+  animation-delay: 0.6s;
 }
 
 @keyframes ringExpand {
-  0% {
-    transform: translate(-50%, -50%) scale(0.5);
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1.5);
-    opacity: 0;
-  }
+  0% { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
 }
 
-/* Pixel Flash */
-.pixelFlash {
+.energyFlash {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 80px;
-  height: 80px;
-  background: radial-gradient(circle, 
-    rgba(0, 212, 255, 0.8) 0%, 
-    rgba(0, 255, 136, 0.6) 30%, 
-    rgba(255, 51, 102, 0.4) 60%, 
-    transparent 100%);
-  animation: pixelFlashAnim 1s ease-out infinite;
-  filter: blur(5px);
+  width: 100px;
+  height: 100px;
 }
 
-@keyframes pixelFlashAnim {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 0;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 1;
-  }
+.flashCore {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(0,212,255,0.9) 0%, rgba(0,255,136,0.7) 30%, rgba(255,51,102,0.5) 60%, transparent 100%);
+  border-radius: 50%;
+  animation: flashPulse 1.5s ease-out infinite;
+  filter: blur(8px);
 }
 
-/* ============================================
-   CAT SPACESUIT (Appears after animation)
-   ============================================ */
+@keyframes flashPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  50% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+}
 
+.flashRays {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(0deg, transparent 45%, rgba(0,212,255,0.6) 50%, transparent 55%),
+    linear-gradient(90deg, transparent 45%, rgba(255,51,102,0.6) 50%, transparent 55%);
+  animation: raysRotate 1.5s linear infinite;
+}
+
+@keyframes raysRotate {
+  0% { transform: translate(-50%, -50%) rotate(0deg) scale(0); opacity: 0; }
+  50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.2); opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(360deg) scale(0); opacity: 0; }
+}
+
+/* Cat Spacesuit */
 .catSpacesuit {
   position: absolute;
   top: 0;
@@ -669,124 +1004,175 @@
   width: 100%;
   height: 100%;
   opacity: 0;
-  animation: suitAppear 8s infinite;
+  animation: suitMaterialize 8s infinite;
+  z-index: 12;
 }
 
-@keyframes suitAppear {
-  0%, 19% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  20%, 22% {
-    opacity: 0.5;
-    transform: scale(1.05);
-  }
-  23%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+@keyframes suitMaterialize {
+  0%, 20% { opacity: 0; transform: scale(0.7); filter: blur(5px); }
+  22%, 24% { opacity: 0.5; transform: scale(1.08); filter: blur(2px); }
+  25%, 100% { opacity: 1; transform: scale(1); filter: blur(0); }
 }
 
-/* Cat Helmet */
 .catHelmet {
   position: absolute;
-  top: -8px;
+  top: -10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, rgba(224, 224, 224, 0.7) 0%, rgba(176, 176, 176, 0.7) 100%);
-  border-radius: 50%;
-  border: 3px solid rgba(128, 128, 128, 0.8);
-  box-shadow:
-    inset -8px -8px 15px rgba(0, 0, 0, 0.2),
-    inset 8px 8px 15px rgba(255, 255, 255, 0.3),
-    0 0 20px rgba(255, 255, 255, 0.3);
+  width: 75px;
+  height: 75px;
+  z-index: 13;
 }
 
-.catVisor {
+.catHelmetGlass {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 68px;
+  height: 60px;
+  background: linear-gradient(180deg, rgba(200,230,255,0.3) 0%, rgba(150,200,255,0.4) 50%, rgba(100,170,255,0.5) 100%);
+  border-radius: 50%;
+  border: 3px solid rgba(180,200,220,0.8);
+  box-shadow: inset -8px -8px 20px rgba(0,0,0,0.15), inset 8px 8px 20px rgba(255,255,255,0.4), 0 0 30px rgba(150,200,255,0.3), 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.catVisorReflection {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  width: 22px;
+  height: 18px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 100%);
+  border-radius: 50%;
+  filter: blur(3px);
+}
+
+.catHelmetFrame {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 20px;
+  background: linear-gradient(90deg, #a8b8c8 0%, #c8d8e8 50%, #a8b8c8 100%);
+  border-radius: 50%;
+  border: 2px solid #8898a8;
+  box-shadow: inset 0 -3px 8px rgba(0,0,0,0.2), 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.catHelmetSeal {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 65px;
+  height: 12px;
+  background: linear-gradient(90deg, #707080 0%, #909098 50%, #707080 100%);
+  border-radius: 50%;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.3), 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.catSuitTorso {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 78px;
+  height: 60px;
+  background: linear-gradient(135deg, rgba(240,245,250,0.7) 0%, rgba(210,220,235,0.8) 50%, rgba(190,205,225,0.9) 100%);
+  border-radius: 40% 40% 50% 50%;
+  border: 2px solid rgba(180,195,215,0.8);
+  box-shadow: inset -6px -6px 12px rgba(0,0,0,0.15), inset 6px 6px 12px rgba(255,255,255,0.4), 0 8px 15px rgba(0,0,0,0.2);
+  z-index: 11;
+}
+
+.catSuitPanel {
   position: absolute;
   top: 15px;
   left: 50%;
   transform: translateX(-50%);
-  width: 40px;
-  height: 25px;
-  background: linear-gradient(180deg, rgba(0, 212, 255, 0.6) 0%, rgba(0, 102, 204, 0.6) 100%);
-  border-radius: 50%;
-  border: 2px solid rgba(0, 64, 128, 0.8);
-  box-shadow:
-    inset 0 -5px 15px rgba(0, 0, 0, 0.3),
-    0 0 15px rgba(0, 212, 255, 0.5);
-}
-
-.catVisor::before {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 8px;
-  width: 10px;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 50%;
-  filter: blur(2px);
-}
-
-/* Cat Suit Body */
-.catSuitBody {
-  position: absolute;
-  top: 35px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 65px;
-  height: 50px;
-  background: linear-gradient(135deg, rgba(240, 240, 240, 0.6) 0%, rgba(192, 192, 192, 0.6) 100%);
-  border-radius: 40% 40% 50% 50%;
-  border: 3px solid rgba(160, 160, 160, 0.8);
-  box-shadow:
-    inset -5px -5px 10px rgba(0, 0, 0, 0.2),
-    inset 5px 5px 10px rgba(255, 255, 255, 0.2);
-}
-
-/* Cat Suit Pack */
-.catSuitPack {
-  position: absolute;
-  top: 45px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 35px;
-  height: 25px;
-  background: rgba(42, 63, 95, 0.8);
-  border: 2px solid rgba(58, 95, 143, 0.9);
+  width: 42px;
+  height: 28px;
+  background: linear-gradient(135deg, #1a3a52 0%, #2a5a82 50%, #1a3a52 100%);
   border-radius: 8px;
-  box-shadow:
-    inset 0 0 10px rgba(0, 212, 255, 0.4);
+  border: 2px solid #3a7aaa;
+  box-shadow: inset 0 0 12px rgba(0,212,255,0.3), 0 4px 8px rgba(0,0,0,0.3);
 }
 
-.catSuitPack::before {
+.catSuitLights {
+  position: absolute;
+  top: 23px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 8px;
+}
+
+.catSuitLights::before {
   content: '';
   position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 4px;
-  height: 4px;
+  top: 0;
+  left: 3px;
+  width: 6px;
+  height: 6px;
   background: #00ff88;
   border-radius: 50%;
-  box-shadow:
-    0 0 5px #00ff88,
-    10px 0 0 #00ff88,
-    10px 0 5px #00ff88;
-  animation: suitPackBlink 1.5s infinite;
+  box-shadow: 0 0 8px #00ff88, 10px 0 0 #ff3366, 10px 0 8px #ff3366;
+  animation: suitLightsBlink 1.5s infinite;
 }
 
-@keyframes suitPackBlink {
+@keyframes suitLightsBlink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
 
-/* ============================================
-   FLOATING PARTICLES
-   ============================================ */
+.catSuitPack {
+  position: absolute;
+  top: 55px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 45px;
+  height: 38px;
+  background: linear-gradient(135deg, #d8d8d8 0%, #c0c0c0 50%, #a8a8a8 100%);
+  border-radius: 12px;
+  border: 2px solid #989898;
+  box-shadow: inset -4px -4px 10px rgba(0,0,0,0.25), 0 6px 12px rgba(0,0,0,0.3);
+  z-index: 10;
+}
 
+.packTank {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 35px;
+  height: 25px;
+  background: linear-gradient(135deg, #b8c8d8 0%, #a0b0c0 100%);
+  border-radius: 8px;
+  border: 2px solid #7888a8;
+  box-shadow: inset 0 0 8px rgba(0,212,255,0.2), 0 3px 6px rgba(0,0,0,0.2);
+}
+
+.packIndicator {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  background: #00ff88;
+  border-radius: 50%;
+  box-shadow: 0 0 12px #00ff88, inset 0 0 4px rgba(255,255,255,0.5);
+  animation: packBlink 1.8s infinite;
+}
+
+@keyframes packBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Particles */
 .particles {
   position: absolute;
   top: 0;
@@ -799,74 +1185,33 @@
 
 .particle {
   position: absolute;
-  width: 4px;
-  height: 4px;
-  background: #fff;
+  width: 5px;
+  height: 5px;
+  background: radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
   border-radius: 50%;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
   opacity: 0;
-  animation: particleFloat 3s ease-in-out infinite;
-}
-
-.particle:nth-child(1) {
-  top: 20%;
-  left: 15%;
-  animation-delay: 0s;
-}
-
-.particle:nth-child(2) {
-  top: 40%;
-  left: 85%;
-  animation-delay: 0.6s;
-}
-
-.particle:nth-child(3) {
-  top: 60%;
-  left: 10%;
-  animation-delay: 1.2s;
-}
-
-.particle:nth-child(4) {
-  top: 80%;
-  left: 90%;
-  animation-delay: 1.8s;
-}
-
-.particle:nth-child(5) {
-  top: 30%;
-  left: 50%;
-  animation-delay: 2.4s;
+  animation: particleFloat 4s ease-in-out infinite;
+  top: var(--y, 20%);
+  left: var(--x, 20%);
+  animation-delay: var(--delay, 0s);
 }
 
 @keyframes particleFloat {
-  0% {
-    opacity: 0;
-    transform: translateY(0) scale(1);
-  }
-  20% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-50px) scale(0.5);
-  }
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-80px) scale(1.2); }
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
-
+/* Responsive */
 @media screen and (max-width: 768px) {
   .animationContainer {
-    transform: scale(0.85);
+    transform: scale(0.75);
   }
 }
 
 @media screen and (max-width: 480px) {
   .animationContainer {
-    transform: scale(0.7);
+    transform: scale(0.6);
   }
 }
