@@ -91,141 +91,65 @@
   height: 100%;
 }
 
-/* Pixel art Earth */
+/* Round pixel art Earth */
 .planets::before {
   content: '';
   position: absolute;
   top: 15%;
   right: 12%;
-  width: 10px;
-  height: 10px;
-  background: #4a90e2;
+  width: 80px;
+  height: 80px;
+  background: 
+    radial-gradient(circle at 30% 30%, #6fb85e 15%, transparent 16%),
+    radial-gradient(circle at 50% 70%, #6fb85e 12%, transparent 13%),
+    radial-gradient(circle at 70% 45%, #6fb85e 18%, transparent 19%),
+    radial-gradient(circle at 60% 20%, #6fb85e 8%, transparent 9%),
+    radial-gradient(circle at 25% 65%, #6fb85e 10%, transparent 11%),
+    radial-gradient(circle at 75% 75%, #6fb85e 14%, transparent 15%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, #4a90e2 0%, #5ba3f5 50%, #3a7bc8 100%);
+  border-radius: 50%;
   box-shadow:
-    /* Earth base */
-    0 0 0 10px #5ba3f5,
-    10px 0 0 10px #4a90e2,
-    20px 0 0 10px #5ba3f5,
-    30px 0 0 10px #4a90e2,
-    40px 0 0 10px #5ba3f5,
-    50px 0 0 10px #4a90e2,
-    60px 0 0 10px #5ba3f5,
-    70px 0 0 10px #4a90e2,
-    0 10px 0 10px #4a90e2,
-    10px 10px 0 10px #6fb85e,
-    20px 10px 0 10px #5ba3f5,
-    30px 10px 0 10px #6fb85e,
-    40px 10px 0 10px #4a90e2,
-    50px 10px 0 10px #5ba3f5,
-    60px 10px 0 10px #6fb85e,
-    70px 10px 0 10px #5ba3f5,
-    0 20px 0 10px #5ba3f5,
-    10px 20px 0 10px #4a90e2,
-    20px 20px 0 10px #6fb85e,
-    30px 20px 0 10px #5ba3f5,
-    40px 20px 0 10px #6fb85e,
-    50px 20px 0 10px #4a90e2,
-    60px 20px 0 10px #5ba3f5,
-    70px 20px 0 10px #4a90e2,
-    0 30px 0 10px #4a90e2,
-    10px 30px 0 10px #5ba3f5,
-    20px 30px 0 10px #4a90e2,
-    30px 30px 0 10px #6fb85e,
-    40px 30px 0 10px #5ba3f5,
-    50px 30px 0 10px #6fb85e,
-    60px 30px 0 10px #4a90e2,
-    70px 30px 0 10px #5ba3f5,
-    0 40px 0 10px #5ba3f5,
-    10px 40px 0 10px #4a90e2,
-    20px 40px 0 10px #5ba3f5,
-    30px 40px 0 10px #4a90e2,
-    40px 40px 0 10px #6fb85e,
-    50px 40px 0 10px #5ba3f5,
-    60px 40px 0 10px #6fb85e,
-    70px 40px 0 10px #4a90e2,
-    0 50px 0 10px #4a90e2,
-    10px 50px 0 10px #5ba3f5,
-    20px 50px 0 10px #4a90e2,
-    30px 50px 0 10px #5ba3f5,
-    40px 50px 0 10px #4a90e2,
-    50px 50px 0 10px #5ba3f5,
-    60px 50px 0 10px #4a90e2,
-    70px 50px 0 10px #5ba3f5,
-    0 60px 0 10px #5ba3f5,
-    10px 60px 0 10px #4a90e2,
-    20px 60px 0 10px #5ba3f5,
-    30px 60px 0 10px #4a90e2,
-    40px 60px 0 10px #5ba3f5,
-    50px 60px 0 10px #4a90e2,
-    60px 60px 0 10px #5ba3f5,
-    70px 60px 0 10px #4a90e2,
-    0 70px 0 10px #4a90e2,
-    10px 70px 0 10px #5ba3f5,
-    20px 70px 0 10px #4a90e2,
-    30px 70px 0 10px #5ba3f5,
-    40px 70px 0 10px #4a90e2,
-    50px 70px 0 10px #5ba3f5,
-    60px 70px 0 10px #4a90e2,
-    70px 70px 0 10px #5ba3f5,
-    /* Glow effect */
-    0 0 40px rgba(74, 144, 226, 0.3),
-    40px 40px 50px rgba(74, 144, 226, 0.2);
-  animation: float 8s ease-in-out infinite;
-  opacity: 0.85;
+    inset -10px -10px 25px rgba(0, 0, 0, 0.3),
+    inset 8px 8px 20px rgba(255, 255, 255, 0.15),
+    0 0 40px rgba(74, 144, 226, 0.4),
+    0 0 60px rgba(74, 144, 226, 0.2);
+  animation: float 8s ease-in-out infinite, earthRotate 60s linear infinite;
+  opacity: 0.9;
 }
 
-/* Pixel art Moon */
+@keyframes earthRotate {
+  from {
+    background-position: 0 0, 10px 10px, 20px 5px, 15px 2px, 5px 12px, 18px 15px, 0 0;
+  }
+  to {
+    background-position: 80px 0, 90px 10px, 100px 5px, 95px 2px, 85px 12px, 98px 15px, 0 0;
+  }
+}
+
+/* Round pixel art Moon */
 .planets::after {
   content: '';
   position: absolute;
   bottom: 25%;
   left: 8%;
-  width: 8px;
-  height: 8px;
-  background: #d4d4d4;
+  width: 60px;
+  height: 60px;
+  background:
+    radial-gradient(circle at 35% 30%, #b8b8b8 8%, transparent 9%),
+    radial-gradient(circle at 60% 50%, #b8b8b8 12%, transparent 13%),
+    radial-gradient(circle at 25% 65%, #b8b8b8 6%, transparent 7%),
+    radial-gradient(circle at 70% 25%, #b8b8b8 5%, transparent 6%),
+    radial-gradient(circle at 45% 75%, #b8b8b8 9%, transparent 10%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, #e8e8e8 0%, #d4d4d4 60%, #c0c0c0 100%);
+  border-radius: 50%;
   box-shadow:
-    /* Moon base */
-    0 0 0 8px #e8e8e8,
-    8px 0 0 8px #d4d4d4,
-    16px 0 0 8px #e8e8e8,
-    24px 0 0 8px #d4d4d4,
-    32px 0 0 8px #e8e8e8,
-    40px 0 0 8px #d4d4d4,
-    0 8px 0 8px #d4d4d4,
-    8px 8px 0 8px #b8b8b8,
-    16px 8px 0 8px #d4d4d4,
-    24px 8px 0 8px #e8e8e8,
-    32px 8px 0 8px #b8b8b8,
-    40px 8px 0 8px #d4d4d4,
-    0 16px 0 8px #e8e8e8,
-    8px 16px 0 8px #d4d4d4,
-    16px 16px 0 8px #b8b8b8,
-    24px 16px 0 8px #d4d4d4,
-    32px 16px 0 8px #e8e8e8,
-    40px 16px 0 8px #d4d4d4,
-    0 24px 0 8px #d4d4d4,
-    8px 24px 0 8px #e8e8e8,
-    16px 24px 0 8px #d4d4d4,
-    24px 24px 0 8px #b8b8b8,
-    32px 24px 0 8px #d4d4d4,
-    40px 24px 0 8px #e8e8e8,
-    0 32px 0 8px #e8e8e8,
-    8px 32px 0 8px #d4d4d4,
-    16px 32px 0 8px #e8e8e8,
-    24px 32px 0 8px #d4d4d4,
-    32px 32px 0 8px #b8b8b8,
-    40px 32px 0 8px #d4d4d4,
-    0 40px 0 8px #d4d4d4,
-    8px 40px 0 8px #e8e8e8,
-    16px 40px 0 8px #d4d4d4,
-    24px 40px 0 8px #e8e8e8,
-    32px 40px 0 8px #d4d4d4,
-    40px 40px 0 8px #e8e8e8,
-    /* Glow effect */
-    0 0 30px rgba(232, 232, 232, 0.4),
-    20px 20px 40px rgba(232, 232, 232, 0.3);
+    inset -8px -8px 20px rgba(0, 0, 0, 0.25),
+    inset 6px 6px 15px rgba(255, 255, 255, 0.2),
+    0 0 30px rgba(232, 232, 232, 0.5),
+    0 0 50px rgba(232, 232, 232, 0.3);
   animation: float 10s ease-in-out infinite;
   animation-delay: 1.5s;
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 @keyframes float {
@@ -387,47 +311,6 @@
 }
 
 /* Pixel art logo */
-.pixelLogo {
-  margin: 0 auto 2rem;
-  width: 120px;
-  height: 120px;
-  position: relative;
-  animation: pulse 3s ease-in-out infinite;
-}
-
-.logoPixel {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #7ba7d9 0%, #6b9bd1 50%, #5a8ac4 100%);
-  box-shadow:
-    0 0 0 8px rgba(123, 167, 217, 0.4),
-    0 0 0 16px rgba(123, 167, 217, 0.25),
-    0 0 0 24px rgba(123, 167, 217, 0.1),
-    inset 8px 8px 16px rgba(0, 0, 0, 0.15),
-    inset -8px -8px 16px rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  position: relative;
-}
-
-.logoPixel::before {
-  content: '⚡';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 48px;
-  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
 /* Title */
 .cosmicTitle {
   font-size: 4rem;
@@ -691,38 +574,13 @@
   }
 
   .planets::before {
-    width: 50px;
-    height: 50px;
-    box-shadow:
-      0 0 0 5px #f39c12,
-      5px 0 0 5px #f39c12,
-      10px 0 0 5px #f1c40f,
-      15px 0 0 5px #f39c12,
-      0 5px 0 5px #f39c12,
-      5px 5px 0 5px #f1c40f,
-      10px 5px 0 5px #f39c12,
-      15px 5px 0 5px #f39c12;
+    width: 60px;
+    height: 60px;
   }
 
   .planets::after {
-    width: 40px;
-    height: 40px;
-    box-shadow:
-      0 0 0 4px #9b59b6,
-      4px 0 0 4px #8e44ad,
-      8px 0 0 4px #9b59b6,
-      0 4px 0 4px #8e44ad,
-      4px 4px 0 4px #9b59b6,
-      8px 4px 0 4px #8e44ad;
-  }
-
-  .pixelLogo {
-    width: 90px;
-    height: 90px;
-  }
-
-  .logoPixel::before {
-    font-size: 36px;
+    width: 45px;
+    height: 45px;
   }
 
   .actionButtons {

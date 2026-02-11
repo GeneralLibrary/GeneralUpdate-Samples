@@ -18,9 +18,6 @@ function CosmicHero() {
         <div className={styles.shootingStar3}></div>
       </div>
       <div className={styles.heroContent}>
-        <div className={styles.pixelLogo}>
-          <div className={styles.logoPixel}></div>
-        </div>
         <Heading as="h1" className={styles.cosmicTitle}>
           {siteConfig.title}
         </Heading>
