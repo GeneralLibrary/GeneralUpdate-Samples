@@ -230,10 +230,10 @@
 
 @keyframes float {
   0%, 100% {
-    transform: translateY(0px) translateX(0px);
+    transform: translate3d(0, 0, 0);
   }
   50% {
-    transform: translateY(-25px) translateX(10px);
+    transform: translate3d(10px, -25px, 0);
   }
 }
 
@@ -279,19 +279,19 @@
 
 @keyframes satelliteOrbit {
   0% {
-    transform: translate(0, 0) rotate(0deg);
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
   25% {
-    transform: translate(60px, -30px) rotate(90deg);
+    transform: translate3d(60px, -30px, 0) rotate(90deg);
   }
   50% {
-    transform: translate(80px, 20px) rotate(180deg);
+    transform: translate3d(80px, 20px, 0) rotate(180deg);
   }
   75% {
-    transform: translate(40px, 50px) rotate(270deg);
+    transform: translate3d(40px, 50px, 0) rotate(270deg);
   }
   100% {
-    transform: translate(0, 0) rotate(360deg);
+    transform: translate3d(0, 0, 0) rotate(360deg);
   }
 }
 
@@ -315,25 +315,65 @@
   opacity: 0;
 }
 
+.shootingStar2 {
+  position: absolute;
+  top: 30%;
+  right: 10%;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  box-shadow:
+    0 0 0 4px #fff,
+    4px 4px 0 4px rgba(255, 255, 255, 0.9),
+    8px 8px 0 4px rgba(255, 255, 255, 0.7),
+    12px 12px 0 4px rgba(255, 255, 255, 0.5),
+    16px 16px 0 4px rgba(255, 255, 255, 0.3),
+    20px 20px 0 4px rgba(255, 255, 255, 0.1),
+    0 0 15px rgba(255, 255, 255, 0.8);
+  animation: shootingStar 6s ease-in infinite;
+  animation-delay: 3s;
+  opacity: 0;
+}
+
+.shootingStar3 {
+  position: absolute;
+  top: 60%;
+  right: 10%;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  box-shadow:
+    0 0 0 4px #fff,
+    4px 4px 0 4px rgba(255, 255, 255, 0.9),
+    8px 8px 0 4px rgba(255, 255, 255, 0.7),
+    12px 12px 0 4px rgba(255, 255, 255, 0.5),
+    16px 16px 0 4px rgba(255, 255, 255, 0.3),
+    20px 20px 0 4px rgba(255, 255, 255, 0.1),
+    0 0 15px rgba(255, 255, 255, 0.8);
+  animation: shootingStar 6s ease-in infinite;
+  animation-delay: 5.5s;
+  opacity: 0;
+}
+
 @keyframes shootingStar {
   0% {
     opacity: 0;
-    transform: translateX(0) translateY(0) rotate(45deg);
+    transform: translate3d(0, 0, 0) rotate(45deg);
   }
   5% {
     opacity: 1;
   }
   15% {
     opacity: 1;
-    transform: translateX(-300px) translateY(300px) rotate(45deg);
+    transform: translate3d(-300px, 300px, 0) rotate(45deg);
   }
   20% {
     opacity: 0;
-    transform: translateX(-400px) translateY(400px) rotate(45deg);
+    transform: translate3d(-400px, 400px, 0) rotate(45deg);
   }
   100% {
     opacity: 0;
-    transform: translateX(-400px) translateY(400px) rotate(45deg);
+    transform: translate3d(-400px, 400px, 0) rotate(45deg);
   }
 }
 
