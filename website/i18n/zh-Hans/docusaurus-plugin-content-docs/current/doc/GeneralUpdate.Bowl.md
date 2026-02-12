@@ -2,67 +2,237 @@
 sidebar_position: 3
 ---
 
-### 定义
+# GeneralUpdate.Bowl
 
-命名空间：GeneralUpdate.Bowl
+## 组件概览 | Component Overview
 
-程序集：GeneralUpdate.Bowl.dll
+**GeneralUpdate.Bowl** 是一个独立的进程监控组件，在升级流程结束前启动，负责启动主客户端应用程序并监控其运行状态。该组件提供了完整的崩溃监控和诊断能力，当被监控的应用程序发生异常时，会自动导出Dump文件、驱动信息、系统信息和事件日志，帮助开发者快速定位问题。
 
+**GeneralUpdate.Bowl** is an independent process monitoring component that launches before the end of the upgrade process. It is responsible for starting the main client application and monitoring its running status. This component provides comprehensive crash monitoring and diagnostic capabilities. When the monitored application encounters an exception, it automatically exports Dump files, driver information, system information, and event logs to help developers quickly locate issues.
 
+**命名空间 | Namespace:** `GeneralUpdate.Bowl`  
+**程序集 | Assembly:** `GeneralUpdate.Bowl.dll`
 
-该组件在升级流程结束之前启动的一个独立进程，它在流程结束之前去启动主客户端应用程序并监控是否正常运行。
-
-```c#
+```csharp
 public sealed class Bowl
 ```
 
+---
 
+## 核心特性 | Core Features
 
-### 示例
+### 1. 进程监控 | Process Monitoring
+- 实时监控目标应用程序的运行状态 | Real-time monitoring of target application status
+- 自动检测进程崩溃和异常退出 | Automatic detection of process crashes and abnormal exits
 
-以下示例定义方法，包含Bowl使用。
+### 2. 崩溃诊断 | Crash Diagnostics
+- 自动生成Dump文件（.dmp）用于崩溃分析 | Automatic generation of Dump files (.dmp) for crash analysis
+- 导出详细的系统和驱动信息 | Export detailed system and driver information
+- 收集Windows系统事件日志 | Collect Windows system event logs
 
-```c#
+### 3. 版本化管理 | Version Management
+- 按版本号分类存储故障信息 | Store failure information categorized by version number
+- 支持升级和正常两种工作模式 | Support both upgrade and normal working modes
+
+---
+
+## 快速开始 | Quick Start
+
+### 安装 | Installation
+
+通过 NuGet 安装 GeneralUpdate.Bowl：
+
+Install GeneralUpdate.Bowl via NuGet:
+
+```bash
+dotnet add package GeneralUpdate.Bowl
+```
+
+### 初始化与使用 | Initialization and Usage
+
+以下示例展示了如何使用 Bowl 组件监控应用程序：
+
+The following example demonstrates how to use the Bowl component to monitor an application:
+
+```csharp
+using GeneralUpdate.Bowl;
+using GeneralUpdate.Bowl.Strategys;
+
 var installPath = AppDomain.CurrentDomain.BaseDirectory;
 var lastVersion = "1.0.0.3";
 var processInfo = new MonitorParameter
 {
-    ProcessNameOrId = "JsonTest.exe",
+    ProcessNameOrId = "YourApp.exe",
     DumpFileName = $"{lastVersion}_fail.dmp",
     FailFileName = $"{lastVersion}_fail.json",
     TargetPath = installPath,
     FailDirectory = Path.Combine(installPath, "fail", lastVersion),
     BackupDirectory = Path.Combine(installPath, lastVersion),
-    WorkModel = "Normal"
+    WorkModel = "Normal"  // 使用 Normal 模式独立监控 | Use Normal mode for standalone monitoring
 };
 Bowl.Launch(processInfo);
 ```
 
+---
 
+## 核心 API 参考 | Core API Reference
 
-### 捕获
+### Launch 方法 | Launch Method
 
-如果监控到崩溃闪退将会在运行目录下生成：
+启动进程监控功能。
 
-- 📒Dump文件（1.0.0.*_fail.dmp）
-- 📒升级包版本信息（1.0.0.*_fail.json）
-- 📒驱动信息（driverInfo.txt）
-- 📒操作系统信息/硬件信息（systeminfo.txt）
-- 📒系统事件日志（systemlog.evtx）
+Start the process monitoring functionality.
 
-导出到“fail”目录下并根据版本号区分文件夹。
+**方法签名 | Method Signature:**
 
-![](imgs\crash.jpg)
+```csharp
+public static void Launch(MonitorParameter? monitorParameter = null)
+```
 
+**参数 | Parameters:**
 
+#### MonitorParameter 类 | MonitorParameter Class
 
-#### (1)x.0.0.*_fail.dmp
+```csharp
+public class MonitorParameter
+{   
+    /// <summary>
+    /// 被监控的目录
+    /// Directory being monitored
+    /// </summary>
+    public string TargetPath { get; set; }
+    
+    /// <summary>
+    /// 导出异常信息的目录
+    /// Directory where captured exception information is exported
+    /// </summary>
+    public string FailDirectory { get; set; }
+    
+    /// <summary>
+    /// 备份目录
+    /// Backup directory
+    /// </summary>
+    public string BackupDirectory { get; set; }
+    
+    /// <summary>
+    /// 被监控进程的名称或ID
+    /// Name or ID of the process being monitored
+    /// </summary>
+    public string ProcessNameOrId { get; set; }
+ 
+    /// <summary>
+    /// Dump 文件名
+    /// Dump file name
+    /// </summary>
+    public string DumpFileName { get; set; }
+    
+    /// <summary>
+    /// 升级包版本信息（.json）文件名
+    /// Upgrade package version information (.json) file name
+    /// </summary>
+    public string FailFileName { get; set; }
 
-![](imgs\dump.png)
+    /// <summary>
+    /// 工作模式：
+    /// - Upgrade: 升级模式，主要用于与 GeneralUpdate 配合使用，内部逻辑处理，默认模式启动时请勿随意修改
+    /// - Normal: 正常模式，可独立使用监控单个程序，程序崩溃时导出崩溃信息
+    /// 
+    /// Work Mode:
+    /// - Upgrade: Upgrade mode, primarily used in conjunction with GeneralUpdate for internal logic handling. 
+    ///           Do not modify arbitrarily when the default mode is activated.
+    /// - Normal: Normal mode, can be used independently to monitor a single program. 
+    ///          Exports crash information when the program crashes.
+    /// </summary>
+    public string WorkModel { get; set; } = "Upgrade";
+}
+```
 
+---
 
+## 实际使用示例 | Practical Usage Examples
 
-#### (2)x.0.0.*_fail.json
+### 示例 1：独立模式监控应用 | Example 1: Standalone Mode Application Monitoring
+
+```csharp
+using GeneralUpdate.Bowl;
+using GeneralUpdate.Bowl.Strategys;
+
+// 配置监控参数 | Configure monitoring parameters
+var installPath = AppDomain.CurrentDomain.BaseDirectory;
+var currentVersion = "1.0.0.5";
+
+var monitorConfig = new MonitorParameter
+{
+    ProcessNameOrId = "MyApplication.exe",
+    DumpFileName = $"{currentVersion}_crash.dmp",
+    FailFileName = $"{currentVersion}_crash.json",
+    TargetPath = installPath,
+    FailDirectory = Path.Combine(installPath, "crash_reports", currentVersion),
+    BackupDirectory = Path.Combine(installPath, "backups", currentVersion),
+    WorkModel = "Normal"  // 独立监控模式 | Standalone monitoring mode
+};
+
+// 启动监控 | Start monitoring
+Bowl.Launch(monitorConfig);
+```
+
+### 示例 2：结合 GeneralUpdate 使用 | Example 2: Use with GeneralUpdate
+
+```csharp
+using GeneralUpdate.Bowl;
+using GeneralUpdate.Bowl.Strategys;
+
+// 在升级完成后启动 Bowl 监控 | Start Bowl monitoring after upgrade completion
+var installPath = AppDomain.CurrentDomain.BaseDirectory;
+var upgradedVersion = "2.0.0.1";
+
+var upgradeMonitor = new MonitorParameter
+{
+    ProcessNameOrId = "UpdatedApp.exe",
+    DumpFileName = $"{upgradedVersion}_fail.dmp",
+    FailFileName = $"{upgradedVersion}_fail.json",
+    TargetPath = installPath,
+    FailDirectory = Path.Combine(installPath, "fail", upgradedVersion),
+    BackupDirectory = Path.Combine(installPath, upgradedVersion),
+    WorkModel = "Upgrade"  // 升级模式 | Upgrade mode
+};
+
+Bowl.Launch(upgradeMonitor);
+```
+
+---
+
+## 崩溃信息捕获 | Crash Information Capture
+
+当检测到崩溃时，以下文件将在运行目录中生成：
+
+When a crash is detected, the following files will be generated in the running directory:
+
+- 📒 **Dump 文件** (`x.0.0.*_fail.dmp`) | **Dump file** (`x.0.0.*_fail.dmp`)
+- 📒 **升级包版本信息** (`x.0.0.*_fail.json`) | **Upgrade package version information** (`x.0.0.*_fail.json`)
+- 📒 **驱动信息** (`driverInfo.txt`) | **Driver information** (`driverInfo.txt`)
+- 📒 **操作系统/硬件信息** (`systeminfo.txt`) | **Operating system/hardware information** (`systeminfo.txt`)
+- 📒 **系统事件日志** (`systemlog.evtx`) | **System event log** (`systemlog.evtx`)
+
+这些文件将按版本号分类导出到 "fail" 目录中。
+
+These files will be exported to the "fail" directory, categorized by version number.
+
+![Crash Files](imgs/crash.jpg)
+
+### 1. Dump 文件 | Dump File
+
+Dump 文件包含崩溃时刻的内存快照，可用于调试分析：
+
+The Dump file contains a memory snapshot at the moment of crash, which can be used for debugging analysis:
+
+![Dump File](imgs/dump.png)
+
+### 2. 版本信息文件 | Version Information File
+
+JSON 格式的详细崩溃报告，包含参数配置和 ProcDump 输出：
+
+Detailed crash report in JSON format, including parameter configuration and ProcDump output:
 
 ```json
 {
@@ -104,163 +274,100 @@ Bowl.Launch(processInfo);
 }
 ```
 
+### 3. 驱动信息文件 | Driver Information File
 
+包含系统中所有驱动程序的详细信息：
 
-#### (3)driverInfo.txt
+Contains detailed information about all drivers in the system:
 
-```json
-
-模块名       显示名称               描述                   驱动程序类型  启动模式   状态       状态       接受停止    接受暂停     分页缓冲池 代码(字节) BSS(字  链接日期               路径                                             Init(字节)
-============ ====================== ====================== ============= ========== ========== ========== =========== ============ ========== ========== ======= ====================== ================================================ ==========   
-360AntiAttac 360Safe Anti Attack Se 360Safe Anti Attack Se Kernel        System     Running    OK         TRUE        FALSE        4,096      36,864     0       9/29/2022 3:45:03 PM   C:\Windows\system32\Drivers\360AntiAttack64.sys  4,096     
-360AntiHacke 360Safe Anti Hacker Se 360Safe Anti Hacker Se Kernel        System     Running    OK         TRUE        FALSE        4,096      139,264    0       11/27/2023 3:43:37 PM  C:\Windows\system32\Drivers\360AntiHacker64.sys  8,192     
-360AntiHijac 360Safe Anti Hijack Se 360Safe Anti Hijack Se Kernel        System     Running    OK         TRUE        FALSE        4,096      73,728     0       5/8/2024 12:19:52 PM   C:\Windows\system32\Drivers\360AntiHijack64.sys  4,096     
-360AntiSteal 360Safe Anti Steal Fil 360Safe Anti Steal Fil Kernel        System     Running    OK         TRUE        FALSE        4,096      20,480     0       4/18/2024 3:58:04 PM   C:\Windows\system32\Drivers\360AntiSteal64.sys   8,192     
-360Box64     360Box mini-filter dri 360Box mini-filter dri File System   System     Running    OK         TRUE        FALSE        0          225,280    0       8/7/2024 11:50:19 AM   C:\Windows\system32\DRIVERS\360Box64.sys         12,288    
-
-//...
+```text
+Module Name   Display Name            Description               Driver Type  Start Mode   State       Status    
+============ ====================== ====================== ============= ========== ========== ==========
+360AntiAttac 360Safe Anti Attack Se 360Safe Anti Attack Se Kernel        System     Running    OK        
+360AntiHacke 360Safe Anti Hacker Se 360Safe Anti Hacker Se Kernel        System     Running    OK        
+// ...更多驱动信息 | ...more driver information
 ```
 
+### 4. 系统信息文件 | System Information File
 
+完整的操作系统和硬件配置信息：
 
-#### (4)systeminfo.txt
+Complete operating system and hardware configuration information:
 
-```json
-
-主机名:           ****
-OS 名称:          Microsoft Windows 11 专业版
-OS 版本:          10.0.2*** Build 22***
-OS 制造商:        Microsoft Corporation
-OS 配置:          独立工作站
-OS 构建类型:      Multiprocessor Free
-注册的所有人:      ****@outlook.com
-注册的组织:       
-产品 ID:          ****-80000-***00-A****
-初始安装日期:     11/16/2023, 9:56:28 PM
-系统启动时间:     11/26/2024, 9:37:51 PM
-系统制造商:       ASUS
-系统型号:         System Product Name
-系统类型:         x64-based PC
-处理器:           安装了 1 个处理器。
-                  [01]: Intel** Family * Model *** Stepping * GenuineIntel ~**** Mhz
-BIOS 版本:        American Megatrends Inc. 1402, 4/1/2022
-Windows 目录:     C:\Windows
-系统目录:         C:\Windows\system32
-启动设备:         \Device\Ha*****olume1
-系统区域设置:     zh-cn;中文(中国)
-输入法区域设置:   zh-cn;中文(中国)
-时区:             (UTC+08:00) **，**，*******，****
-物理内存总量:     16,194 MB
-可用的物理内存:   1,795 MB
-虚拟内存: 最大值: 25,410 MB
-虚拟内存: 可用:   9,438 MB
-虚拟内存: 使用中: 15,972 MB
-页面文件位置:     D:\****file.sys
-域:               WORKGROUP
-登录服务器:       \\****
-修补程序:         安装了 6 个修补程序。
-                  [01]: KB504****
-                  [02]: KB502****
-                  [03]: KB503****
-                  [04]: KB503****
-                  [05]: KB504****
-                  [06]: KB504****
-网卡:             安装了 3 个 NIC。
-                  [01]: Intel(R) Ethernet Connection (**) I***-V
-                      连接名:      以太网
-                      启用 DHCP:   是
-                      DHCP 服务器: 192.168.**.**
-                      IP 地址
-                        [01]: 192.168.**.**
-                        [02]: ***::2640:***:****:****
-                  [02]: VMware Virtual Ethernet Adapter for VMnet1
-                      连接名:      VMware Network Adapter VMnet1
-                      启用 DHCP:   是
-                      DHCP 服务器: 192.168.**.**
-                      IP 地址
-                        [01]: 192.168.**.**
-                        [02]: ***::9b3:***,***:****
-                  [03]: VMware Virtual Ethernet Adapter for VMnet8
-                      连接名:      VMware Network Adapter VMnet8
-                      启用 DHCP:   是
-                      DHCP 服务器: 192.168.**.**
-                      IP 地址
-                        [01]: 192.***,***:****
-                        [02]: fe80::***:***:***:****
-Hyper-V 要求:     已检测到虚拟机监控程序。将不显示 Hyper-V 所需的功能。
-
-//...
+```text
+Host Name:           ****
+OS Name:             Microsoft Windows 11 Pro
+OS Version:          10.0.*** Build 22***
+System Manufacturer: ASUS
+System Model:        System Product Name
+Processor(s):        Intel** Family * Model ***
+Total Physical Memory: 16,194 MB
+// ...更多系统信息 | ...more system information
 ```
 
+### 5. 系统事件日志 | System Event Log
 
+Windows 事件查看器格式的系统日志（.evtx 文件）：
 
-#### (5)systemlog.evtx
+System log in Windows Event Viewer format (.evtx file):
 
-![](imgs\evtx.png)
+![System Event Log](imgs/evtx.png)
 
+---
 
+## 注意事项与警告 | Notes and Warnings
 
-### 注解
+### ⚠️ 重要提示 | Important Notes
 
-Bowl提供运行监控功能，并导出相关错误信息 。
+1. **工作模式选择 | Work Mode Selection**
+   - `Upgrade` 模式：专门用于与 GeneralUpdate 框架集成，包含内部逻辑处理
+   - `Normal` 模式：可独立使用，适合监控任何 .NET 应用程序
+   - `Upgrade` mode: Specifically for integration with GeneralUpdate framework, includes internal logic processing
+   - `Normal` mode: Can be used independently, suitable for monitoring any .NET application
 
+2. **权限要求 | Permission Requirements**
+   - Bowl 需要足够的权限来生成 Dump 文件和读取系统信息
+   - 建议以管理员权限运行需要监控的应用程序
+   - Bowl requires sufficient permissions to generate Dump files and read system information
+   - It is recommended to run the monitored application with administrator privileges
 
+3. **磁盘空间 | Disk Space**
+   - Dump 文件可能占用大量磁盘空间（通常 50-200 MB）
+   - 确保 FailDirectory 所在磁盘有足够的可用空间
+   - Dump files may consume significant disk space (typically 50-200 MB)
+   - Ensure sufficient available space on the disk where FailDirectory is located
 
-#### 方法
+4. **依赖项 | Dependencies**
+   - Bowl 使用 ProcDump 工具生成 Dump 文件，该工具已内置在组件中
+   - 无需额外安装依赖项
+   - Bowl uses the ProcDump tool to generate Dump files, which is built into the component
+   - No additional dependencies need to be installed
 
-| Method   |          |
-| -------- | -------- |
-| Launch() | 启动监控 |
+### 💡 最佳实践 | Best Practices
 
+- **版本号管理**：为每个版本使用独立的故障目录，便于问题追踪
+- **日志清理**：定期清理旧版本的故障信息，避免磁盘空间耗尽
+- **测试验证**：在生产环境部署前，在测试环境验证监控功能
+- **Version Management**: Use separate failure directories for each version for easier issue tracking
+- **Log Cleanup**: Regularly clean up failure information from old versions to avoid disk space exhaustion
+- **Testing**: Verify monitoring functionality in a test environment before production deployment
 
+---
 
-### 🌼Launch()
+## 适用平台 | Applicable Platforms
 
-**启动函数**
+| 产品 Product        | 版本 Version       |
+| ------------------ | ----------------- |
+| .NET               | 5, 6, 7, 8, 9     |
+| .NET Framework     | 4.6.1             |
+| .NET Standard      | 2.0               |
+| .NET Core          | 2.0               |
+| ASP.NET            | Any               |
 
-```c#
-Launch(MonitorParameter? monitorParameter = null);
-```
+---
 
-**参数**
+## 相关资源 | Related Resources
 
-```c#
-public class MonitorParameter
-{   
-    //被监控的目录
-    public string TargetPath { get; set; }
-    
-    //捕获的异常信息导出到的目录
-    public string FailDirectory { get; set; }
-    
-    //备份目录
-    public string BackupDirectory { get; set; }
-    
-    //监控进程名称或者进程id
-    public string ProcessNameOrId { get; set; }
- 
-    //dump文件名
-    public string DumpFileName { get; set; }
-    
-    //升级包版本信息（.json）文件名
-    public string FailFileName { get; set; }
-
-    /// <summary>
-    /// Upgrade: upgrade mode. This mode is primarily used in conjunction with GeneralUpdate for internal use. Please do not modify it arbitrarily when the default mode is activated.
-    /// Normal: Normal mode,This mode can be used independently to monitor a single program. If the program crashes, it will export the crash information.
-    /// </summary>
-    public string WorkModel { get; set; } = "Upgrade";
-}
-```
-
-
-
-### 适用于
-
-| 产品           | 版本          |
-| -------------- | ------------- |
-| .NET           | 5、6、7、8、9 |
-| .NET Framework | 4.6.1         |
-| .NET Standard  | 2.0           |
-| .NET Core      | 2.0           |
-| ASP.NET        | Any           |
+- **示例代码**：[查看 GitHub 示例](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Bowl) | [View GitHub Examples](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Bowl)
+- **视频教程**：[观看 Bilibili 教程](https://www.bilibili.com/video/BV1c8iyYZE7P) | [Watch Bilibili Tutorial](https://www.bilibili.com/video/BV1c8iyYZE7P)
+- **主仓库**：[GeneralUpdate 项目](https://github.com/GeneralLibrary/GeneralUpdate) | [GeneralUpdate Project](https://github.com/GeneralLibrary/GeneralUpdate)
