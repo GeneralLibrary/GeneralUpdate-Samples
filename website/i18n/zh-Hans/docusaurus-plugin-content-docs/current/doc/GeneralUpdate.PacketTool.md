@@ -21,6 +21,8 @@ GeneralUpdate.Tools 是一款使用 Avalonia 开发的桌面应用程序，支�
 
 ![](imgs\tool2.png)
 
+![](imgs\tool3.png)
+
 ---
 
 ## 功能说明
