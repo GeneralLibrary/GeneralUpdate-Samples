@@ -289,7 +289,7 @@ The GeneralUpdate ecosystem consists of multiple repositories:
 
 ### Official Documentation
 - 🌐 **Official Website**: [https://www.justerzhu.cn/](https://www.justerzhu.cn/)
-- 📖 **Quick Start Guide**: [https://www.justerzhu.cn/docs/quickstart/quikstart](https://www.justerzhu.cn/docs/quickstart/quikstart)
+- 📖 **Quick Start Guide**: [https://www.justerzhu.cn/docs/quickstart/quickstart](https://www.justerzhu.cn/docs/quickstart/quickstart)
 - 🎥 **Video Tutorial**: [Bilibili](https://www.bilibili.com/video/BV1c8iyYZE7P)
 
 ### Documentation in this Repository

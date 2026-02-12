@@ -289,7 +289,7 @@ GeneralUpdate 生态系统由多个仓库组成：
 
 ### 官方文档
 - 🌐 **官方网站**：[https://www.justerzhu.cn/](https://www.justerzhu.cn/)
-- 📖 **快速入门指南**：[https://www.justerzhu.cn/docs/quickstart/quikstart](https://www.justerzhu.cn/docs/quickstart/quikstart)
+- 📖 **快速入门指南**：[https://www.justerzhu.cn/docs/quickstart/quickstart](https://www.justerzhu.cn/docs/quickstart/quickstart)
 - 🎥 **视频教程**：[哔哩哔哩](https://www.bilibili.com/video/BV1c8iyYZE7P)
 
 ### 本仓库中的文档
