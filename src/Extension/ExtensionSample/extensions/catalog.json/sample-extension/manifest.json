@@ -1,0 +1,23 @@
+{
+  "Id": "d975c68e-016a-4b30-b75a-a3dc04c9b308",
+  "Name": "sample-extension",
+  "DisplayName": "示例扩展 / Sample Extension",
+  "Version": "1.0.0",
+  "FileSize": 1532,
+  "UploadTime": "2026-02-12T10:45:46.0614732Z",
+  "Status": true,
+  "Description": "这是一个演示用的示例扩展 / This is a sample extension for demonstration",
+  "Format": ".zip",
+  "Hash": "sample-hash-sha256",
+  "Publisher": "GeneralUpdate Team",
+  "License": "MIT",
+  "Categories": "Tools,Development",
+  "SupportedPlatforms": 7,
+  "MinHostVersion": "1.0.0",
+  "MaxHostVersion": "2.0.0",
+  "ReleaseDate": "2026-02-12T10:45:46.0614554Z",
+  "Dependencies": null,
+  "IsPreRelease": false,
+  "DownloadUrl": "http://127.0.0.1:7391/Extension/download",
+  "CustomProperties": null
+}

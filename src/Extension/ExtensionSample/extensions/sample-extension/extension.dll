@@ -1,0 +1,15 @@
+// Mock DLL content
+// 模拟的DLL内容
+// In production, this would be the actual compiled extension binary
+// 在生产环境中，这将是实际编译的扩展二进制文件
+namespace sample-extension
+{
+    public class ExtensionEntry
+    {
+        public void Initialize()
+        {
+            // Extension initialization code
+            // 扩展初始化代码
+        }
+    }
+}
