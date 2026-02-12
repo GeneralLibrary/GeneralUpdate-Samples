@@ -195,3 +195,7 @@ FakesAssemblies/
 
 .idea/
 .vs/
+
+# Generated extensions directory
+**/extensions/
+*.slnx
