@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="/tmp/GeneralUpdate/src/c#/GeneralUpdate.Extension/GeneralUpdate.Extension.csproj" />
+        <PackageReference Include="GeneralUpdate.Extension" Version="10.2.1" />
     </ItemGroup>
 
 </Project>
