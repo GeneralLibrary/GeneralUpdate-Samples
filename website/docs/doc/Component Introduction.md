@@ -35,9 +35,11 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 | Blacklist                  | Yes            | Skips files and file extensions listed in the blacklist during the update process. |
 | OSS                        | Yes            | Simplifies updates with an independent update mechanism. Only requires placing a `version.json` configuration file on the file server. The component will update and download based on the version information in the configuration file. |
 | Rollback and Backup        | Yes            | Backs up local client files before updating, and rolls back if the client fails to start or crashes. |
-| Driver Update              | To be verified | Backs up drivers locally before updating, and rolls back if the client fails to start or crashes. |
+| Driver Update              | Supported      | Cross-platform driver auto-update implemented based on the GeneralUpdate.Drivelution component, supporting Windows and Linux platforms. Provides complete functions including driver validation, backup, rollback, signature verification, and permission management. |
+| Extension Management       | Supported      | VS Code-like extension system implemented based on the GeneralUpdate.Extension component, managing extension plugins such as Lua/Python. Supports extension directory management, remote query, download queue, version compatibility check, multi-platform support, dependency resolution, rollback mechanism, event notification, and other functions. |
 | Custom Method List         | Yes            | Injects a collection of custom methods that execute before the update starts. If any exception occurs while executing the custom method list, it will be notified through exception subscription. (Recommended to check the current software environment before updating) |
 | AOT                        | Yes            | Supports AOT compilation and publishing.                     |
+| Authentication             | Supported      | Identity authentication information (token) can be passed in HTTP requests for server resources. |
 
 ## 3. What does GeneralUpdate support?
 
