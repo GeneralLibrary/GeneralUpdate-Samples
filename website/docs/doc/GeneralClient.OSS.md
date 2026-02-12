@@ -39,7 +39,7 @@ public sealed class GeneralClientOSS
 
 ![](imgs/oss_flow.png)
 
-1. Prepare the version.json configuration file and update files (update.zip) just like in previous packaging methods.
+1. Prepare the version.json file for version information configuration, and update the file (update.zip) for packaging. The packaging can be done manually using compression software (such as 7zip, a free software).
 
 ```json
 [

@@ -41,7 +41,7 @@ public sealed class GeneralClientOSS
 
 ![](imgs/oss_flow.png)
 
-1.准备version.json版本信息配置文件，更新文件（update.zip）更新文件和之前的打包方式一样。
+1.准备version.json版本信息配置文件，更新文件（update.zip）打包可以直接通过压缩软件（7zip等免费软件）进行手动打包。
 
 ```json
 [
