@@ -14,10 +14,13 @@ This tool is developed using Avalonia and supports Windows / Linux / Mac desktop
 | ------------------------------- | --------- | ------------------------------------------------------------ |
 | Build patch package             | Yes       | Compares the previous version with the current version to identify updated, newly added, or deleted files. |
 | Build OSS version configuration | Yes       | Easily generates OSS version configuration files.            |
+| Build Extension package         | Yes       |                                                              |
 
 ![](imgs\tool.png)
 
 ![](imgs\tool2.png)
+
+![](imgs\tool3.png)
 
 #### Explanation
 
