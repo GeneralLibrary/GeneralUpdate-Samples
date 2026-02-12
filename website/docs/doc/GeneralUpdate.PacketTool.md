@@ -125,8 +125,8 @@ OSS 版本配置构建器用于生成 `version.json` 配置文件，该文件包
 
 **示例**：
 ```
-This extension adds powerful data export capabilities to your application,
-
+此扩展为您的应用程序添加强大的数据导出功能，
+支持多种格式，包括 CSV、Excel 和 JSON。
 ```
 
 ---
@@ -377,11 +377,6 @@ MinHostVersion ≤ Host Version ≤ MaxHostVersion
 - 依赖库
 - 文档文件（README、LICENSE）
 
-- Assembly files (DLLs, executables)
-- Resource files (icons, templates, configuration files)
-- Dependency libraries
-- Documentation files (README, LICENSE)
-
 ---
 
 #### 步骤 2：打开扩展管理器
@@ -475,10 +470,8 @@ MinHostVersion ≤ Host Version ≤ MaxHostVersion
 #### 步骤 9：验证扩展包
 
 生成后，验证扩展包是否包含：
-1. 所有源文件（从扩展目录压缩）All source files (compressed from extension directory)
-2. `manifest.json` 文件（自动生成）`manifest.json` file (automatically generated)
-
-2. `manifest.json` file (automatically generated)
+1. 所有源文件（从扩展目录压缩）
+2. `manifest.json` 文件（自动生成）
 
 可以使用解压缩工具打开 .zip 文件进行检查：
 ```
