@@ -2,73 +2,225 @@
 sidebar_position: 3
 ---
 
-### Definition
+# GeneralUpdate.Bowl
 
-Namespace: GeneralUpdate.Bowl
+## Component Overview
 
-Assembly: GeneralUpdate.Bowl.dll
+**GeneralUpdate.Bowl** is an independent process monitoring component that launches before the end of the upgrade process. It is responsible for starting the main client application and monitoring its running status. This component provides comprehensive crash monitoring and diagnostic capabilities. When the monitored application encounters an exception, it automatically exports Dump files, driver information, system information, and event logs to help developers quickly locate issues.
 
-This component is an independent process launched before the end of the upgrade process. It starts the main client application and monitors its normal operation before the process ends.
+**Namespace:** `GeneralUpdate.Bowl`  
+**Assembly:** `GeneralUpdate.Bowl.dll`
 
-```c#
+```csharp
 public sealed class Bowl
 ```
 
+---
 
+## Core Features
 
-### Example
+### 1. Process Monitoring
+- Real-time monitoring of target application status
+- Automatic detection of process crashes and abnormal exits
 
-The following example defines a method that includes the use of Bowl.
+### 2. Crash Diagnostics
+- Automatic generation of Dump files (.dmp) for crash analysis
+- Export detailed system and driver information
+- Collect Windows system event logs
 
-```c#
+### 3. Version Management
+- Store failure information categorized by version number
+- Support both upgrade and normal working modes
+
+---
+
+## Quick Start
+
+### Installation
+
+Install GeneralUpdate.Bowl via NuGet:
+
+```bash
+dotnet add package GeneralUpdate.Bowl
+```
+
+### Initialization and Usage
+
+The following example demonstrates how to use the Bowl component to monitor an application:
+
+```csharp
+using GeneralUpdate.Bowl;
+using GeneralUpdate.Bowl.Strategys;
+
 var installPath = AppDomain.CurrentDomain.BaseDirectory;
 var lastVersion = "1.0.0.3";
 var processInfo = new MonitorParameter
 {
-    ProcessNameOrId = "JsonTest.exe",
+    ProcessNameOrId = "YourApp.exe",
     DumpFileName = $"{lastVersion}_fail.dmp",
     FailFileName = $"{lastVersion}_fail.json",
     TargetPath = installPath,
     FailDirectory = Path.Combine(installPath, "fail", lastVersion),
     BackupDirectory = Path.Combine(installPath, lastVersion),
-    WorkModel = "Normal"
+    WorkModel = "Normal"  // Use Normal mode for standalone monitoring
 };
 Bowl.Launch(processInfo);
 ```
 
-### Capture
+---
 
-If a crash is detected, the following files will be generated in the running directory:
+## Core API Reference
 
-- 📒 Dump file (1.0.0.*_fail.dmp)
-- 📒 Upgrade package version information (1.0.0.*_fail.json)
-- 📒 Driver information (driverInfo.txt)
-- 📒 Operating system/hardware information (systeminfo.txt)
-- 📒 System event log (systemlog.evtx)
+### Launch Method
 
-These will be exported to the "fail" directory, categorized by version number.
+Start the process monitoring functionality.
 
-![](imgs\crash.jpg)
+**Method Signature:**
 
-#### (1) x.0.0.*_fail.dmp
+```csharp
+public static void Launch(MonitorParameter? monitorParameter = null)
+```
 
-![](imgs\dump.png)
+**Parameters:**
 
-#### (2) x.0.0.*_fail.json
+#### MonitorParameter Class
+
+```csharp
+public class MonitorParameter
+{   
+    /// <summary>
+    /// Directory being monitored
+    /// </summary>
+    public string TargetPath { get; set; }
+    
+    /// <summary>
+    /// Directory where captured exception information is exported
+    /// </summary>
+    public string FailDirectory { get; set; }
+    
+    /// <summary>
+    /// Backup directory
+    /// </summary>
+    public string BackupDirectory { get; set; }
+    
+    /// <summary>
+    /// Name or ID of the process being monitored
+    /// </summary>
+    public string ProcessNameOrId { get; set; }
+ 
+    /// <summary>
+    /// Dump file name
+    /// </summary>
+    public string DumpFileName { get; set; }
+    
+    /// <summary>
+    /// Upgrade package version information (.json) file name
+    /// </summary>
+    public string FailFileName { get; set; }
+
+    /// <summary>
+    /// Work Mode:
+    /// - Upgrade: Upgrade mode, primarily used in conjunction with GeneralUpdate for internal logic handling. 
+    ///           Do not modify arbitrarily when the default mode is activated.
+    /// - Normal: Normal mode, can be used independently to monitor a single program. 
+    ///          Exports crash information when the program crashes.
+    /// </summary>
+    public string WorkModel { get; set; } = "Upgrade";
+}
+```
+
+---
+
+## Practical Usage Examples
+
+### Example 1: Standalone Mode Application Monitoring
+
+```csharp
+using GeneralUpdate.Bowl;
+using GeneralUpdate.Bowl.Strategys;
+
+// Configure monitoring parameters
+var installPath = AppDomain.CurrentDomain.BaseDirectory;
+var currentVersion = "1.0.0.5";
+
+var monitorConfig = new MonitorParameter
+{
+    ProcessNameOrId = "MyApplication.exe",
+    DumpFileName = $"{currentVersion}_crash.dmp",
+    FailFileName = $"{currentVersion}_crash.json",
+    TargetPath = installPath,
+    FailDirectory = Path.Combine(installPath, "crash_reports", currentVersion),
+    BackupDirectory = Path.Combine(installPath, "backups", currentVersion),
+    WorkModel = "Normal"  // Standalone monitoring mode
+};
+
+// Start monitoring
+Bowl.Launch(monitorConfig);
+```
+
+### Example 2: Use with GeneralUpdate
+
+```csharp
+using GeneralUpdate.Bowl;
+using GeneralUpdate.Bowl.Strategys;
+
+// Start Bowl monitoring after upgrade completion
+var installPath = AppDomain.CurrentDomain.BaseDirectory;
+var upgradedVersion = "2.0.0.1";
+
+var upgradeMonitor = new MonitorParameter
+{
+    ProcessNameOrId = "UpdatedApp.exe",
+    DumpFileName = $"{upgradedVersion}_fail.dmp",
+    FailFileName = $"{upgradedVersion}_fail.json",
+    TargetPath = installPath,
+    FailDirectory = Path.Combine(installPath, "fail", upgradedVersion),
+    BackupDirectory = Path.Combine(installPath, upgradedVersion),
+    WorkModel = "Upgrade"  // Upgrade mode
+};
+
+Bowl.Launch(upgradeMonitor);
+```
+
+---
+
+## Crash Information Capture
+
+When a crash is detected, the following files will be generated in the running directory:
+
+- 📒 **Dump file** (`x.0.0.*_fail.dmp`)
+- 📒 **Upgrade package version information** (`x.0.0.*_fail.json`)
+- 📒 **Driver information** (`driverInfo.txt`)
+- 📒 **Operating system/hardware information** (`systeminfo.txt`)
+- 📒 **System event log** (`systemlog.evtx`)
+
+These files will be exported to the "fail" directory, categorized by version number.
+
+![Crash Files](imgs/crash.jpg)
+
+### 1. Dump File
+
+The Dump file contains a memory snapshot at the moment of crash, which can be used for debugging analysis:
+
+![Dump File](imgs/dump.png)
+
+### 2. Version Information File
+
+Detailed crash report in JSON format, including parameter configuration and ProcDump output:
 
 ```json
 {
-	"Parameter": {
-		"TargetPath": "D:\\github_project\\GeneralUpdate\\src\\c#\\Generalupdate.CatBowl\\bin\\Debug\\net9.0\\",
-		"FailDirectory": "D:\\github_project\\GeneralUpdate\\src\\c#\\Generalupdate.CatBowl\\bin\\Debug\\net9.0\\fail\\1.0.0.3",
-		"BackupDirectory": "D:\\github_project\\GeneralUpdate\\src\\c#\\Generalupdate.CatBowl\\bin\\Debug\\net9.0\\1.0.0.3",
-		"ProcessNameOrId": "JsonTest.exe",
-		"DumpFileName": "1.0.0.3_fail.dmp",
-		"FailFileName": "1.0.0.3_fail.json",
-		"WorkModel": "Normal",
-		"ExtendedField": null
-	},
-	"ProcdumpOutPutLines": [
+"Parameter": {
+"TargetPath": "D:\\github_project\\GeneralUpdate\\src\\c#\\Generalupdate.CatBowl\\bin\\Debug\\net9.0\\",
+"FailDirectory": "D:\\github_project\\GeneralUpdate\\src\\c#\\Generalupdate.CatBowl\\bin\\Debug\\net9.0\\fail\\1.0.0.3",
+"BackupDirectory": "D:\\github_project\\GeneralUpdate\\src\\c#\\Generalupdate.CatBowl\\bin\\Debug\\net9.0\\1.0.0.3",
+"ProcessNameOrId": "JsonTest.exe",
+"DumpFileName": "1.0.0.3_fail.dmp",
+"FailFileName": "1.0.0.3_fail.json",
+"WorkModel": "Normal",
+"ExtendedField": null
+},
+"ProcdumpOutPutLines": [
         "ProcDump v11.0 - Sysinternals process dump utility",
         "Copyright (C) 2009-2022 Mark Russinovich and Andrew Richards",
         "Sysinternals - www.sysinternals.com", 
@@ -96,147 +248,83 @@ These will be exported to the "fail" directory, categorized by version number.
 }
 ```
 
-#### (3) driverInfo.txt
+### 3. Driver Information File
 
-```json
-Module Name   Display Name            Description               Driver Type  Start Mode   State       Status       Accept Stop    Accept Pause     Paged Pool Code(Bytes) BSS(Bytes) Link Date               Path                                             Init(Bytes)
-============ ====================== ====================== ============= ========== ========== ========== =========== ============ ========== ========== ======= ====================== ================================================ ==========   
-360AntiAttac 360Safe Anti Attack Se 360Safe Anti Attack Se Kernel        System     Running    OK         TRUE        FALSE        4,096      36,864     0       9/29/2022 3:45:03 PM   C:\Windows\system32\Drivers\360AntiAttack64.sys  4,096     
-360AntiHacke 360Safe Anti Hacker Se 360Safe Anti Hacker Se Kernel        System     Running    OK         TRUE        FALSE        4,096      139,264    0       11/27/2023 3:43:37 PM  C:\Windows\system32\Drivers\360AntiHacker64.sys  8,192     
-360AntiHijac 360Safe Anti Hijack Se 360Safe Anti Hijack Se Kernel        System     Running    OK         TRUE        FALSE        4,096      73,728     0       5/8/2024 12:19:52 PM   C:\Windows\system32\Drivers\360AntiHijack64.sys  4,096     
-360AntiSteal 360Safe Anti Steal Fil 360Safe Anti Steal Fil Kernel        System     Running    OK         TRUE        FALSE        4,096      20,480     0       4/18/2024 3:58:04 PM   C:\Windows\system32\Drivers\360AntiSteal64.sys   8,192     
-360Box64     360Box mini-filter dri 360Box mini-filter dri File System   System     Running    OK         TRUE        FALSE        0          225,280    0       8/7/2024 11:50:19 AM   C:\Windows\system32\DRIVERS\360Box64.sys         12,288    
+Contains detailed information about all drivers in the system:
 
-//...
+```text
+Module Name   Display Name            Description               Driver Type  Start Mode   State       Status    
+============ ====================== ====================== ============= ========== ========== ==========
+360AntiAttac 360Safe Anti Attack Se 360Safe Anti Attack Se Kernel        System     Running    OK        
+360AntiHacke 360Safe Anti Hacker Se 360Safe Anti Hacker Se Kernel        System     Running    OK        
+// ...more driver information
 ```
 
-#### (4) systeminfo.txt
+### 4. System Information File
 
-```json
+Complete operating system and hardware configuration information:
+
+```text
 Host Name:           ****
-OS Name:          Microsoft Windows 11 Pro
-OS Version:          10.0.2*** Build 22***
-OS Manufacturer:        Microsoft Corporation
-OS Configuration:          Standalone Workstation
-OS Build Type:      Multiprocessor Free
-Registered Owner:      ****@outlook.com
-Registered Organization:       
-Product ID:          ****-80000-***00-A****
-Original Install Date:     11/16/2023, 9:56:28 PM
-System Boot Time:     11/26/2024, 9:37:51 PM
-System Manufacturer:       ASUS
-System Model:         System Product Name
-System Type:         x64-based PC
-Processor(s):           Installed 1 Processor(s).
-                  [01]: Intel** Family * Model *** Stepping * GenuineIntel ~**** Mhz
-BIOS Version:        American Megatrends Inc. 1402, 4/1/2022
-Windows Directory:     C:\Windows
-System Directory:         C:\Windows\system32
-Boot Device:         \Device\Ha*****olume1
-System Locale:     zh-cn;Chinese (China)
-Input Locale:   zh-cn;Chinese (China)
-Time Zone:             (UTC+08:00) **，**，*******，****
-Total Physical Memory:     16,194 MB
-Available Physical Memory:   1,795 MB
-Virtual Memory: Max Size: 25,410 MB
-Virtual Memory: Available:   9,438 MB
-Virtual Memory: In Use: 15,972 MB
-Page File Location(s):     D:\****file.sys
-Domain:               WORKGROUP
-Logon Server:       \\****
-Hotfix(s)::       6 Hotfix(s) Installed.
-                  [01]: KB504****
-                  [02]: KB502****
-                  [03]: KB503****
-                  [04]: KB503****
-                  [05]: KB504****
-                  [06]: KB504****
-Network Card(s):             3 NIC(s) Installed.
-                  [01]: Intel(R) Ethernet Connection (**) I***-V
-                      Connection Name:      Ethernet
-                      DHCP Enabled:   Yes
-                      DHCP Server: 192.168.**.**
-                      IP Address
-                        [01]: 192.168.**.**
-                        [02]: ***::2640:***:****:****
-                  [02]: VMware Virtual Ethernet Adapter for VMnet1
-                      Connection Name:      VMware Network Adapter VMnet1
-                      DHCP Enabled:   Yes
-                      DHCP Server: 192.168.**.**
-                      IP Address
-                        [01]: 192.168.**.**
-                        [02]: ***::9b3:***,***:****
-                  [03]: VMware Virtual Ethernet Adapter for VMnet8
-                      Connection Name:      VMware Network Adapter VMnet8
-                      DHCP Enabled:   Yes
-                      DHCP Server: 192.168.**.**
-                      IP Address
-                        [01]: 192.***,***:****
-                        [02]: fe80::***:***:***:****
-Hyper-V Requirements:     A hypervisor has been detected. Features required for Hyper-V will not be displayed.
-
-//...
+OS Name:             Microsoft Windows 11 Pro
+OS Version:          10.0.*** Build 22***
+System Manufacturer: ASUS
+System Model:        System Product Name
+Processor(s):        Intel** Family * Model ***
+Total Physical Memory: 16,194 MB
+// ...more system information
 ```
 
-#### (5) systemlog.evtx
+### 5. System Event Log
 
-![](imgs\evtx.png)
+System log in Windows Event Viewer format (.evtx file):
 
-### Notes
+![System Event Log](imgs/evtx.png)
 
-Bowl provides runtime monitoring capabilities and exports relevant error information.
+---
 
-#### Methods
+## Notes and Warnings
 
-| Method   | Description      |
-| -------- | ---------------- |
-| Launch() | Start monitoring |
+### ⚠️ Important Notes
 
-### 🌼Launch()
+1. **Work Mode Selection**
+   - `Upgrade` mode: Specifically for integration with GeneralUpdate framework, includes internal logic processing
+   - `Normal` mode: Can be used independently, suitable for monitoring any .NET application
 
-**Launch Function**
+2. **Permission Requirements**
+   - Bowl requires sufficient permissions to generate Dump files and read system information
+   - It is recommended to run the monitored application with administrator privileges
 
-```c#
-Launch(MonitorParameter? monitorParameter = null);
-```
+3. **Disk Space**
+   - Dump files may consume significant disk space (typically 50-200 MB)
+   - Ensure sufficient available space on the disk where FailDirectory is located
 
-**Parameters**
+4. **Dependencies**
+   - Bowl uses the ProcDump tool to generate Dump files, which is built into the component
+   - No additional dependencies need to be installed
 
-```c#
-public class MonitorParameter
-{   
-    // Directory being monitored
-    public string TargetPath { get; set; }
-    
-    // Directory where captured exception information is exported
-    public string FailDirectory { get; set; }
-    
-    // Backup directory
-    public string BackupDirectory { get; set; }
-    
-    // Name or ID of the process being monitored
-    public string ProcessNameOrId { get; set; }
- 
-    // Dump file name
-    public string DumpFileName { get; set; }
-    
-    // Upgrade package version information (.json) file name
-    public string FailFileName { get; set; }
+### 💡 Best Practices
 
-    /// <summary>
-    /// Upgrade: upgrade mode. This mode is primarily used in conjunction with GeneralUpdate for internal use. Please do not modify it arbitrarily when the default mode is activated.
-    /// Normal: Normal mode, This mode can be used independently to monitor a single program. If the program crashes, it will export the crash information.
-    /// </summary>
-    public string WorkModel { get; set; } = "Upgrade";
-}
-```
+- **Version Management**: Use separate failure directories for each version for easier issue tracking
+- **Log Cleanup**: Regularly clean up failure information from old versions to avoid disk space exhaustion
+- **Testing**: Verify monitoring functionality in a test environment before production deployment
 
-### Applicable To
+---
 
-| Product        | Version       |
-| -------------- | ------------- |
-| .NET           | 5, 6, 7, 8, 9 |
-| .NET Framework | 4.6.1         |
-| .NET Standard  | 2.0           |
-| .NET Core      | 2.0           |
-| ASP.NET        | Any           |
+## Applicable Platforms
+
+| Product         | Version           |
+| --------------- | ----------------- |
+| .NET            | 5, 6, 7, 8, 9     |
+| .NET Framework  | 4.6.1             |
+| .NET Standard   | 2.0               |
+| .NET Core       | 2.0               |
+| ASP.NET         | Any               |
+
+---
+
+## Related Resources
+
+- **Example Code**: [View GitHub Examples](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Bowl)
+- **Video Tutorial**: [Watch Bilibili Tutorial](https://www.bilibili.com/video/BV1c8iyYZE7P)
+- **Main Repository**: [GeneralUpdate Project](https://github.com/GeneralLibrary/GeneralUpdate)
