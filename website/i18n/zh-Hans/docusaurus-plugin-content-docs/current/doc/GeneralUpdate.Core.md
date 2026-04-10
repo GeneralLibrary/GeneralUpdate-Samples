@@ -204,17 +204,6 @@ public GeneralUpdateBootstrap AddListenerException(
     Action<object, ExceptionEventArgs> callbackAction)
 ```
 
-#### SetFieldMappings 方法
-
-设置字段映射表,用于解析驱动包信息。
-
-```csharp
-public GeneralUpdateBootstrap SetFieldMappings(Dictionary<string, string> fieldMappings)
-```
-
-**参数:**
-- `fieldMappings`: 字段映射字典,键为英文字段名,值为本地化字段名
-
 ---
 
 ## 配置类详解
@@ -387,26 +376,41 @@ catch (Exception e)
 }
 ```
 
-### 示例 2:启用驱动升级
+### 示例 2：启用驱动升级
+
+驱动升级通过 `GeneralUpdate.ClientCore` 中的 `Configinfo.DriverDirectory` 字段传入驱动目录，`GeneralUpdate.Core` 中的 `DrivelutionMiddleware` 会自动处理驱动安装。
+
+在 `ClientCore` 侧配置：
+
+```csharp
+using GeneralUpdate.ClientCore;
+using GeneralUpdate.Common.Shared.Object;
+
+var config = new Configinfo
+{
+    UpdateUrl = "http://your-server.com/api/update/check",
+    ClientVersion = "1.0.0.0",
+    InstallPath = AppDomain.CurrentDomain.BaseDirectory,
+    // 指定包含驱动文件的目录
+    DriverDirectory = @"C:\Drivers\Updates"
+};
+
+await new GeneralClientBootstrap()
+    .SetConfig(config)
+    .AddListenerException((sender, args) =>
+    {
+        Console.WriteLine($"更新异常: {args.Exception.Message}");
+    })
+    .LaunchAsync();
+```
+
+在 `Core`（升级助手）侧，无需额外配置，`DrivelutionMiddleware` 会自动从 `PipelineContext` 获取驱动目录并执行驱动安装：
 
 ```csharp
 using GeneralUpdate.Core;
-using GeneralUpdate.Common.Internal.Bootstrap;
-
-// 中文字段映射表
-var fieldMappingsCN = new Dictionary<string, string>
-{
-    { "DriverName", "驱动名称" },
-    { "DriverVersion", "驱动版本" },
-    { "DriverDescription", "驱动描述" },
-    { "InstallPath", "安装路径" }
-};
 
 await new GeneralUpdateBootstrap()
-    // 设置字段映射表
-    .SetFieldMappings(fieldMappingsCN)
-    // 启用驱动更新
-    .Option(UpdateOption.Drive, true)
+    .Option(UpdateOption.Drive, true)  // 启用驱动升级
     .AddListenerException((sender, args) =>
     {
         Console.WriteLine($"升级异常: {args.Exception.Message}");
