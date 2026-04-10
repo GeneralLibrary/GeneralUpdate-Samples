@@ -59,7 +59,7 @@ GeneralTracer.SetTracingEnabled(false);
 
 | Product        | Versions         |
 | -------------- | ---------------- |
-| .NET           | 5, 6, 7, 8, 9,10 |
+| .NET           | 5, 6, 7, 8, 9, 10 |
 | .NET Framework | 4.6.1            |
 | .NET Standard  | 2.0              |
 | .NET Core      | 2.0              |

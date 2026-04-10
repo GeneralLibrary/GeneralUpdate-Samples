@@ -28,13 +28,20 @@ public class GeneralClientBootstrap : AbstractBootstrap<GeneralClientBootstrap, 
 - 黑名单机制(文件、格式、目录)
 - 自定义更新策略和操作
 - 支持二进制差异更新和全量更新
+- `ConfiginfoBuilder` 零配置构建器,只需三个参数即可完成配置
 
 ### 3. 完整的事件通知
 - 下载进度、完成、错误事件
-- 支持用户自定义跳过更新选项
+- 更新版本信息通知（`AddListenerUpdateInfo`）
+- 统一更新预检回调（`AddListenerUpdatePrecheck`）
 - 异常和错误全程监控
 
-### 4. 多平台支持
+### 4. 静默更新模式
+- 后台轮询检测新版本（默认每 20 分钟一次）
+- 静默下载并准备更新包
+- 在主程序退出后自动启动升级流程
+
+### 5. 多平台支持
 - Windows、Linux、macOS 平台支持
 - 自动平台检测和策略选择
 
@@ -245,12 +252,46 @@ public GeneralClientBootstrap AddListenerException(
 public GeneralClientBootstrap AddCustomOption(Func<Task> customFunc)
 ```
 
-#### SetCustomSkipOption 方法
+#### AddListenerUpdateInfo 方法
 
-设置自定义跳过选项,允许用户决定是否继续更新。
+注册更新版本信息回调。版本验证完成后立即触发,可用于展示更新日志或版本列表。
 
 ```csharp
-public GeneralClientBootstrap SetCustomSkipOption(Func<bool> customSkipFunc)
+public GeneralClientBootstrap AddListenerUpdateInfo(
+    Action<object, UpdateInfoEventArgs> callbackAction)
+```
+
+**UpdateInfoEventArgs 属性:**
+- `Info`: `VersionRespDTO` — 服务端返回的版本响应数据,包含可用版本列表及每个版本的 `UpdateLog` 字段
+
+**示例:**
+```csharp
+.AddListenerUpdateInfo((sender, e) =>
+{
+    foreach (var v in e.Info.Body ?? [])
+        Console.WriteLine($"{v.Version}: {v.UpdateLog}");
+})
+```
+
+#### AddListenerUpdatePrecheck 方法
+
+注册更新预检回调,将更新信息通知和跳过更新决策合并为单一入口。回调接收完整的 `UpdateInfoEventArgs`（版本列表、强制更新标志等），返回 `true` 跳过更新，返回 `false` 继续更新。
+
+> **注意：** 此方法替代了旧的 `AddListenerUpdateInfo` + `SetCustomSkipOption` 组合写法。`IsForcibly` 为强制更新时，回调返回值将被忽略，更新始终执行。
+
+```csharp
+public GeneralClientBootstrap AddListenerUpdatePrecheck(
+    Func<UpdateInfoEventArgs, bool> precheckFunc)
+```
+
+**示例:**
+```csharp
+.AddListenerUpdatePrecheck(updateInfo =>
+{
+    // 在此可访问完整版本信息
+    bool userChoseSkip = ShowUpdateDialog(updateInfo.Info);
+    return userChoseSkip; // true = 跳过, false = 继续更新
+})
 ```
 
 ---
@@ -346,6 +387,11 @@ public class Configinfo
     /// Linux 平台下的脚本,用于在更新完成后为文件分配权限
     /// </summary>
     public string Script { get; set; }
+    
+    /// <summary>
+    /// 驱动程序目录路径,指定包含需要更新的驱动文件的目录
+    /// </summary>
+    public string DriverDirectory { get; set; }
 }
 ```
 
@@ -377,9 +423,73 @@ public enum UpdateOption
     /// <summary>
     /// 是否在更新前启用备份功能,默认启用;设置为 false 则不进行备份
     /// </summary>
-    BackUp
+    BackUp,
+    
+    /// <summary>
+    /// 是否启用静默更新模式。启用后将在后台轮询检测新版本、静默下载更新包,
+    /// 并在主程序退出后自动启动升级流程,不影响用户的正常使用。
+    /// </summary>
+    EnableSilentUpdate
 }
 ```
+
+---
+
+## ConfiginfoBuilder 构建器
+
+`ConfiginfoBuilder` 是零配置模式的 `Configinfo` 构建器,灵感来自 [Velopack](https://github.com/velopack/velopack) 的设计。只需提供三个必填参数即可自动生成完整的平台适配配置。
+
+**命名空间:** `GeneralUpdate.Common.Shared.Object`
+
+### 特性
+
+- 仅需三个参数：`UpdateUrl`、`Token`、`Scheme`
+- 自动从 `.csproj` 文件提取应用名称、版本号和发布者信息
+- 自动适配 Windows / Linux / macOS 平台差异（路径、权限脚本等）
+- 安装路径默认使用宿主程序所在目录（`AppDomain.CurrentDomain.BaseDirectory`）
+
+### 快速使用
+
+```csharp
+using GeneralUpdate.Common.Shared.Object;
+
+// 零配置:从 .csproj 自动提取名称、版本、发布者
+var config = ConfiginfoBuilder
+    .Create("https://api.example.com/updates", "your-token", "Bearer")
+    .Build();
+
+await new GeneralClientBootstrap()
+    .SetConfig(config)
+    .LaunchAsync();
+```
+
+### 自定义覆盖
+
+```csharp
+var config = ConfiginfoBuilder
+    .Create("https://api.example.com/updates", "your-token", "Bearer")
+    .SetAppName("CustomApp.exe")        // 覆盖自动检测的名称
+    .SetClientVersion("2.0.0")          // 覆盖自动检测的版本
+    .SetInstallPath("/custom/path")     // 覆盖安装路径
+    .Build();
+```
+
+### 自动提取规则
+
+| 配置项 | 提取来源 | csproj 字段 | 映射目标 |
+|--------|----------|-------------|----------|
+| 应用名称 | 项目文件 | `<AssemblyName>` 或文件名 | `AppName`、`MainAppName` |
+| 版本号 | 项目文件 | `<Version>` | `ClientVersion`、`UpgradeClientVersion` |
+| 发布者 | 项目文件 | `<Company>` 或 `<Authors>` | `ProductId` |
+| 安装路径 | 宿主程序运行时目录 | — | `InstallPath` |
+
+### 平台支持
+
+| 平台 | 应用名称后缀 | 默认脚本 |
+|------|------------|---------|
+| Windows | `.exe` | 无 |
+| Linux | 无后缀 | chmod 权限脚本 |
+| macOS | 无后缀 | chmod 权限脚本 |
 
 ---
 
@@ -518,7 +628,7 @@ await new GeneralClientBootstrap()
     .LaunchAsync();
 ```
 
-### 示例 5:自定义操作和跳过选项
+### 示例 5：更新预检与跳过（AddListenerUpdatePrecheck）
 
 ```csharp
 using GeneralUpdate.ClientCore;
@@ -533,20 +643,62 @@ var config = new Configinfo
 
 await new GeneralClientBootstrap()
     .SetConfig(config)
-    // 添加自定义操作(更新前检查环境)
-    .AddCustomOption(async () =>
+    // 统一的更新预检回调：可获取版本信息并决定是否跳过
+    .AddListenerUpdatePrecheck(updateInfo =>
     {
-        Console.WriteLine("正在检查运行环境...");
-        await Task.Delay(1000);
-        // 检查磁盘空间、依赖项等
-        Console.WriteLine("环境检查完成");
-    })
-    // 设置用户跳过选项
-    .SetCustomSkipOption(() =>
-    {
-        Console.WriteLine("发现新版本,是否更新?(y/n)");
+        Console.WriteLine($"发现 {updateInfo.Info.Body?.Count ?? 0} 个新版本");
+        Console.WriteLine("是否现在更新？(y/n)");
         var input = Console.ReadLine();
-        return input?.ToLower() == "y";
+        return input?.ToLower() != "y"; // true = 跳过, false = 继续更新
+    })
+    .AddListenerException((sender, args) =>
+    {
+        Console.WriteLine($"更新异常：{args.Exception.Message}");
+    })
+    .LaunchAsync();
+```
+
+### 示例 6：静默更新模式（EnableSilentUpdate）
+
+```csharp
+using GeneralUpdate.ClientCore;
+using GeneralUpdate.Common.Internal;
+using GeneralUpdate.Common.Internal.Bootstrap;
+
+var config = new Configinfo
+{
+    UpdateUrl = "http://your-server.com/api/update/check",
+    ClientVersion = "1.0.0.0",
+    InstallPath = AppDomain.CurrentDomain.BaseDirectory
+};
+
+// 启用静默更新：后台每 20 分钟轮询，主程序退出后自动启动升级
+await new GeneralClientBootstrap()
+    .SetConfig(config)
+    .Option(UpdateOption.EnableSilentUpdate, true)
+    .AddListenerException((sender, args) =>
+    {
+        Console.WriteLine($"静默更新异常：{args.Exception.Message}");
+    })
+    .LaunchAsync();
+```
+
+### 示例 7：使用 ConfiginfoBuilder 零配置构建
+
+```csharp
+using GeneralUpdate.ClientCore;
+using GeneralUpdate.Common.Shared.Object;
+
+// 从 .csproj 自动提取应用名称、版本和发布者
+var config = ConfiginfoBuilder
+    .Create("http://your-server.com/api/update/check", "your-token", "Bearer")
+    .Build();
+
+await new GeneralClientBootstrap()
+    .SetConfig(config)
+    .AddListenerException((sender, args) =>
+    {
+        Console.WriteLine($"更新异常：{args.Exception.Message}");
     })
     .LaunchAsync();
 ```
@@ -577,12 +729,21 @@ await new GeneralClientBootstrap()
    - 黑名单中的文件和目录不会被更新
    - 常用于保护配置文件、用户数据等
 
+6. **更新预检回调**
+   - `AddListenerUpdatePrecheck` 已替代旧的 `SetCustomSkipOption` + `AddListenerUpdateInfo` 组合
+   - 强制更新（`IsForcibly = true`）时，回调返回值被忽略，更新始终执行
+
+7. **静默更新**
+   - `EnableSilentUpdate` 不改变默认更新行为，需显式启用
+   - 静默模式下，升级助手将在主程序退出事件触发后才启动
+
 ### 💡 最佳实践
 
+- **零配置构建**：优先使用 `ConfiginfoBuilder.Create()` 减少手动配置错误
 - **备份策略**:始终启用 BackUp 选项,以便更新失败时可以回滚
 - **差异更新**:启用 Patch 选项以减少下载量和更新时间
 - **错误处理**:实现完整的异常监听和错误处理逻辑
-- **用户体验**:在更新前提示用户并允许选择更新时机
+- **用户体验**:使用 `AddListenerUpdatePrecheck` 在更新前提示用户并允许选择更新时机
 - **测试验证**:在生产环境部署前充分测试更新流程
 
 ---

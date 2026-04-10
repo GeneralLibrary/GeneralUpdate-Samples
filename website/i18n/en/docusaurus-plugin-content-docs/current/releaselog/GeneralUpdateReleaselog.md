@@ -7,6 +7,21 @@ tags: [log]
 
 # 📒Release log
 
+### 📍2026-04-10
+
+- Add `AddListenerUpdatePrecheck(Func<UpdateInfoEventArgs, bool>)` to `GeneralClientBootstrap` — unified entry that receives the full version info and returns `true` to skip or `false` to proceed; replaces the combined use of `AddListenerUpdateInfo` + `SetCustomSkipOption`. Forced-update (`IsForcibly`) versions always proceed regardless of the callback return value.
+- Remove deprecated `SetCustomSkipOption` from `GeneralClientBootstrap`.
+- Add `AddListenerUpdateInfo(Action<object, UpdateInfoEventArgs>)` to `GeneralClientBootstrap` and `GeneralUpdateBootstrap` — dispatched immediately after version validation; each `VersionInfo` entry now carries a new `UpdateLog` field for release notes.
+- Add opt-in silent update mode (`UpdateOption.EnableSilentUpdate`) to `GeneralClientBootstrap` — polls every 20 minutes in the background, prepares the update package silently, and launches the updater only after the host process exits.
+- Add `ConfiginfoBuilder` — zero-configuration builder for `Configinfo`; only `UpdateUrl`, `Token`, and `Scheme` are required; all other fields are auto-detected from the `.csproj` file and the runtime platform (Windows / Linux / macOS).
+- Add `DriverDirectory` field to `Configinfo` / `BaseConfigInfo` and propagate it through `ConfigurationMapper`, `ProcessInfo`, and `PipelineContext` to `DrivelutionMiddleware` for driver update support.
+- Remove `SetFieldMappings` from `GeneralUpdateBootstrap`.
+- Add full lifecycle tracing (`GeneralTracer`) across `GeneralUpdate.Bowl`, `GeneralUpdate.Extension`, `GeneralUpdate.Core`, `GeneralUpdate.ClientCore`, and `GeneralUpdate.Drivelution`.
+- Fix `DefaultCleanMatcher.Match` incorrectly returning `null` for same-name files in different directories.
+- Fix orphaned temp files in `BinaryHandler.Dirty` causing patch failures on repeated update runs.
+
+
+
 - ### 📍2026-01-06 10.0.0
 
   - Adapt to .NET 10 upgrade and update the versions of referenced components.

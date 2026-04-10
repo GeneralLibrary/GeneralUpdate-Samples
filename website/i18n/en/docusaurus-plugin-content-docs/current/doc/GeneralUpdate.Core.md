@@ -204,17 +204,6 @@ public GeneralUpdateBootstrap AddListenerException(
     Action<object, ExceptionEventArgs> callbackAction)
 ```
 
-#### SetFieldMappings Method
-
-Set field mapping table for parsing driver package information.
-
-```csharp
-public GeneralUpdateBootstrap SetFieldMappings(Dictionary<string, string> fieldMappings)
-```
-
-**Parameters:**
-- `fieldMappings`: Field mapping dictionary, key is English field name, value is localized field name
-
 ---
 
 ## Configuration Class Details
@@ -347,6 +336,11 @@ public class Packet
     /// Indicates if the driver upgrade feature is enabled
     /// </summary>
     public bool DriveEnabled { get; set; }
+    
+    /// <summary>
+    /// Driver directory path, corresponds to Configinfo.DriverDirectory and is auto-populated by ConfigurationMapper
+    /// </summary>
+    public string DriverDirectory { get; set; }
 }
 ```
 
@@ -389,24 +383,39 @@ catch (Exception e)
 
 ### Example 2: Enable Driver Upgrade
 
-```csharp
-using GeneralUpdate.Core;
-using GeneralUpdate.Common.Internal.Bootstrap;
+Driver upgrades are configured via the `DriverDirectory` field in `Configinfo` on the `GeneralUpdate.ClientCore` side. The `DrivelutionMiddleware` in `GeneralUpdate.Core` automatically processes driver installation.
 
-// Chinese field mapping table
-var fieldMappingsCN = new Dictionary<string, string>
+On the `ClientCore` side:
+
+```csharp
+using GeneralUpdate.ClientCore;
+using GeneralUpdate.Common.Shared.Object;
+
+var config = new Configinfo
 {
-    { "DriverName", "驱动名称" },
-    { "DriverVersion", "驱动版本" },
-    { "DriverDescription", "驱动描述" },
-    { "InstallPath", "安装路径" }
+    UpdateUrl = "http://your-server.com/api/update/check",
+    ClientVersion = "1.0.0.0",
+    InstallPath = AppDomain.CurrentDomain.BaseDirectory,
+    // Specify the directory containing driver files
+    DriverDirectory = @"C:\Drivers\Updates"
 };
 
+await new GeneralClientBootstrap()
+    .SetConfig(config)
+    .AddListenerException((sender, args) =>
+    {
+        Console.WriteLine($"Update exception: {args.Exception.Message}");
+    })
+    .LaunchAsync();
+```
+
+On the `Core` (upgrade assistant) side, no additional configuration is needed — `DrivelutionMiddleware` automatically retrieves the driver directory from `PipelineContext` and performs driver installation:
+
+```csharp
+using GeneralUpdate.Core;
+
 await new GeneralUpdateBootstrap()
-    // Set field mappings
-    .SetFieldMappings(fieldMappingsCN)
-    // Enable driver update
-    .Option(UpdateOption.Drive, true)
+    .Option(UpdateOption.Drive, true)  // Enable driver upgrade
     .AddListenerException((sender, args) =>
     {
         Console.WriteLine($"Upgrade exception: {args.Exception.Message}");
@@ -551,7 +560,7 @@ await new GeneralUpdateBootstrap()
 
 | Product        | Version       |
 | -------------- | ------------- |
-| .NET               | 5, 6, 7, 8, 9     |
+| .NET               | 5, 6, 7, 8, 9, 10  |
 | .NET Framework     | 4.6.1             |
 | .NET Standard      | 2.0               |
 | .NET Core          | 2.0               |

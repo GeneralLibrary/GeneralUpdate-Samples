@@ -7,6 +7,21 @@ tags: [log]
 
 # 📒更新日志
 
+## 📍2026-04-10
+
+- 新增 `AddListenerUpdatePrecheck(Func<UpdateInfoEventArgs, bool>)` 到 `GeneralClientBootstrap` —— 统一的更新预检入口，接收完整版本信息并通过返回值决定是否跳过（`true` = 跳过，`false` = 继续）；替代旧的 `AddListenerUpdateInfo` + `SetCustomSkipOption` 组合。强制更新（`IsForcibly`）时，回调返回值被忽略，更新始终执行。
+- 移除已废弃的 `SetCustomSkipOption`。
+- 新增 `AddListenerUpdateInfo(Action<object, UpdateInfoEventArgs>)` 到 `GeneralClientBootstrap` 和 `GeneralUpdateBootstrap` —— 在版本验证完成后立即触发；`VersionInfo` 新增 `UpdateLog` 字段用于携带版本更新日志。
+- 新增静默更新模式（`UpdateOption.EnableSilentUpdate`）—— 在后台每 20 分钟轮询检测新版本，静默准备更新包，在主程序退出后自动启动升级流程。
+- 新增 `ConfiginfoBuilder` —— `Configinfo` 的零配置构建器，仅需 `UpdateUrl`、`Token`、`Scheme` 三个参数，其他字段自动从 `.csproj` 文件和运行时平台（Windows / Linux / macOS）检测。
+- 新增 `DriverDirectory` 字段到 `Configinfo` / `BaseConfigInfo`，并通过 `ConfigurationMapper`、`ProcessInfo`、`PipelineContext` 传递至 `DrivelutionMiddleware`，以支持驱动更新功能。
+- 移除 `GeneralUpdateBootstrap` 中已废弃的 `SetFieldMappings` 方法。
+- 为 `GeneralUpdate.Bowl`、`GeneralUpdate.Extension`、`GeneralUpdate.Core`、`GeneralUpdate.ClientCore`、`GeneralUpdate.Drivelution` 补充完整的生命周期追踪（`GeneralTracer`）。
+- 修复 `DefaultCleanMatcher.Match` 对不同目录下同名文件错误返回 `null` 的问题。
+- 修复 `BinaryHandler.Dirty` 中遗留临时文件导致重复更新时补丁失败的问题。
+
+
+
 ## 📍2026-01-06 10.0.0
 
 - 适配.NET10升级引用组件版本。
