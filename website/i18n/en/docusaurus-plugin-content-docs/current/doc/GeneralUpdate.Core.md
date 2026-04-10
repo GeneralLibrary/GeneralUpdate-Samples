@@ -336,6 +336,11 @@ public class Packet
     /// Indicates if the driver upgrade feature is enabled
     /// </summary>
     public bool DriveEnabled { get; set; }
+    
+    /// <summary>
+    /// Driver directory path, corresponds to Configinfo.DriverDirectory and is auto-populated by ConfigurationMapper
+    /// </summary>
+    public string DriverDirectory { get; set; }
 }
 ```
 
@@ -555,7 +560,7 @@ await new GeneralUpdateBootstrap()
 
 | Product        | Version       |
 | -------------- | ------------- |
-| .NET               | 5, 6, 7, 8, 9     |
+| .NET               | 5, 6, 7, 8, 9, 10  |
 | .NET Framework     | 4.6.1             |
 | .NET Standard      | 2.0               |
 | .NET Core          | 2.0               |

@@ -732,7 +732,7 @@ GeneralDrivelution provides a complete driver update solution with the following
 
 | Product        | Versions      |
 | -------------- | ------------- |
-| .NET           | 8, 9          |
+| .NET           | 8, 9, 10      |
 | .NET Standard  | N/A           |
 | .NET Core      | N/A           |
 | .NET Framework | N/A           |
