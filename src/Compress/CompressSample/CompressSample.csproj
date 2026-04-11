@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="GeneralUpdate.Core" Version="9.1.5" />
+      <PackageReference Include="GeneralUpdate.Core" Version="10.4.6" />
     </ItemGroup>
 
 </Project>
