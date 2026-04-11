@@ -10,7 +10,7 @@ public class HttpResponseDTO
     /// <summary>
     /// 响应消息内容
     /// </summary>
-    public string Message { get; set; }
+    public string Message { get; set; } = string.Empty;
 
     public static HttpResponseDTO Success(string message = "Success")
     {

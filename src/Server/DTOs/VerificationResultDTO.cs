@@ -55,7 +55,7 @@ public record VerificationResultDTO
     /// <summary>
     /// 文件格式
     /// </summary>
-    public string Format { get; set; }
+    public string Format { get; set; } = string.Empty;
 
     /// <summary>
     /// 文件大小

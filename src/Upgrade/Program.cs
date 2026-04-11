@@ -34,7 +34,7 @@ catch (Exception e)
 void OnMultiDownloadError(object arg1, MultiDownloadErrorEventArgs arg2)
 {
     var version = arg2.Version as VersionInfo;
-    Console.WriteLine($"{version.Version} {arg2.Exception}");
+    Console.WriteLine($"{version?.Version} {arg2.Exception}");
 }
 
 void OnMultiAllDownloadCompleted(object arg1, MultiAllDownloadCompletedEventArgs arg2)
@@ -45,13 +45,13 @@ void OnMultiAllDownloadCompleted(object arg1, MultiAllDownloadCompletedEventArgs
 void OnMultiDownloadCompleted(object arg1, MultiDownloadCompletedEventArgs arg2)
 {
     var version = arg2.Version as VersionInfo;
-    Console.WriteLine(arg2.IsComplated ? $"当前下载版本：{version.Version}, 下载完成！" : $"当前下载版本：{version.Version}, 下载失败！");
+    Console.WriteLine(arg2.IsComplated ? $"当前下载版本：{version?.Version}, 下载完成！" : $"当前下载版本：{version?.Version}, 下载失败！");
 }
 
 void OnMultiDownloadStatistics(object arg1, MultiDownloadStatisticsEventArgs arg2)
 {
     var version = arg2.Version as VersionInfo;
-    Console.WriteLine($"当前下载版本：{version.Version}，下载速度：{arg2.Speed}，剩余下载时间：{arg2.Remaining}，已下载大小：{arg2.BytesReceived}，总大小：{arg2.TotalBytesToReceive}, 进度百分比：{arg2.ProgressPercentage}%");
+    Console.WriteLine($"当前下载版本：{version?.Version}，下载速度：{arg2.Speed}，剩余下载时间：{arg2.Remaining}，已下载大小：{arg2.BytesReceived}，总大小：{arg2.TotalBytesToReceive}, 进度百分比：{arg2.ProgressPercentage}%");
 }
 
 void OnException(object arg1, ExceptionEventArgs arg2)
