@@ -11,7 +11,7 @@
     <Content Update="wwwroot\packages\versions.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Update="wwwroot\packages\packet_20250102230201638_1.0.0.1.zip">
+    <Content Update="wwwroot\packages\patch_*.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -20,9 +20,6 @@
     <None Remove="build.bat" />
     <None Remove="ServerSample\**" />
     <None Update="packages\packet_20250102230201638_1.0.0.1.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\packages\packet_20250102230201638_1.0.0.1.zip">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
