@@ -4,57 +4,53 @@ sidebar_position: 5
 
 # GeneralUpdate.Core
 
-## 组件概览
+## 组件定位
 
-**GeneralUpdate.Core** 是 GeneralUpdate 框架最核心的组件之一,提供了完整的升级执行能力。与 ClientCore 不同,Core 组件作为独立的升级助手程序运行,负责在主程序关闭后执行实际的文件替换、版本升级和系统更新操作。通过进程启动和参数传递的方式,Core 接收来自 ClientCore 的更新指令,并安全地完成主程序的升级任务。
+`GeneralUpdate.Core` 是 GeneralUpdate 的更新执行核心。它负责把“检查版本、下载更新包、校验、解压/合并、替换文件、启动目标程序”等步骤串成一个完整流程，并通过 `GeneralUpdateBootstrap` 提供统一入口。
 
-**命名空间:** `GeneralUpdate.Core`  
-**程序集:** `GeneralUpdate.Core.dll`
+Core 既可以运行在主程序内执行 `Client` / `OssClient` 流程，也可以作为独立升级程序执行 `Upgrade` / `OssUpgrade` 流程。实际项目中最常见的部署方式是：
 
-```csharp
-public class GeneralUpdateBootstrap : AbstractBootstrap<GeneralUpdateBootstrap, IStrategy>
-```
+1. 主程序负责启动更新检查。
+2. Core 在客户端流程中获取版本清单并下载更新包。
+3. Core 启动独立升级程序，升级程序关闭占用进程后完成文件替换。
+4. 升级完成后重新启动主程序。
 
----
+> 固件升级不属于本页范围；驱动安装能力请参考后续 `GeneralUpdate.Drivelution` 文档。
 
-## 核心特性
-
-### 1. 文件替换与版本管理
-- 安全的文件替换机制,避免文件占用问题
-- 支持多版本增量升级
-- 自动处理文件依赖关系
-
-### 2. 驱动升级支持
-- 可选的驱动程序升级功能
-- 字段映射表配置
-- 安全的驱动安装流程
-
-### 3. 完整的事件通知
-- 下载进度实时监控
-- 多版本下载管理
-- 异常和错误完整捕获
-
-### 4. 跨平台支持
-- Windows、Linux、macOS 平台全支持
-- 自动平台检测和策略适配
-
-![Multi Download](imgs/muti_donwload.png)
-
----
-
-## 快速开始
-
-### 安装
-
-通过 NuGet 安装 GeneralUpdate.Core:
+**命名空间:** `GeneralUpdate.Core`
+**主要入口:** `GeneralUpdateBootstrap`
+**NuGet 包:** `GeneralUpdate.Core`
 
 ```bash
 dotnet add package GeneralUpdate.Core
 ```
 
-### 初始化与使用
+## 适用场景
 
-以下示例展示了如何在升级助手程序中配置和启动升级流程:
+| 场景 | 是否适合使用 Core |
+| --- | --- |
+| 桌面应用自更新 | 适合。主程序检查更新，升级程序替换文件。 |
+| 需要多版本连续升级 | 适合。Core 可以按服务端返回的版本序列处理多个包。 |
+| 需要差分补丁更新 | 适合。配合差分包和 `Option.PatchEnabled` / `Option.DiffMode` 使用。 |
+| 需要云存储分发更新包 | 适合。使用 `OssClient` / `OssUpgrade` 角色。 |
+| 固件刷写 | 不适合。本页不覆盖固件升级组件。 |
+
+## 运行角色
+
+Core 通过 `Option.AppType` 决定当前进程承担的更新角色：
+
+| AppType | 角色 | 说明 |
+| --- | --- | --- |
+| `Client` | 主程序侧更新流程 | 检查服务端版本、下载包、准备升级上下文，并启动升级程序。默认值。 |
+| `Upgrade` | 独立升级程序流程 | 读取主程序传入的 IPC 数据，执行文件替换，再启动主程序。 |
+| `OssClient` | OSS 主程序侧流程 | 从 OSS 配置检查更新并启动 OSS 升级程序。 |
+| `OssUpgrade` | OSS 升级程序流程 | 从 OSS 下载并部署更新包。 |
+
+升级程序通常不需要手动调用 `SetConfig`。当它由主程序启动时，Core 会通过加密文件 IPC 自动读取 `ProcessContract`，恢复安装路径、版本、临时目录、下载配置、更新包列表等上下文。
+
+## 最小升级程序
+
+`GeneralUpdate-Samples/src/Upgrade/Program.cs` 展示了独立升级程序的最小形态。该程序只需要注册必要事件，然后调用 `LaunchAsync()`：
 
 ```csharp
 using GeneralUpdate.Common.Download;
@@ -64,511 +60,230 @@ using GeneralUpdate.Core;
 
 try
 {
-    Console.WriteLine($"升级程序初始化,{DateTime.Now}!");
-    Console.WriteLine("当前运行目录:" + Thread.GetDomain().BaseDirectory);
-    
-    // 启动升级流程
-    await new GeneralUpdateBootstrap()
-        // 监听下载统计信息
+    Console.WriteLine($"Updater started at {DateTime.Now}");
+
+    _ = await new GeneralUpdateBootstrap()
         .AddListenerMultiDownloadStatistics(OnMultiDownloadStatistics)
-        // 监听单个下载完成
         .AddListenerMultiDownloadCompleted(OnMultiDownloadCompleted)
-        // 监听所有下载完成
         .AddListenerMultiAllDownloadCompleted(OnMultiAllDownloadCompleted)
-        // 监听下载错误
         .AddListenerMultiDownloadError(OnMultiDownloadError)
-        // 监听异常
         .AddListenerException(OnException)
-        // 启动异步升级
         .LaunchAsync();
-        
-    Console.WriteLine($"升级程序已启动,{DateTime.Now}!");
-    await Task.Delay(2000);
 }
-catch (Exception e)
+catch (Exception ex)
 {
-    Console.WriteLine(e.Message + "\n" + e.StackTrace);
+    Console.WriteLine(ex);
 }
 
-// 事件处理方法
-void OnMultiDownloadStatistics(object arg1, MultiDownloadStatisticsEventArgs arg2)
+void OnMultiDownloadStatistics(object sender, MultiDownloadStatisticsEventArgs args)
 {
-    var version = arg2.Version as VersionInfo;
-    Console.WriteLine($"当前下载版本:{version.Version},下载速度:{arg2.Speed}," +
-                     $"剩余时间:{arg2.Remaining},进度:{arg2.ProgressPercentage}%");
+    var version = args.Version as VersionInfo;
+    Console.WriteLine(
+        $"Version: {version?.Version}, Speed: {args.Speed}, Progress: {args.ProgressPercentage}%");
 }
 
-void OnMultiDownloadCompleted(object arg1, MultiDownloadCompletedEventArgs arg2)
+void OnMultiDownloadCompleted(object sender, MultiDownloadCompletedEventArgs args)
 {
-    var version = arg2.Version as VersionInfo;
-    Console.WriteLine(arg2.IsComplated ? 
-        $"版本 {version.Version} 下载完成!" : 
-        $"版本 {version.Version} 下载失败!");
+    var version = args.Version as VersionInfo;
+    Console.WriteLine(args.IsComplated
+        ? $"Version {version?.Version} download completed."
+        : $"Version {version?.Version} download failed.");
 }
 
-void OnMultiAllDownloadCompleted(object arg1, MultiAllDownloadCompletedEventArgs arg2)
+void OnMultiAllDownloadCompleted(object sender, MultiAllDownloadCompletedEventArgs args)
 {
-    Console.WriteLine(arg2.IsAllDownloadCompleted ? 
-        "所有下载任务已完成!" : 
-        $"下载任务失败!失败数量:{arg2.FailedVersions.Count}");
+    Console.WriteLine(args.IsAllDownloadCompleted
+        ? "All download tasks completed."
+        : $"Download failed. Failed versions: {args.FailedVersions.Count}");
 }
 
-void OnMultiDownloadError(object arg1, MultiDownloadErrorEventArgs arg2)
+void OnMultiDownloadError(object sender, MultiDownloadErrorEventArgs args)
 {
-    var version = arg2.Version as VersionInfo;
-    Console.WriteLine($"版本 {version.Version} 下载错误:{arg2.Exception}");
+    var version = args.Version as VersionInfo;
+    Console.WriteLine($"Version {version?.Version} download error: {args.Exception}");
 }
 
-void OnException(object arg1, ExceptionEventArgs arg2)
+void OnException(object sender, ExceptionEventArgs args)
 {
-    Console.WriteLine($"升级异常:{arg2.Exception}");
+    Console.WriteLine(args.Exception);
 }
 ```
 
----
+## 主程序侧配置示例
 
-## 核心 API 参考
-
-### GeneralUpdateBootstrap 类方法
-
-#### LaunchAsync 方法
-
-异步启动升级流程。
-
-```csharp
-public async Task<GeneralUpdateBootstrap> LaunchAsync()
-```
-
-**返回值:**
-- 返回当前 GeneralUpdateBootstrap 实例,支持链式调用
-
-#### Option 方法
-
-设置升级选项。
-
-```csharp
-public GeneralUpdateBootstrap Option(UpdateOption option, object value)
-```
-
-**参数:**
-- `option`: 升级选项枚举
-- `value`: 选项值
-
-**示例:**
-```csharp
-.Option(UpdateOption.Drive, true)  // 启用驱动升级
-```
-
-#### AddListenerMultiDownloadStatistics 方法
-
-监听下载统计信息(速度、进度、剩余时间等)。
-
-```csharp
-public GeneralUpdateBootstrap AddListenerMultiDownloadStatistics(
-    Action<object, MultiDownloadStatisticsEventArgs> callbackAction)
-```
-
-#### AddListenerMultiDownloadCompleted 方法
-
-监听单个更新包下载完成事件。
-
-```csharp
-public GeneralUpdateBootstrap AddListenerMultiDownloadCompleted(
-    Action<object, MultiDownloadCompletedEventArgs> callbackAction)
-```
-
-#### AddListenerMultiAllDownloadCompleted 方法
-
-监听所有版本下载完成事件。
-
-```csharp
-public GeneralUpdateBootstrap AddListenerMultiAllDownloadCompleted(
-    Action<object, MultiAllDownloadCompletedEventArgs> callbackAction)
-```
-
-#### AddListenerMultiDownloadError 方法
-
-监听每个版本下载错误事件。
-
-```csharp
-public GeneralUpdateBootstrap AddListenerMultiDownloadError(
-    Action<object, MultiDownloadErrorEventArgs> callbackAction)
-```
-
-#### AddListenerException 方法
-
-监听升级组件内部所有异常。
-
-```csharp
-public GeneralUpdateBootstrap AddListenerException(
-    Action<object, ExceptionEventArgs> callbackAction)
-```
-
----
-
-## 配置类详解
-
-### UpdateOption 枚举
-
-```csharp
-public enum UpdateOption
-{
-    /// <summary>
-    /// 是否启用驱动升级功能
-    /// </summary>
-    Drive
-}
-```
-
-### Packet 类
-
-升级包信息类,由 ClientCore 通过参数传递给 Core:
-
-```csharp
-public class Packet
-{
-    /// <summary>
-    /// 主更新检查 API 地址
-    /// </summary>
-    public string MainUpdateUrl { get; set; }
-    
-    /// <summary>
-    /// 应用类型:1=客户端应用,2=更新应用
-    /// </summary>
-    public int AppType { get; set; }
-    
-    /// <summary>
-    /// 更新检查 API 地址
-    /// </summary>
-    public string UpdateUrl { get; set; }
-    
-    /// <summary>
-    /// 需要启动的应用程序名称
-    /// </summary>
-    public string AppName { get; set; }
-    
-    /// <summary>
-    /// 主应用程序名称
-    /// </summary>
-    public string MainAppName { get; set; }
-    
-    /// <summary>
-    /// 更新包文件格式(默认为 Zip)
-    /// </summary>
-    public string Format { get; set; }
-    
-    /// <summary>
-    /// 是否需要升级更新应用
-    /// </summary>
-    public bool IsUpgradeUpdate { get; set; }
-    
-    /// <summary>
-    /// 是否需要更新主应用
-    /// </summary>
-    public bool IsMainUpdate { get; set; }
-    
-    /// <summary>
-    /// 更新日志网页 URL
-    /// </summary>
-    public string UpdateLogUrl { get; set; }
-    
-    /// <summary>
-    /// 需要更新的版本信息列表
-    /// </summary>
-    public List<VersionInfo> UpdateVersions { get; set; }
-    
-    /// <summary>
-    /// 文件操作编码格式
-    /// </summary>
-    public Encoding Encoding { get; set; }
-    
-    /// <summary>
-    /// 下载超时时间(秒)
-    /// </summary>
-    public int DownloadTimeOut { get; set; }
-    
-    /// <summary>
-    /// 应用密钥,与服务器约定
-    /// </summary>
-    public string AppSecretKey { get; set; }
-    
-    /// <summary>
-    /// 当前客户端版本
-    /// </summary>
-    public string ClientVersion { get; set; }
-    
-    /// <summary>
-    /// 最新版本
-    /// </summary>
-    public string LastVersion { get; set; }
-    
-    /// <summary>
-    /// 安装路径(用于更新文件逻辑)
-    /// </summary>
-    public string InstallPath { get; set; }
-    
-    /// <summary>
-    /// 下载文件的临时存储路径
-    /// </summary>
-    public string TempPath { get; set; }
-    
-    /// <summary>
-    /// 升级终端程序的配置参数(Base64 编码)
-    /// </summary>
-    public string ProcessBase64 { get; set; }
-    
-    /// <summary>
-    /// 当前策略所属平台(Windows/Linux/Mac)
-    /// </summary>
-    public string Platform { get; set; }
-    
-    /// <summary>
-    /// 黑名单文件列表
-    /// </summary>
-    public List<string> BlackFiles { get; set; }
-    
-    /// <summary>
-    /// 黑名单文件格式列表
-    /// </summary>
-    public List<string> BlackFormats { get; set; }
-    
-    /// <summary>
-    /// 是否启用驱动升级功能
-    /// </summary>
-    public bool DriveEnabled { get; set; }
-    
-    /// <summary>
-    /// 驱动程序目录路径，与 Configinfo.DriverDirectory 对应，由 ConfigurationMapper 自动填充
-    /// </summary>
-    public string DriverDirectory { get; set; }
-}
-```
-
----
-
-## 实际使用示例
-
-### 示例 1:基本升级流程
-
-```csharp
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Internal;
-using GeneralUpdate.Common.Shared.Object;
-using GeneralUpdate.Core;
-
-try
-{
-    Console.WriteLine("升级程序初始化...");
-    
-    // 启动升级流程
-    await new GeneralUpdateBootstrap()
-        .AddListenerMultiDownloadStatistics((sender, args) =>
-        {
-            var version = args.Version as VersionInfo;
-            Console.WriteLine($"[{version.Version}] 下载进度: {args.ProgressPercentage}%");
-        })
-        .AddListenerException((sender, args) =>
-        {
-            Console.WriteLine($"升级异常: {args.Exception.Message}");
-        })
-        .LaunchAsync();
-        
-    Console.WriteLine("升级完成!");
-}
-catch (Exception e)
-{
-    Console.WriteLine($"升级失败: {e.Message}");
-}
-```
-
-### 示例 2：启用驱动升级
-
-驱动升级通过 `GeneralUpdate.ClientCore` 中的 `Configinfo.DriverDirectory` 字段传入驱动目录，`GeneralUpdate.Core` 中的 `DrivelutionMiddleware` 会自动处理驱动安装。
-
-在 `ClientCore` 侧配置：
-
-```csharp
-using GeneralUpdate.ClientCore;
-using GeneralUpdate.Common.Shared.Object;
-
-var config = new Configinfo
-{
-    UpdateUrl = "http://your-server.com/api/update/check",
-    ClientVersion = "1.0.0.0",
-    InstallPath = AppDomain.CurrentDomain.BaseDirectory,
-    // 指定包含驱动文件的目录
-    DriverDirectory = @"C:\Drivers\Updates"
-};
-
-await new GeneralClientBootstrap()
-    .SetConfig(config)
-    .AddListenerException((sender, args) =>
-    {
-        Console.WriteLine($"更新异常: {args.Exception.Message}");
-    })
-    .LaunchAsync();
-```
-
-在 `Core`（升级助手）侧，无需额外配置，`DrivelutionMiddleware` 会自动从 `PipelineContext` 获取驱动目录并执行驱动安装：
+如果你在主程序内直接使用 Core 的 `Client` 流程，可以显式传入 `UpdateRequest`：
 
 ```csharp
 using GeneralUpdate.Core;
+using GeneralUpdate.Core.Configuration;
 
 await new GeneralUpdateBootstrap()
-    .Option(UpdateOption.Drive, true)  // 启用驱动升级
+    .SetConfig(new UpdateRequest
+    {
+        UpdateUrl = "https://update.example.com/api/upgrade/verification",
+        ReportUrl = "https://update.example.com/api/upgrade/report",
+        UpdateAppName = "UpgradeSample.exe",
+        MainAppName = "ClientSample.exe",
+        InstallPath = AppDomain.CurrentDomain.BaseDirectory,
+        ClientVersion = "1.0.0",
+        AppSecretKey = "your-app-secret",
+        ProductId = "your-product-id"
+    })
+    .SetOption(Option.AppType, AppType.Client)
+    .SetOption(Option.DownloadTimeout, 60)
+    .SetOption(Option.MaxConcurrency, 3)
+    .AddListenerUpdateInfo((sender, args) =>
+    {
+        Console.WriteLine($"Server returned {args.Info.Body?.Count ?? 0} update versions.");
+    })
     .AddListenerException((sender, args) =>
     {
-        Console.WriteLine($"升级异常: {args.Exception.Message}");
+        Console.WriteLine(args.Exception);
     })
     .LaunchAsync();
 ```
 
-### 示例 3:完整事件监听
+也可以使用 `SetSource` 走简化配置路径：
 
 ```csharp
-using GeneralUpdate.Core;
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Shared.Object;
-
 await new GeneralUpdateBootstrap()
-    // 下载统计
-    .AddListenerMultiDownloadStatistics((sender, args) =>
-    {
-        var version = args.Version as VersionInfo;
-        Console.WriteLine($"[{version.Version}]");
-        Console.WriteLine($"  速度: {args.Speed}");
-        Console.WriteLine($"  进度: {args.ProgressPercentage}%");
-        Console.WriteLine($"  已下载: {args.BytesReceived} / {args.TotalBytesToReceive}");
-        Console.WriteLine($"  剩余时间: {args.Remaining}");
-    })
-    // 单个下载完成
-    .AddListenerMultiDownloadCompleted((sender, args) =>
-    {
-        var version = args.Version as VersionInfo;
-        string status = args.IsComplated ? "✓ 成功" : "✗ 失败";
-        Console.WriteLine($"版本 {version.Version} 下载{status}");
-    })
-    // 所有下载完成
-    .AddListenerMultiAllDownloadCompleted((sender, args) =>
-    {
-        if (args.IsAllDownloadCompleted)
-        {
-            Console.WriteLine("✓ 所有版本下载完成,开始安装...");
-        }
-        else
-        {
-            Console.WriteLine($"✗ 下载失败,{args.FailedVersions.Count} 个版本失败:");
-            foreach (var version in args.FailedVersions)
-            {
-                Console.WriteLine($"  - {version}");
-            }
-        }
-    })
-    // 下载错误
-    .AddListenerMultiDownloadError((sender, args) =>
-    {
-        var version = args.Version as VersionInfo;
-        Console.WriteLine($"✗ 版本 {version.Version} 错误:");
-        Console.WriteLine($"  {args.Exception.Message}");
-    })
-    // 异常处理
-    .AddListenerException((sender, args) =>
-    {
-        Console.WriteLine("⚠ 升级过程异常:");
-        Console.WriteLine($"  错误: {args.Exception.Message}");
-        Console.WriteLine($"  堆栈: {args.Exception.StackTrace}");
-    })
+    .SetSource(
+        updateUrl: "https://update.example.com/api/upgrade/verification",
+        appSecretKey: "your-app-secret",
+        reportUrl: "https://update.example.com/api/upgrade/report")
+    .SetOption(Option.AppType, AppType.Client)
     .LaunchAsync();
 ```
 
-### 示例 4:自定义升级流程
+## 核心执行流程
+
+1. `SetConfig` / `SetSource` 载入更新地址、应用名称、版本号、密钥、安装目录等配置。
+2. `LaunchAsync` 根据 `Option.AppType` 选择 `ClientStrategy`、`UpdateStrategy` 或 OSS 策略。
+3. Client 流程向服务端请求版本信息，并触发 `AddListenerUpdateInfo` / `AddListenerUpdatePrecheck`。
+4. Core 下载需要更新的版本包，并通过下载事件持续回调速度、进度和错误。
+5. 下载完成后执行校验、解压、差分合并和文件替换等管道步骤。
+6. Upgrade 流程完成后根据 `Option.LaunchClientAfterUpdate` 决定是否启动主程序。
+7. 如配置了 `ReportUrl` 或自定义 `UpdateReporter`，Core 会上报更新状态。
+
+## 常用配置项
+
+使用 `SetOption(Option.Xxx, value)` 设置运行时选项：
+
+| 选项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `Option.AppType` | `AppType.Client` | 当前进程角色。 |
+| `Option.Encoding` | `Encoding.UTF8` | 压缩包文件名/内容处理编码。 |
+| `Option.Format` | `Format.Zip` | 更新包压缩格式。 |
+| `Option.DownloadTimeout` | `30` | 下载超时时间，单位为秒。 |
+| `Option.PatchEnabled` | `true` | 是否启用差分补丁处理。 |
+| `Option.BackupEnabled` | `true` | 是否在更新前备份被替换文件。 |
+| `Option.MaxConcurrency` | `3` | 多文件下载最大并发数。 |
+| `Option.EnableResume` | `true` | 是否启用断点续传。 |
+| `Option.RetryCount` | `3` | 下载失败重试次数。 |
+| `Option.RetryInterval` | `1s` | 下载重试间隔。 |
+| `Option.VerifyChecksum` | `true` | 是否校验文件 Hash。 |
+| `Option.DiffMode` | `DiffMode.Serial` | 差分合并执行模式。 |
+| `Option.Silent` | `false` | 是否启用静默轮询更新。 |
+| `Option.SilentPollIntervalMinutes` | `60` | 静默模式检查更新间隔。 |
+| `Option.LaunchClientAfterUpdate` | `true` | 升级后是否启动主程序。 |
+
+示例：
 
 ```csharp
-using GeneralUpdate.Core;
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Shared.Object;
-
-// 记录升级开始时间
-var startTime = DateTime.Now;
-var downloadedVersions = new List<string>();
-
 await new GeneralUpdateBootstrap()
-    .AddListenerMultiDownloadCompleted((sender, args) =>
-    {
-        if (args.IsComplated)
-        {
-            var version = args.Version as VersionInfo;
-            downloadedVersions.Add(version.Version);
-        }
-    })
-    .AddListenerMultiAllDownloadCompleted((sender, args) =>
-    {
-        if (args.IsAllDownloadCompleted)
-        {
-            var duration = DateTime.Now - startTime;
-            Console.WriteLine($"升级完成!");
-            Console.WriteLine($"总耗时: {duration.TotalSeconds:F2} 秒");
-            Console.WriteLine($"已更新版本: {string.Join(", ", downloadedVersions)}");
-        }
-    })
-    .AddListenerException((sender, args) =>
-    {
-        // 记录日志到文件
-        File.AppendAllText("upgrade_error.log", 
-            $"[{DateTime.Now}] {args.Exception}\n");
-    })
+    .SetConfig(request)
+    .SetOption(Option.AppType, AppType.Client)
+    .SetOption(Option.PatchEnabled, true)
+    .SetOption(Option.BackupEnabled, true)
+    .SetOption(Option.VerifyChecksum, true)
+    .SetOption(Option.MaxConcurrency, 4)
     .LaunchAsync();
 ```
 
----
+## 事件监听
 
-## 注意事项与警告
+Core 通过事件监听器暴露更新过程状态：
 
-### ⚠️ 重要提示
+| 方法 | 触发时机 | 典型用途 |
+| --- | --- | --- |
+| `AddListenerUpdateInfo` | 服务端返回版本信息后 | 展示更新日志、版本列表、更新大小。 |
+| `AddListenerUpdatePrecheck` | 下载开始前 | 检查磁盘空间、网络环境、用户确认。 |
+| `AddListenerMultiDownloadStatistics` | 下载过程中持续触发 | 展示速度、剩余时间、百分比。 |
+| `AddListenerMultiDownloadCompleted` | 单个版本包下载完成 | 记录每个版本下载结果。 |
+| `AddListenerMultiAllDownloadCompleted` | 全部下载任务完成 | 切换 UI 状态或写日志。 |
+| `AddListenerMultiDownloadError` | 下载任务失败 | 输出失败版本和异常。 |
+| `AddListenerProgress` | 通用更新进度变化 | 对接统一进度条。 |
+| `AddListenerException` | Core 捕获到异常 | 写入日志、提示用户或上报。 |
 
-1. **进程隔离**
-   - Core 必须作为独立进程运行,不能在主程序中直接调用
-   - 升级时主程序必须完全关闭,否则文件替换会失败
+如果不想逐个注册事件，可以实现 `IUpdateEventListener` 后使用 `AddEventListener<TListener>()` 批量注册。
 
-2. **参数传递**
-   - ClientCore 通过 Base64 编码的参数传递配置给 Core
-   - 确保参数传递过程中不会被截断或损坏
+## 静默更新
 
-3. **文件权限**
-   - 在 Windows 上可能需要管理员权限替换系统目录中的文件
-   - 在 Linux/macOS 上需要适当的文件系统权限
+静默更新适合后台定期检查更新。启用后，`Client` 流程会启动后台轮询并立即返回，更新准备完成后在进程退出时继续升级。
 
-4. **驱动升级**
-   - 驱动升级功能需要系统级权限
-   - 建议在测试环境充分验证后再使用
+```csharp
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .SetOption(Option.AppType, AppType.Client)
+    .SetOption(Option.Silent, true)
+    .SetOption(Option.SilentPollIntervalMinutes, 30)
+    .SetOption(Option.LaunchClientAfterUpdate, true)
+    .LaunchAsync();
+```
 
-5. **回滚机制**
-   - Core 不直接提供回滚功能,但保留了备份文件
-   - 如需回滚,可使用 ClientCore 的备份功能
+静默更新仍然需要正确配置更新地址、应用密钥、主程序名称、升级程序名称和安装目录。
 
-### 💡 最佳实践
+## 扩展点
 
-- **日志记录**:实现完整的异常监听,记录升级过程中的所有问题
-- **超时设置**:根据网络环境合理设置下载超时时间
-- **进度反馈**:向用户显示升级进度,提升用户体验
-- **错误处理**:升级失败时提供清晰的错误信息和解决方案
-- **测试验证**:在各种网络条件下测试升级流程的稳定性
+`GeneralUpdateBootstrap` 继承自 `AbstractBootstrap`，可以替换多个内部组件：
 
----
+| 方法 | 用途 |
+| --- | --- |
+| `Strategy<T>()` | 指定自定义平台策略。 |
+| `Hooks<T>()` | 注入更新前、下载后、更新后、启动前、异常时的生命周期钩子。 |
+| `UpdateReporter<T>()` | 自定义更新状态上报。 |
+| `SslPolicy<T>()` | 自定义 HTTPS 证书校验策略。 |
+| `UpdateAuth<T>()` | 为 HTTP 请求添加认证信息。 |
+| `DownloadSource<T>()` | 自定义版本清单和文件来源。 |
+| `DownloadPolicy<T>()` | 自定义下载重试/超时策略。 |
+| `DownloadExecutor<T>()` | 自定义单文件下载实现。 |
+| `DownloadPipeline<T>()` | 自定义下载后处理，例如解密、杀毒、校验。 |
+| `DownloadOrchestrator<T>()` | 完全接管批量下载流程。 |
 
-## 适用平台
+高级项目可以只替换某一个环节，而不需要 fork Core。
 
-| 产品                | 版本               |
-| ------------------ | ----------------- |
-| .NET               | 5, 6, 7, 8, 9, 10  |
-| .NET Framework     | 4.6.1             |
-| .NET Standard      | 2.0               |
-| .NET Core          | 2.0               |
+## 与 GeneralUpdate.Tools 的关系
 
----
+Core 消费的是更新服务端或 OSS 返回的版本清单和更新包。`GeneralUpdate.Tools` 用来帮助生成和验证这些输入：
 
-## 相关资源
+- 使用 Patch Package 生成差分更新包。
+- 使用 Extension Package 生成扩展包。
+- 使用 OSS Config 准备云存储分发配置。
+- 使用模拟、报告和 Hash 相关能力提前验证包结构与完整性。
 
-- **示例代码**:[查看 GitHub 示例](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/Program.cs)
-- **主仓库**:[GeneralUpdate 项目](https://github.com/GeneralLibrary/GeneralUpdate)
-- **相关组件**:[GeneralUpdate.ClientCore](./GeneralUpdate.ClientCore.md) | [GeneralUpdate.Bowl](./GeneralUpdate.Bowl.md)
+推荐流程是：先用 Tools 生成并校验更新包，再把包和版本清单发布到服务端或 OSS，最后由 Core 在客户端执行更新。
+
+## 常见问题
+
+### 升级程序启动后没有执行更新
+
+确认它是否由主程序启动。如果直接双击独立升级程序，通常没有 IPC 上下文，`Upgrade` 流程无法知道安装目录和待更新版本。开发调试时可以先从主程序触发完整流程。
+
+### 文件替换失败
+
+通常是主程序或 Bowl 进程仍占用文件。确认主程序已退出，并正确配置 `Bowl` 进程名或相关关闭逻辑。
+
+### 下载成功但校验失败
+
+确认服务端或 OSS 上的包没有被重新压缩、截断或替换。若启用了 `Option.VerifyChecksum`，客户端收到的 Hash 必须和清单中的 Hash 一致。
+
+### 差分包没有生效
+
+确认服务端返回的是差分包清单，并且 `Option.PatchEnabled` 为 `true`。差分包建议通过 `GeneralUpdate.Tools` 生成，避免手工组织目录导致清单和包内容不一致。
+
+## 相关示例
+
+- [Upgrade sample](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/Program.cs)
+- [OSS upgrade sample](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/OSS/OSSUpgradeSample)
+- [GeneralUpdate repository](https://github.com/GeneralLibrary/GeneralUpdate)
+- [GeneralUpdate.Tools repository](https://github.com/GeneralLibrary/GeneralUpdate.Tools)

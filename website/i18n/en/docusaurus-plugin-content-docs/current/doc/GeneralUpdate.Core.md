@@ -4,57 +4,53 @@ sidebar_position: 5
 
 # GeneralUpdate.Core
 
-## Component Overview
+## Component role
 
-**GeneralUpdate.Core** is one of the most essential components of the GeneralUpdate framework, providing complete upgrade execution capabilities. Unlike ClientCore, the Core component runs as an independent upgrade assistant program and is responsible for performing actual file replacement, version upgrades, and system update operations after the main program closes. Through process startup and parameter passing, Core receives update instructions from ClientCore and safely completes the main program's upgrade tasks.
+`GeneralUpdate.Core` is the execution core of GeneralUpdate. It connects update checking, package download, checksum verification, extraction or patch merge, file replacement, process restart, and reporting through a single entry point: `GeneralUpdateBootstrap`.
 
-**Namespace:** `GeneralUpdate.Core`  
-**Assembly:** `GeneralUpdate.Core.dll`
+Core can run inside the main application for the `Client` / `OssClient` workflow, or inside an independent updater process for the `Upgrade` / `OssUpgrade` workflow. A typical desktop deployment is:
 
-```csharp
-public class GeneralUpdateBootstrap : AbstractBootstrap<GeneralUpdateBootstrap, IStrategy>
-```
+1. The main application starts the update check.
+2. Core obtains the server manifest and downloads update packages.
+3. Core starts an independent updater process after the main application is ready to exit.
+4. The updater process replaces files and restarts the main application.
 
----
+> Firmware update is outside the scope of this page. Driver installation belongs to `GeneralUpdate.Drivelution` and is documented separately.
 
-## Core Features
-
-### 1. File Replacement and Version Management
-- Safe file replacement mechanism to avoid file locking issues
-- Support multi-version incremental upgrades
-- Automatic handling of file dependencies
-
-### 2. Driver Upgrade Support
-- Optional driver upgrade functionality
-- Field mapping table configuration
-- Safe driver installation process
-
-### 3. Comprehensive Event Notifications
-- Real-time download progress monitoring
-- Multi-version download management
-- Complete exception and error capture
-
-### 4. Cross-Platform Support
-- Full support for Windows, Linux, macOS platforms
-- Automatic platform detection and strategy adaptation
-
-![Multi Download](imgs/muti_donwload.png)
-
----
-
-## Quick Start
-
-### Installation
-
-Install GeneralUpdate.Core via NuGet:
+**Namespace:** `GeneralUpdate.Core`
+**Primary entry point:** `GeneralUpdateBootstrap`
+**NuGet package:** `GeneralUpdate.Core`
 
 ```bash
 dotnet add package GeneralUpdate.Core
 ```
 
-### Initialization and Usage
+## When to use Core
 
-The following example demonstrates how to configure and launch the upgrade process in the upgrade assistant program:
+| Scenario | Fit |
+| --- | --- |
+| Desktop application self-update | Yes. Use the main app to check updates and the updater process to replace files. |
+| Multi-version sequential update | Yes. Core can process the version sequence returned by the server. |
+| Differential package update | Yes. Use differential packages with `Option.PatchEnabled` / `Option.DiffMode`. |
+| OSS or cloud-storage distribution | Yes. Use `OssClient` / `OssUpgrade`. |
+| Firmware flashing | No. This page does not cover firmware update components. |
+
+## Runtime roles
+
+Core uses `Option.AppType` to decide the process role:
+
+| AppType | Role | Description |
+| --- | --- | --- |
+| `Client` | Main application workflow | Checks versions, downloads packages, prepares upgrade context, and starts the updater. Default value. |
+| `Upgrade` | Independent updater workflow | Reads IPC data from the main app, replaces files, and starts the main app. |
+| `OssClient` | OSS client workflow | Checks OSS update configuration and starts the OSS updater. |
+| `OssUpgrade` | OSS updater workflow | Downloads from OSS and deploys packages. |
+
+The updater process usually does not call `SetConfig` manually. When it is launched by the main application, Core reads the encrypted file IPC contract and restores paths, versions, temporary directories, download settings, and package lists automatically.
+
+## Minimal updater process
+
+`GeneralUpdate-Samples/src/Upgrade/Program.cs` shows the minimal independent updater shape. Register the events you care about and call `LaunchAsync()`:
 
 ```csharp
 using GeneralUpdate.Common.Download;
@@ -64,511 +60,230 @@ using GeneralUpdate.Core;
 
 try
 {
-    Console.WriteLine($"Upgrade program initialization, {DateTime.Now}!");
-    Console.WriteLine("Current directory: " + Thread.GetDomain().BaseDirectory);
-    
-    // Launch upgrade process
-    await new GeneralUpdateBootstrap()
-        // Listen for download statistics
+    Console.WriteLine($"Updater started at {DateTime.Now}");
+
+    _ = await new GeneralUpdateBootstrap()
         .AddListenerMultiDownloadStatistics(OnMultiDownloadStatistics)
-        // Listen for single download completion
         .AddListenerMultiDownloadCompleted(OnMultiDownloadCompleted)
-        // Listen for all downloads completion
         .AddListenerMultiAllDownloadCompleted(OnMultiAllDownloadCompleted)
-        // Listen for download errors
         .AddListenerMultiDownloadError(OnMultiDownloadError)
-        // Listen for exceptions
         .AddListenerException(OnException)
-        // Launch async upgrade
         .LaunchAsync();
-        
-    Console.WriteLine($"Upgrade program started, {DateTime.Now}!");
-    await Task.Delay(2000);
 }
-catch (Exception e)
+catch (Exception ex)
 {
-    Console.WriteLine(e.Message + "\n" + e.StackTrace);
+    Console.WriteLine(ex);
 }
 
-// Event handler methods
-void OnMultiDownloadStatistics(object arg1, MultiDownloadStatisticsEventArgs arg2)
+void OnMultiDownloadStatistics(object sender, MultiDownloadStatisticsEventArgs args)
 {
-    var version = arg2.Version as VersionInfo;
-    Console.WriteLine($"Current download version: {version.Version}, Download speed: {arg2.Speed}, " +
-                     $"Remaining time: {arg2.Remaining}, Progress: {arg2.ProgressPercentage}%");
+    var version = args.Version as VersionInfo;
+    Console.WriteLine(
+        $"Version: {version?.Version}, Speed: {args.Speed}, Progress: {args.ProgressPercentage}%");
 }
 
-void OnMultiDownloadCompleted(object arg1, MultiDownloadCompletedEventArgs arg2)
+void OnMultiDownloadCompleted(object sender, MultiDownloadCompletedEventArgs args)
 {
-    var version = arg2.Version as VersionInfo;
-    Console.WriteLine(arg2.IsComplated ? 
-        $"Version {version.Version} download complete!" : 
-        $"Version {version.Version} download failed!");
+    var version = args.Version as VersionInfo;
+    Console.WriteLine(args.IsComplated
+        ? $"Version {version?.Version} download completed."
+        : $"Version {version?.Version} download failed.");
 }
 
-void OnMultiAllDownloadCompleted(object arg1, MultiAllDownloadCompletedEventArgs arg2)
+void OnMultiAllDownloadCompleted(object sender, MultiAllDownloadCompletedEventArgs args)
 {
-    Console.WriteLine(arg2.IsAllDownloadCompleted ? 
-        "All download tasks completed!" : 
-        $"Download tasks failed! Failed count: {arg2.FailedVersions.Count}");
+    Console.WriteLine(args.IsAllDownloadCompleted
+        ? "All download tasks completed."
+        : $"Download failed. Failed versions: {args.FailedVersions.Count}");
 }
 
-void OnMultiDownloadError(object arg1, MultiDownloadErrorEventArgs arg2)
+void OnMultiDownloadError(object sender, MultiDownloadErrorEventArgs args)
 {
-    var version = arg2.Version as VersionInfo;
-    Console.WriteLine($"Version {version.Version} download error: {arg2.Exception}");
+    var version = args.Version as VersionInfo;
+    Console.WriteLine($"Version {version?.Version} download error: {args.Exception}");
 }
 
-void OnException(object arg1, ExceptionEventArgs arg2)
+void OnException(object sender, ExceptionEventArgs args)
 {
-    Console.WriteLine($"Upgrade exception: {arg2.Exception}");
+    Console.WriteLine(args.Exception);
 }
 ```
 
----
+## Main application configuration
 
-## Core API Reference
-
-### GeneralUpdateBootstrap Class Methods
-
-#### LaunchAsync Method
-
-Launch the upgrade process asynchronously.
-
-```csharp
-public async Task<GeneralUpdateBootstrap> LaunchAsync()
-```
-
-**Return Value:**
-- Returns the current GeneralUpdateBootstrap instance, supporting method chaining
-
-#### Option Method
-
-Set upgrade options.
-
-```csharp
-public GeneralUpdateBootstrap Option(UpdateOption option, object value)
-```
-
-**Parameters:**
-- `option`: Upgrade option enum
-- `value`: Option value
-
-**Example:**
-```csharp
-.Option(UpdateOption.Drive, true)  // Enable driver upgrade
-```
-
-#### AddListenerMultiDownloadStatistics Method
-
-Listen for download statistics (speed, progress, remaining time, etc.).
-
-```csharp
-public GeneralUpdateBootstrap AddListenerMultiDownloadStatistics(
-    Action<object, MultiDownloadStatisticsEventArgs> callbackAction)
-```
-
-#### AddListenerMultiDownloadCompleted Method
-
-Listen for single update package download completion event.
-
-```csharp
-public GeneralUpdateBootstrap AddListenerMultiDownloadCompleted(
-    Action<object, MultiDownloadCompletedEventArgs> callbackAction)
-```
-
-#### AddListenerMultiAllDownloadCompleted Method
-
-Listen for all version downloads completion event.
-
-```csharp
-public GeneralUpdateBootstrap AddListenerMultiAllDownloadCompleted(
-    Action<object, MultiAllDownloadCompletedEventArgs> callbackAction)
-```
-
-#### AddListenerMultiDownloadError Method
-
-Listen for download error events for each version.
-
-```csharp
-public GeneralUpdateBootstrap AddListenerMultiDownloadError(
-    Action<object, MultiDownloadErrorEventArgs> callbackAction)
-```
-
-#### AddListenerException Method
-
-Listen for all internal exceptions in the upgrade component.
-
-```csharp
-public GeneralUpdateBootstrap AddListenerException(
-    Action<object, ExceptionEventArgs> callbackAction)
-```
-
----
-
-## Configuration Class Details
-
-### UpdateOption Enum
-
-```csharp
-public enum UpdateOption
-{
-    /// <summary>
-    /// Whether to enable driver upgrade functionality
-    /// </summary>
-    Drive
-}
-```
-
-### Packet Class
-
-Upgrade package information class, passed from ClientCore to Core via parameters:
-
-```csharp
-public class Packet
-{
-    /// <summary>
-    /// Main update check API address
-    /// </summary>
-    public string MainUpdateUrl { get; set; }
-    
-    /// <summary>
-    /// Application type: 1=ClientApp, 2=UpdateApp
-    /// </summary>
-    public int AppType { get; set; }
-    
-    /// <summary>
-    /// Update check API address
-    /// </summary>
-    public string UpdateUrl { get; set; }
-    
-    /// <summary>
-    /// Name of the application to be launched
-    /// </summary>
-    public string AppName { get; set; }
-    
-    /// <summary>
-    /// Main application name
-    /// </summary>
-    public string MainAppName { get; set; }
-    
-    /// <summary>
-    /// Update package file format (default is Zip)
-    /// </summary>
-    public string Format { get; set; }
-    
-    /// <summary>
-    /// Indicates if the update application needs to be upgraded
-    /// </summary>
-    public bool IsUpgradeUpdate { get; set; }
-    
-    /// <summary>
-    /// Indicates if the main application needs to be updated
-    /// </summary>
-    public bool IsMainUpdate { get; set; }
-    
-    /// <summary>
-    /// Update log webpage URL
-    /// </summary>
-    public string UpdateLogUrl { get; set; }
-    
-    /// <summary>
-    /// List of version information that needs updating
-    /// </summary>
-    public List<VersionInfo> UpdateVersions { get; set; }
-    
-    /// <summary>
-    /// File operation encoding format
-    /// </summary>
-    public Encoding Encoding { get; set; }
-    
-    /// <summary>
-    /// Download timeout duration (seconds)
-    /// </summary>
-    public int DownloadTimeOut { get; set; }
-    
-    /// <summary>
-    /// Application secret key, agreed upon with the server
-    /// </summary>
-    public string AppSecretKey { get; set; }
-    
-    /// <summary>
-    /// Current client version
-    /// </summary>
-    public string ClientVersion { get; set; }
-    
-    /// <summary>
-    /// Latest version
-    /// </summary>
-    public string LastVersion { get; set; }
-    
-    /// <summary>
-    /// Installation path (used for update file logic)
-    /// </summary>
-    public string InstallPath { get; set; }
-    
-    /// <summary>
-    /// Temporary storage path for downloaded files
-    /// </summary>
-    public string TempPath { get; set; }
-    
-    /// <summary>
-    /// Configuration parameters for the upgrade terminal program (Base64 encoded)
-    /// </summary>
-    public string ProcessBase64 { get; set; }
-    
-    /// <summary>
-    /// Platform to which the current strategy belongs (Windows/Linux/Mac)
-    /// </summary>
-    public string Platform { get; set; }
-    
-    /// <summary>
-    /// Files in the blacklist
-    /// </summary>
-    public List<string> BlackFiles { get; set; }
-    
-    /// <summary>
-    /// File formats in the blacklist
-    /// </summary>
-    public List<string> BlackFormats { get; set; }
-    
-    /// <summary>
-    /// Indicates if the driver upgrade feature is enabled
-    /// </summary>
-    public bool DriveEnabled { get; set; }
-    
-    /// <summary>
-    /// Driver directory path, corresponds to Configinfo.DriverDirectory and is auto-populated by ConfigurationMapper
-    /// </summary>
-    public string DriverDirectory { get; set; }
-}
-```
-
----
-
-## Practical Usage Examples
-
-### Example 1: Basic Upgrade Process
-
-```csharp
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Internal;
-using GeneralUpdate.Common.Shared.Object;
-using GeneralUpdate.Core;
-
-try
-{
-    Console.WriteLine("Upgrade program initialization...");
-    
-    // Launch upgrade process
-    await new GeneralUpdateBootstrap()
-        .AddListenerMultiDownloadStatistics((sender, args) =>
-        {
-            var version = args.Version as VersionInfo;
-            Console.WriteLine($"[{version.Version}] Download progress: {args.ProgressPercentage}%");
-        })
-        .AddListenerException((sender, args) =>
-        {
-            Console.WriteLine($"Upgrade exception: {args.Exception.Message}");
-        })
-        .LaunchAsync();
-        
-    Console.WriteLine("Upgrade complete!");
-}
-catch (Exception e)
-{
-    Console.WriteLine($"Upgrade failed: {e.Message}");
-}
-```
-
-### Example 2: Enable Driver Upgrade
-
-Driver upgrades are configured via the `DriverDirectory` field in `Configinfo` on the `GeneralUpdate.ClientCore` side. The `DrivelutionMiddleware` in `GeneralUpdate.Core` automatically processes driver installation.
-
-On the `ClientCore` side:
-
-```csharp
-using GeneralUpdate.ClientCore;
-using GeneralUpdate.Common.Shared.Object;
-
-var config = new Configinfo
-{
-    UpdateUrl = "http://your-server.com/api/update/check",
-    ClientVersion = "1.0.0.0",
-    InstallPath = AppDomain.CurrentDomain.BaseDirectory,
-    // Specify the directory containing driver files
-    DriverDirectory = @"C:\Drivers\Updates"
-};
-
-await new GeneralClientBootstrap()
-    .SetConfig(config)
-    .AddListenerException((sender, args) =>
-    {
-        Console.WriteLine($"Update exception: {args.Exception.Message}");
-    })
-    .LaunchAsync();
-```
-
-On the `Core` (upgrade assistant) side, no additional configuration is needed — `DrivelutionMiddleware` automatically retrieves the driver directory from `PipelineContext` and performs driver installation:
+When using Core directly from the main application, pass an `UpdateRequest` explicitly:
 
 ```csharp
 using GeneralUpdate.Core;
+using GeneralUpdate.Core.Configuration;
 
 await new GeneralUpdateBootstrap()
-    .Option(UpdateOption.Drive, true)  // Enable driver upgrade
+    .SetConfig(new UpdateRequest
+    {
+        UpdateUrl = "https://update.example.com/api/upgrade/verification",
+        ReportUrl = "https://update.example.com/api/upgrade/report",
+        UpdateAppName = "UpgradeSample.exe",
+        MainAppName = "ClientSample.exe",
+        InstallPath = AppDomain.CurrentDomain.BaseDirectory,
+        ClientVersion = "1.0.0",
+        AppSecretKey = "your-app-secret",
+        ProductId = "your-product-id"
+    })
+    .SetOption(Option.AppType, AppType.Client)
+    .SetOption(Option.DownloadTimeout, 60)
+    .SetOption(Option.MaxConcurrency, 3)
+    .AddListenerUpdateInfo((sender, args) =>
+    {
+        Console.WriteLine($"Server returned {args.Info.Body?.Count ?? 0} update versions.");
+    })
     .AddListenerException((sender, args) =>
     {
-        Console.WriteLine($"Upgrade exception: {args.Exception.Message}");
+        Console.WriteLine(args.Exception);
     })
     .LaunchAsync();
 ```
 
-### Example 3: Complete Event Listening
+For a simplified setup, use `SetSource`:
 
 ```csharp
-using GeneralUpdate.Core;
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Shared.Object;
-
 await new GeneralUpdateBootstrap()
-    // Download statistics
-    .AddListenerMultiDownloadStatistics((sender, args) =>
-    {
-        var version = args.Version as VersionInfo;
-        Console.WriteLine($"[{version.Version}]");
-        Console.WriteLine($"  Speed: {args.Speed}");
-        Console.WriteLine($"  Progress: {args.ProgressPercentage}%");
-        Console.WriteLine($"  Downloaded: {args.BytesReceived} / {args.TotalBytesToReceive}");
-        Console.WriteLine($"  Remaining time: {args.Remaining}");
-    })
-    // Single download completed
-    .AddListenerMultiDownloadCompleted((sender, args) =>
-    {
-        var version = args.Version as VersionInfo;
-        string status = args.IsComplated ? "✓ Success" : "✗ Failed";
-        Console.WriteLine($"Version {version.Version} download {status}");
-    })
-    // All downloads completed
-    .AddListenerMultiAllDownloadCompleted((sender, args) =>
-    {
-        if (args.IsAllDownloadCompleted)
-        {
-            Console.WriteLine("✓ All versions downloaded, starting installation...");
-        }
-        else
-        {
-            Console.WriteLine($"✗ Download failed, {args.FailedVersions.Count} versions failed:");
-            foreach (var version in args.FailedVersions)
-            {
-                Console.WriteLine($"  - {version}");
-            }
-        }
-    })
-    // Download error
-    .AddListenerMultiDownloadError((sender, args) =>
-    {
-        var version = args.Version as VersionInfo;
-        Console.WriteLine($"✗ Version {version.Version} error:");
-        Console.WriteLine($"  {args.Exception.Message}");
-    })
-    // Exception handling
-    .AddListenerException((sender, args) =>
-    {
-        Console.WriteLine("⚠ Upgrade process exception:");
-        Console.WriteLine($"  Error: {args.Exception.Message}");
-        Console.WriteLine($"  Stack: {args.Exception.StackTrace}");
-    })
+    .SetSource(
+        updateUrl: "https://update.example.com/api/upgrade/verification",
+        appSecretKey: "your-app-secret",
+        reportUrl: "https://update.example.com/api/upgrade/report")
+    .SetOption(Option.AppType, AppType.Client)
     .LaunchAsync();
 ```
 
-### Example 4: Custom Upgrade Process
+## Execution flow
+
+1. `SetConfig` / `SetSource` loads update URLs, app names, versions, secret keys, and install paths.
+2. `LaunchAsync` selects `ClientStrategy`, `UpdateStrategy`, or an OSS strategy based on `Option.AppType`.
+3. The Client workflow requests version metadata and triggers `AddListenerUpdateInfo` / `AddListenerUpdatePrecheck`.
+4. Core downloads required version packages and reports speed, progress, completion, and errors through events.
+5. After download, Core verifies checksums, extracts packages, merges patches, and replaces files.
+6. The Upgrade workflow starts the main app according to `Option.LaunchClientAfterUpdate`.
+7. If `ReportUrl` or a custom `UpdateReporter` is configured, Core reports update status.
+
+## Common options
+
+Use `SetOption(Option.Xxx, value)` for runtime settings:
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `Option.AppType` | `AppType.Client` | Current process role. |
+| `Option.Encoding` | `Encoding.UTF8` | Encoding for package processing. |
+| `Option.Format` | `Format.Zip` | Update package compression format. |
+| `Option.DownloadTimeout` | `30` | Download timeout in seconds. |
+| `Option.PatchEnabled` | `true` | Enables differential patch processing. |
+| `Option.BackupEnabled` | `true` | Backs up replaced files before update. |
+| `Option.MaxConcurrency` | `3` | Max concurrent file downloads. |
+| `Option.EnableResume` | `true` | Enables resumable downloads. |
+| `Option.RetryCount` | `3` | Download retry count. |
+| `Option.RetryInterval` | `1s` | Delay between retries. |
+| `Option.VerifyChecksum` | `true` | Verifies file checksums. |
+| `Option.DiffMode` | `DiffMode.Serial` | Differential merge mode. |
+| `Option.Silent` | `false` | Enables silent polling update mode. |
+| `Option.SilentPollIntervalMinutes` | `60` | Silent polling interval. |
+| `Option.LaunchClientAfterUpdate` | `true` | Starts the main app after update. |
+
+Example:
 
 ```csharp
-using GeneralUpdate.Core;
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Shared.Object;
-
-// Record upgrade start time
-var startTime = DateTime.Now;
-var downloadedVersions = new List<string>();
-
 await new GeneralUpdateBootstrap()
-    .AddListenerMultiDownloadCompleted((sender, args) =>
-    {
-        if (args.IsComplated)
-        {
-            var version = args.Version as VersionInfo;
-            downloadedVersions.Add(version.Version);
-        }
-    })
-    .AddListenerMultiAllDownloadCompleted((sender, args) =>
-    {
-        if (args.IsAllDownloadCompleted)
-        {
-            var duration = DateTime.Now - startTime;
-            Console.WriteLine($"Upgrade complete!");
-            Console.WriteLine($"Total time: {duration.TotalSeconds:F2} seconds");
-            Console.WriteLine($"Updated versions: {string.Join(", ", downloadedVersions)}");
-        }
-    })
-    .AddListenerException((sender, args) =>
-    {
-        // Log to file
-        File.AppendAllText("upgrade_error.log", 
-            $"[{DateTime.Now}] {args.Exception}\n");
-    })
+    .SetConfig(request)
+    .SetOption(Option.AppType, AppType.Client)
+    .SetOption(Option.PatchEnabled, true)
+    .SetOption(Option.BackupEnabled, true)
+    .SetOption(Option.VerifyChecksum, true)
+    .SetOption(Option.MaxConcurrency, 4)
     .LaunchAsync();
 ```
 
----
+## Events
 
-## Notes and Warnings
+Core exposes update state through listener methods:
 
-### ⚠️ Important Notes
+| Method | Trigger | Typical use |
+| --- | --- | --- |
+| `AddListenerUpdateInfo` | After server version metadata is returned | Show update notes, version list, or package size. |
+| `AddListenerUpdatePrecheck` | Before download starts | Check disk space, network conditions, or user confirmation. |
+| `AddListenerMultiDownloadStatistics` | During download | Show speed, remaining time, and percentage. |
+| `AddListenerMultiDownloadCompleted` | One version package completes | Log per-version download result. |
+| `AddListenerMultiAllDownloadCompleted` | All download tasks complete | Update UI state or write logs. |
+| `AddListenerMultiDownloadError` | A download task fails | Capture failed version and exception. |
+| `AddListenerProgress` | Generic update progress changes | Drive a unified progress bar. |
+| `AddListenerException` | Core catches an exception | Log, notify the user, or report telemetry. |
 
-1. **Process Isolation**
-   - Core must run as an independent process, cannot be called directly in the main program
-   - The main program must be completely closed during upgrade, otherwise file replacement will fail
+You can also implement `IUpdateEventListener` and register all handlers with `AddEventListener<TListener>()`.
 
-2. **Parameter Passing**
-   - ClientCore passes configuration to Core via Base64 encoded parameters
-   - Ensure parameters are not truncated or corrupted during passing
+## Silent update
 
-3. **File Permissions**
-   - Administrator privileges may be required on Windows to replace files in system directories
-   - Appropriate file system permissions are required on Linux/macOS
+Silent mode is designed for background polling. When enabled, the `Client` workflow starts a background poll loop and returns immediately. Prepared updates continue when the process exits.
 
-4. **Driver Upgrade**
-   - Driver upgrade functionality requires system-level permissions
-   - Recommended to thoroughly validate in test environment before use
+```csharp
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .SetOption(Option.AppType, AppType.Client)
+    .SetOption(Option.Silent, true)
+    .SetOption(Option.SilentPollIntervalMinutes, 30)
+    .SetOption(Option.LaunchClientAfterUpdate, true)
+    .LaunchAsync();
+```
 
-5. **Rollback Mechanism**
-   - Core does not directly provide rollback functionality, but backup files are preserved
-   - For rollback, use ClientCore's backup functionality
+Silent mode still requires valid update URL, secret key, main app name, updater name, and install path configuration.
 
-### 💡 Best Practices
+## Extension points
 
-- **Logging**: Implement complete exception listening to record all issues during the upgrade process
-- **Timeout Settings**: Set download timeout appropriately based on network environment
-- **Progress Feedback**: Display upgrade progress to users to improve user experience
-- **Error Handling**: Provide clear error messages and solutions when upgrade fails
-- **Testing**: Test upgrade process stability under various network conditions
+`GeneralUpdateBootstrap` inherits from `AbstractBootstrap` and can replace multiple internal components:
 
----
+| Method | Purpose |
+| --- | --- |
+| `Strategy<T>()` | Selects a custom platform strategy. |
+| `Hooks<T>()` | Adds lifecycle hooks before update, after download, after update, before app start, and on error. |
+| `UpdateReporter<T>()` | Customizes update status reporting. |
+| `SslPolicy<T>()` | Customizes HTTPS certificate validation. |
+| `UpdateAuth<T>()` | Adds authentication to HTTP requests. |
+| `DownloadSource<T>()` | Customizes manifest and file source. |
+| `DownloadPolicy<T>()` | Customizes retry and timeout behavior. |
+| `DownloadExecutor<T>()` | Customizes single-file download implementation. |
+| `DownloadPipeline<T>()` | Adds post-download processing such as decryption, scanning, or validation. |
+| `DownloadOrchestrator<T>()` | Fully owns batch download orchestration. |
 
-## Applicable Platforms
+Advanced projects can replace one part of the workflow without forking Core.
 
-| Product        | Version       |
-| -------------- | ------------- |
-| .NET               | 5, 6, 7, 8, 9, 10  |
-| .NET Framework     | 4.6.1             |
-| .NET Standard      | 2.0               |
-| .NET Core          | 2.0               |
+## Relationship with GeneralUpdate.Tools
 
----
+Core consumes version manifests and update packages from the update server or OSS. `GeneralUpdate.Tools` helps produce and verify those inputs:
 
-## Related Resources
+- Patch Package generates differential packages.
+- Extension Package generates extension packages.
+- OSS Config prepares cloud-storage distribution configuration.
+- Simulation, report, and hash features help validate package structure and integrity before release.
 
-- **Sample Code**: [View GitHub Examples](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/Program.cs)
-- **Main Repository**: [GeneralUpdate Project](https://github.com/GeneralLibrary/GeneralUpdate)
-- **Related Components**: [GeneralUpdate.ClientCore](./GeneralUpdate.ClientCore.md) | [GeneralUpdate.Bowl](./GeneralUpdate.Bowl.md)
+Recommended workflow: use Tools to generate and validate packages, publish packages and manifests to the server or OSS, then let Core execute the update on client machines.
+
+## Troubleshooting
+
+### The updater starts but does nothing
+
+Confirm it was launched by the main application. If the independent updater is started by double-clicking, it usually has no IPC context and cannot know the install path or pending versions.
+
+### File replacement fails
+
+The main app or Bowl process is usually still holding files. Confirm the main app has exited and configure the `Bowl` process name or shutdown logic correctly.
+
+### Download succeeds but checksum validation fails
+
+Confirm the package was not recompressed, truncated, or replaced on the server or OSS. When `Option.VerifyChecksum` is enabled, the received file hash must match the manifest.
+
+### Differential packages are ignored
+
+Confirm the server returns a differential package manifest and `Option.PatchEnabled` is `true`. Generate differential packages with `GeneralUpdate.Tools` to avoid mismatched manifests and package contents.
+
+## Related samples
+
+- [Upgrade sample](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/Program.cs)
+- [OSS upgrade sample](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/OSS/OSSUpgradeSample)
+- [GeneralUpdate repository](https://github.com/GeneralLibrary/GeneralUpdate)
+- [GeneralUpdate.Tools repository](https://github.com/GeneralLibrary/GeneralUpdate.Tools)
