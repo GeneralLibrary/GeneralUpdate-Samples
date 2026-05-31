@@ -253,7 +253,6 @@ await new GeneralUpdateBootstrap()
 | `Files` | 更新时跳过的指定文件。 |
 | `Formats` | 更新时跳过的扩展名，例如 `.log`。 |
 | `Directories` | 更新时跳过的目录。 |
-| `DriverDirectory` | 驱动目录；驱动安装属于 Drivelution 文档范围。 |
 
 ### 使用 UpdateRequestBuilder
 

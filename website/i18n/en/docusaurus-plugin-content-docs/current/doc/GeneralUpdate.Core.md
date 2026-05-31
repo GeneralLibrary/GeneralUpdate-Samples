@@ -251,7 +251,6 @@ await new GeneralUpdateBootstrap()
 | `Files` | Specific files to skip during update. |
 | `Formats` | File extensions to skip, such as `.log`. |
 | `Directories` | Directories to skip. |
-| `DriverDirectory` | Driver directory; driver installation is documented under Drivelution. |
 
 ### UpdateRequestBuilder
 
