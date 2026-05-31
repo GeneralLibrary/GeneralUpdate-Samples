@@ -636,7 +636,7 @@ await new GeneralUpdateBootstrap()
 | 方法 | 参数类型 | 当前代码中的触发时机 | 关键字段 | 推荐用途 |
 | --- | --- | --- | --- | --- |
 | `AddListenerUpdateInfo` | `UpdateInfoEventArgs` | 标准 `Client` 策略完成版本对比后触发。没有可更新内容时也会触发一次，`Info.Code` 为 `404`、`Info.Body` 为空列表；有更新时 `Info.Body` 是需要下载的 `VersionEntry` 列表。 | `Info.Code`、`Info.Message`、`Info.Body`；`VersionEntry` 包含 `RecordId`、`Name`、`Version`、`Url`、`Hash`、`AppType`、`IsForcibly`、`UpgradeMode`、`FromVersion`、`ToVersion` 等。 | 展示更新说明、版本数量、强制更新提示，或者记录服务端返回的版本元数据。不要在这里做文件替换。 |
-| `AddListenerUpdatePrecheck` | `Func<UpdateInfoEventArgs, bool>` | `UpdateInfo` 事件之后、Hook 和下载之前执行。按当前 `ClientStrategy.CanSkip` 实现：非强制更新下返回 `true` 表示跳过本次更新，返回 `false` 表示继续；强制更新会忽略跳过逻辑继续执行。 | 入参同 `UpdateInfoEventArgs`。 | 做下载前的轻量决策，例如磁盘不足、用户选择稍后、网络类型不允许时返回 `true` 跳过。需要异步、可取消或有副作用的流程请使用 `IUpdateHooks.OnBeforeUpdateAsync`。 |
+| `AddListenerUpdatePrecheck` | `Func<UpdateInfoEventArgs, bool>` | `UpdateInfo` 事件之后、Hook 和下载之前执行。按当前 `ClientStrategy.CanSkip` 实现：非强制更新下返回 `true` 表示跳过本次更新，返回 `false` 表示继续；强制更新不会进入跳过判断。 | 入参同 `UpdateInfoEventArgs`，可以读取本次更新涉及的所有 `VersionEntry`，包括版本号、更新说明、Hash、包地址、升级模式、跨版本范围等。 | 做下载前的轻量决策，也可以整理版本信息弹窗给用户，让用户阅读更新内容后决定是否继续。需要异步、可取消或有副作用的流程请使用 `IUpdateHooks.OnBeforeUpdateAsync`。 |
 | `AddListenerProgress` | `ProgressEventArgs` | 默认下载通道报告 `DownloadProgress` 时触发；差分 Clean / Dirty 管道报告 `DiffProgress` 时也会触发。同一个事件参数中 `Progress` 和 `DiffProgress` 只会有一个非空。 | 下载：`Progress.AssetName`、`BytesDownloaded`、`TotalBytes`、`Percentage`、`Status`。差分：`DiffProgress.Completed`、`Total`、`CurrentFile`、`Percentage`、`IsComplete`、`Error`。 | 更新进度条、状态文本、下载速度/大小展示、差分补丁进度展示。默认下载进度应优先使用这个事件。 |
 | `AddListenerMultiDownloadCompleted` | `MultiDownloadCompletedEventArgs` | `DownloadProgressReporter` 收到 `DownloadStatus.Completed` 时触发。当前默认桥接中 `Version` 实际携带 `AssetName`，自定义下载器也可以放入自己的对象。 | `Version`、`IsCompleted`。 | 标记某个资源包下载完成、追加下载日志。不要把它当作“全部资源下载完成”。 |
 | `AddListenerMultiAllDownloadCompleted` | `MultiAllDownloadCompletedEventArgs` | `DefaultDownloadOrchestrator` 等待所有下载任务结束后触发一次。并发下载时它在所有任务都完成、失败结果收集完之后触发。 | `IsAllDownloadCompleted`；`FailedVersions` 是失败明细列表，元素为 `(asset, errorMessage)`。 | 在所有资源下载结束后刷新整体 UI、输出失败汇总、决定是否展示重试入口。 |
@@ -646,7 +646,7 @@ await new GeneralUpdateBootstrap()
 
 `UpdateInfoEventArgs.Info.Body` 中的元素是 Core 经过版本对比、应用类型筛选和下载计划构建后需要处理的版本包，不是简单的原始 HTTP 响应透传。需要关注下载 URL、Hash、强制更新、跨版本差分范围时，可以直接读取 `VersionEntry` 上的属性。
 
-`AddListenerUpdatePrecheck` 的返回值容易误解：以当前代码为准，返回 `true` 是“可以跳过”，不是“继续下载”。如果你只是想观察版本信息，不要注册 precheck；如果你要在用户取消、磁盘不足、移动网络等场景阻止非强制更新，才返回 `true`。
+`AddListenerUpdatePrecheck` 的返回值容易误解：以当前代码为准，返回 `true` 是“可以跳过”，不是“继续下载”。它适合放在“下载前确认”这个场景里：先从 `UpdateInfoEventArgs.Info.Body` 整理本次更新涉及的版本号、更新日志、包大小、升级类型等内容，弹窗给用户阅读；用户确认更新时返回 `false` 继续，用户选择稍后、磁盘不足或当前网络不允许时返回 `true` 跳过非强制更新。如果只是展示服务端版本信息、不需要决定是否跳过，可以只监听 `AddListenerUpdateInfo`。
 
 ```csharp
 await new GeneralUpdateBootstrap()
@@ -657,13 +657,15 @@ await new GeneralUpdateBootstrap()
     })
     .AddListenerUpdatePrecheck(e =>
     {
-        var hasUpdate = (e.Info?.Body?.Count ?? 0) > 0;
+        var versions = e.Info?.Body;
+        var hasUpdate = (versions?.Count ?? 0) > 0;
         var enoughDisk = DriveInfo.GetDrives()
             .Where(d => d.IsReady)
             .Any(d => d.AvailableFreeSpace > 1024L * 1024 * 1024);
+        var userRejected = versions != null && !ShowUpdateDialog(versions);
 
         // 当前实现中返回 true 表示跳过非强制更新，返回 false 表示继续。
-        return !hasUpdate || !enoughDisk;
+        return !hasUpdate || !enoughDisk || userRejected;
     })
     .AddListenerMultiDownloadCompleted((_, e) =>
     {
