@@ -532,7 +532,7 @@ Registered types must have a parameterless constructor because Core creates them
 
 ## Lifecycle hooks: IUpdateHooks
 
-`IUpdateHooks` is best for business logic before update, after download, after update, before app start, and on errors.
+`IUpdateHooks` is best for business logic before update, after download, after update, before app start, and on errors. It is also a flexible open extension point: on Linux or macOS, updated executables may need execute permission restored, or an organization may need to run an internal authorization, signature-check, or permission-repair script before the main app starts. Put that work in `OnBeforeStartAppAsync`.
 
 ```csharp
 using GeneralUpdate.Core.Hooks;
@@ -573,6 +573,40 @@ public sealed class ProductUpdateHooks : IUpdateHooks
 await new GeneralUpdateBootstrap()
     .SetConfig(request)
     .Hooks<ProductUpdateHooks>()
+    .LaunchAsync();
+```
+
+On Linux/macOS, you can register the built-in `UnixPermissionHooks` to let Core run `chmod +x` before starting the app:
+
+```csharp
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .Hooks<UnixPermissionHooks>()
+    .LaunchAsync();
+```
+
+If you need to run your own permission script, wrap it in a parameterless hook adapter and register that adapter with `Hooks<T>()`:
+
+```csharp
+using GeneralUpdate.Core.Hooks;
+
+public sealed class ProductPermissionHooks : IUpdateHooks
+{
+    private readonly CustomPermissionHooks _inner =
+        new("/opt/my-product/scripts/fix-permissions.sh");
+
+    public Task OnBeforeStartAppAsync(HookContext ctx)
+        => _inner.OnBeforeStartAppAsync(ctx);
+
+    public Task<bool> OnBeforeUpdateAsync(HookContext ctx) => Task.FromResult(true);
+    public Task OnDownloadCompletedAsync(DownloadContext ctx) => Task.CompletedTask;
+    public Task OnAfterUpdateAsync(HookContext ctx) => Task.CompletedTask;
+    public Task OnUpdateErrorAsync(HookContext ctx, Exception ex) => Task.CompletedTask;
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .Hooks<ProductPermissionHooks>()
     .LaunchAsync();
 ```
 
