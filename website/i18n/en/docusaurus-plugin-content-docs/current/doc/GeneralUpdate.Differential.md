@@ -173,20 +173,41 @@ Differential currently includes two file-level differ algorithms. Both write a B
 | Core idea | Classic BSDIFF 4.0; uses suffix sorting to find long matches between old and new files. | Builds an old-file index with block-level FNV-1a hashes, filters candidate blocks quickly, then extends matches at byte level. |
 | Default compression | BZip2 (`0x00`). | Deflate (`0x01`). |
 | Patch application | Implements BSDIFF Dirty logic directly. | `DirtyAsync` delegates to `BsdiffDiffer`, so the apply phase remains BSDIFF-compatible. |
-| Generation efficiency | More fine-grained matching, but suffix sorting and full file loading cost more CPU and memory. | Faster candidate lookup and usually better suited to batch builds with many files. |
+| Generation efficiency | More fine-grained matching and stable behavior for localized or dispersed changes, but suffix sorting and full file loading cost CPU and memory. | Faster when block matches are effective; can become slower when changes are dispersed and block-hash hits are rare. |
 | Client-side apply performance | Default BZip2 decompression is more expensive when many patches are applied. | Default Deflate decompression is faster and friendlier for applying many client patches. |
-| Patch-size tendency | Usually aims for fine-grained matches and stable patch size. | Speed-first; patch size depends on change distribution, block size, and window budget. |
+| Patch-size tendency | Usually aims for fine-grained matches and much more stable patch size. | Speed-first; patch size strongly depends on change distribution, block size, and window budget. When block hits are poor, the patch can approach the full file size. |
 | Memory profile | Reads the old and new files during generation, so large single files need memory planning. | Uses `BlockSize` and `MaxWindowSize` to control the matching window; very large single files need validation or tuning. |
 | Compatibility | Best when legacy BSDIFF/BZip2 compatibility matters. | Best for new projects, directory-level batch diffs, and Core `DiffPipeline` default builds. |
 
-As a rule of thumb, `BsdiffDiffer` leans toward compatibility and stable patch size, while `StreamingHdiffDiffer` leans toward build efficiency and client apply performance. If a project has many files and frequent releases, prefer `StreamingHdiffDiffer`; if you need historical patch compatibility or a more conservative patch format, prefer `BsdiffDiffer`.
+As a rule of thumb, `BsdiffDiffer` leans toward compatibility and stable patch size, while `StreamingHdiffDiffer` leans toward faster client-side apply and tunable parameters. If patch size matters most or changes are dispersed, start with `BsdiffDiffer`. If client-side apply speed matters more and your own benchmarks show acceptable patch size, consider `StreamingHdiffDiffer`.
+
+### Benchmark reference {#benchmark-reference}
+
+The following numbers come from a local microbenchmark against the current source. They are meant to give developers an order-of-magnitude reference, not a performance guarantee across all projects. The test used Windows x64, a .NET Release build, and synthetic 2-4 MB files. Real results depend on CPU, disk, file type, change ratio, compression level, and parallelism.
+
+| Scenario | `BsdiffDiffer` clean | `StreamingHdiffDiffer` clean | `BsdiffDiffer` dirty | `StreamingHdiffDiffer` dirty | `BsdiffDiffer` patch size | `StreamingHdiffDiffer` patch size |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 MB text, small line changes/inserts | 484 ms | 2059 ms | 55 ms | 36 ms | 0.05% | 3.50% |
+| 4 MB binary, contiguous local block change | 1030 ms | 318 ms | 55 ms | 11 ms | 2.58% | 100.04% |
+| 4 MB binary, dispersed random byte changes | 757 ms | 4176 ms | 70 ms | 30 ms | 2.18% | 100.27% |
+
+Practical estimates from this benchmark:
+
+| Metric | Reference conclusion |
+| --- | --- |
+| Patch size | `BsdiffDiffer` produced patches around 0.05%-2.58% of the new file in these scenarios; `StreamingHdiffDiffer` produced around 3.50%-100%. If package size is the top priority, test `BsdiffDiffer` first. |
+| Client-side apply speed | `StreamingHdiffDiffer` defaults to Deflate and applied patches about 1.5-5x faster in this benchmark. The difference matters more when many files are applied. |
+| Generation speed | There is no absolute winner: `StreamingHdiffDiffer` was about 3.2x faster for the contiguous binary block change, while `BsdiffDiffer` was about 4.3-5.5x faster for text and dispersed random changes. |
+| Large project choice | For large projects, evaluate total patch size, build time, and client apply time together. If many files can be processed independently, `WithParallelism(...)` often affects total time more than small differences in a single differ. |
+
+> The key takeaway is directional: `BsdiffDiffer` more often produces small patches, while `StreamingHdiffDiffer` applies patches faster, but patch size and generation speed are very sensitive to the shape of file changes. Before production release, benchmark with your own application artifacts.
 
 Recommended choices:
 
 | Scenario | Recommendation |
 | --- | --- |
 | Low-level single-file patching with maximum compatibility | Use `new BsdiffDiffer()`. |
-| Directory-level batch patches through Core `DiffPipeline` | Use the default `StreamingHdiffDiffer` and combine it with `WithParallelism(...)` to improve throughput. |
+| Directory-level batch patches through Core `DiffPipeline` | Benchmark the default configuration first; if patch size is too large, explicitly switch to `BsdiffDiffer`; then combine it with `WithParallelism(...)` to improve throughput. |
 | Client-side decompression performance is more important | Prefer Deflate patches: `StreamingHdiffDiffer` defaults, or `new BsdiffDiffer(new DeflateCompressionProvider())`. |
 | Existing patches are legacy BSDIFF/BZip2 | Apply them with `BsdiffDiffer`; 32-byte headers are treated as BZip2. |
 | Large projects with many DLLs, resources, or plugin files | Use Core `DiffPipeline` for file-level parallelism instead of calling Differential file by file in a serial loop. |
