@@ -26,7 +26,6 @@ Core executes updates. It does not generate update packages or manage the server
 | Verify and apply patches | Yes | Hash verification, archive handling, and differential patching are supported. |
 | Replace files and restart app | Yes | `Upgrade` / `OssUpgrade` is used by the updater process. |
 | Generate differential packages | No | Use `GeneralUpdate.Tools`. |
-| Firmware update | No | Firmware components are out of scope for this page. |
 
 ## Entry point: GeneralUpdateBootstrap
 
