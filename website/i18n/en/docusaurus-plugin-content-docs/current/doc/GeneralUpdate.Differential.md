@@ -31,6 +31,7 @@ If this is your first time reading the Differential documentation, start with th
 | How directory-level differential updates are enabled in Core | [Relationship with GeneralUpdate.Core](#relationship-with-generalupdatecore) |
 | What Tools uses when building differential packages | [Relationship with GeneralUpdate.Tools](#relationship-with-generalupdatetools) |
 | Whether downloads and diff work can run in parallel | [Concurrency model and performance guidance](#concurrency-model-and-performance-guidance) |
+| How large projects can improve differential build throughput | [Parallel differential work for large projects](#parallel-differential-work-for-large-projects) |
 | How to plug in a custom differ or compression provider | [Extension points](#extension-points) |
 
 ## Component boundaries
@@ -165,19 +166,30 @@ The current implementation is not a full external-memory streaming differ. If a 
 
 ## Differ algorithm selection
 
-| Algorithm | Default compression | Generation strategy | Strengths | Notes |
-| --- | --- | --- | --- | --- |
-| `BsdiffDiffer` | BZip2 | Suffix sort + BSDIFF control/diff/extra sections | Good historical compatibility and stable patch size | Reads old and new files during generation, so large files increase memory pressure |
-| `StreamingHdiffDiffer` | Deflate | Block hash index + BSDIFF-compatible output | Faster candidate lookup, suitable for Core pipeline defaults | Single files larger than `MaxWindowSize` need validation or tuning |
+Differential currently includes two file-level differ algorithms. Both write a BSDIFF-compatible patch structure, but their match strategy, default compression, and performance priorities are different.
+
+| Comparison | `BsdiffDiffer` | `StreamingHdiffDiffer` |
+| --- | --- | --- |
+| Core idea | Classic BSDIFF 4.0; uses suffix sorting to find long matches between old and new files. | Builds an old-file index with block-level FNV-1a hashes, filters candidate blocks quickly, then extends matches at byte level. |
+| Default compression | BZip2 (`0x00`). | Deflate (`0x01`). |
+| Patch application | Implements BSDIFF Dirty logic directly. | `DirtyAsync` delegates to `BsdiffDiffer`, so the apply phase remains BSDIFF-compatible. |
+| Generation efficiency | More fine-grained matching, but suffix sorting and full file loading cost more CPU and memory. | Faster candidate lookup and usually better suited to batch builds with many files. |
+| Client-side apply performance | Default BZip2 decompression is more expensive when many patches are applied. | Default Deflate decompression is faster and friendlier for applying many client patches. |
+| Patch-size tendency | Usually aims for fine-grained matches and stable patch size. | Speed-first; patch size depends on change distribution, block size, and window budget. |
+| Memory profile | Reads the old and new files during generation, so large single files need memory planning. | Uses `BlockSize` and `MaxWindowSize` to control the matching window; very large single files need validation or tuning. |
+| Compatibility | Best when legacy BSDIFF/BZip2 compatibility matters. | Best for new projects, directory-level batch diffs, and Core `DiffPipeline` default builds. |
+
+As a rule of thumb, `BsdiffDiffer` leans toward compatibility and stable patch size, while `StreamingHdiffDiffer` leans toward build efficiency and client apply performance. If a project has many files and frequent releases, prefer `StreamingHdiffDiffer`; if you need historical patch compatibility or a more conservative patch format, prefer `BsdiffDiffer`.
 
 Recommended choices:
 
 | Scenario | Recommendation |
 | --- | --- |
 | Low-level single-file patching with maximum compatibility | Use `new BsdiffDiffer()`. |
-| Directory-level batch patches through Core `DiffPipeline` | Use the default `StreamingHdiffDiffer`, or specify it explicitly in `UseDiffPipeline`. |
+| Directory-level batch patches through Core `DiffPipeline` | Use the default `StreamingHdiffDiffer` and combine it with `WithParallelism(...)` to improve throughput. |
 | Client-side decompression performance is more important | Prefer Deflate patches: `StreamingHdiffDiffer` defaults, or `new BsdiffDiffer(new DeflateCompressionProvider())`. |
 | Existing patches are legacy BSDIFF/BZip2 | Apply them with `BsdiffDiffer`; 32-byte headers are treated as BZip2. |
+| Large projects with many DLLs, resources, or plugin files | Use Core `DiffPipeline` for file-level parallelism instead of calling Differential file by file in a serial loop. |
 
 ## Patch format and compression providers {#patch-format-and-compression-providers}
 
@@ -303,6 +315,17 @@ var pipeline = new DiffPipelineBuilder()
 await pipeline.CleanAsync(oldDir, newDir, patchDir);
 ```
 
+### Parallel differential work for large projects {#parallel-differential-work-for-large-projects}
+
+Large desktop projects are usually not one huge file. They are often composed of the main executable, many DLLs, plugins, resource files, runtime files, and configuration files. Core `DiffPipeline` splits the directory comparison result into file-level tasks, and each changed file independently calls `IBinaryDiffer.CleanAsync` to produce a patch. That means `WithParallelism(...)` can process multiple files at the same time.
+
+This parallel model matters for large projects:
+
+1. The publishing side can generate `.patch` files for multiple changed files at once, shortening package build time.
+2. The client side can also apply multiple file patches in parallel, reducing the upgrade window.
+3. Core orchestrates new-file copying, delete manifest handling, and differential patch generation, so developers do not need to write custom thread scheduling.
+4. Parallelism can be tuned for the machine: higher on build servers, lower on resource-sensitive clients.
+
 | Parameter/strategy | Guidance |
 | --- | --- |
 | `WithParallelism(1)` | Resource-sensitive devices, HDDs, or low-memory environments. |
@@ -311,6 +334,8 @@ await pipeline.CleanAsync(oldDir, newDir, patchDir);
 | BZip2 | Better compatibility, but higher client-side decompression cost. |
 | Deflate | Friendlier decompression speed for applying many client patches. |
 | Large files | Measure generation time, memory peak, and restoration correctness; do not look only at patch size. |
+
+Parallel differential work is best for large projects with many independently processable files. A single very large file is still handled internally by the selected differ algorithm; `WithParallelism(8)` does not split one file into eight parallel chunks. It improves throughput across multiple files.
 
 Downloads and differential work can run in parallel at the upper update-flow level: Core can download multiple resources concurrently, and the patch application phase can process files in parallel. Differential itself only computes the patch for one file and does not manage network download threads.
 

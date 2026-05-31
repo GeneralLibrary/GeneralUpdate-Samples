@@ -31,6 +31,7 @@ dotnet add package GeneralUpdate.Differential
 | 如何在 Core 更新流程里启用目录级差分 | [与 GeneralUpdate.Core 的关系](#与-generalupdatecore-的关系) |
 | Tools 构建差分包时用了什么能力 | [与 GeneralUpdate.Tools 的关系](#与-generalupdatetools-的关系) |
 | 下载和差分是否可以多线程并行 | [并发模型与性能建议](#并发模型与性能建议) |
+| 大型项目如何提升差分构建效率 | [大型项目并行差分](#大型项目并行差分) |
 | 如何接入自定义差分算法或压缩方式 | [扩展点](#扩展点) |
 
 ## 组件能力边界
@@ -165,19 +166,30 @@ await differ.DirtyAsync(oldFile, outputFile, patchFile);
 
 ## 差分算法选择
 
-| 算法 | 默认压缩 | 生成策略 | 优势 | 注意事项 |
-| --- | --- | --- | --- | --- |
-| `BsdiffDiffer` | BZip2 | 后缀排序 + BSDIFF 控制/差异/额外段 | 历史兼容性好，补丁体积稳定 | 生成阶段读入旧/新文件，较大文件内存压力更明显 |
-| `StreamingHdiffDiffer` | Deflate | 块哈希索引 + BSDIFF 兼容输出 | 候选查找更快，适合 Core 管道默认构建 | 超过 `MaxWindowSize` 的单文件需要额外验证或调参 |
+当前 Differential 内置两种文件级差分算法。它们都输出 BSDIFF 兼容补丁结构，但生成补丁时的匹配方式、默认压缩、性能侧重点不同。
+
+| 对比项 | `BsdiffDiffer` | `StreamingHdiffDiffer` |
+| --- | --- | --- |
+| 核心思路 | 经典 BSDIFF 4.0，基于后缀排序寻找旧文件和新文件之间的最长匹配。 | 使用块级 FNV-1a 哈希建立旧文件索引，先用哈希快速筛选候选块，再做字节级扩展匹配。 |
+| 默认压缩 | BZip2 (`0x00`)。 | Deflate (`0x01`)。 |
+| 补丁应用 | 自己实现 BSDIFF Dirty 逻辑。 | `DirtyAsync` 委托给 `BsdiffDiffer`，因此应用阶段和 BSDIFF 补丁兼容。 |
+| 生成效率 | 匹配更精细，但后缀排序和全量读入会带来更高 CPU/内存开销。 | 候选查找更快，通常更适合大量文件的批量构建。 |
+| 客户端应用性能 | 默认 BZip2 解压成本更高，客户端应用大量补丁时耗时可能更明显。 | 默认 Deflate 解压更快，更适合客户端批量应用补丁。 |
+| 补丁体积倾向 | 通常更追求细粒度匹配，补丁体积表现稳定。 | 速度优先，补丁体积与文件变化分布、块大小、窗口预算有关。 |
+| 内存特征 | 生成阶段读取旧文件和新文件，单个大文件需要关注内存峰值。 | 通过 `BlockSize` 和 `MaxWindowSize` 控制匹配窗口，超大单文件需要额外验证或调参。 |
+| 兼容性 | 最适合需要兼容旧 BSDIFF/BZip2 补丁的场景。 | 适合新项目、目录级批量差分和 Core `DiffPipeline` 默认构建。 |
+
+可以简单理解为：`BsdiffDiffer` 更偏“兼容和补丁体积稳定”，`StreamingHdiffDiffer` 更偏“构建效率和客户端应用性能”。如果项目文件数量很多、发布构建频繁，优先考虑 `StreamingHdiffDiffer`；如果需要兼容历史补丁或更保守的补丁格式，优先考虑 `BsdiffDiffer`。
 
 推荐选择：
 
 | 场景 | 建议 |
 | --- | --- |
 | 只需要低层单文件补丁，并希望最大兼容 | 使用 `new BsdiffDiffer()`。 |
-| 通过 Core `DiffPipeline` 批量生成目录级补丁 | 使用默认 `StreamingHdiffDiffer`，或在 `UseDiffPipeline` 中显式指定。 |
+| 通过 Core `DiffPipeline` 批量生成目录级补丁 | 使用默认 `StreamingHdiffDiffer`，并结合 `WithParallelism(...)` 提升吞吐。 |
 | 客户端解压性能更敏感 | 优先选择 Deflate 补丁，即 `StreamingHdiffDiffer` 默认配置，或 `new BsdiffDiffer(new DeflateCompressionProvider())`。 |
 | 历史补丁仍是旧 BSDIFF/BZip2 | 使用 `BsdiffDiffer` 应用；32 字节头会按 BZip2 处理。 |
+| 大型项目包含大量 DLL、资源文件、插件文件 | 使用 Core `DiffPipeline` 做文件级并行，避免自己逐个文件串行调用 Differential。 |
 
 ## 补丁格式与压缩 Provider {#补丁格式与压缩-provider}
 
@@ -303,6 +315,17 @@ var pipeline = new DiffPipelineBuilder()
 await pipeline.CleanAsync(oldDir, newDir, patchDir);
 ```
 
+### 大型项目并行差分 {#大型项目并行差分}
+
+大型桌面项目通常不是“一个超大文件”，而是由主程序、多个 DLL、插件、资源文件、运行时文件和配置文件组成。Core `DiffPipeline` 会把目录对比结果拆成文件级任务，每个变更文件独立调用 `IBinaryDiffer.CleanAsync` 生成补丁，因此可以通过 `WithParallelism(...)` 同时处理多个文件。
+
+这种并行模型对大型项目很重要：
+
+1. 构建侧可以同时为多个变更文件生成 `.patch`，缩短发布包构建时间。
+2. 客户端应用补丁时也可以并行处理多个文件，减少升级窗口。
+3. 新增文件复制、删除清单处理和差分补丁生成由 Core 管道统一编排，开发者不需要手写多线程调度。
+4. 并行度可以按机器能力调整，构建机可以设置更高，低配置客户端可以保持较低。
+
 | 参数/策略 | 建议 |
 | --- | --- |
 | `WithParallelism(1)` | 资源敏感、机械硬盘、低内存环境。 |
@@ -311,6 +334,8 @@ await pipeline.CleanAsync(oldDir, newDir, patchDir);
 | BZip2 | 补丁兼容性好，但客户端解压成本更高。 |
 | Deflate | 解压速度更友好，适合客户端大批量应用补丁。 |
 | 大文件 | 先压测补丁生成耗时、内存峰值和还原结果，不要只看补丁体积。 |
+
+并行差分适合“文件数量多、每个文件可独立处理”的大型项目。需要注意的是，单个超大文件内部仍由具体 differ 算法处理，不会因为 `WithParallelism(8)` 就把一个文件拆成 8 份并行计算；并行度提升的是多个文件之间的吞吐。
 
 下载与差分可以在上层更新流程中并行：Core 下载阶段可以并发拉取多个资源，差分应用阶段也可以按文件并行处理补丁。Differential 只负责单个文件的补丁计算，不直接管理网络下载线程。
 
