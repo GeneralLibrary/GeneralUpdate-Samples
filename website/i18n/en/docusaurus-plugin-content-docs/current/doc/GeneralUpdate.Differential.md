@@ -25,6 +25,7 @@ If this is your first time reading the Differential documentation, start with th
 | What Differential is responsible for | [Component boundaries](#component-boundaries) |
 | What `Clean` and `Dirty` mean | [Clean and Dirty semantics](#clean-and-dirty-semantics) |
 | How to generate and apply a patch for one file | [Single-file quick start](#single-file-quick-start) |
+| Whether Core users need to integrate Differential manually | [Relationship with GeneralUpdate.Core](#relationship-with-generalupdatecore) |
 | Which algorithms exist and how to choose one | [Differ algorithm selection](#differ-algorithm-selection) |
 | How the BSDIFF header and compression byte work | [Patch format and compression providers](#patch-format-and-compression-providers) |
 | How directory-level differential updates are enabled in Core | [Relationship with GeneralUpdate.Core](#relationship-with-generalupdatecore) |
@@ -62,7 +63,7 @@ File-level patch application does not overwrite the old file directly. It writes
 
 ## Single-file quick start
 
-This example only demonstrates the low-level single-file capability. If you need to compare two directories, generate many `.patch` files, copy added files, or handle deleted files, go to [Relationship with GeneralUpdate.Core](#relationship-with-generalupdatecore).
+This example only demonstrates the low-level single-file capability. If you already use `GeneralUpdate.Core`, Core integrates Differential by default, so you do not need to manually integrate or directly call this component for the normal update flow. If you need to compare two directories, generate many `.patch` files, copy added files, or handle deleted files, go to [Relationship with GeneralUpdate.Core](#relationship-with-generalupdatecore).
 
 ```csharp
 using GeneralUpdate.Differential.Abstractions;
@@ -240,7 +241,9 @@ await differ.DirtyAsync(oldFile, outputFile, patchFile);
 4. Writing `generalupdate.delete.json` for deleted files.
 5. Applying patches on the client by calling `IBinaryDiffer.DirtyAsync` in parallel, writing temporary files first, then replacing originals after success.
 
-If you are using Core in an application update flow, you usually do not need to call `BsdiffDiffer` or `StreamingHdiffDiffer` directly. Configure the algorithm and parallelism through `UseDiffPipeline`:
+If you use `GeneralUpdate.Core` in an application update flow, Core integrates Differential by default and includes the differential pipeline out of the box. In other words, normal update integration does not require extra installation, initialization, or direct calls to `GeneralUpdate.Differential`. As long as you use the Core update flow and enable patch update behavior as needed, Core creates the differ, applies patches, and performs directory-level orchestration internally.
+
+Use `UseDiffPipeline` only for advanced configuration, such as replacing the default differ algorithm, tuning parallelism, changing error behavior, or plugging in custom matchers:
 
 ```csharp
 using GeneralUpdate.Core;
@@ -267,7 +270,7 @@ There are two default layers in the current source:
 | Direct `new DiffPipeline()` or `new DiffPipelineBuilder().Build()` | `StreamingHdiffDiffer` |
 | `GeneralUpdateBootstrap` without an explicit `UseDiffPipeline(...)` | `BsdiffDiffer`, parallelism 2, with `DiffProgressReporter` |
 
-If you want a specific algorithm in the Core update flow, call `UseDiffPipeline(...)` explicitly rather than relying on defaults.
+For regular users, Differential can be treated as a built-in Core capability that does not need separate integration. Call `UseDiffPipeline(...)` only when you want Core to use a specific algorithm or custom differential behavior.
 
 ## Relationship with GeneralUpdate.Tools {#relationship-with-generalupdatetools}
 

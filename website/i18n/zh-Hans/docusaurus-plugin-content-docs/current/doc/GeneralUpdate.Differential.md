@@ -25,6 +25,7 @@ dotnet add package GeneralUpdate.Differential
 | Differential 到底负责什么、不负责什么 | [组件能力边界](#组件能力边界) |
 | `Clean` / `Dirty` 是什么含义 | [Clean 与 Dirty 语义](#clean-与-dirty-语义) |
 | 如何给单个文件生成并应用补丁 | [单文件快速开始](#单文件快速开始) |
+| 使用 Core 时是否还要手动集成 Differential | [与 GeneralUpdate.Core 的关系](#与-generalupdatecore-的关系) |
 | 当前有哪些差分算法，如何选择 | [差分算法选择](#差分算法选择) |
 | BSDIFF 补丁格式和压缩字节怎么工作 | [补丁格式与压缩 Provider](#补丁格式与压缩-provider) |
 | 如何在 Core 更新流程里启用目录级差分 | [与 GeneralUpdate.Core 的关系](#与-generalupdatecore-的关系) |
@@ -62,7 +63,7 @@ Differential 沿用了 GeneralUpdate 差分流程中的两个术语：
 
 ## 单文件快速开始
 
-下面示例只演示 Differential 的底层单文件能力。如果你要比较两个目录、生成一批 `.patch`、复制新增文件或处理删除文件，请直接看 [与 GeneralUpdate.Core 的关系](#与-generalupdatecore-的关系)。
+下面示例只演示 Differential 的底层单文件能力。如果你已经在使用 `GeneralUpdate.Core`，Core 默认已经集成 Differential，不需要为了正常更新流程再手动集成或直接调用本组件。如果你要比较两个目录、生成一批 `.patch`、复制新增文件或处理删除文件，请直接看 [与 GeneralUpdate.Core 的关系](#与-generalupdatecore-的关系)。
 
 ```csharp
 using GeneralUpdate.Differential.Abstractions;
@@ -240,7 +241,9 @@ await differ.DirtyAsync(oldFile, outputFile, patchFile);
 4. 生成 `generalupdate.delete.json` 记录删除文件。
 5. 客户端应用补丁时并行调用 `IBinaryDiffer.DirtyAsync`，先写临时文件，成功后替换原文件。
 
-如果你在应用更新流程中使用 Core，通常不需要直接调用 `BsdiffDiffer` 或 `StreamingHdiffDiffer`。只需要通过 `UseDiffPipeline` 调整算法和并行度：
+如果你在应用更新流程中使用 `GeneralUpdate.Core`，Core 默认已经集成 Differential 并内置差分管道。也就是说，常规更新接入时不需要额外安装、初始化或手动调用 `GeneralUpdate.Differential`；只要使用 Core 的更新流程，并按业务需要启用补丁更新能力，Core 会在内部完成 differ 创建、补丁应用和目录级编排。
+
+只有在你想替换默认差分算法、调整并行度、改变错误策略或接入自定义 matcher 时，才需要通过 `UseDiffPipeline` 做高级配置：
 
 ```csharp
 using GeneralUpdate.Core;
@@ -267,7 +270,7 @@ await new GeneralUpdateBootstrap()
 | 直接 `new DiffPipeline()` 或 `new DiffPipelineBuilder().Build()` | `StreamingHdiffDiffer` |
 | `GeneralUpdateBootstrap` 未显式调用 `UseDiffPipeline(...)` 时内部构建 | `BsdiffDiffer`，并行度 2，带 `DiffProgressReporter` |
 
-因此，如果你希望 Core 更新流程明确使用某个算法，建议显式调用 `UseDiffPipeline(...)`，不要依赖默认值。
+因此，普通用户可以把 Differential 看作 Core 已经带好的底层能力，不需要特地集成；只有希望 Core 更新流程明确使用某个算法或自定义差分行为时，才建议显式调用 `UseDiffPipeline(...)`。
 
 ## 与 GeneralUpdate.Tools 的关系 {#与-generalupdatetools-的关系}
 
