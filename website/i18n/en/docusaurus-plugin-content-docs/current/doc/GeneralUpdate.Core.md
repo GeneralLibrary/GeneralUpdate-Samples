@@ -378,14 +378,14 @@ The recommended responsibility split is:
 
 ### Version write-back
 
-The manifest is not only read at startup. After a successful update, Core writes the new version back to the same `generalupdate.manifest.json` under the install directory:
+In the `generalupdate.manifest.json` model, the manifest is also the local version state file. Developers generate it with Tools for the first release, but they do not need to write application code that updates the local version after every successful update. After an update succeeds, Core automatically writes the applied version back to the same `generalupdate.manifest.json` under the install directory:
 
 | Scenario | Field written back |
 | --- | --- |
 | Main application update completed | `ClientVersion` |
 | Updater self-update completed | `UpgradeClientVersion` |
 
-On the next polling cycle or process start, Core therefore validates from the latest applied version instead of the build-time version. This requires the install directory to be writable; if the application is installed under a restricted directory, ensure the updater has permission to update the manifest file.
+On the next polling cycle or process start, the bootstrap validates from the latest local version stored in the manifest instead of the build-time version. The purpose of write-back is to move local version maintenance into Core's update workflow, so application code does not need to maintain `ClientVersion` or `UpgradeClientVersion` separately. This requires the install directory to be writable; if the application is installed under a restricted directory, ensure the updater has permission to update the manifest file.
 
 ## Runtime options: Option
 

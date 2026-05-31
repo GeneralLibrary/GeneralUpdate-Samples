@@ -380,14 +380,14 @@ await new GeneralUpdateBootstrap()
 
 ### 版本回写
 
-清单不只是启动时读取。更新成功后，Core 会把新版本写回安装目录下的同一个 `generalupdate.manifest.json`：
+在 `generalupdate.manifest.json` 体系下，清单同时也是本地版本状态文件。开发者只需要在首次发布时通过 Tools 生成清单，不需要在每次更新完成后再写业务代码去修改本地版本号。更新成功后，Core 会把已应用的新版本自动写回安装目录下的同一个 `generalupdate.manifest.json`：
 
 | 场景 | 回写字段 |
 | --- | --- |
 | 主程序更新完成 | `ClientVersion` |
 | 升级程序自身更新完成 | `UpgradeClientVersion` |
 
-这样下一次轮询或启动时，Core 会从最新版本继续向服务端验证，而不是继续使用打包时的旧版本。这个行为依赖安装目录可写；如果应用安装在受限目录，需要确保升级程序拥有写入清单的权限。
+这样下一次轮询或启动时，引导类会基于清单中的最新本地版本继续向服务端验证，而不是继续使用打包时的旧版本。回写的意义是把“本地版本号维护”收进 Core 的更新流程里，避免开发者在应用代码中额外维护 `ClientVersion` 或 `UpgradeClientVersion`。这个行为依赖安装目录可写；如果应用安装在受限目录，需要确保升级程序拥有写入清单的权限。
 
 ## 运行选项：Option
 
