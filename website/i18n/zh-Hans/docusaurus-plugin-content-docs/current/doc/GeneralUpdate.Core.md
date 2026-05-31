@@ -4,18 +4,7 @@ sidebar_position: 5
 
 # GeneralUpdate.Core
 
-## 组件定位
-
-`GeneralUpdate.Core` 是 GeneralUpdate 的更新执行核心。它负责把“检查版本、下载更新包、校验、解压/合并、替换文件、启动目标程序”等步骤串成一个完整流程，并通过 `GeneralUpdateBootstrap` 提供统一入口。
-
-Core 既可以运行在主程序内执行 `Client` / `OssClient` 流程，也可以作为独立升级程序执行 `Upgrade` / `OssUpgrade` 流程。实际项目中最常见的部署方式是：
-
-1. 主程序负责启动更新检查。
-2. Core 在客户端流程中获取版本清单并下载更新包。
-3. Core 启动独立升级程序，升级程序关闭占用进程后完成文件替换。
-4. 升级完成后重新启动主程序。
-
-> 固件升级不属于本页范围；驱动安装能力请参考后续 `GeneralUpdate.Drivelution` 文档。
+`GeneralUpdate.Core` 是 GeneralUpdate 的更新执行核心，重点提供可编程的启动器、配置模型、事件模型、下载子系统扩展点、生命周期钩子、状态上报、差分管道和平台策略扩展。本页聚焦组件 API、属性和扩展方式；完整端到端上手流程会放到 cookbook 中。
 
 **命名空间:** `GeneralUpdate.Core`
 **主要入口:** `GeneralUpdateBootstrap`
@@ -25,201 +14,794 @@ Core 既可以运行在主程序内执行 `Client` / `OssClient` 流程，也可
 dotnet add package GeneralUpdate.Core
 ```
 
-## 适用场景
+## 组件能力边界
 
-| 场景 | 是否适合使用 Core |
-| --- | --- |
-| 桌面应用自更新 | 适合。主程序检查更新，升级程序替换文件。 |
-| 需要多版本连续升级 | 适合。Core 可以按服务端返回的版本序列处理多个包。 |
-| 需要差分补丁更新 | 适合。配合差分包和 `Option.PatchEnabled` / `Option.DiffMode` 使用。 |
-| 需要云存储分发更新包 | 适合。使用 `OssClient` / `OssUpgrade` 角色。 |
-| 固件刷写 | 不适合。本页不覆盖固件升级组件。 |
+Core 负责“执行更新”，不负责生成更新包，也不直接管理服务端后台。
 
-## 运行角色
-
-Core 通过 `Option.AppType` 决定当前进程承担的更新角色：
-
-| AppType | 角色 | 说明 |
+| 能力 | Core 是否负责 | 说明 |
 | --- | --- | --- |
-| `Client` | 主程序侧更新流程 | 检查服务端版本、下载包、准备升级上下文，并启动升级程序。默认值。 |
-| `Upgrade` | 独立升级程序流程 | 读取主程序传入的 IPC 数据，执行文件替换，再启动主程序。 |
-| `OssClient` | OSS 主程序侧流程 | 从 OSS 配置检查更新并启动 OSS 升级程序。 |
-| `OssUpgrade` | OSS 升级程序流程 | 从 OSS 下载并部署更新包。 |
+| 读取更新配置 | 是 | 通过 `UpdateRequest`、配置文件、`SetSource` 或 IPC 恢复运行参数。 |
+| 检查服务端版本 | 是 | `Client` / `OssClient` 角色会读取版本清单并生成下载计划。 |
+| 下载更新包 | 是 | 可替换下载来源、执行器、重试策略、后处理管道或完整编排器。 |
+| 校验与应用补丁 | 是 | 支持 Hash 校验、压缩包处理、差分补丁管道。 |
+| 文件替换与重启应用 | 是 | `Upgrade` / `OssUpgrade` 角色用于独立升级程序。 |
+| 生成差分包 | 否 | 推荐使用 `GeneralUpdate.Tools`。 |
+| 固件升级 | 否 | 固件升级组件不在本页范围内。 |
 
-升级程序通常不需要手动调用 `SetConfig`。当它由主程序启动时，Core 会通过加密文件 IPC 自动读取 `ProcessContract`，恢复安装路径、版本、临时目录、下载配置、更新包列表等上下文。
+## 入口类：GeneralUpdateBootstrap
 
-## 最小升级程序
-
-`GeneralUpdate-Samples/src/Upgrade/Program.cs` 展示了独立升级程序的最小形态。该程序只需要注册必要事件，然后调用 `LaunchAsync()`：
+`GeneralUpdateBootstrap` 是 Core 的主要门面类。它继承 `AbstractBootstrap<GeneralUpdateBootstrap, IStrategy>`，因此同时拥有自身方法和基类提供的扩展注册方法。
 
 ```csharp
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Internal;
-using GeneralUpdate.Common.Shared.Object;
 using GeneralUpdate.Core;
 
-try
-{
-    Console.WriteLine($"Updater started at {DateTime.Now}");
+var bootstrap = new GeneralUpdateBootstrap();
+```
 
-    _ = await new GeneralUpdateBootstrap()
-        .AddListenerMultiDownloadStatistics(OnMultiDownloadStatistics)
-        .AddListenerMultiDownloadCompleted(OnMultiDownloadCompleted)
-        .AddListenerMultiAllDownloadCompleted(OnMultiAllDownloadCompleted)
-        .AddListenerMultiDownloadError(OnMultiDownloadError)
-        .AddListenerException(OnException)
-        .LaunchAsync();
-}
-catch (Exception ex)
+### 方法总览
+
+| 方法 | 用途 | 常用场景 |
+| --- | --- | --- |
+| `LaunchAsync()` | 按当前 `Option.AppType` 启动更新流程。 | 所有 Core 使用场景最终都会调用。 |
+| `Cancel()` | 请求取消当前更新操作。 | UI 中提供“取消更新”按钮。 |
+| `SetConfig(UpdateRequest)` | 使用强类型对象配置更新。 | 主程序内显式配置更新参数。 |
+| `SetConfig(string)` | 从 JSON 文件读取 `UpdateRequest`。 | 将更新参数放到 `update_config.json` 或自定义配置文件。 |
+| `SetSource(...)` | 只提供更新地址、密钥、报告地址等基础参数。 | 零配置/轻配置入口。 |
+| `SetOption(Option<T>, T)` | 设置运行时选项。 | 设置角色、超时、并发、差分、静默更新等。 |
+| `UseDiffPipeline(Action<DiffPipelineBuilder>)` | 自定义差分补丁管道。 | 替换 differ、调整并行度、接入补丁进度。 |
+| `AddListenerUpdatePrecheck(Func<UpdateInfoEventArgs, bool>)` | 下载前预检查。 | 检查磁盘空间、网络状态或弹窗确认。 |
+| `AddListener...` | 注册单个事件回调。 | 更新 UI、写日志、上报监控。 |
+| `AddEventListener<TListener>()` | 批量注册事件监听器。 | 将事件处理封装成类。 |
+
+### LaunchAsync
+
+```csharp
+public Task<GeneralUpdateBootstrap> LaunchAsync()
+```
+
+`LaunchAsync` 会读取 `Option.AppType` 并选择对应策略：
+
+| `Option.AppType` | 策略 | 说明 |
+| --- | --- | --- |
+| `AppType.Client` | `ClientStrategy` | 主程序侧：检查版本、下载包、准备升级上下文、启动升级程序。 |
+| `AppType.Upgrade` | `UpdateStrategy` | 升级程序侧：读取 IPC 上下文并执行文件替换。 |
+| `AppType.OssClient` | `OssStrategy` | OSS 主程序侧更新流程。 |
+| `AppType.OssUpgrade` | `OssStrategy` | OSS 升级程序侧更新流程。 |
+
+示例：独立升级程序入口。
+
+```csharp
+await new GeneralUpdateBootstrap()
+    .SetOption(Option.AppType, AppType.Upgrade)
+    .AddListenerException((_, e) => Console.WriteLine(e.Exception))
+    .LaunchAsync();
+```
+
+> 当升级程序由主程序启动时，Core 会通过加密文件 IPC 自动恢复更新上下文，通常不需要在升级程序里再次调用 `SetConfig`。
+
+### Cancel
+
+```csharp
+public void Cancel()
+```
+
+`Cancel` 会触发内部 `CancellationTokenSource`，更新策略会在安全检查点观察取消请求。适合 UI 应用把 bootstrap 保存为字段后绑定取消按钮。
+
+```csharp
+private GeneralUpdateBootstrap? _bootstrap;
+
+async Task StartUpdateAsync(UpdateRequest request)
 {
-    Console.WriteLine(ex);
+    _bootstrap = new GeneralUpdateBootstrap()
+        .SetConfig(request)
+        .AddListenerException((_, e) => Console.WriteLine(e.Exception));
+
+    await _bootstrap.LaunchAsync();
 }
 
-void OnMultiDownloadStatistics(object sender, MultiDownloadStatisticsEventArgs args)
+void CancelUpdate()
 {
-    var version = args.Version as VersionInfo;
-    Console.WriteLine(
-        $"Version: {version?.Version}, Speed: {args.Speed}, Progress: {args.ProgressPercentage}%");
-}
-
-void OnMultiDownloadCompleted(object sender, MultiDownloadCompletedEventArgs args)
-{
-    var version = args.Version as VersionInfo;
-    Console.WriteLine(args.IsComplated
-        ? $"Version {version?.Version} download completed."
-        : $"Version {version?.Version} download failed.");
-}
-
-void OnMultiAllDownloadCompleted(object sender, MultiAllDownloadCompletedEventArgs args)
-{
-    Console.WriteLine(args.IsAllDownloadCompleted
-        ? "All download tasks completed."
-        : $"Download failed. Failed versions: {args.FailedVersions.Count}");
-}
-
-void OnMultiDownloadError(object sender, MultiDownloadErrorEventArgs args)
-{
-    var version = args.Version as VersionInfo;
-    Console.WriteLine($"Version {version?.Version} download error: {args.Exception}");
-}
-
-void OnException(object sender, ExceptionEventArgs args)
-{
-    Console.WriteLine(args.Exception);
+    _bootstrap?.Cancel();
 }
 ```
 
-## 主程序侧配置示例
+### SetConfig(UpdateRequest)
 
-如果你在主程序内直接使用 Core 的 `Client` 流程，可以显式传入 `UpdateRequest`：
+```csharp
+public GeneralUpdateBootstrap SetConfig(UpdateRequest configInfo)
+```
+
+`SetConfig(UpdateRequest)` 会调用 `UpdateRequest.Validate()`，并把外部配置映射为内部 `UpdateContext`。当角色不是 `AppType.Upgrade` 时，它还会初始化临时目录和黑名单匹配器。
 
 ```csharp
 using GeneralUpdate.Core;
 using GeneralUpdate.Core.Configuration;
 
+var request = new UpdateRequest
+{
+    UpdateUrl = "https://update.example.com/api/upgrade/verification",
+    ReportUrl = "https://update.example.com/api/upgrade/report",
+    UpdateAppName = "UpgradeSample.exe",
+    MainAppName = "ClientSample.exe",
+    InstallPath = AppDomain.CurrentDomain.BaseDirectory,
+    ClientVersion = "1.0.0",
+    AppSecretKey = "your-app-secret",
+    ProductId = "your-product-id",
+    Files = new List<string> { "appsettings.json" },
+    Formats = new List<string> { ".log", ".tmp" },
+    Directories = new List<string> { "logs", "cache" }
+};
+
 await new GeneralUpdateBootstrap()
-    .SetConfig(new UpdateRequest
-    {
-        UpdateUrl = "https://update.example.com/api/upgrade/verification",
-        ReportUrl = "https://update.example.com/api/upgrade/report",
-        UpdateAppName = "UpgradeSample.exe",
-        MainAppName = "ClientSample.exe",
-        InstallPath = AppDomain.CurrentDomain.BaseDirectory,
-        ClientVersion = "1.0.0",
-        AppSecretKey = "your-app-secret",
-        ProductId = "your-product-id"
-    })
+    .SetConfig(request)
     .SetOption(Option.AppType, AppType.Client)
-    .SetOption(Option.DownloadTimeout, 60)
-    .SetOption(Option.MaxConcurrency, 3)
-    .AddListenerUpdateInfo((sender, args) =>
-    {
-        Console.WriteLine($"Server returned {args.Info.Body?.Count ?? 0} update versions.");
-    })
-    .AddListenerException((sender, args) =>
-    {
-        Console.WriteLine(args.Exception);
-    })
     .LaunchAsync();
 ```
 
-也可以使用 `SetSource` 走简化配置路径：
+### SetConfig(string)
+
+```csharp
+public GeneralUpdateBootstrap SetConfig(string filePath)
+```
+
+`SetConfig(string)` 从 UTF-8 JSON 文件读取 `UpdateRequest`。如果只传文件名，会从当前应用基目录解析；如果传相对或绝对路径，会按路径解析。
+
+```json
+{
+  "updateUrl": "https://update.example.com/api/upgrade/verification",
+  "reportUrl": "https://update.example.com/api/upgrade/report",
+  "updateAppName": "UpgradeSample.exe",
+  "mainAppName": "ClientSample.exe",
+  "installPath": "C:\\Program Files\\MyApp",
+  "clientVersion": "1.0.0",
+  "appSecretKey": "your-app-secret",
+  "productId": "your-product-id"
+}
+```
+
+```csharp
+await new GeneralUpdateBootstrap()
+    .SetConfig("update_config.json")
+    .SetOption(Option.AppType, AppType.Client)
+    .LaunchAsync();
+```
+
+### SetSource
+
+```csharp
+public GeneralUpdateBootstrap SetSource(
+    string updateUrl,
+    string appSecretKey,
+    string? reportUrl = null,
+    string? scheme = null,
+    string? token = null)
+```
+
+`SetSource` 是轻配置入口，适合把应用身份信息放到 `generalupdate.manifest.json` 或运行时发现机制里，只在代码中指定服务端入口和密钥。
 
 ```csharp
 await new GeneralUpdateBootstrap()
     .SetSource(
         updateUrl: "https://update.example.com/api/upgrade/verification",
         appSecretKey: "your-app-secret",
-        reportUrl: "https://update.example.com/api/upgrade/report")
+        reportUrl: "https://update.example.com/api/upgrade/report",
+        scheme: "Bearer",
+        token: "access-token")
     .SetOption(Option.AppType, AppType.Client)
     .LaunchAsync();
 ```
 
-## 核心执行流程
+### UseDiffPipeline
 
-1. `SetConfig` / `SetSource` 载入更新地址、应用名称、版本号、密钥、安装目录等配置。
-2. `LaunchAsync` 根据 `Option.AppType` 选择 `ClientStrategy`、`UpdateStrategy` 或 OSS 策略。
-3. Client 流程向服务端请求版本信息，并触发 `AddListenerUpdateInfo` / `AddListenerUpdatePrecheck`。
-4. Core 下载需要更新的版本包，并通过下载事件持续回调速度、进度和错误。
-5. 下载完成后执行校验、解压、差分合并和文件替换等管道步骤。
-6. Upgrade 流程完成后根据 `Option.LaunchClientAfterUpdate` 决定是否启动主程序。
-7. 如配置了 `ReportUrl` 或自定义 `UpdateReporter`，Core 会上报更新状态。
+```csharp
+public GeneralUpdateBootstrap UseDiffPipeline(Action<DiffPipelineBuilder>? configure)
+```
 
-## 常用配置项
+`UseDiffPipeline` 用于替换或调整差分补丁管道。未调用时，Core 会创建默认管道：`BsdiffDiffer`、`DefaultCleanMatcher`、`DefaultDirtyMatcher`、并行度 `2`，并接入 Core 的差分进度事件。
 
-使用 `SetOption(Option.Xxx, value)` 设置运行时选项：
+```csharp
+using GeneralUpdate.Core.Differential;
+using GeneralUpdate.Core.Models;
+using GeneralUpdate.Core.Pipeline;
+using GeneralUpdate.Differential.Differ;
 
-| 选项 | 默认值 | 说明 |
-| --- | --- | --- |
-| `Option.AppType` | `AppType.Client` | 当前进程角色。 |
-| `Option.Encoding` | `Encoding.UTF8` | 压缩包文件名/内容处理编码。 |
-| `Option.Format` | `Format.Zip` | 更新包压缩格式。 |
-| `Option.DownloadTimeout` | `30` | 下载超时时间，单位为秒。 |
-| `Option.PatchEnabled` | `true` | 是否启用差分补丁处理。 |
-| `Option.BackupEnabled` | `true` | 是否在更新前备份被替换文件。 |
-| `Option.MaxConcurrency` | `3` | 多文件下载最大并发数。 |
-| `Option.EnableResume` | `true` | 是否启用断点续传。 |
-| `Option.RetryCount` | `3` | 下载失败重试次数。 |
-| `Option.RetryInterval` | `1s` | 下载重试间隔。 |
-| `Option.VerifyChecksum` | `true` | 是否校验文件 Hash。 |
-| `Option.DiffMode` | `DiffMode.Serial` | 差分合并执行模式。 |
-| `Option.Silent` | `false` | 是否启用静默轮询更新。 |
-| `Option.SilentPollIntervalMinutes` | `60` | 静默模式检查更新间隔。 |
-| `Option.LaunchClientAfterUpdate` | `true` | 升级后是否启动主程序。 |
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .UseDiffPipeline(builder =>
+    {
+        builder
+            .UseDiffer(new StreamingHdiffDiffer())
+            .UseCleanMatcher(new DefaultCleanMatcher())
+            .UseDirtyMatcher(new DefaultDirtyMatcher())
+            .WithParallelism(4)
+            .WithStopOnFirstError(true)
+            .WithProgress(new Progress<DiffProgress>(p =>
+            {
+                Console.WriteLine($"{p.Completed}/{p.Total}: {p.FileName}");
+            }));
+    })
+    .SetOption(Option.PatchEnabled, true)
+    .LaunchAsync();
+```
 
-示例：
+## 配置模型：UpdateRequest
+
+`UpdateRequest` 是外部调用者最常用的配置对象。它继承 `UpdateConfiguration`，并在 `Validate()` 中检查关键字段。
+
+### 必填或强烈建议配置的属性
+
+| 属性 | 说明 |
+| --- | --- |
+| `UpdateUrl` | 更新检查 API 地址。必须是绝对 URL。 |
+| `UpdateAppName` | 升级程序文件名，默认 `Update.exe`。如果你的升级程序叫 `UpgradeSample.exe`，必须显式设置。 |
+| `MainAppName` | 主程序文件名。用于升级后重新启动，也用于识别要更新的应用。 |
+| `ClientVersion` | 当前主程序版本。 |
+| `AppSecretKey` | 应用密钥，用于和服务端约定认证。 |
+| `InstallPath` | 应用安装目录，默认当前应用基目录。生产环境建议显式设置。 |
+
+### 可选属性
+
+| 属性 | 说明 |
+| --- | --- |
+| `ReportUrl` | 更新状态上报 API。 |
+| `UpdateLogUrl` | 更新日志页面地址。 |
+| `UpgradeClientVersion` | 升级程序自身版本。 |
+| `ProductId` | 产品标识，同一服务端管理多个产品时使用。 |
+| `UpdatePath` | 升级程序所在目录；为空时使用 `InstallPath`。 |
+| `Bowl` | 更新前需要关闭的辅助进程名。 |
+| `Scheme` / `Token` | 请求认证信息，可与内置认证提供器配合。 |
+| `Files` | 更新时跳过的指定文件。 |
+| `Formats` | 更新时跳过的扩展名，例如 `.log`。 |
+| `Directories` | 更新时跳过的目录。 |
+| `DriverDirectory` | 驱动目录；驱动安装属于 Drivelution 文档范围。 |
+
+### 使用 UpdateRequestBuilder
+
+`UpdateRequestBuilder` 提供链式构建 API，并在 `Build()` 时执行校验。
+
+```csharp
+using GeneralUpdate.Core.Configuration;
+
+var request = new UpdateRequestBuilder()
+    .SetUpdateUrl("https://update.example.com/api/upgrade/verification")
+    .SetReportUrl("https://update.example.com/api/upgrade/report")
+    .SetUpgradeAppName("UpgradeSample.exe")
+    .SetMainAppName("ClientSample.exe")
+    .SetClientVersion("1.0.0")
+    .SetAppSecretKey("your-app-secret")
+    .SetProductId("your-product-id")
+    .SetInstallPath(AppDomain.CurrentDomain.BaseDirectory)
+    .SetFiles(new List<string> { "appsettings.json" })
+    .SetFormats(new List<string> { ".log", ".tmp" })
+    .SetDirectories(new List<string> { "logs" })
+    .Build();
+```
+
+`UpdateRequestBuilder.Create()` 会尝试从应用运行目录的 `update_config.json` 读取配置。如果文件不存在，会抛出 `FileNotFoundException`。
+
+```csharp
+var request = UpdateRequestBuilder.Create().Build();
+```
+
+## 运行选项：Option
+
+Core 使用强类型 `Option<T>` 注册运行时选项，并通过 `SetOption` 设置值。
 
 ```csharp
 await new GeneralUpdateBootstrap()
     .SetConfig(request)
     .SetOption(Option.AppType, AppType.Client)
-    .SetOption(Option.PatchEnabled, true)
-    .SetOption(Option.BackupEnabled, true)
-    .SetOption(Option.VerifyChecksum, true)
     .SetOption(Option.MaxConcurrency, 4)
+    .SetOption(Option.VerifyChecksum, true)
     .LaunchAsync();
 ```
 
-## 事件监听
+| 选项 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `Option.AppType` | `AppType` | `Client` | 当前进程角色。 |
+| `Option.DiffMode` | `DiffMode` | `Serial` | 差分执行模式。 |
+| `Option.Encoding` | `Encoding` | `UTF8` | 压缩包处理编码。 |
+| `Option.Format` | `Format` | `Zip` | 更新包格式。 |
+| `Option.DownloadTimeout` | `int?` | `30` | 下载超时时间，单位秒。 |
+| `Option.PatchEnabled` | `bool?` | `true` | 是否启用差分补丁处理。 |
+| `Option.BackupEnabled` | `bool?` | `true` | 更新前是否备份被替换文件。 |
+| `Option.Silent` | `bool` | `false` | 是否启用静默轮询更新。 |
+| `Option.SilentPollIntervalMinutes` | `int` | `60` | 静默模式轮询间隔。 |
+| `Option.LaunchClientAfterUpdate` | `bool` | `true` | 升级后是否启动主程序。 |
+| `Option.MaxConcurrency` | `int` | `3` | 下载最大并发数。 |
+| `Option.EnableResume` | `bool` | `true` | 是否启用断点续传。 |
+| `Option.RetryCount` | `int` | `3` | 下载重试次数。 |
+| `Option.VerifyChecksum` | `bool` | `true` | 是否校验下载文件 Hash。 |
+| `Option.RetryInterval` | `TimeSpan` | `1s` | 下载重试间隔。 |
 
-Core 通过事件监听器暴露更新过程状态：
+如果传入 `null` 给可空选项，`SetOption` 会移除当前设置，后续读取回到默认值。
 
-| 方法 | 触发时机 | 典型用途 |
+## 事件 API
+
+事件适合观察更新过程，不应该承载复杂业务流程。复杂流程建议封装成 `IUpdateHooks` 或 cookbook 中的完整方案。
+
+### 单个事件回调
+
+| 方法 | 参数类型 | 触发时机 |
 | --- | --- | --- |
-| `AddListenerUpdateInfo` | 服务端返回版本信息后 | 展示更新日志、版本列表、更新大小。 |
-| `AddListenerUpdatePrecheck` | 下载开始前 | 检查磁盘空间、网络环境、用户确认。 |
-| `AddListenerMultiDownloadStatistics` | 下载过程中持续触发 | 展示速度、剩余时间、百分比。 |
-| `AddListenerMultiDownloadCompleted` | 单个版本包下载完成 | 记录每个版本下载结果。 |
-| `AddListenerMultiAllDownloadCompleted` | 全部下载任务完成 | 切换 UI 状态或写日志。 |
-| `AddListenerMultiDownloadError` | 下载任务失败 | 输出失败版本和异常。 |
-| `AddListenerProgress` | 通用更新进度变化 | 对接统一进度条。 |
-| `AddListenerException` | Core 捕获到异常 | 写入日志、提示用户或上报。 |
+| `AddListenerUpdateInfo` | `UpdateInfoEventArgs` | 服务端版本信息返回后。 |
+| `AddListenerUpdatePrecheck` | `Func<UpdateInfoEventArgs, bool>` | 下载开始前，返回 `true` 继续，返回 `false` 中止。 |
+| `AddListenerMultiDownloadStatistics` | `MultiDownloadStatisticsEventArgs` | 下载过程中持续触发。 |
+| `AddListenerMultiDownloadCompleted` | `MultiDownloadCompletedEventArgs` | 单个版本下载结束。 |
+| `AddListenerMultiAllDownloadCompleted` | `MultiAllDownloadCompletedEventArgs` | 所有下载任务结束。 |
+| `AddListenerMultiDownloadError` | `MultiDownloadErrorEventArgs` | 下载失败。 |
+| `AddListenerProgress` | `ProgressEventArgs` | 下载进度或差分补丁进度变化。 |
+| `AddListenerException` | `ExceptionEventArgs` | Core 捕获异常。 |
 
-如果不想逐个注册事件，可以实现 `IUpdateEventListener` 后使用 `AddEventListener<TListener>()` 批量注册。
+```csharp
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .AddListenerUpdateInfo((_, e) =>
+    {
+        Console.WriteLine($"Versions from server: {e.Info?.Body?.Count ?? 0}");
+    })
+    .AddListenerUpdatePrecheck(e =>
+    {
+        var hasUpdate = (e.Info?.Body?.Count ?? 0) > 0;
+        var enoughDisk = DriveInfo.GetDrives()
+            .Where(d => d.IsReady)
+            .Any(d => d.AvailableFreeSpace > 1024L * 1024 * 1024);
 
-## 静默更新
+        return hasUpdate && enoughDisk;
+    })
+    .AddListenerMultiDownloadStatistics((_, e) =>
+    {
+        Console.WriteLine($"{e.ProgressPercentage}% {e.Speed} {e.BytesReceived}/{e.TotalBytesToReceive}");
+    })
+    .AddListenerMultiDownloadCompleted((_, e) =>
+    {
+        Console.WriteLine(e.IsCompleted ? "Download completed." : "Download failed.");
+    })
+    .AddListenerProgress((_, e) =>
+    {
+        if (e.Progress != null)
+            Console.WriteLine($"Download: {e.Progress.Percentage}%");
 
-静默更新适合后台定期检查更新。启用后，`Client` 流程会启动后台轮询并立即返回，更新准备完成后在进程退出时继续升级。
+        if (e.DiffProgress != null)
+            Console.WriteLine($"Patch: {e.DiffProgress.Completed}/{e.DiffProgress.Total}");
+    })
+    .AddListenerException((_, e) =>
+    {
+        Console.WriteLine(e.Message);
+        Console.WriteLine(e.Exception);
+    })
+    .LaunchAsync();
+```
+
+### 批量事件监听器
+
+实现 `IUpdateEventListener` 可以把事件处理集中到一个类。若只关心部分事件，继承 `UpdateEventListenerBase` 更简单。
+
+```csharp
+using GeneralUpdate.Core.Download;
+using GeneralUpdate.Core.Event;
+
+public sealed class ConsoleUpdateListener : UpdateEventListenerBase
+{
+    public override void OnUpdateInfo(UpdateInfoEventArgs args)
+    {
+        Console.WriteLine($"Update count: {args.Info?.Body?.Count ?? 0}");
+    }
+
+    public override void OnDownloadStatistics(MultiDownloadStatisticsEventArgs args)
+    {
+        Console.WriteLine($"{args.ProgressPercentage}% {args.Speed}");
+    }
+
+    public override void OnException(ExceptionEventArgs args)
+    {
+        Console.WriteLine(args.Exception);
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .AddEventListener<ConsoleUpdateListener>()
+    .LaunchAsync();
+```
+
+## 扩展点总览
+
+扩展点由 `AbstractBootstrap` 提供，所有注册方法都返回当前 bootstrap，可链式调用。
+
+| 注册方法 | 接口 | 影响范围 |
+| --- | --- | --- |
+| `Hooks<T>()` | `IUpdateHooks` | 更新生命周期前后置逻辑。 |
+| `UpdateReporter<T>()` | `IUpdateReporter` | 更新状态上报。 |
+| `SslPolicy<T>()` | `ISslValidationPolicy` | HTTPS 证书校验。 |
+| `UpdateAuth<T>()` | `IHttpAuthProvider` | HTTP 请求认证。 |
+| `DownloadSource<T>()` | `IDownloadSource` | 版本清单和下载资源来源。 |
+| `DownloadPolicy<T>()` | `IDownloadPolicy` | 下载重试、超时、熔断等策略。 |
+| `DownloadExecutor<T>()` | `IDownloadExecutor` | 单文件下载实现。 |
+| `DownloadPipeline<T>()` | `IDownloadPipeline` | 下载后处理，例如校验、解密、扫描。 |
+| `DownloadOrchestrator<T>()` | `IDownloadOrchestrator` | 批量下载完整编排。 |
+| `Strategy<T>()` | `IStrategy` | 自定义平台级更新策略。 |
+
+> 通过这些方法注册的类型必须有无参构造函数，因为 Core 使用 `new()` 或反射创建实例。需要复杂依赖时，建议在自定义类型内部读取配置，或在应用层封装一个无参适配器。
+
+## 生命周期钩子：IUpdateHooks
+
+`IUpdateHooks` 适合处理“更新前检查、下载完成后处理、更新完成后清理、启动应用前准备、异常处理”等业务逻辑。
+
+```csharp
+using GeneralUpdate.Core.Hooks;
+
+public sealed class ProductUpdateHooks : IUpdateHooks
+{
+    public Task<bool> OnBeforeUpdateAsync(HookContext ctx)
+    {
+        Console.WriteLine($"Before update: {ctx.CurrentVersion} -> {ctx.TargetVersion}");
+        return Task.FromResult(true);
+    }
+
+    public Task OnDownloadCompletedAsync(DownloadContext ctx)
+    {
+        Console.WriteLine($"Downloaded {ctx.AssetName}, success={ctx.Success}, path={ctx.LocalPath}");
+        return Task.CompletedTask;
+    }
+
+    public Task OnAfterUpdateAsync(HookContext ctx)
+    {
+        File.WriteAllText(Path.Combine(ctx.InstallPath, "last-update.txt"), DateTimeOffset.Now.ToString("O"));
+        return Task.CompletedTask;
+    }
+
+    public Task OnUpdateErrorAsync(HookContext ctx, Exception ex)
+    {
+        File.AppendAllText(Path.Combine(ctx.InstallPath, "update-error.log"), ex + Environment.NewLine);
+        return Task.CompletedTask;
+    }
+
+    public Task OnBeforeStartAppAsync(HookContext ctx)
+    {
+        Console.WriteLine($"Starting app from {ctx.InstallPath}");
+        return Task.CompletedTask;
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .Hooks<ProductUpdateHooks>()
+    .LaunchAsync();
+```
+
+内置实现包括：
+
+| 类型 | 说明 |
+| --- | --- |
+| `NoOpUpdateHooks` | 默认空实现。 |
+| `UnixPermissionHooks` | 在 Unix-like 系统启动前执行 `chmod +x`。 |
+| `CustomPermissionHooks` | 执行自定义权限脚本；该类型构造函数需要参数，不适合直接用 `Hooks<T>()` 注册，可自行包装无参适配器。 |
+
+## 状态上报：IUpdateReporter
+
+`IUpdateReporter` 用于把更新状态上报到服务端。
+
+```csharp
+using GeneralUpdate.Core.Download.Reporting;
+
+public sealed class ConsoleUpdateReporter : IUpdateReporter
+{
+    public Task ReportAsync(UpdateReport report, CancellationToken token = default)
+    {
+        Console.WriteLine($"Report: record={report.RecordId}, status={report.Status}, type={report.Type}");
+        return Task.CompletedTask;
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .UpdateReporter<ConsoleUpdateReporter>()
+    .LaunchAsync();
+```
+
+内置 `HttpUpdateReporter` 会向 `ReportUrl` 发送 JSON：
+
+```json
+{
+  "recordId": 123,
+  "status": 1,
+  "type": 1
+}
+```
+
+状态值：
+
+| 枚举 | 值 | 说明 |
+| --- | --- | --- |
+| `UpdateStatus.Updating` | `1` | 更新中。 |
+| `UpdateStatus.Success` | `2` | 更新成功。 |
+| `UpdateStatus.Failure` | `3` | 更新失败。 |
+
+## HTTP 认证：IHttpAuthProvider
+
+`IHttpAuthProvider` 可以为 Core 发出的 HTTP 请求追加认证头。
+
+```csharp
+using GeneralUpdate.Core.Security;
+
+public sealed class StaticBearerAuthProvider : IHttpAuthProvider
+{
+    public Task ApplyAuthAsync(HttpRequestMessage request, CancellationToken token = default)
+    {
+        request.Headers.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "access-token");
+
+        return Task.CompletedTask;
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .UpdateAuth<StaticBearerAuthProvider>()
+    .LaunchAsync();
+```
+
+Core 内置的认证类型包括 `NoOpAuthProvider`、`BearerTokenAuthProvider`、`ApiKeyAuthProvider` 和 `HmacAuthProvider`。这些类型中部分构造函数需要参数，因此如果要通过 `UpdateAuth<T>()` 注册，通常需要写一个无参包装类。
+
+## HTTPS 证书策略：ISslValidationPolicy
+
+`ISslValidationPolicy` 用于控制 HTTPS 证书校验。默认 `StrictSslValidationPolicy` 只接受没有 SSL policy errors 的证书。
+
+```csharp
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using GeneralUpdate.Core.Security;
+
+public sealed class DevelopmentSslPolicy : ISslValidationPolicy
+{
+    public bool ValidateCertificate(
+        X509Certificate2? certificate,
+        X509Chain? chain,
+        SslPolicyErrors sslPolicyErrors)
+    {
+        return sslPolicyErrors == SslPolicyErrors.None
+            || certificate?.Issuer.Contains("CN=Local Dev Root") == true;
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .SslPolicy<DevelopmentSslPolicy>()
+    .LaunchAsync();
+```
+
+生产环境不建议无条件返回 `true`，否则会绕过 HTTPS 的安全保证。
+
+## 下载来源：IDownloadSource
+
+`IDownloadSource` 负责返回待下载资源列表。适合接入私有服务、文件服务器、配置中心或自定义云存储。
+
+```csharp
+using GeneralUpdate.Core.Download.Abstractions;
+using GeneralUpdate.Core.Download.Models;
+
+public sealed class StaticDownloadSource : IDownloadSource
+{
+    public Task<DownloadSourceResult> ListAsync(CancellationToken token = default)
+    {
+        var assets = new[]
+        {
+            new DownloadAsset(
+                Name: "app-1.0.1.zip",
+                Url: "https://cdn.example.com/releases/app-1.0.1.zip",
+                Size: 25_000_000,
+                SHA256: "expected-sha256",
+                Version: "1.0.1")
+        };
+
+        return Task.FromResult(new DownloadSourceResult
+        {
+            Assets = assets,
+            HasMainUpdate = true,
+            HasUpgradeUpdate = false
+        });
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .DownloadSource<StaticDownloadSource>()
+    .LaunchAsync();
+```
+
+## 下载重试策略：IDownloadPolicy
+
+`IDownloadPolicy` 包装单次下载动作，适合实现重试、超时、熔断或限流。
+
+```csharp
+using GeneralUpdate.Core.Download.Abstractions;
+
+public sealed class TwoAttemptDownloadPolicy : IDownloadPolicy
+{
+    public async Task<T> ExecuteAsync<T>(
+        Func<CancellationToken, Task<T>> action,
+        CancellationToken token = default)
+    {
+        try
+        {
+            return await action(token);
+        }
+        catch when (!token.IsCancellationRequested)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(2), token);
+            return await action(token);
+        }
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .DownloadPolicy<TwoAttemptDownloadPolicy>()
+    .LaunchAsync();
+```
+
+如果同时注册 `DownloadOrchestrator<T>()`，自定义 orchestrator 会接管完整下载流程，`DownloadPolicy<T>()` 是否生效取决于 orchestrator 自己是否使用该策略。
+
+## 单文件下载：IDownloadExecutor
+
+`IDownloadExecutor` 负责把一个 `DownloadAsset` 下载到目标路径。适合支持 FTP、SFTP、私有协议或自定义 HTTP 客户端。
+
+```csharp
+using GeneralUpdate.Core.Download.Abstractions;
+using GeneralUpdate.Core.Download.Models;
+
+public sealed class MirrorDownloadExecutor : IDownloadExecutor
+{
+    private readonly HttpClient _client = new();
+
+    public async Task<DownloadResult> ExecuteAsync(
+        DownloadAsset asset,
+        string destPath,
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken token = default)
+    {
+        var started = DateTimeOffset.Now;
+        await using var input = await _client.GetStreamAsync(asset.Url, token);
+        await using var output = File.Create(destPath);
+        await input.CopyToAsync(output, token);
+
+        var fileInfo = new FileInfo(destPath);
+        return new DownloadResult(asset, destPath, fileInfo.Length, DateTimeOffset.Now - started, 0, true, null);
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .DownloadExecutor<MirrorDownloadExecutor>()
+    .LaunchAsync();
+```
+
+## 下载后处理：IDownloadPipeline
+
+`IDownloadPipeline` 在文件下载完成后运行。适合做 Hash 校验、解密、病毒扫描、格式转换等。
+
+```csharp
+using GeneralUpdate.Core.Download.Abstractions;
+
+public sealed class AntivirusPipeline : IDownloadPipeline
+{
+    public Task<string> ProcessAsync(string downloadedPath, CancellationToken token = default)
+    {
+        if (!File.Exists(downloadedPath))
+            throw new FileNotFoundException("Downloaded file not found.", downloadedPath);
+
+        Console.WriteLine($"Scanning {downloadedPath}");
+        return Task.FromResult(downloadedPath);
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .DownloadPipeline<AntivirusPipeline>()
+    .LaunchAsync();
+```
+
+Core 在创建下载管道时会优先尝试使用 `string` 构造函数传入期望 Hash；如果没有该构造函数，则使用无参构造函数。
+
+## 批量下载编排：IDownloadOrchestrator
+
+`IDownloadOrchestrator` 是下载子系统的最高层扩展点。注册后，它会接管批量下载、并发控制、重试、进度和结果汇总。
+
+```csharp
+using GeneralUpdate.Core.Download.Abstractions;
+using GeneralUpdate.Core.Download.Executors;
+using GeneralUpdate.Core.Download.Models;
+
+public sealed class SerialDownloadOrchestrator : IDownloadOrchestrator
+{
+    private readonly IDownloadExecutor _executor = new HttpDownloadExecutor(new HttpClient());
+
+    public async Task<DownloadReport> ExecuteAsync(
+        DownloadPlan plan,
+        string destDir,
+        int maxConcurrency = 3,
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken token = default)
+    {
+        var results = new List<DownloadResult>();
+        var started = DateTimeOffset.Now;
+
+        foreach (var asset in plan.Assets)
+        {
+            var destPath = Path.Combine(destDir, asset.Name);
+            results.Add(await _executor.ExecuteAsync(asset, destPath, progress, token));
+        }
+
+        return new DownloadReport(
+            results,
+            results.Where(r => r.Success).Sum(r => r.DownloadedBytes),
+            DateTimeOffset.Now - started,
+            results.Count(r => r.Success),
+            results.Count(r => !r.Success));
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .DownloadOrchestrator<SerialDownloadOrchestrator>()
+    .LaunchAsync();
+```
+
+只有当你需要完整替换下载行为时才建议实现 orchestrator。多数情况下替换 `IDownloadExecutor`、`IDownloadPolicy` 或 `IDownloadPipeline` 就够了。
+
+## 平台策略：IStrategy
+
+`IStrategy` 是最高级别的更新策略接口。Core 内置 `ClientStrategy`、`UpdateStrategy`、`OssStrategy` 以及 Windows/Linux/macOS 平台策略。只有在你需要替换平台级文件操作或启动逻辑时，才应实现它。
+
+```csharp
+using GeneralUpdate.Core.Configuration;
+using GeneralUpdate.Core.Download.Reporting;
+using GeneralUpdate.Core.Hooks;
+using GeneralUpdate.Core.Strategy;
+
+public sealed class LoggingStrategy : IStrategy
+{
+    private UpdateContext? _context;
+
+    public IUpdateHooks Hooks { get; set; } = new NoOpUpdateHooks();
+    public IUpdateReporter Reporter { get; set; } = new HttpUpdateReporter();
+
+    public void Create(UpdateContext parameter)
+    {
+        _context = parameter;
+    }
+
+    public async Task ExecuteAsync()
+    {
+        if (_context == null)
+            throw new InvalidOperationException("Strategy was not initialized.");
+
+        Console.WriteLine($"Custom strategy executing in {_context.InstallPath}");
+        await Hooks.OnBeforeUpdateAsync(new HookContext(
+            _context.UpdateAppName,
+            _context.InstallPath,
+            _context.ClientVersion,
+            _context.LastVersion,
+            _context.AppType ?? AppType.Client));
+    }
+
+    public Task StartAppAsync()
+    {
+        Console.WriteLine("Custom start app logic.");
+        return Task.CompletedTask;
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .Strategy<LoggingStrategy>()
+    .LaunchAsync();
+```
+
+## 静默更新选项
+
+静默更新通过选项启用，不需要额外接口。启用后，`Client` 角色会启动后台轮询并立即返回。
 
 ```csharp
 await new GeneralUpdateBootstrap()
@@ -231,55 +813,18 @@ await new GeneralUpdateBootstrap()
     .LaunchAsync();
 ```
 
-静默更新仍然需要正确配置更新地址、应用密钥、主程序名称、升级程序名称和安装目录。
-
-## 扩展点
-
-`GeneralUpdateBootstrap` 继承自 `AbstractBootstrap`，可以替换多个内部组件：
-
-| 方法 | 用途 |
-| --- | --- |
-| `Strategy<T>()` | 指定自定义平台策略。 |
-| `Hooks<T>()` | 注入更新前、下载后、更新后、启动前、异常时的生命周期钩子。 |
-| `UpdateReporter<T>()` | 自定义更新状态上报。 |
-| `SslPolicy<T>()` | 自定义 HTTPS 证书校验策略。 |
-| `UpdateAuth<T>()` | 为 HTTP 请求添加认证信息。 |
-| `DownloadSource<T>()` | 自定义版本清单和文件来源。 |
-| `DownloadPolicy<T>()` | 自定义下载重试/超时策略。 |
-| `DownloadExecutor<T>()` | 自定义单文件下载实现。 |
-| `DownloadPipeline<T>()` | 自定义下载后处理，例如解密、杀毒、校验。 |
-| `DownloadOrchestrator<T>()` | 完全接管批量下载流程。 |
-
-高级项目可以只替换某一个环节，而不需要 fork Core。
+适合把“是否启用、何时提示用户、如何处理退出时升级”等完整策略写到 cookbook，而组件文档只需要说明相关 API。
 
 ## 与 GeneralUpdate.Tools 的关系
 
-Core 消费的是更新服务端或 OSS 返回的版本清单和更新包。`GeneralUpdate.Tools` 用来帮助生成和验证这些输入：
+Core 消费更新清单和更新包；`GeneralUpdate.Tools` 负责辅助生成和验证这些产物。
 
-- 使用 Patch Package 生成差分更新包。
-- 使用 Extension Package 生成扩展包。
-- 使用 OSS Config 准备云存储分发配置。
-- 使用模拟、报告和 Hash 相关能力提前验证包结构与完整性。
-
-推荐流程是：先用 Tools 生成并校验更新包，再把包和版本清单发布到服务端或 OSS，最后由 Core 在客户端执行更新。
-
-## 常见问题
-
-### 升级程序启动后没有执行更新
-
-确认它是否由主程序启动。如果直接双击独立升级程序，通常没有 IPC 上下文，`Upgrade` 流程无法知道安装目录和待更新版本。开发调试时可以先从主程序触发完整流程。
-
-### 文件替换失败
-
-通常是主程序或 Bowl 进程仍占用文件。确认主程序已退出，并正确配置 `Bowl` 进程名或相关关闭逻辑。
-
-### 下载成功但校验失败
-
-确认服务端或 OSS 上的包没有被重新压缩、截断或替换。若启用了 `Option.VerifyChecksum`，客户端收到的 Hash 必须和清单中的 Hash 一致。
-
-### 差分包没有生效
-
-确认服务端返回的是差分包清单，并且 `Option.PatchEnabled` 为 `true`。差分包建议通过 `GeneralUpdate.Tools` 生成，避免手工组织目录导致清单和包内容不一致。
+| Tools 能力 | Core 中对应消费点 |
+| --- | --- |
+| Patch Package | `Option.PatchEnabled`、`UseDiffPipeline`、差分补丁处理。 |
+| Extension Package | 作为更新包内容或扩展包分发，由下载和部署流程消费。 |
+| OSS Config | `OssClient` / `OssUpgrade` 角色读取 OSS 配置并下载。 |
+| Hash / Simulation / Report | 对应 `Option.VerifyChecksum`、下载后校验和状态上报。 |
 
 ## 相关示例
 
