@@ -173,20 +173,41 @@ await differ.DirtyAsync(oldFile, outputFile, patchFile);
 | 核心思路 | 经典 BSDIFF 4.0，基于后缀排序寻找旧文件和新文件之间的最长匹配。 | 使用块级 FNV-1a 哈希建立旧文件索引，先用哈希快速筛选候选块，再做字节级扩展匹配。 |
 | 默认压缩 | BZip2 (`0x00`)。 | Deflate (`0x01`)。 |
 | 补丁应用 | 自己实现 BSDIFF Dirty 逻辑。 | `DirtyAsync` 委托给 `BsdiffDiffer`，因此应用阶段和 BSDIFF 补丁兼容。 |
-| 生成效率 | 匹配更精细，但后缀排序和全量读入会带来更高 CPU/内存开销。 | 候选查找更快，通常更适合大量文件的批量构建。 |
+| 生成效率 | 匹配更精细，局部或分散变化下补丁生成表现稳定；但后缀排序和全量读入会带来 CPU/内存开销。 | 块命中效果好时生成更快；如果变化分散、块哈希命中少，生成可能变慢。 |
 | 客户端应用性能 | 默认 BZip2 解压成本更高，客户端应用大量补丁时耗时可能更明显。 | 默认 Deflate 解压更快，更适合客户端批量应用补丁。 |
-| 补丁体积倾向 | 通常更追求细粒度匹配，补丁体积表现稳定。 | 速度优先，补丁体积与文件变化分布、块大小、窗口预算有关。 |
+| 补丁体积倾向 | 通常更追求细粒度匹配，补丁体积明显更稳定。 | 速度优先，补丁体积与文件变化分布、块大小、窗口预算强相关；块命中差时可能接近完整文件。 |
 | 内存特征 | 生成阶段读取旧文件和新文件，单个大文件需要关注内存峰值。 | 通过 `BlockSize` 和 `MaxWindowSize` 控制匹配窗口，超大单文件需要额外验证或调参。 |
 | 兼容性 | 最适合需要兼容旧 BSDIFF/BZip2 补丁的场景。 | 适合新项目、目录级批量差分和 Core `DiffPipeline` 默认构建。 |
 
-可以简单理解为：`BsdiffDiffer` 更偏“兼容和补丁体积稳定”，`StreamingHdiffDiffer` 更偏“构建效率和客户端应用性能”。如果项目文件数量很多、发布构建频繁，优先考虑 `StreamingHdiffDiffer`；如果需要兼容历史补丁或更保守的补丁格式，优先考虑 `BsdiffDiffer`。
+可以简单理解为：`BsdiffDiffer` 更偏“兼容和补丁体积稳定”，`StreamingHdiffDiffer` 更偏“客户端应用速度和可调参数”。如果项目非常在意补丁体积或文件变化较分散，优先考虑 `BsdiffDiffer`；如果项目更在意客户端应用速度，并且经过压测确认补丁体积可接受，可以考虑 `StreamingHdiffDiffer`。
+
+### 参考基准数据 {#benchmark-reference}
+
+下面数据来自当前源码的一组本地微基准，用于给开发者判断量级，不是跨所有项目的性能承诺。测试环境为 Windows x64、.NET Release 构建，使用 2-4 MB 合成文件；真实结果会受 CPU、磁盘、文件类型、变化比例、压缩级别和并行度影响。
+
+| 场景 | `BsdiffDiffer` 生成 | `StreamingHdiffDiffer` 生成 | `BsdiffDiffer` 应用 | `StreamingHdiffDiffer` 应用 | `BsdiffDiffer` 补丁体积 | `StreamingHdiffDiffer` 补丁体积 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 MB 文本，少量行变更/插入 | 484 ms | 2059 ms | 55 ms | 36 ms | 0.05% | 3.50% |
+| 4 MB 二进制，连续局部块变更 | 1030 ms | 318 ms | 55 ms | 11 ms | 2.58% | 100.04% |
+| 4 MB 二进制，随机分散字节变更 | 757 ms | 4176 ms | 70 ms | 30 ms | 2.18% | 100.27% |
+
+从这组数据可以得到几个实用预估：
+
+| 指标 | 参考结论 |
+| --- | --- |
+| 补丁体积 | `BsdiffDiffer` 在测试场景中约为新文件的 0.05%-2.58%；`StreamingHdiffDiffer` 约为 3.50%-100%。如果补丁包大小是第一优先级，优先测试 `BsdiffDiffer`。 |
+| 客户端应用速度 | `StreamingHdiffDiffer` 默认 Deflate，在测试中应用补丁约快 1.5-5 倍。大量文件批量应用时，这个差距会更明显。 |
+| 生成速度 | 没有绝对赢家：连续局部二进制变更中 `StreamingHdiffDiffer` 约快 3.2 倍；文本和随机分散变更中 `BsdiffDiffer` 约快 4.3-5.5 倍。 |
+| 大型项目选择 | 大型项目建议同时看“补丁总体积 + 构建耗时 + 客户端应用耗时”。如果大量文件可以并行，`WithParallelism(...)` 往往比单个 differ 的微小差距更影响总体耗时。 |
+
+> 这组数据的重点是帮助判断方向：`BsdiffDiffer` 通常更容易得到小补丁，`StreamingHdiffDiffer` 的应用阶段更快，但补丁体积和生成速度对文件变化形态非常敏感。正式发布前建议用自己项目的真实产物做一次压测。
 
 推荐选择：
 
 | 场景 | 建议 |
 | --- | --- |
 | 只需要低层单文件补丁，并希望最大兼容 | 使用 `new BsdiffDiffer()`。 |
-| 通过 Core `DiffPipeline` 批量生成目录级补丁 | 使用默认 `StreamingHdiffDiffer`，并结合 `WithParallelism(...)` 提升吞吐。 |
+| 通过 Core `DiffPipeline` 批量生成目录级补丁 | 先用默认配置跑基准；若补丁体积偏大，可显式切换到 `BsdiffDiffer`；再结合 `WithParallelism(...)` 提升吞吐。 |
 | 客户端解压性能更敏感 | 优先选择 Deflate 补丁，即 `StreamingHdiffDiffer` 默认配置，或 `new BsdiffDiffer(new DeflateCompressionProvider())`。 |
 | 历史补丁仍是旧 BSDIFF/BZip2 | 使用 `BsdiffDiffer` 应用；32 字节头会按 BZip2 处理。 |
 | 大型项目包含大量 DLL、资源文件、插件文件 | 使用 Core `DiffPipeline` 做文件级并行，避免自己逐个文件串行调用 Differential。 |
