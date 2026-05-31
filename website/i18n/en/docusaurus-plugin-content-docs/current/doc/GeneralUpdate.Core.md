@@ -634,7 +634,7 @@ Callbacks may be raised from the update workflow thread, download task threads, 
 | Method | Argument type | Trigger in the current code | Important fields | Recommended use |
 | --- | --- | --- | --- | --- |
 | `AddListenerUpdateInfo` | `UpdateInfoEventArgs` | Fired by the standard `Client` strategy after version comparison. When no update is needed, it still fires once with `Info.Code = 404` and an empty `Info.Body`; when updates are needed, `Info.Body` contains the `VersionEntry` list to download. | `Info.Code`, `Info.Message`, `Info.Body`; `VersionEntry` includes `RecordId`, `Name`, `Version`, `Url`, `Hash`, `AppType`, `IsForcibly`, `UpgradeMode`, `FromVersion`, `ToVersion`, and more. | Show release notes, update count, forced-update hints, or log version metadata. Do not replace files here. |
-| `AddListenerUpdatePrecheck` | `Func<UpdateInfoEventArgs, bool>` | Runs after `UpdateInfo` and before hooks/download. In the current `ClientStrategy.CanSkip` implementation, returning `true` skips this non-forced update; returning `false` continues. Forced updates ignore this skip path and continue. | Same input as `UpdateInfoEventArgs`. | Make lightweight pre-download decisions. Return `true` for "skip now" cases such as low disk space, user chose later, or disallowed network type. Use `IUpdateHooks.OnBeforeUpdateAsync` for asynchronous, cancelable, or side-effecting workflows. |
+| `AddListenerUpdatePrecheck` | `Func<UpdateInfoEventArgs, bool>` | Runs after `UpdateInfo` and before hooks/download. In the current `ClientStrategy.CanSkip` implementation, returning `true` skips this non-forced update; returning `false` continues. Forced updates do not enter the skip check. | Same input as `UpdateInfoEventArgs`; it can read all `VersionEntry` items involved in this update, including version numbers, release notes, hashes, package URLs, upgrade modes, and cross-version ranges. | Make lightweight pre-download decisions. You can also format the version information into a dialog so the user can read the update contents and decide whether to continue. Use `IUpdateHooks.OnBeforeUpdateAsync` for asynchronous, cancelable, or side-effecting workflows. |
 | `AddListenerProgress` | `ProgressEventArgs` | Fired when the default download path reports `DownloadProgress`; also fired when the differential Clean / Dirty pipeline reports `DiffProgress`. Exactly one of `Progress` or `DiffProgress` is non-null in a single event. | Download: `Progress.AssetName`, `BytesDownloaded`, `TotalBytes`, `Percentage`, `Status`. Differential: `DiffProgress.Completed`, `Total`, `CurrentFile`, `Percentage`, `IsComplete`, `Error`. | Update progress bars, status text, downloaded size, and differential patch progress. Prefer this event for default download progress. |
 | `AddListenerMultiDownloadCompleted` | `MultiDownloadCompletedEventArgs` | Fired when `DownloadProgressReporter` receives `DownloadStatus.Completed`. In the default bridge, `Version` carries `AssetName`; custom downloaders may pass their own object. | `Version`, `IsCompleted`. | Mark one asset/reporting item as completed or append a download log entry. Do not treat it as "all downloads completed". |
 | `AddListenerMultiAllDownloadCompleted` | `MultiAllDownloadCompletedEventArgs` | Fired once after `DefaultDownloadOrchestrator` waits for all download tasks. With parallel downloads, this happens after every task has completed and failed results have been collected. | `IsAllDownloadCompleted`; `FailedVersions` is the failure detail list, with entries shaped as `(asset, errorMessage)`. | Refresh overall UI, write a failure summary, or decide whether to show a retry entry after all downloads finish. |
@@ -644,7 +644,7 @@ Callbacks may be raised from the update workflow thread, download task threads, 
 
 Items in `UpdateInfoEventArgs.Info.Body` are packages that Core needs to process after version comparison, app-type filtering, and download-plan construction. They are not merely a raw HTTP response passthrough. Read `VersionEntry` properties directly when you need download URLs, hashes, forced-update flags, or cross-version differential ranges.
 
-`AddListenerUpdatePrecheck` is easy to misread. In the current code, returning `true` means "skip this non-forced update", not "continue downloading". If you only want to observe version metadata, do not register a precheck callback. Return `true` only when you want to stop a non-forced update because the user cancelled, disk space is low, the current network is not allowed, and so on.
+`AddListenerUpdatePrecheck` is easy to misread. In the current code, returning `true` means "skip this non-forced update", not "continue downloading". It fits the "confirm before download" scenario: collect version numbers, release notes, package sizes, and upgrade types from `UpdateInfoEventArgs.Info.Body`, show them in a dialog, then return `false` when the user accepts the update. Return `true` when the user chooses later, disk space is low, or the current network is not allowed. If you only need to display server version metadata and do not need skip/continue control, subscribe to `AddListenerUpdateInfo` instead.
 
 ```csharp
 await new GeneralUpdateBootstrap()
@@ -655,14 +655,16 @@ await new GeneralUpdateBootstrap()
     })
     .AddListenerUpdatePrecheck(e =>
     {
-        var hasUpdate = (e.Info?.Body?.Count ?? 0) > 0;
+        var versions = e.Info?.Body;
+        var hasUpdate = (versions?.Count ?? 0) > 0;
         var enoughDisk = DriveInfo.GetDrives()
             .Where(d => d.IsReady)
             .Any(d => d.AvailableFreeSpace > 1024L * 1024 * 1024);
+        var userRejected = versions != null && !ShowUpdateDialog(versions);
 
         // In the current implementation, true means "skip non-forced update";
         // false means "continue".
-        return !hasUpdate || !enoughDisk;
+        return !hasUpdate || !enoughDisk || userRejected;
     })
     .AddListenerMultiDownloadCompleted((_, e) =>
     {
