@@ -4,745 +4,370 @@ sidebar_position: 12
 
 ### Definition
 
-Namespace: GeneralUpdate.Drivelution
+Namespace: `GeneralUpdate.Drivelution`
 
-Assembly: GeneralUpdate.Drivelution.dll
-
-
-
-GeneralUpdate.Drivelution is a cross-platform driver update component that provides automatic detection, validation, backup, installation, and rollback capabilities for device drivers. It supports Windows, Linux, and MacOS platforms and offers a unified API interface to simplify the driver update process while ensuring security and reliability.
+Assembly: `GeneralUpdate.Drivelution.dll`
 
 ```c#
 public static class GeneralDrivelution
 ```
 
+`GeneralUpdate.Drivelution` is a cross-platform component for operating-system driver updates. It turns the risky parts of driver servicing into a unified pipeline: platform detection, permission checks, file validation, backup, installation, post-install verification, and rollback entry points. Windows, Linux, and macOS implementations call the native tools that each platform expects for driver installation.
 
+Driver updates are different from normal application file updates. Application updates usually download, extract, replace files, and restart a process. Driver updates can affect the kernel, device nodes, system extensions, or the system driver store, so they also need administrator/root permissions, trusted signatures, target OS and CPU architecture checks, command-result handling, restart planning, and a recovery path. Drivelution covers operating-system driver updates only; it does not handle device-internal flashing workflows.
 
-### Applicable Scenarios
+### Capability overview
 
-GeneralUpdate.Drivelution is suitable for the following scenarios:
+| Capability | Current implementation |
+| --- | --- |
+| Platform adaptation | `GeneralDrivelution.Create()` automatically chooses the Windows, Linux, or macOS implementation. |
+| Standard pipeline | Windows/Linux run a permission step before `Validate -> Backup -> Install -> Verify`. macOS currently includes a `CheckSudo` step and then runs system commands; actual installation still depends on system permissions. |
+| Validation | File existence, optional hash validation, optional signature validation, target OS and architecture compatibility. |
+| Backup | `UpdateStrategy.RequireBackup` defaults to `true`; the backup root comes from `UpdateStrategy.BackupPath`. |
+| Installation | Windows uses `pnputil.exe`; Linux uses `insmod`/`modprobe`, `dpkg`, `rpm`/`dnf`; macOS uses system tools such as `kextload` and `installer`. |
+| Rollback | `RollbackAsync(backupPath)` is exposed. Windows reinstalls backed-up `.inf` files, Linux restores `.ko` modules, and macOS restores `.kext` bundles. |
+| Batch/parallel work | `BatchUpdateAsync` supports `BatchMode.Sequential` and `BatchMode.Parallel` for large driver sets. |
+| Logging | `GeneralTracer` writes to console and `Logs\generalupdate-trace yyyy-MM-dd.log` by default, and can be disabled with `SetTracingEnabled(false)`. |
 
-- **Enterprise device management**: Batch update drivers for multiple devices in corporate environments
-- **IoT device updates**: Remote driver updates for embedded systems and IoT devices
-- **Hardware vendor software**: Integrate driver update functionality into hardware vendor applications
-- **System maintenance tools**: Build automated driver update and maintenance tools
-- **Cross-platform applications**: Applications that need to manage drivers on multiple operating systems
+### When to use Drivelution
 
+Use Drivelution when:
 
+- A hardware-vendor client needs to ship NIC, capture-card, USB, virtual-device, or similar drivers.
+- Enterprise or industrial environments need to scan driver packages and update them from a manifest-like list.
+- An installer, maintenance tool, or device-management service needs one API across Windows/Linux/macOS.
+- You need hash, signature, OS, and architecture validation before installation, plus a backup path for recovery.
 
-### Installation & Configuration
+Do not use Drivelution as a generic application file updater. If you only need to update your own exe, dll, assets, or plugins, use the `GeneralUpdate.Core` application update flow instead.
 
-#### Installation
-
-Install via NuGet package manager:
+### Installation
 
 ```bash
 dotnet add package GeneralUpdate.Drivelution
 ```
 
-Or add the following to your project file:
+Or add the package reference:
 
 ```xml
 <PackageReference Include="GeneralUpdate.Drivelution" Version="*" />
 ```
 
-#### Configuration
-
-Create a configuration options object (optional, defaults are used if not specified):
-
-```c#
-var options = new DrivelutionOptions
-{
-    LogLevel = "Info",                          // Log level (Debug/Info/Warn/Error/Fatal)
-    LogFilePath = "./Logs/drivelution-.log",    // Log file path
-    EnableConsoleLogging = true,                // Enable console logging
-    EnableFileLogging = true,                   // Enable file logging
-    DefaultBackupPath = "./DriverBackups",      // Default backup path
-    DefaultRetryCount = 3,                      // Default retry count
-    DefaultRetryIntervalSeconds = 5,            // Default retry interval (seconds)
-    DefaultTimeoutSeconds = 300,                // Default timeout (seconds)
-    AutoCleanupBackups = true,                  // Auto cleanup old backups
-    BackupsToKeep = 5                           // Number of backups to keep
-};
-```
-
-
-
-### Quick Start
-
-#### Basic Usage (Hello World)
-
-The simplest driver update example:
+### Quick start: update one driver
 
 ```c#
 using GeneralUpdate.Drivelution;
 using GeneralUpdate.Drivelution.Abstractions.Models;
 
-// 1. Create driver information
-var driverInfo = new DriverInfo
+var driver = new DriverInfo
 {
     Name = "MyDevice Driver",
     Version = "1.2.0",
-    FilePath = "C:\\Drivers\\mydevice.inf",  // Windows: .inf, Linux: .ko, MacOS: .kext
+    FilePath = @"C:\Drivers\mydevice.inf",
     TargetOS = "Windows",
     Architecture = "x64",
-    Hash = "abc123...",                       // SHA256 hash of the driver file
-    HashAlgorithm = "SHA256"
+    Hash = "driver-file-sha256",
+    HashAlgorithm = "SHA256",
+    TrustedPublishers = { "Contoso Hardware" }
 };
 
-// 2. Quick update with default settings
-var result = await GeneralDrivelution.QuickUpdateAsync(driverInfo);
+var result = await GeneralDrivelution.QuickUpdateAsync(driver);
 
-// 3. Check result
 if (result.Success)
 {
-    Console.WriteLine("Driver updated successfully!");
-    Console.WriteLine($"Duration: {result.DurationMs}ms");
+    Console.WriteLine($"Driver updated. Duration={result.DurationMs}ms");
 }
 else
 {
-    Console.WriteLine($"Update failed: {result.Error?.Message}");
+    Console.WriteLine($"Driver update failed: {result.Error?.Message}");
+    Console.WriteLine(string.Join(Environment.NewLine, result.StepLogs));
 }
 ```
 
-#### Advanced Usage with Custom Strategy
+`QuickUpdateAsync` creates the updater for the current platform and uses safe defaults: backup is required, failures can be retried 3 times, and the retry interval is 5 seconds. In production, pass an explicit `UpdateStrategy`, especially for backup location, timeout, and restart behavior.
+
+### Custom strategy
 
 ```c#
 using GeneralUpdate.Drivelution;
-using GeneralUpdate.Drivelution.Abstractions.Models;
 using GeneralUpdate.Drivelution.Abstractions.Configuration;
+using GeneralUpdate.Drivelution.Abstractions.Models;
 
-// 1. Create configuration options
 var options = new DrivelutionOptions
 {
-    LogLevel = "Debug",
-    DefaultBackupPath = "C:\\DriverBackups"
+    DefaultBackupPath = @"C:\DriverBackups",
+    DefaultRetryCount = 3,
+    DefaultRetryIntervalSeconds = 5,
+    DefaultTimeoutSeconds = 600,
+    UseExponentialBackoff = true,
+    ForceTerminateOnPermissionFailure = true
 };
 
-// 2. Create updater instance
 var updater = GeneralDrivelution.Create(options);
 
-// 3. Define driver information
-var driverInfo = new DriverInfo
-{
-    Name = "Graphics Driver",
-    Version = "2.1.0",
-    FilePath = "C:\\Drivers\\graphics.inf",
-    TargetOS = "Windows",
-    Architecture = "x64",
-    Hash = "def456...",
-    HashAlgorithm = "SHA256",
-    HardwareId = "PCI\\VEN_10DE&DEV_1234",
-    Description = "NVIDIA Graphics Driver"
-};
-
-// 4. Define update strategy
 var strategy = new UpdateStrategy
 {
-    RequireBackup = true,                      // Enable backup
-    BackupPath = "C:\\DriverBackups\\graphics",
-    RetryCount = 3,                            // Retry 3 times on failure
-    RetryIntervalSeconds = 5,                  // Wait 5 seconds between retries
-    RestartMode = RestartMode.Prompt,          // Prompt user to restart
-    SkipSignatureValidation = false,           // Enable signature validation
-    TimeoutSeconds = 600                       // 10-minute timeout
+    RequireBackup = true,
+    BackupPath = @"C:\DriverBackups\graphics",
+    RetryCount = 3,
+    RetryIntervalSeconds = 5,
+    TimeoutSeconds = 600,
+    RestartMode = RestartMode.Prompt,
+    SkipHashValidation = false,
+    SkipSignatureValidation = false
 };
 
-// 5. Execute update
-var result = await updater.UpdateAsync(driverInfo, strategy);
+var progress = new Progress<UpdateProgress>(p =>
+{
+    Console.WriteLine($"{p.Percentage}% {p.StepName}: {p.Message}");
+});
 
-// 6. Handle result
-if (result.Success)
+var result = await updater.UpdateAsync(driver, strategy, progress);
+
+if (!result.Success && result.BackupPath is not null)
 {
-    Console.WriteLine($"✓ Update succeeded in {result.DurationMs}ms");
-    if (!string.IsNullOrEmpty(result.BackupPath))
-    {
-        Console.WriteLine($"✓ Backup saved to: {result.BackupPath}");
-    }
-}
-else
-{
-    Console.WriteLine($"✗ Update failed: {result.Error?.Code}");
-    Console.WriteLine($"  Message: {result.Error?.Message}");
-    
-    if (result.RolledBack)
-    {
-        Console.WriteLine("✓ System rolled back to previous state");
-    }
+    await updater.RollbackAsync(result.BackupPath);
 }
 ```
 
+> Note: `UpdateStrategy.RetryCount` and `RetryIntervalSeconds` exist on the strategy model. The current pipeline retry policy is created from `DrivelutionOptions.DefaultRetryCount`, `DefaultRetryIntervalSeconds`, and `UseExponentialBackoff`. Configure `DrivelutionOptions` when you need to control retry behavior consistently.
 
+### Dependency injection
 
-### Core Modules & API Description
+Generic Host, ASP.NET Core, and custom containers can register the current-platform implementation:
 
-#### Main Entry Class: GeneralDrivelution
+```c#
+using GeneralUpdate.Drivelution.Core;
 
-The static entry class provides the following methods:
+builder.Services.AddDrivelution(options =>
+{
+    options.DefaultBackupPath = "./DriverBackups";
+    options.DefaultTimeoutSeconds = 600;
+});
+
+var updater = GeneralDrivelution.Create(builder.Services.BuildServiceProvider());
+```
+
+`AddDrivelution` registers `ICommandRunner`, the platform `IDriverValidator`, `IDriverBackup`, and `IGeneralDrivelution`.
+
+### API overview
+
+#### `GeneralDrivelution`
 
 | Method | Description |
-| ------ | ----------- |
-| `Create(options?)` | Creates a driver updater instance with automatic platform detection |
-| `Create(logger, options?)` | Creates a driver updater instance with custom logger |
-| `QuickUpdateAsync(driverInfo)` | Quick driver update with default settings |
-| `QuickUpdateAsync(driverInfo, strategy)` | Quick driver update with custom strategy |
-| `ValidateAsync(driverInfo)` | Validates driver file |
-| `GetPlatformInfo()` | Gets current platform information |
-| `GetDriversFromDirectoryAsync(path)` | Reads driver information from local directory |
+| --- | --- |
+| `Create(DrivelutionOptions? options = null)` | Detects the current OS and creates the platform driver updater. |
+| `Create(IServiceProvider serviceProvider)` | Resolves `IGeneralDrivelution` from DI; falls back to automatic platform creation if not registered. |
+| `QuickUpdateAsync(driverInfo, strategy?, progress?, token?)` | Updates one driver with default or custom strategy. |
+| `ValidateAsync(driverInfo, token?)` | Validates a driver with the current platform validator. |
+| `GetPlatformInfo()` | Returns platform, OS, architecture, system version, and support status. |
+| `GetDriversFromDirectoryAsync(path, pattern?, token?)` | Scans a directory and parses driver information. |
+| `BatchUpdateAsync(drivers, strategy, mode, progress?, token?)` | Updates multiple drivers sequentially or in parallel. |
 
-#### Core Interface: IGeneralDrivelution
-
-The updater interface provides the following capabilities:
+#### `IGeneralDrivelution`
 
 | Method | Description |
-| ------ | ----------- |
-| `UpdateAsync(driverInfo, strategy, token?)` | Updates driver asynchronously |
-| `ValidateAsync(driverInfo, token?)` | Validates driver asynchronously |
-| `BackupAsync(driverInfo, backupPath, token?)` | Backs up driver asynchronously |
-| `RollbackAsync(backupPath, token?)` | Rolls back driver asynchronously |
-| `GetDriversFromDirectoryAsync(path, pattern?, token?)` | Reads driver information from directory |
+| --- | --- |
+| `UpdateAsync(driverInfo, strategy, progress?, token?)` | Runs the full update pipeline. |
+| `ValidateAsync(driverInfo, token?)` | Validates a driver only. |
+| `BackupAsync(driverInfo, backupPath, token?)` | Backs up the driver file. |
+| `RollbackAsync(backupPath, token?)` | Attempts platform-specific recovery from a backup. |
+| `GetDriversFromDirectoryAsync(path, pattern?, token?)` | Scans a directory. |
+| `BatchUpdateAsync(drivers, strategy, mode, progress?, token?)` | Processes multiple drivers. |
 
-#### Data Models
+### Data models
 
-##### DriverInfo
+#### `DriverInfo`
 
-Driver information model:
+| Property | Description |
+| --- | --- |
+| `Name` | Driver name. |
+| `Version` | Driver version. Directory scanning tries to read it from INF, `modinfo`, package metadata, or plist data, and falls back to `1.0.0`. |
+| `FilePath` | Driver file path. Windows usually uses `.inf`, Linux uses `.ko`/`.deb`/`.rpm`, and macOS uses `.kext`/`.dext`/`.pkg`. |
+| `TargetOS` | Target operating system. Empty means no OS restriction; otherwise it must contain the current OS name, such as `Windows`, `Linux`, or `MacOS`. |
+| `Architecture` | Target architecture. Common aliases are normalized: `x64/amd64/x86_64`, `x86/i386/i686`, `arm64/aarch64`, `arm/armv7`. |
+| `HardwareId` | Hardware ID or module alias. Windows parses INF metadata; Linux can read `modinfo alias`. |
+| `Hash` / `HashAlgorithm` | Integrity validation. `SHA256` and compatibility `MD5` are supported. |
+| `TrustedPublishers` | Trusted publisher list. Signature validation runs only when this list is not empty and signature validation is not skipped. |
+| `Description`, `ReleaseDate`, `Metadata` | Display and extension data. |
 
-| Property | Type | Description |
-| -------- | ---- | ----------- |
-| `Name` | string | Driver name |
-| `Version` | string | Driver version (follows SemVer 2.0) |
-| `FilePath` | string | Driver file path |
-| `TargetOS` | string | Target operating system |
-| `Architecture` | string | System architecture (x86, x64, ARM, ARM64) |
-| `HardwareId` | string | Hardware ID (Windows hardware ID or Linux PCI/USB device ID) |
-| `Hash` | string | File hash for integrity validation |
-| `HashAlgorithm` | string | Hash algorithm (SHA256, MD5) |
-| `TrustedPublishers` | List\<string\> | Trusted publishers list |
-| `Description` | string | Driver description |
-| `ReleaseDate` | DateTime | Driver release date |
-| `Metadata` | Dictionary | Additional metadata |
+#### `UpdateStrategy`
 
-##### UpdateStrategy
+| Property | Description |
+| --- | --- |
+| `RequireBackup` | Whether to run the backup step. Defaults to `true`. |
+| `BackupPath` | Backup root. The pipeline creates `backup_{Name}_{yyyyMMddHHmmss}` under this path. |
+| `RestartMode` | Restart intent: `None`, `Prompt`, `Delayed`, or `Immediate`. The current update pipeline does not restart the system automatically; call `RestartHelper.HandleRestartAsync(...)` after success if needed. |
+| `SkipHashValidation` | Skips hash validation. Recommended only for debugging or controlled environments. |
+| `SkipSignatureValidation` | Skips signature validation. Recommended only for debugging or controlled environments. |
+| `TimeoutSeconds` | Per-update timeout; values less than or equal to 0 use `DrivelutionOptions.DefaultTimeoutSeconds`. |
+| `Mode`, `ForceUpdate`, `Priority` | Reserved strategy fields that can be used by upper-level scheduling or UI logic. |
 
-Update strategy model:
+#### `UpdateResult`
 
-| Property | Type | Description |
-| -------- | ---- | ----------- |
-| `Mode` | UpdateMode | Update mode (Full/Incremental) |
-| `ForceUpdate` | bool | Whether to force update |
-| `RequireBackup` | bool | Whether backup is required |
-| `BackupPath` | string | Backup path |
-| `RetryCount` | int | Retry count on failure |
-| `RetryIntervalSeconds` | int | Retry interval (seconds) |
-| `Priority` | int | Update priority (for batch updates) |
-| `RestartMode` | RestartMode | Restart mode after update |
-| `SkipSignatureValidation` | bool | Skip signature validation (debug mode only) |
-| `SkipHashValidation` | bool | Skip hash validation (debug mode only) |
-| `TimeoutSeconds` | int | Timeout (seconds) |
+| Property | Description |
+| --- | --- |
+| `Success` / `Status` | Success flag and status: `NotStarted`, `Validating`, `BackingUp`, `Updating`, `Verifying`, `Succeeded`, `Failed`, `RolledBack`. |
+| `Error` | Error type, code, message, details, and stack trace. |
+| `BackupPath` | Backup path for this update. |
+| `RolledBack` | Whether the pipeline entered the rollback path after failure. If you need strong recovery, explicitly call `RollbackAsync(BackupPath)`. |
+| `StepLogs` | Step-by-step logs suitable for an installer result page or diagnostics upload. |
+| `DurationMs` | Total duration. |
 
-##### UpdateResult
+### Update pipeline
 
-Update result model:
+`BaseDriverUpdater.UpdateAsync` runs the current platform steps in order:
 
-| Property | Type | Description |
-| -------- | ---- | ----------- |
-| `Success` | bool | Whether update succeeded |
-| `Status` | UpdateStatus | Update status |
-| `Error` | ErrorInfo? | Error information |
-| `StartTime` | DateTime | Update start time |
-| `EndTime` | DateTime | Update end time |
-| `DurationMs` | long | Update duration (milliseconds) |
-| `BackupPath` | string? | Backup path (if backed up) |
-| `RolledBack` | bool | Whether rolled back |
-| `Message` | string | Additional message |
-| `StepLogs` | List\<string\> | Update step logs |
+1. Platform permission step: `CheckPermissions` on Windows, `CheckSudo` on Linux, and `CheckSudo` on macOS.
+2. `Validate`: file existence, hash, signature, and compatibility.
+3. `Backup`: runs when `RequireBackup == true`.
+4. `Install`: calls the platform installation command.
+5. `Verify`: checks installation result. Windows runs `pnputil.exe /enum-drivers`; inconclusive verification logs a warning but does not fail the whole update.
 
-##### DrivelutionOptions
+Each step reports `StepName`, `Percentage`, `Message`, `StepIndex`, and `TotalSteps` through `IProgress<UpdateProgress>`. When a step fails or an exception occurs, `UpdateResult.Error` is mapped to displayable error information. If a backup path exists, the pipeline enters the rollback path and records it in `StepLogs`.
 
-Configuration options:
+### Validation strategy
 
-| Property | Type | Description |
-| -------- | ---- | ----------- |
-| `DefaultBackupPath` | string | Default backup path |
-| `LogLevel` | string | Log level (Debug/Info/Warn/Error/Fatal) |
-| `LogFilePath` | string | Log file path |
-| `EnableConsoleLogging` | bool | Enable console logging |
-| `EnableFileLogging` | bool | Enable file logging |
-| `DefaultRetryCount` | int | Default retry count |
-| `DefaultRetryIntervalSeconds` | int | Default retry interval (seconds) |
-| `DefaultTimeoutSeconds` | int | Default timeout (seconds) |
-| `DebugModeSkipSignature` | bool | Skip signature validation in debug mode |
-| `DebugModeSkipHash` | bool | Skip hash validation in debug mode |
-| `ForceTerminateOnPermissionFailure` | bool | Force terminate on permission check failure |
-| `AutoCleanupBackups` | bool | Auto cleanup old backups |
-| `BackupsToKeep` | int | Number of backups to keep |
-| `TrustedCertificateThumbprints` | List\<string\> | Trusted certificate thumbprints (for signature validation) |
-| `TrustedGpgKeys` | List\<string\> | Trusted GPG public keys (for Linux) |
+Validation is conditional:
 
+- File existence is always checked.
+- If `DriverInfo.Hash` is not empty and `SkipHashValidation == false`, the file hash is computed and compared with the expected value.
+- If `DriverInfo.TrustedPublishers.Count > 0` and `SkipSignatureValidation == false`, signature validation runs.
+- Compatibility is always checked; empty `TargetOS` or `Architecture` means that dimension is unrestricted.
 
+Platform signature behavior:
 
-### Cross-Platform Usage
+| Platform | Signature validation |
+| --- | --- |
+| Windows | Uses Authenticode-related logic and checks trusted publishers. |
+| Linux | Looks for sibling `.sig` or `.asc` files and validates GPG signatures; unsigned files are accepted when no trusted publisher is configured. |
+| macOS | Runs `codesign -v`, then `codesign -v --deep` if needed; when trusted publishers are provided, it matches `codesign -dvv` output. |
 
-GeneralUpdate.Drivelution supports Windows, Linux, and MacOS platforms with automatic platform detection and adaptation.
+### Platform differences
 
-#### Windows Platform
+#### Windows
 
-**Supported Driver Types:**
-- INF-based drivers (*.inf)
-- PnP drivers
-- Kernel-mode drivers
-- User-mode drivers
+The Windows implementation targets INF driver packages:
 
-**Example:**
+- Default scan pattern: `*.inf`.
+- Permission: the process must run as administrator, otherwise `CheckPermissions` fails.
+- Installation: `pnputil.exe /add-driver <path> /install`.
+- Verification: `pnputil.exe /enum-drivers`; inconclusive verification logs a warning but does not block the update.
+- Metadata: parses `DriverVer`, `DriverDesc`, and `HardwareId`, and computes SHA256.
+- Rollback: `RollbackAsync` scans backed-up `.inf` files and reinstalls them with PnPUtil.
 
-```c#
-var driverInfo = new DriverInfo
-{
-    Name = "USB Device Driver",
-    Version = "3.0.1",
-    FilePath = "C:\\Drivers\\usbdevice.inf",
-    TargetOS = "Windows",
-    Architecture = "x64",
-    Hash = "sha256_hash_here",
-    HardwareId = "USB\\VID_1234&PID_5678"
-};
+#### Linux
 
-var strategy = new UpdateStrategy
-{
-    RequireBackup = true,
-    RestartMode = RestartMode.Prompt
-};
+The Linux implementation supports kernel modules and distro packages:
 
-var updater = GeneralDrivelution.Create();
-var result = await updater.UpdateAsync(driverInfo, strategy);
-```
+- Default scanning includes `.ko`; when no search pattern is specified it also scans `.deb` and `.rpm`.
+- Permission: sudo/root is required for normal driver installation.
+- `.ko` installation: tries `insmod <module.ko>` first, then falls back to `modprobe <moduleName>`.
+- `.deb` installation: `dpkg -i <package.deb>`.
+- `.rpm` installation: tries `rpm -ivh <package.rpm>`, then falls back to `dnf install -y <package.rpm>`.
+- Metadata: `.ko` uses `modinfo`; `.deb` uses `dpkg-deb -I`; `.rpm` uses `rpm -qip`.
+- Rollback: currently focuses on `.ko`, tries `modprobe -r <moduleName>`, then loads the backed-up module with `insmod <backup.ko>`.
 
-**Windows-Specific Features:**
-- Automatic signature validation using Windows Authenticode
-- Hardware ID matching for device drivers
-- Integration with Windows Driver Store
-- Support for driver installation via PnPUtil
+#### macOS
 
-#### Linux Platform
+The macOS implementation targets kernel extensions, DriverKit extensions, and packages:
 
-**Supported Driver Types:**
-- Kernel modules (*.ko)
-- Device Tree overlays
-- Firmware files
+- Default scanning includes `.kext`, `.dext`, and `.pkg`.
+- `.kext` installation: copies to `/Library/Extensions/`, sets `root:wheel` and `755`, runs `kextload`, then `kextcache -i /`.
+- `.dext` installation: copies to `/Library/SystemExtensions/`; DriverKit extensions usually still require user approval in system security settings.
+- `.pkg` installation: `/usr/sbin/installer -pkg <pkg> -target /`.
+- Signature: uses `codesign`.
+- Limitations: newer macOS versions impose SIP, user approval, and system-extension policies. A command succeeding does not necessarily mean the user approval flow is complete.
+- Rollback: currently focuses on `.kext`, copies it back to `/Library/Extensions/`, and attempts `kextload`.
 
-**Example:**
+### Batch and parallel updates
+
+Batch mode is useful when a large project splits driver packages into a list:
 
 ```c#
-var driverInfo = new DriverInfo
-{
-    Name = "Network Adapter Driver",
-    Version = "1.5.0",
-    FilePath = "/lib/modules/drivers/netadapter.ko",
-    TargetOS = "Linux",
-    Architecture = "x64",
-    Hash = "sha256_hash_here"
-};
+var drivers = await GeneralDrivelution.GetDriversFromDirectoryAsync(@"C:\Drivers");
 
-var strategy = new UpdateStrategy
-{
-    RequireBackup = true,
-    RestartMode = RestartMode.Delayed  // Delay restart for Linux systems
-};
+var batch = await GeneralDrivelution.BatchUpdateAsync(
+    drivers,
+    strategy,
+    BatchMode.Parallel,
+    progress);
 
-var updater = GeneralDrivelution.Create();
-var result = await updater.UpdateAsync(driverInfo, strategy);
+Console.WriteLine(batch);
 ```
 
-**Linux-Specific Features:**
-- GPG signature validation
-- Kernel module dependency checking
-- Integration with modprobe and insmod
-- Support for DKMS (Dynamic Kernel Module Support)
+`BatchMode.Sequential` processes drivers one by one and is safer for core drivers, dependent drivers, or risk-sensitive installs. `BatchMode.Parallel` uses `Task.WhenAll` for multiple drivers and can improve throughput for independent scanning, validation, and installation work, but underlying system tools may still contend for the driver store, package-manager locks, or kernel module resources. For large projects, parallelize scanning and validation first, then group or serialize high-risk installation stages.
 
-**Required Permissions:**
-```bash
-# Run with sudo or root privileges
-sudo dotnet run MyApp.dll
-```
+### Restart behavior
 
-#### MacOS Platform
+`UpdateStrategy.RestartMode` expresses the restart intent after driver installation:
 
-**Supported Driver Types:**
-- Kernel extensions (*.kext)
-- DriverKit extensions
+| Value | Meaning |
+| --- | --- |
+| `None` | No restart required. |
+| `Prompt` | The app should prompt the user. Current `RestartHelper.PromptUserForRestart` writes a prompt and returns `false`, so GUI apps should handle the dialog themselves. |
+| `Delayed` | Waits, then calls the platform restart command. |
+| `Immediate` | Calls the platform restart command immediately. |
 
-**Example:**
+`UpdateAsync` does not call `RestartHelper` automatically, so it will not restart the system right after installation. Decide in your application layer based on driver type and result:
 
 ```c#
-var driverInfo = new DriverInfo
+if (result.Success && RestartHelper.IsRestartRequired(strategy.RestartMode))
 {
-    Name = "Audio Device Driver",
-    Version = "2.3.0",
-    FilePath = "/Library/Extensions/AudioDevice.kext",
-    TargetOS = "MacOS",
-    Architecture = "ARM64",
-    Hash = "sha256_hash_here"
-};
-
-var strategy = new UpdateStrategy
-{
-    RequireBackup = true,
-    RestartMode = RestartMode.Prompt
-};
-
-var updater = GeneralDrivelution.Create();
-var result = await updater.UpdateAsync(driverInfo, strategy);
-```
-
-**MacOS-Specific Features:**
-- Code signature validation using codesign
-- System Integrity Protection (SIP) awareness
-- Support for notarized drivers
-- Integration with kextutil
-
-**Required Permissions:**
-```bash
-# Run with administrator privileges
-sudo dotnet run MyApp.dll
-```
-
-#### Platform Detection
-
-Automatically detect current platform:
-
-```c#
-var platformInfo = GeneralDrivelution.GetPlatformInfo();
-
-Console.WriteLine($"Platform: {platformInfo.Platform}");
-Console.WriteLine($"OS: {platformInfo.OperatingSystem}");
-Console.WriteLine($"Architecture: {platformInfo.Architecture}");
-Console.WriteLine($"Supported: {platformInfo.IsSupported}");
-```
-
-#### Cross-Platform Code Example
-
-Write once, run everywhere:
-
-```c#
-// This code works on Windows, Linux, and MacOS
-var updater = GeneralDrivelution.Create();
-
-// Platform-specific driver paths can be determined at runtime
-var driverPath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
-    ? "C:\\Drivers\\device.inf"
-    : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-        ? "/lib/modules/device.ko"
-        : "/Library/Extensions/device.kext";
-
-var driverInfo = new DriverInfo
-{
-    Name = "Device Driver",
-    Version = "1.0.0",
-    FilePath = driverPath,
-    Hash = "calculated_hash"
-};
-
-var result = await updater.UpdateAsync(driverInfo, new UpdateStrategy());
-```
-
-
-
-### Frequently Asked Questions (FAQ)
-
-#### Q1: What platforms are supported?
-
-**A:** GeneralUpdate.Drivelution supports Windows (7/8/10/11/Server), Linux (various distributions), and MacOS (10.13+). The component automatically detects the platform and uses the appropriate driver update strategy.
-
-#### Q2: Do I need administrator/root privileges?
-
-**A:** Yes, driver updates require elevated privileges on all platforms:
-- **Windows**: Run as Administrator
-- **Linux**: Run with sudo or as root
-- **MacOS**: Run with sudo or as root
-
-#### Q3: How do I calculate the driver file hash?
-
-**A:** You can use built-in utilities or the following code:
-
-```c#
-using System.Security.Cryptography;
-
-string CalculateFileHash(string filePath)
-{
-    using var sha256 = SHA256.Create();
-    using var stream = File.OpenRead(filePath);
-    var hash = sha256.ComputeHash(stream);
-    return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+    await RestartHelper.HandleRestartAsync(
+        strategy.RestartMode,
+        delaySeconds: 60,
+        message: "Driver update completed. Restart now?");
 }
 ```
 
-#### Q4: What happens if the update fails?
+### Logging and performance switch
 
-**A:** If `RequireBackup` is enabled in the update strategy, the system will automatically roll back to the previous driver version. The `UpdateResult` object will contain detailed error information.
+Drivelution uses `GeneralTracer` for internal diagnostics:
 
-#### Q5: Can I update multiple drivers at once?
+- Enabled by default.
+- Console output through `TextWriterTraceListener(Console.Out)`.
+- File output under the application base directory: `Logs\generalupdate-trace yyyy-MM-dd.log`, rotated by date.
+- Windows debug output through `WindowsOutputDebugListener`.
+- `DefaultTraceListener` is added when a debugger is attached.
 
-**A:** Yes, you can update multiple drivers sequentially or in parallel:
-
-```c#
-var drivers = new List<DriverInfo> { driver1, driver2, driver3 };
-var tasks = drivers.Select(d => updater.UpdateAsync(d, strategy));
-var results = await Task.WhenAll(tasks);
-```
-
-#### Q6: How do I handle driver signature validation?
-
-**A:** By default, signature validation is enabled. To skip validation (not recommended in production):
+Driver updates often involve external commands and elevated permissions, so logs are important for troubleshooting. However, `GeneralTracer` creates timestamps, stack-frame location data, and Trace Listener writes. In performance-sensitive scans, batch validation, or high-parallelism scenarios, disable it temporarily:
 
 ```c#
-var strategy = new UpdateStrategy
-{
-    SkipSignatureValidation = true  // Only for testing!
-};
+GeneralTracer.SetTracingEnabled(false);
+
+// Run performance-sensitive scanning or batch validation.
+
+GeneralTracer.SetTracingEnabled(true);
 ```
 
-For production, ensure drivers are properly signed:
-- **Windows**: Use Microsoft Authenticode
-- **Linux**: Use GPG signing
-- **MacOS**: Use Apple code signing
+If you need to bridge logs into your own UI or logging stack, you can wrap the `DrivelutionLogger.LogMessage` event. The main update pipeline currently uses `GeneralTracer`.
 
-#### Q7: Does the system need to restart after updating drivers?
+### Recommended practices
 
-**A:** It depends on the driver type and platform. You can control restart behavior via `RestartMode`:
-- `RestartMode.None`: No restart required
-- `RestartMode.Prompt`: Prompt user to restart
-- `RestartMode.Delayed`: Schedule restart for later
-- `RestartMode.Immediate`: Restart immediately
+| Scenario | Recommendation |
+| --- | --- |
+| Production updates | Keep `RequireBackup = true`, set an explicit `BackupPath`, and do not skip hash or signature validation. |
+| First integration | Call `ValidateAsync` and `GetPlatformInfo()` first, then show target OS, architecture, version, and publisher in the UI. |
+| Windows | Start the process as administrator and prefer vendor-signed INF packages. |
+| Linux | Verify root/sudo, kernel version, and package-manager locks; install core modules sequentially. |
+| macOS | Warn users that system-extension approval may be required; kext behavior is heavily affected by SIP and system policies. |
+| Large driver sets | Scan and validate in parallel, group installation by risk, and keep `StepLogs` and `BackupPath` on failure. |
+| High-performance flows | Temporarily disable `GeneralTracer` during bulk scans, then enable it again. |
 
-#### Q8: How do I validate a driver before updating?
+### FAQ
 
-**A:** Use the `ValidateAsync` method:
+#### Why did signature validation not run?
 
-```c#
-var isValid = await updater.ValidateAsync(driverInfo);
-if (isValid)
-{
-    // Proceed with update
-    var result = await updater.UpdateAsync(driverInfo, strategy);
-}
-```
+Signature validation runs only when `DriverInfo.TrustedPublishers` is not empty and `SkipSignatureValidation == false`. To require signature validation, provide trusted publishers and ensure the platform has the corresponding signature file or system signature metadata.
 
-#### Q9: Can I customize logging?
+#### Why did the system not restart after setting `RestartMode`?
 
-**A:** Yes, you can provide a custom Serilog logger:
+`RestartMode` is currently a strategy field. The update pipeline does not restart the system automatically. Call `RestartHelper.HandleRestartAsync(...)` after a successful `UpdateAsync`, or handle restart with your own GUI or service logic.
 
-```c#
-var logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
-    .WriteTo.Console()
-    .WriteTo.File("logs/driver-update.log")
-    .CreateLogger();
+#### Is `BatchMode.Parallel` always faster?
 
-var updater = GeneralDrivelution.Create(logger, options);
-```
+No. Parallel work improves throughput for scanning, validation, and independent tasks, but installation calls system tools and may hit driver-store locks, package-manager locks, module dependencies, or restart requirements. For large projects, validate in parallel first, then control installation concurrency by group.
 
-#### Q10: Where are driver backups stored?
+#### How should rollback be designed?
 
-**A:** Backups are stored in the path specified by:
-1. `UpdateStrategy.BackupPath` (if specified)
-2. `DrivelutionOptions.DefaultBackupPath` (if configured)
-3. Default: `./DriverBackups` directory
-
-Old backups are automatically cleaned up if `AutoCleanupBackups` is enabled.
-
-#### Q11: How do I get driver information from a directory?
-
-**A:** Use the `GetDriversFromDirectoryAsync` method:
-
-```c#
-// Get all drivers from directory
-var drivers = await updater.GetDriversFromDirectoryAsync("C:\\Drivers");
-
-// Get drivers with specific pattern
-var infDrivers = await updater.GetDriversFromDirectoryAsync(
-    "C:\\Drivers", 
-    "*.inf"
-);
-```
-
-#### Q12: Is the component thread-safe?
-
-**A:** Yes, you can safely use the updater instance across multiple threads. Each update operation is independent and can run concurrently.
-
-#### Q13: What .NET versions are supported?
-
-**A:** GeneralUpdate.Drivelution targets .NET 8.0 and is compatible with:
-- .NET 8.0+
-- Supports AOT (Ahead-of-Time) compilation
-- Supports trimming for smaller deployments
-
-
-
-### Example
-
-Complete example with error handling and logging:
-
-```c#
-using GeneralUpdate.Drivelution;
-using GeneralUpdate.Drivelution.Abstractions.Models;
-using GeneralUpdate.Drivelution.Abstractions.Configuration;
-using Serilog;
-
-public class DriverUpdateExample
-{
-    public static async Task Main(string[] args)
-    {
-        // Configure logging
-        var logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
-            .WriteTo.Console()
-            .WriteTo.File("logs/driver-update.log", rollingInterval: RollingInterval.Day)
-            .CreateLogger();
-
-        // Configure options
-        var options = new DrivelutionOptions
-        {
-            LogLevel = "Info",
-            DefaultBackupPath = "C:\\DriverBackups",
-            AutoCleanupBackups = true,
-            BackupsToKeep = 5
-        };
-
-        try
-        {
-            // Create updater
-            var updater = GeneralDrivelution.Create(logger, options);
-
-            // Get platform info
-            var platformInfo = GeneralDrivelution.GetPlatformInfo();
-            Console.WriteLine($"Platform: {platformInfo}");
-
-            // Define driver information
-            var driverInfo = new DriverInfo
-            {
-                Name = "Sample Device Driver",
-                Version = "2.0.0",
-                FilePath = "C:\\Drivers\\sample.inf",
-                TargetOS = "Windows",
-                Architecture = "x64",
-                Hash = CalculateFileHash("C:\\Drivers\\sample.inf"),
-                HashAlgorithm = "SHA256",
-                HardwareId = "PCI\\VEN_1234&DEV_5678",
-                Description = "Sample device driver for demonstration"
-            };
-
-            // Validate driver first
-            Console.WriteLine("Validating driver...");
-            var isValid = await updater.ValidateAsync(driverInfo);
-            if (!isValid)
-            {
-                Console.WriteLine("Driver validation failed!");
-                return;
-            }
-
-            // Define update strategy
-            var strategy = new UpdateStrategy
-            {
-                RequireBackup = true,
-                RetryCount = 3,
-                RetryIntervalSeconds = 5,
-                RestartMode = RestartMode.Prompt,
-                TimeoutSeconds = 600
-            };
-
-            // Execute update
-            Console.WriteLine("Starting driver update...");
-            var result = await updater.UpdateAsync(driverInfo, strategy);
-
-            // Handle result
-            if (result.Success)
-            {
-                Console.WriteLine($"✓ Driver updated successfully in {result.DurationMs}ms");
-                Console.WriteLine($"✓ Backup: {result.BackupPath}");
-                
-                foreach (var log in result.StepLogs)
-                {
-                    Console.WriteLine($"  - {log}");
-                }
-            }
-            else
-            {
-                Console.WriteLine($"✗ Update failed: {result.Error?.Message}");
-                Console.WriteLine($"  Error Code: {result.Error?.Code}");
-                
-                if (result.RolledBack)
-                {
-                    Console.WriteLine("✓ System rolled back successfully");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Unexpected error: {ex.Message}");
-            logger.Error(ex, "Driver update failed");
-        }
-    }
-
-    private static string CalculateFileHash(string filePath)
-    {
-        using var sha256 = System.Security.Cryptography.SHA256.Create();
-        using var stream = File.OpenRead(filePath);
-        var hash = sha256.ComputeHash(stream);
-        return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-    }
-}
-```
-
-
-
-### Annotations
-
-GeneralDrivelution provides a complete driver update solution with the following key features:
-
-#### Security Features
-- ✓ Driver signature validation (platform-specific)
-- ✓ File hash integrity checking
-- ✓ Hardware ID matching
-- ✓ Publisher trust validation
-- ✓ Permission checking before operations
-
-#### Reliability Features
-- ✓ Automatic backup before updates
-- ✓ Rollback on failure
-- ✓ Retry mechanism with configurable attempts
-- ✓ Timeout protection
-- ✓ Comprehensive error handling and logging
-
-#### Platform Features
-- ✓ Windows: INF driver installation, PnPUtil integration
-- ✓ Linux: Kernel module management, modprobe integration
-- ✓ MacOS: KEXT installation, System Integrity Protection awareness
-
-#### Developer Features
-- ✓ Simple and intuitive API
-- ✓ Async/await support
-- ✓ Comprehensive logging with Serilog
-- ✓ Detailed error information
-- ✓ Progress tracking and step logs
-
-
-
-### Applicable to
-
-| Product        | Versions      |
-| -------------- | ------------- |
-| .NET           | 8, 9, 10      |
-| .NET Standard  | N/A           |
-| .NET Core      | N/A           |
-| .NET Framework | N/A           |
-
-**Platform Support:**
-
-| Platform       | Support Level |
-| -------------- | ------------- |
-| Windows        | ✓ Full        |
-| Linux          | ✓ Full        |
-| MacOS          | ✓ Full        |
-
-**Note:** Requires elevated privileges (Administrator/root) on all platforms for driver operations.
+Keep the backup path before updating, and read `UpdateResult.BackupPath` and `StepLogs` on failure. If your business flow requires strong recovery, explicitly call `RollbackAsync(backupPath)` and tell the user that a restart or device replug may still be required.

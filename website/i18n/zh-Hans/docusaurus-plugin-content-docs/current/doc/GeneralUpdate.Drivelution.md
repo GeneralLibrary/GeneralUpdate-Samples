@@ -4,37 +4,43 @@ sidebar_position: 12
 
 ### 定义
 
-命名空间：GeneralUpdate.Drivelution
+命名空间：`GeneralUpdate.Drivelution`
 
-程序集：GeneralUpdate.Drivelution.dll
-
-
-
-GeneralUpdate.Drivelution 是一个跨平台的驱动更新组件，提供设备驱动的自动检测、验证、备份、安装和回滚功能。它支持 Windows、Linux 和 MacOS 平台，并提供统一的 API 接口，简化驱动更新流程的同时确保安全性和可靠性。
+程序集：`GeneralUpdate.Drivelution.dll`
 
 ```c#
 public static class GeneralDrivelution
 ```
 
+`GeneralUpdate.Drivelution` 是面向驱动更新场景的跨平台组件。它把驱动更新中容易出错的步骤拆成统一流水线：平台识别、权限检查、文件验证、备份、安装、结果验证、失败后的回滚入口，并在 Windows、Linux、macOS 上分别调用系统原生工具完成驱动安装。
 
+驱动更新不是普通应用文件替换。应用文件通常只需要下载、解压、覆盖并重启进程；驱动更新会影响内核、设备节点、系统扩展或驱动仓库，因此必须额外关注管理员权限、签名可信度、目标系统和 CPU 架构、安装命令返回值、是否需要系统重启以及失败后的恢复路径。Drivelution 只负责操作系统驱动更新，不处理设备内部写入流程。
 
-### 适用场景
+### 核心能力速览
 
-GeneralUpdate.Drivelution 适用于以下场景：
+| 能力 | 当前实现 |
+| --- | --- |
+| 平台适配 | `GeneralDrivelution.Create()` 自动选择 Windows、Linux 或 macOS 实现。 |
+| 标准流水线 | Windows/Linux 会先做权限检查，然后执行 `Validate -> Backup -> Install -> Verify`。macOS 当前包含 `CheckSudo` 步骤并继续执行系统命令，实际安装仍取决于系统权限。 |
+| 验证 | 文件存在检查、可选哈希校验、可选签名校验、目标 OS/架构兼容性检查。 |
+| 备份 | `UpdateStrategy.RequireBackup` 默认为 `true`；备份路径来自 `UpdateStrategy.BackupPath`。 |
+| 安装 | Windows 使用 `pnputil.exe`；Linux 使用 `insmod`/`modprobe`、`dpkg`、`rpm`/`dnf`；macOS 使用 `kextload`、`installer` 等系统工具。 |
+| 回滚 | 暴露 `RollbackAsync(backupPath)`；Windows 会尝试重新安装备份中的 `.inf`，Linux 会尝试恢复 `.ko`，macOS 会尝试恢复 `.kext`。 |
+| 批量/并行 | `BatchUpdateAsync` 支持 `BatchMode.Sequential` 和 `BatchMode.Parallel`，适合大型项目按驱动清单处理。 |
+| 日志 | `GeneralTracer` 默认写入控制台和 `Logs\generalupdate-trace yyyy-MM-dd.log`，可通过 `SetTracingEnabled(false)` 关闭。 |
 
-- **企业设备管理**：在企业环境中批量更新多个设备的驱动程序
-- **IoT 设备更新**：为嵌入式系统和物联网设备提供远程驱动更新
-- **硬件厂商软件**：将驱动更新功能集成到硬件厂商的应用程序中
-- **系统维护工具**：构建自动化的驱动更新和维护工具
-- **跨平台应用**：需要在多个操作系统上管理驱动的应用程序
+### 何时使用 Drivelution
 
+适合使用 Drivelution 的场景：
 
+- 硬件厂商客户端需要随应用一起交付网卡、采集卡、USB、虚拟设备等驱动。
+- 企业或工业现场需要批量扫描驱动包并按清单更新。
+- 安装器、维护工具、设备管理服务需要统一处理 Windows/Linux/macOS 驱动差异。
+- 需要在更新前进行哈希、签名、系统架构校验，并在失败后保留可恢复的备份。
 
-### 安装与配置
+不适合把 Drivelution 当作普通文件更新器使用。如果只是更新应用自身的 exe、dll、资源文件或插件，请优先使用 `GeneralUpdate.Core` 的应用更新流程。
 
-#### 安装
-
-通过 NuGet 包管理器安装：
+### 安装
 
 ```bash
 dotnet add package GeneralUpdate.Drivelution
@@ -46,703 +52,322 @@ dotnet add package GeneralUpdate.Drivelution
 <PackageReference Include="GeneralUpdate.Drivelution" Version="*" />
 ```
 
-#### 配置
-
-创建配置选项对象（可选，不指定时使用默认值）：
-
-```c#
-var options = new DrivelutionOptions
-{
-    LogLevel = "Info",                          // 日志级别（Debug/Info/Warn/Error/Fatal）
-    LogFilePath = "./Logs/drivelution-.log",    // 日志文件路径
-    EnableConsoleLogging = true,                // 启用控制台日志
-    EnableFileLogging = true,                   // 启用文件日志
-    DefaultBackupPath = "./DriverBackups",      // 默认备份路径
-    DefaultRetryCount = 3,                      // 默认重试次数
-    DefaultRetryIntervalSeconds = 5,            // 默认重试间隔（秒）
-    DefaultTimeoutSeconds = 300,                // 默认超时时间（秒）
-    AutoCleanupBackups = true,                  // 自动清理旧备份
-    BackupsToKeep = 5                           // 保留的备份数量
-};
-```
-
-
-
-### 快速开始
-
-#### 基础用法（Hello World）
-
-最简单的驱动更新示例：
+### 快速开始：更新单个驱动
 
 ```c#
 using GeneralUpdate.Drivelution;
 using GeneralUpdate.Drivelution.Abstractions.Models;
 
-// 1. 创建驱动信息
-var driverInfo = new DriverInfo
+var driver = new DriverInfo
 {
-    Name = "我的设备驱动",
+    Name = "MyDevice Driver",
     Version = "1.2.0",
-    FilePath = "C:\\Drivers\\mydevice.inf",  // Windows: .inf, Linux: .ko, MacOS: .kext
+    FilePath = @"C:\Drivers\mydevice.inf",
     TargetOS = "Windows",
     Architecture = "x64",
-    Hash = "abc123...",                       // 驱动文件的 SHA256 哈希值
-    HashAlgorithm = "SHA256"
+    Hash = "driver-file-sha256",
+    HashAlgorithm = "SHA256",
+    TrustedPublishers = { "Contoso Hardware" }
 };
 
-// 2. 使用默认设置快速更新
-var result = await GeneralDrivelution.QuickUpdateAsync(driverInfo);
+var result = await GeneralDrivelution.QuickUpdateAsync(driver);
 
-// 3. 检查结果
 if (result.Success)
 {
-    Console.WriteLine("驱动更新成功！");
-    Console.WriteLine($"耗时: {result.DurationMs}毫秒");
+    Console.WriteLine($"Driver updated. Duration={result.DurationMs}ms");
 }
 else
 {
-    Console.WriteLine($"更新失败: {result.Error?.Message}");
+    Console.WriteLine($"Driver update failed: {result.Error?.Message}");
+    Console.WriteLine(string.Join(Environment.NewLine, result.StepLogs));
 }
 ```
 
-#### 高级用法（自定义策略）
+`QuickUpdateAsync` 会创建当前平台的更新器，并使用安全默认策略：需要备份、失败可重试 3 次、重试间隔 5 秒。生产环境建议显式传入 `UpdateStrategy`，尤其是备份路径、超时时间和重启策略。
+
+### 使用自定义策略
 
 ```c#
 using GeneralUpdate.Drivelution;
-using GeneralUpdate.Drivelution.Abstractions.Models;
 using GeneralUpdate.Drivelution.Abstractions.Configuration;
+using GeneralUpdate.Drivelution.Abstractions.Models;
 
-// 1. 创建配置选项
 var options = new DrivelutionOptions
 {
-    LogLevel = "Debug",
-    DefaultBackupPath = "C:\\DriverBackups"
+    DefaultBackupPath = @"C:\DriverBackups",
+    DefaultRetryCount = 3,
+    DefaultRetryIntervalSeconds = 5,
+    DefaultTimeoutSeconds = 600,
+    UseExponentialBackoff = true,
+    ForceTerminateOnPermissionFailure = true
 };
 
-// 2. 创建更新器实例
 var updater = GeneralDrivelution.Create(options);
 
-// 3. 定义驱动信息
-var driverInfo = new DriverInfo
-{
-    Name = "显卡驱动",
-    Version = "2.1.0",
-    FilePath = "C:\\Drivers\\graphics.inf",
-    TargetOS = "Windows",
-    Architecture = "x64",
-    Hash = "def456...",
-    HashAlgorithm = "SHA256",
-    HardwareId = "PCI\\VEN_10DE&DEV_1234",
-    Description = "NVIDIA 显卡驱动"
-};
-
-// 4. 定义更新策略
 var strategy = new UpdateStrategy
 {
-    RequireBackup = true,                      // 启用备份
-    BackupPath = "C:\\DriverBackups\\graphics",
-    RetryCount = 3,                            // 失败时重试 3 次
-    RetryIntervalSeconds = 5,                  // 重试间隔 5 秒
-    RestartMode = RestartMode.Prompt,          // 提示用户重启
-    SkipSignatureValidation = false,           // 启用签名验证
-    TimeoutSeconds = 600                       // 10 分钟超时
+    RequireBackup = true,
+    BackupPath = @"C:\DriverBackups\graphics",
+    RetryCount = 3,
+    RetryIntervalSeconds = 5,
+    TimeoutSeconds = 600,
+    RestartMode = RestartMode.Prompt,
+    SkipHashValidation = false,
+    SkipSignatureValidation = false
 };
 
-// 5. 执行更新
-var result = await updater.UpdateAsync(driverInfo, strategy);
+var progress = new Progress<UpdateProgress>(p =>
+{
+    Console.WriteLine($"{p.Percentage}% {p.StepName}: {p.Message}");
+});
 
-// 6. 处理结果
-if (result.Success)
+var result = await updater.UpdateAsync(driver, strategy, progress);
+
+if (!result.Success && result.BackupPath is not null)
 {
-    Console.WriteLine($"✓ 更新成功，耗时 {result.DurationMs} 毫秒");
-    if (!string.IsNullOrEmpty(result.BackupPath))
-    {
-        Console.WriteLine($"✓ 备份保存至: {result.BackupPath}");
-    }
-}
-else
-{
-    Console.WriteLine($"✗ 更新失败: {result.Error?.Code}");
-    Console.WriteLine($"  消息: {result.Error?.Message}");
-    
-    if (result.RolledBack)
-    {
-        Console.WriteLine("✓ 系统已回滚至之前状态");
-    }
+    await updater.RollbackAsync(result.BackupPath);
 }
 ```
 
+> 注意：`UpdateStrategy.RetryCount` 和 `RetryIntervalSeconds` 是策略模型字段；当前流水线实际重试策略来自 `DrivelutionOptions.DefaultRetryCount`、`DefaultRetryIntervalSeconds` 和 `UseExponentialBackoff`。如果需要统一控制重试行为，请在创建更新器时配置 `DrivelutionOptions`。
 
+### DI 注册
 
-### 核心模块与 API 说明
+在 Generic Host、ASP.NET Core 或自己的服务容器中，可以通过扩展方法注册当前平台实现：
 
-#### 主入口类：GeneralDrivelution
+```c#
+using GeneralUpdate.Drivelution.Core;
 
-静态入口类提供以下方法：
+builder.Services.AddDrivelution(options =>
+{
+    options.DefaultBackupPath = "./DriverBackups";
+    options.DefaultTimeoutSeconds = 600;
+});
+
+var updater = GeneralDrivelution.Create(builder.Services.BuildServiceProvider());
+```
+
+`AddDrivelution` 会注册 `ICommandRunner`、平台对应的 `IDriverValidator`、`IDriverBackup` 和 `IGeneralDrivelution`。
+
+### API 概览
+
+#### `GeneralDrivelution`
 
 | 方法 | 说明 |
-| ---- | ---- |
-| `Create(options?)` | 创建驱动更新器实例（自动检测平台） |
-| `Create(logger, options?)` | 使用自定义日志器创建驱动更新器实例 |
-| `QuickUpdateAsync(driverInfo)` | 使用默认设置快速更新驱动 |
-| `QuickUpdateAsync(driverInfo, strategy)` | 使用自定义策略快速更新驱动 |
-| `ValidateAsync(driverInfo)` | 验证驱动文件 |
-| `GetPlatformInfo()` | 获取当前平台信息 |
-| `GetDriversFromDirectoryAsync(path)` | 从本地目录读取驱动信息 |
+| --- | --- |
+| `Create(DrivelutionOptions? options = null)` | 自动检测当前系统并创建平台驱动更新器。 |
+| `Create(IServiceProvider serviceProvider)` | 从 DI 容器解析 `IGeneralDrivelution`；未注册时回退到自动平台创建。 |
+| `QuickUpdateAsync(driverInfo, strategy?, progress?, token?)` | 使用默认或自定义策略快速更新单个驱动。 |
+| `ValidateAsync(driverInfo, token?)` | 使用当前平台验证器检查驱动文件。 |
+| `GetPlatformInfo()` | 返回平台、系统、架构、系统版本和是否支持。 |
+| `GetDriversFromDirectoryAsync(path, pattern?, token?)` | 从目录扫描并解析驱动信息。 |
+| `BatchUpdateAsync(drivers, strategy, mode, progress?, token?)` | 批量更新驱动，可选择顺序或并行。 |
 
-#### 核心接口：IGeneralDrivelution
-
-更新器接口提供以下能力：
+#### `IGeneralDrivelution`
 
 | 方法 | 说明 |
-| ---- | ---- |
-| `UpdateAsync(driverInfo, strategy, token?)` | 异步更新驱动 |
-| `ValidateAsync(driverInfo, token?)` | 异步验证驱动 |
-| `BackupAsync(driverInfo, backupPath, token?)` | 异步备份驱动 |
-| `RollbackAsync(backupPath, token?)` | 异步回滚驱动 |
-| `GetDriversFromDirectoryAsync(path, pattern?, token?)` | 从目录读取驱动信息 |
+| --- | --- |
+| `UpdateAsync(driverInfo, strategy, progress?, token?)` | 执行完整更新流水线。 |
+| `ValidateAsync(driverInfo, token?)` | 单独验证驱动。 |
+| `BackupAsync(driverInfo, backupPath, token?)` | 单独备份驱动文件。 |
+| `RollbackAsync(backupPath, token?)` | 按平台实现尝试从备份恢复。 |
+| `GetDriversFromDirectoryAsync(path, pattern?, token?)` | 扫描目录。 |
+| `BatchUpdateAsync(drivers, strategy, mode, progress?, token?)` | 批量处理多个驱动。 |
 
-#### 数据模型
+### 数据模型
 
-##### DriverInfo
+#### `DriverInfo`
 
-驱动信息模型：
+| 属性 | 说明 |
+| --- | --- |
+| `Name` | 驱动名称。 |
+| `Version` | 驱动版本。扫描目录时会尽量从 INF、modinfo、包元数据或 plist 中读取，读取不到时使用 `1.0.0`。 |
+| `FilePath` | 驱动文件路径。Windows 通常为 `.inf`，Linux 为 `.ko`/`.deb`/`.rpm`，macOS 为 `.kext`/`.dext`/`.pkg`。 |
+| `TargetOS` | 目标系统。为空时兼容性检查视为通过；不为空时需要包含当前系统名，例如 `Windows`、`Linux`、`MacOS`。 |
+| `Architecture` | 目标架构。支持常见别名归一化：`x64/amd64/x86_64`、`x86/i386/i686`、`arm64/aarch64`、`arm/armv7`。 |
+| `HardwareId` | 硬件 ID 或模块别名。Windows 解析 INF，Linux 可从 `modinfo alias` 读取。 |
+| `Hash` / `HashAlgorithm` | 完整性校验。当前支持 `SHA256` 和兼容用 `MD5`。 |
+| `TrustedPublishers` | 可信发布者列表。只有该列表非空且未跳过签名校验时才执行签名验证。 |
+| `Description`、`ReleaseDate`、`Metadata` | 展示和扩展信息。 |
 
-| 属性 | 类型 | 说明 |
-| ---- | ---- | ---- |
-| `Name` | string | 驱动名称 |
-| `Version` | string | 驱动版本（遵循 SemVer 2.0） |
-| `FilePath` | string | 驱动文件路径 |
-| `TargetOS` | string | 目标操作系统 |
-| `Architecture` | string | 系统架构（x86、x64、ARM、ARM64） |
-| `HardwareId` | string | 硬件 ID（Windows 硬件 ID 或 Linux PCI/USB 设备 ID） |
-| `Hash` | string | 文件哈希值（用于完整性验证） |
-| `HashAlgorithm` | string | 哈希算法（SHA256、MD5） |
-| `TrustedPublishers` | List\<string\> | 可信发布者列表 |
-| `Description` | string | 驱动描述 |
-| `ReleaseDate` | DateTime | 驱动发布日期 |
-| `Metadata` | Dictionary | 附加元数据 |
+#### `UpdateStrategy`
 
-##### UpdateStrategy
+| 属性 | 说明 |
+| --- | --- |
+| `RequireBackup` | 是否执行备份步骤，默认 `true`。 |
+| `BackupPath` | 备份根路径。流水线会在该路径下生成 `backup_{Name}_{yyyyMMddHHmmss}`。 |
+| `RestartMode` | 重启意图：`None`、`Prompt`、`Delayed`、`Immediate`。当前更新流水线不会自动重启系统，应用可在成功后调用 `RestartHelper.HandleRestartAsync(...)`。 |
+| `SkipHashValidation` | 跳过哈希校验。仅建议调试或受控环境使用。 |
+| `SkipSignatureValidation` | 跳过签名校验。仅建议调试或受控环境使用。 |
+| `TimeoutSeconds` | 单次更新超时；小于等于 0 时使用 `DrivelutionOptions.DefaultTimeoutSeconds`。 |
+| `Mode`、`ForceUpdate`、`Priority` | 策略模型保留字段，可供上层调度或 UI 使用。 |
 
-更新策略模型：
+#### `UpdateResult`
 
-| 属性 | 类型 | 说明 |
-| ---- | ---- | ---- |
-| `Mode` | UpdateMode | 更新模式（全量/增量） |
-| `ForceUpdate` | bool | 是否强制更新 |
-| `RequireBackup` | bool | 是否需要备份 |
-| `BackupPath` | string | 备份路径 |
-| `RetryCount` | int | 失败重试次数 |
-| `RetryIntervalSeconds` | int | 重试间隔（秒） |
-| `Priority` | int | 更新优先级（用于批量更新） |
-| `RestartMode` | RestartMode | 更新后重启模式 |
-| `SkipSignatureValidation` | bool | 跳过签名验证（仅调试模式） |
-| `SkipHashValidation` | bool | 跳过哈希验证（仅调试模式） |
-| `TimeoutSeconds` | int | 超时时间（秒） |
+| 属性 | 说明 |
+| --- | --- |
+| `Success` / `Status` | 是否成功以及当前状态：`NotStarted`、`Validating`、`BackingUp`、`Updating`、`Verifying`、`Succeeded`、`Failed`、`RolledBack`。 |
+| `Error` | 失败时的错误类型、错误码、消息、详情和堆栈。 |
+| `BackupPath` | 本次备份路径。 |
+| `RolledBack` | 流水线失败后是否进入回滚路径。若需要强制执行平台恢复，建议显式调用 `RollbackAsync(BackupPath)`。 |
+| `StepLogs` | 每个步骤的文本日志，适合展示在安装结果页或上传诊断。 |
+| `DurationMs` | 总耗时。 |
 
-##### UpdateResult
+### 更新流水线
 
-更新结果模型：
+`BaseDriverUpdater.UpdateAsync` 会按顺序执行当前平台步骤：
 
-| 属性 | 类型 | 说明 |
-| ---- | ---- | ---- |
-| `Success` | bool | 更新是否成功 |
-| `Status` | UpdateStatus | 更新状态 |
-| `Error` | ErrorInfo? | 错误信息 |
-| `StartTime` | DateTime | 更新开始时间 |
-| `EndTime` | DateTime | 更新结束时间 |
-| `DurationMs` | long | 更新耗时（毫秒） |
-| `BackupPath` | string? | 备份路径（如果有备份） |
-| `RolledBack` | bool | 是否已回滚 |
-| `Message` | string | 附加消息 |
-| `StepLogs` | List\<string\> | 更新步骤日志 |
+1. 平台权限步骤：Windows 为 `CheckPermissions`，Linux 为 `CheckSudo`，macOS 为 `CheckSudo`。
+2. `Validate`：检查文件存在、哈希、签名和兼容性。
+3. `Backup`：当 `RequireBackup == true` 时执行。
+4. `Install`：调用平台安装命令。
+5. `Verify`：平台验证安装结果。Windows 会执行 `pnputil.exe /enum-drivers`，验证不确定时记录警告但不让整个更新失败。
 
-##### DrivelutionOptions
+每个步骤会通过 `IProgress<UpdateProgress>` 上报 `StepName`、`Percentage`、`Message`、`StepIndex` 和 `TotalSteps`。发生异常或步骤失败时，`UpdateResult.Error` 会映射为可展示的错误信息；如果有备份路径，流水线会进入回滚路径并在 `StepLogs` 中记录。
 
-配置选项：
+### 验证策略
 
-| 属性 | 类型 | 说明 |
-| ---- | ---- | ---- |
-| `DefaultBackupPath` | string | 默认备份路径 |
-| `LogLevel` | string | 日志级别（Debug/Info/Warn/Error/Fatal） |
-| `LogFilePath` | string | 日志文件路径 |
-| `EnableConsoleLogging` | bool | 启用控制台日志 |
-| `EnableFileLogging` | bool | 启用文件日志 |
-| `DefaultRetryCount` | int | 默认重试次数 |
-| `DefaultRetryIntervalSeconds` | int | 默认重试间隔（秒） |
-| `DefaultTimeoutSeconds` | int | 默认超时时间（秒） |
-| `DebugModeSkipSignature` | bool | 调试模式下跳过签名验证 |
-| `DebugModeSkipHash` | bool | 调试模式下跳过哈希验证 |
-| `ForceTerminateOnPermissionFailure` | bool | 权限检查失败时强制终止 |
-| `AutoCleanupBackups` | bool | 自动清理旧备份 |
-| `BackupsToKeep` | int | 保留的备份数量 |
-| `TrustedCertificateThumbprints` | List\<string\> | 可信证书指纹列表（用于签名验证） |
-| `TrustedGpgKeys` | List\<string\> | 可信 GPG 公钥列表（Linux 用） |
+Drivelution 的验证逻辑是条件触发的：
 
+- 文件存在是必做项。
+- `DriverInfo.Hash` 不为空且 `SkipHashValidation == false` 时，计算文件哈希并与期望值比较。
+- `DriverInfo.TrustedPublishers.Count > 0` 且 `SkipSignatureValidation == false` 时，执行签名校验。
+- 兼容性校验始终执行；`TargetOS` 或 `Architecture` 为空表示不限制该项。
 
+平台签名行为：
 
-### 跨平台使用
+| 平台 | 签名验证 |
+| --- | --- |
+| Windows | 使用 Authenticode 相关逻辑验证文件签名，并检查可信发布者。 |
+| Linux | 查找同名 `.sig` 或 `.asc` 文件并执行 GPG 签名验证；未提供可信发布者时允许无签名通过。 |
+| macOS | 使用 `codesign -v`，失败后尝试 `codesign -v --deep`；指定可信发布者时通过 `codesign -dvv` 输出匹配。 |
 
-GeneralUpdate.Drivelution 支持 Windows、Linux 和 MacOS 平台，具有自动平台检测和适配功能。
+### 平台差异
 
-#### Windows 平台
+#### Windows
 
-**支持的驱动类型：**
-- INF 驱动（*.inf）
-- PnP 驱动
-- 内核模式驱动
-- 用户模式驱动
+Windows 实现面向 INF 驱动包：
 
-**示例：**
+- 扫描默认模式：`*.inf`。
+- 权限：必须以管理员身份运行，否则 `CheckPermissions` 会失败。
+- 安装：`pnputil.exe /add-driver <path> /install`。
+- 验证：`pnputil.exe /enum-drivers`，验证不确定时记录警告但不阻断更新。
+- 元数据：解析 `DriverVer`、`DriverDesc`、`HardwareId`，并计算 SHA256。
+- 回滚：`RollbackAsync` 会扫描备份目录中的 `.inf` 并重新调用 PnPUtil 安装。
 
-```c#
-var driverInfo = new DriverInfo
-{
-    Name = "USB 设备驱动",
-    Version = "3.0.1",
-    FilePath = "C:\\Drivers\\usbdevice.inf",
-    TargetOS = "Windows",
-    Architecture = "x64",
-    Hash = "sha256_hash_here",
-    HardwareId = "USB\\VID_1234&PID_5678"
-};
+#### Linux
 
-var strategy = new UpdateStrategy
-{
-    RequireBackup = true,
-    RestartMode = RestartMode.Prompt
-};
+Linux 实现支持内核模块和发行版包：
 
-var updater = GeneralDrivelution.Create();
-var result = await updater.UpdateAsync(driverInfo, strategy);
-```
+- 扫描默认包括 `.ko`，未指定搜索模式时还会扫描 `.deb` 和 `.rpm`。
+- 权限：通过 sudo/root 检查，驱动安装通常需要 root。
+- `.ko` 安装：先 `insmod <module.ko>`，失败后回退 `modprobe <moduleName>`。
+- `.deb` 安装：`dpkg -i <package.deb>`。
+- `.rpm` 安装：先 `rpm -ivh <package.rpm>`，失败后回退 `dnf install -y <package.rpm>`。
+- 元数据：`.ko` 通过 `modinfo` 读取版本、描述和 alias；`.deb` 通过 `dpkg-deb -I`；`.rpm` 通过 `rpm -qip`。
+- 回滚：当前主要恢复 `.ko`，先尝试 `modprobe -r <moduleName>` 卸载当前模块，再 `insmod <backup.ko>` 加载备份模块。
 
-**Windows 平台特性：**
-- 使用 Windows Authenticode 自动进行签名验证
-- 设备驱动的硬件 ID 匹配
-- 与 Windows 驱动存储集成
-- 通过 PnPUtil 支持驱动安装
+#### macOS
 
-#### Linux 平台
+macOS 实现面向内核扩展、DriverKit 扩展和安装包：
 
-**支持的驱动类型：**
-- 内核模块（*.ko）
-- 设备树覆盖
-- 固件文件
+- 扫描默认包括 `.kext`、`.dext`、`.pkg`。
+- `.kext` 安装：复制到 `/Library/Extensions/`，设置 `root:wheel` 和 `755`，执行 `kextload`，再执行 `kextcache -i /`。
+- `.dext` 安装：复制到 `/Library/SystemExtensions/`；DriverKit 扩展通常还需要用户在系统设置的安全隐私区域批准。
+- `.pkg` 安装：`/usr/sbin/installer -pkg <pkg> -target /`。
+- 签名：使用 `codesign` 验证。
+- 限制：新版 macOS 对 kext、dext 有 SIP、用户批准和系统扩展策略限制；命令成功不代表用户批准流程已完成。
+- 回滚：当前主要恢复 `.kext`，复制回 `/Library/Extensions/` 并尝试 `kextload`。
 
-**示例：**
+### 批量与并行更新
+
+批量更新适合大型项目把驱动包拆成清单后统一处理：
 
 ```c#
-var driverInfo = new DriverInfo
-{
-    Name = "网卡驱动",
-    Version = "1.5.0",
-    FilePath = "/lib/modules/drivers/netadapter.ko",
-    TargetOS = "Linux",
-    Architecture = "x64",
-    Hash = "sha256_hash_here"
-};
+var drivers = await GeneralDrivelution.GetDriversFromDirectoryAsync(@"C:\Drivers");
 
-var strategy = new UpdateStrategy
-{
-    RequireBackup = true,
-    RestartMode = RestartMode.Delayed  // Linux 系统延迟重启
-};
+var batch = await GeneralDrivelution.BatchUpdateAsync(
+    drivers,
+    strategy,
+    BatchMode.Parallel,
+    progress);
 
-var updater = GeneralDrivelution.Create();
-var result = await updater.UpdateAsync(driverInfo, strategy);
+Console.WriteLine(batch);
 ```
 
-**Linux 平台特性：**
-- GPG 签名验证
-- 内核模块依赖检查
-- 与 modprobe 和 insmod 集成
-- 支持 DKMS（动态内核模块支持）
+`BatchMode.Sequential` 会按顺序逐个更新，适合核心驱动、互相依赖的驱动或需要降低系统风险的场景。`BatchMode.Parallel` 使用 `Task.WhenAll` 并行处理多个驱动，适合互不依赖的驱动包扫描、验证和安装任务，但底层系统工具可能仍会竞争驱动仓库、包管理器锁或内核模块资源。大型项目建议先并行验证和扫描，再对高风险安装阶段做分组或顺序控制。
 
-**所需权限：**
-```bash
-# 使用 sudo 或 root 权限运行
-sudo dotnet run MyApp.dll
-```
+### 重启行为
 
-#### MacOS 平台
+`UpdateStrategy.RestartMode` 表示本次驱动更新完成后的重启意图：
 
-**支持的驱动类型：**
-- 内核扩展（*.kext）
-- DriverKit 扩展
+| 值 | 含义 |
+| --- | --- |
+| `None` | 不需要重启。 |
+| `Prompt` | 应用提示用户重启。当前 `RestartHelper.PromptUserForRestart` 只输出提示并返回 `false`，适合由 GUI 自行接管。 |
+| `Delayed` | 延迟后调用系统重启命令。 |
+| `Immediate` | 立即调用系统重启命令。 |
 
-**示例：**
+当前 `UpdateAsync` 不会自动调用 `RestartHelper`，因此不会在驱动安装后直接重启系统。推荐在业务层根据驱动类型和安装结果决定是否调用：
 
 ```c#
-var driverInfo = new DriverInfo
+if (result.Success && RestartHelper.IsRestartRequired(strategy.RestartMode))
 {
-    Name = "音频设备驱动",
-    Version = "2.3.0",
-    FilePath = "/Library/Extensions/AudioDevice.kext",
-    TargetOS = "MacOS",
-    Architecture = "ARM64",
-    Hash = "sha256_hash_here"
-};
-
-var strategy = new UpdateStrategy
-{
-    RequireBackup = true,
-    RestartMode = RestartMode.Prompt
-};
-
-var updater = GeneralDrivelution.Create();
-var result = await updater.UpdateAsync(driverInfo, strategy);
-```
-
-**MacOS 平台特性：**
-- 使用 codesign 进行代码签名验证
-- 系统完整性保护（SIP）感知
-- 支持公证驱动
-- 与 kextutil 集成
-
-**所需权限：**
-```bash
-# 使用管理员权限运行
-sudo dotnet run MyApp.dll
-```
-
-#### 平台检测
-
-自动检测当前平台：
-
-```c#
-var platformInfo = GeneralDrivelution.GetPlatformInfo();
-
-Console.WriteLine($"平台: {platformInfo.Platform}");
-Console.WriteLine($"操作系统: {platformInfo.OperatingSystem}");
-Console.WriteLine($"架构: {platformInfo.Architecture}");
-Console.WriteLine($"是否支持: {platformInfo.IsSupported}");
-```
-
-#### 跨平台代码示例
-
-编写一次，到处运行：
-
-```c#
-// 此代码在 Windows、Linux 和 MacOS 上均可运行
-var updater = GeneralDrivelution.Create();
-
-// 平台特定的驱动路径可以在运行时确定
-var driverPath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
-    ? "C:\\Drivers\\device.inf"
-    : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-        ? "/lib/modules/device.ko"
-        : "/Library/Extensions/device.kext";
-
-var driverInfo = new DriverInfo
-{
-    Name = "设备驱动",
-    Version = "1.0.0",
-    FilePath = driverPath,
-    Hash = "calculated_hash"
-};
-
-var result = await updater.UpdateAsync(driverInfo, new UpdateStrategy());
-```
-
-
-
-### 常见问题（FAQ）
-
-#### Q1: 支持哪些平台？
-
-**A:** GeneralUpdate.Drivelution 支持 Windows（7/8/10/11/Server）、Linux（各种发行版）和 MacOS（10.13+）。组件会自动检测平台并使用适当的驱动更新策略。
-
-#### Q2: 是否需要管理员/root 权限？
-
-**A:** 是的，驱动更新在所有平台上都需要提升权限：
-- **Windows**：以管理员身份运行
-- **Linux**：使用 sudo 或以 root 身份运行
-- **MacOS**：使用 sudo 或以 root 身份运行
-
-#### Q3: 如何计算驱动文件哈希值？
-
-**A:** 可以使用内置工具或以下代码：
-
-```c#
-using System.Security.Cryptography;
-
-string CalculateFileHash(string filePath)
-{
-    using var sha256 = SHA256.Create();
-    using var stream = File.OpenRead(filePath);
-    var hash = sha256.ComputeHash(stream);
-    return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+    await RestartHelper.HandleRestartAsync(
+        strategy.RestartMode,
+        delaySeconds: 60,
+        message: "Driver update completed. Restart now?");
 }
 ```
 
-#### Q4: 如果更新失败会怎样？
+### 日志与性能开关
 
-**A:** 如果在更新策略中启用了 `RequireBackup`，系统将自动回滚到之前的驱动版本。`UpdateResult` 对象将包含详细的错误信息。
+Drivelution 使用 `GeneralTracer` 输出内部诊断信息：
 
-#### Q5: 可以同时更新多个驱动吗？
+- 默认启用。
+- 控制台输出：通过 `TextWriterTraceListener(Console.Out)`。
+- 文件输出：应用基目录下的 `Logs\generalupdate-trace yyyy-MM-dd.log`，按日期切换。
+- Windows 调试输出：Windows 下会额外添加 `WindowsOutputDebugListener`。
+- 调试器附加时会添加 `DefaultTraceListener`。
 
-**A:** 可以，您可以顺序或并行更新多个驱动：
-
-```c#
-var drivers = new List<DriverInfo> { driver1, driver2, driver3 };
-var tasks = drivers.Select(d => updater.UpdateAsync(d, strategy));
-var results = await Task.WhenAll(tasks);
-```
-
-#### Q6: 如何处理驱动签名验证？
-
-**A:** 默认情况下启用签名验证。要跳过验证（生产环境不推荐）：
+驱动更新通常涉及外部命令和系统权限，日志对排查失败很重要。但 `GeneralTracer` 会生成时间戳、调用栈位置并写入 Trace Listener；在性能敏感、批量验证或大量并行处理场景中，可以关闭它降低额外开销：
 
 ```c#
-var strategy = new UpdateStrategy
-{
-    SkipSignatureValidation = true  // 仅用于测试！
-};
+GeneralTracer.SetTracingEnabled(false);
+
+// 执行性能敏感的扫描或批量验证
+
+GeneralTracer.SetTracingEnabled(true);
 ```
 
-对于生产环境，请确保驱动已正确签名：
-- **Windows**：使用 Microsoft Authenticode
-- **Linux**：使用 GPG 签名
-- **MacOS**：使用 Apple 代码签名
+如果需要把日志桥接到自己的 UI 或日志系统，可以使用 `DrivelutionLogger` 的 `LogMessage` 事件自行包装；当前主更新流水线主要使用 `GeneralTracer`。
 
-#### Q7: 更新驱动后系统是否需要重启？
+### 推荐实践
 
-**A:** 这取决于驱动类型和平台。您可以通过 `RestartMode` 控制重启行为：
-- `RestartMode.None`：不需要重启
-- `RestartMode.Prompt`：提示用户重启
-- `RestartMode.Delayed`：稍后安排重启
-- `RestartMode.Immediate`：立即重启
+| 场景 | 建议 |
+| --- | --- |
+| 生产更新 | 保持 `RequireBackup = true`，设置明确的 `BackupPath`，不要跳过哈希和签名。 |
+| 首次集成 | 先调用 `ValidateAsync` 和 `GetPlatformInfo()`，在 UI 中展示目标 OS、架构、版本和发布者。 |
+| Windows | 以管理员启动进程，并优先使用厂商签名的 INF 包。 |
+| Linux | 确认 root/sudo 权限、内核版本和包管理器锁；核心模块建议顺序更新。 |
+| macOS | 提前告知用户可能需要批准系统扩展；kext 受 SIP 和系统策略影响较大。 |
+| 大批量驱动 | 扫描和验证可并行，安装阶段按驱动风险分组；失败时保留 `StepLogs` 和 `BackupPath`。 |
+| 高性能场景 | 批量扫描时可临时关闭 `GeneralTracer`，结束后再恢复。 |
 
-#### Q8: 如何在更新前验证驱动？
+### 常见问题
 
-**A:** 使用 `ValidateAsync` 方法：
+#### 为什么有时签名校验没有执行？
 
-```c#
-var isValid = await updater.ValidateAsync(driverInfo);
-if (isValid)
-{
-    // 继续更新
-    var result = await updater.UpdateAsync(driverInfo, strategy);
-}
-```
+签名校验只在 `DriverInfo.TrustedPublishers` 非空且 `SkipSignatureValidation == false` 时执行。如果你希望强制校验签名，请提供可信发布者列表，并确保平台对应的签名文件或系统签名信息可用。
 
-#### Q9: 可以自定义日志吗？
+#### 为什么设置了 `RestartMode` 但系统没有重启？
 
-**A:** 可以，您可以提供自定义的 Serilog 日志器：
+`RestartMode` 当前是策略字段，更新流水线不会自动重启系统。应用需要在 `UpdateAsync` 成功后调用 `RestartHelper.HandleRestartAsync(...)`，或用自己的 GUI/服务逻辑接管重启。
 
-```c#
-var logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
-    .WriteTo.Console()
-    .WriteTo.File("logs/driver-update.log")
-    .CreateLogger();
+#### `BatchMode.Parallel` 是否一定更快？
 
-var updater = GeneralDrivelution.Create(logger, options);
-```
+不一定。并行可以提升扫描、验证和互不依赖任务的吞吐，但驱动安装会调用系统工具，可能遇到驱动仓库锁、包管理器锁、模块依赖或重启要求。大型项目建议先并行验证，再对安装阶段分组控制并发。
 
-#### Q10: 驱动备份存储在哪里？
+#### 回滚应该如何设计？
 
-**A:** 备份存储在以下路径（按优先级）：
-1. `UpdateStrategy.BackupPath`（如果指定）
-2. `DrivelutionOptions.DefaultBackupPath`（如果配置）
-3. 默认：`./DriverBackups` 目录
-
-如果启用了 `AutoCleanupBackups`，旧备份会自动清理。
-
-#### Q11: 如何从目录获取驱动信息？
-
-**A:** 使用 `GetDriversFromDirectoryAsync` 方法：
-
-```c#
-// 从目录获取所有驱动
-var drivers = await updater.GetDriversFromDirectoryAsync("C:\\Drivers");
-
-// 获取特定模式的驱动
-var infDrivers = await updater.GetDriversFromDirectoryAsync(
-    "C:\\Drivers", 
-    "*.inf"
-);
-```
-
-#### Q12: 组件是否线程安全？
-
-**A:** 是的，您可以安全地在多个线程之间使用更新器实例。每个更新操作都是独立的，可以并发运行。
-
-#### Q13: 支持哪些 .NET 版本？
-
-**A:** GeneralUpdate.Drivelution 目标是 .NET 8.0，兼容：
-- .NET 8.0+
-- 支持 AOT（提前编译）
-- 支持裁剪以实现更小的部署包
-
-
-
-### 示例
-
-包含错误处理和日志记录的完整示例：
-
-```c#
-using GeneralUpdate.Drivelution;
-using GeneralUpdate.Drivelution.Abstractions.Models;
-using GeneralUpdate.Drivelution.Abstractions.Configuration;
-using Serilog;
-
-public class DriverUpdateExample
-{
-    public static async Task Main(string[] args)
-    {
-        // 配置日志
-        var logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
-            .WriteTo.Console()
-            .WriteTo.File("logs/driver-update.log", rollingInterval: RollingInterval.Day)
-            .CreateLogger();
-
-        // 配置选项
-        var options = new DrivelutionOptions
-        {
-            LogLevel = "Info",
-            DefaultBackupPath = "C:\\DriverBackups",
-            AutoCleanupBackups = true,
-            BackupsToKeep = 5
-        };
-
-        try
-        {
-            // 创建更新器
-            var updater = GeneralDrivelution.Create(logger, options);
-
-            // 获取平台信息
-            var platformInfo = GeneralDrivelution.GetPlatformInfo();
-            Console.WriteLine($"平台: {platformInfo}");
-
-            // 定义驱动信息
-            var driverInfo = new DriverInfo
-            {
-                Name = "示例设备驱动",
-                Version = "2.0.0",
-                FilePath = "C:\\Drivers\\sample.inf",
-                TargetOS = "Windows",
-                Architecture = "x64",
-                Hash = CalculateFileHash("C:\\Drivers\\sample.inf"),
-                HashAlgorithm = "SHA256",
-                HardwareId = "PCI\\VEN_1234&DEV_5678",
-                Description = "用于演示的示例设备驱动"
-            };
-
-            // 先验证驱动
-            Console.WriteLine("验证驱动中...");
-            var isValid = await updater.ValidateAsync(driverInfo);
-            if (!isValid)
-            {
-                Console.WriteLine("驱动验证失败！");
-                return;
-            }
-
-            // 定义更新策略
-            var strategy = new UpdateStrategy
-            {
-                RequireBackup = true,
-                RetryCount = 3,
-                RetryIntervalSeconds = 5,
-                RestartMode = RestartMode.Prompt,
-                TimeoutSeconds = 600
-            };
-
-            // 执行更新
-            Console.WriteLine("开始驱动更新...");
-            var result = await updater.UpdateAsync(driverInfo, strategy);
-
-            // 处理结果
-            if (result.Success)
-            {
-                Console.WriteLine($"✓ 驱动更新成功，耗时 {result.DurationMs} 毫秒");
-                Console.WriteLine($"✓ 备份: {result.BackupPath}");
-                
-                foreach (var log in result.StepLogs)
-                {
-                    Console.WriteLine($"  - {log}");
-                }
-            }
-            else
-            {
-                Console.WriteLine($"✗ 更新失败: {result.Error?.Message}");
-                Console.WriteLine($"  错误代码: {result.Error?.Code}");
-                
-                if (result.RolledBack)
-                {
-                    Console.WriteLine("✓ 系统回滚成功");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"意外错误: {ex.Message}");
-            logger.Error(ex, "驱动更新失败");
-        }
-    }
-
-    private static string CalculateFileHash(string filePath)
-    {
-        using var sha256 = System.Security.Cryptography.SHA256.Create();
-        using var stream = File.OpenRead(filePath);
-        var hash = sha256.ComputeHash(stream);
-        return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-    }
-}
-```
-
-
-
-### 注解
-
-GeneralDrivelution 提供完整的驱动更新解决方案，具有以下关键特性：
-
-#### 安全特性
-- ✓ 驱动签名验证（平台特定）
-- ✓ 文件哈希完整性检查
-- ✓ 硬件 ID 匹配
-- ✓ 发布者信任验证
-- ✓ 操作前权限检查
-
-#### 可靠性特性
-- ✓ 更新前自动备份
-- ✓ 失败时回滚
-- ✓ 可配置尝试次数的重试机制
-- ✓ 超时保护
-- ✓ 全面的错误处理和日志记录
-
-#### 平台特性
-- ✓ Windows：INF 驱动安装、PnPUtil 集成
-- ✓ Linux：内核模块管理、modprobe 集成
-- ✓ MacOS：KEXT 安装、系统完整性保护感知
-
-#### 开发者特性
-- ✓ 简单直观的 API
-- ✓ Async/await 支持
-- ✓ 使用 Serilog 的全面日志记录
-- ✓ 详细的错误信息
-- ✓ 进度跟踪和步骤日志
-
-
-
-### 适用于
-
-| 产品           | 版本          |
-| -------------- | ------------- |
-| .NET           | 8、9、10      |
-| .NET Standard  | 不适用        |
-| .NET Core      | 不适用        |
-| .NET Framework | 不适用        |
-
-**平台支持：**
-
-| 平台           | 支持级别      |
-| -------------- | ------------- |
-| Windows        | ✓ 完全支持    |
-| Linux          | ✓ 完全支持    |
-| MacOS          | ✓ 完全支持    |
-
-**注意：** 在所有平台上进行驱动操作都需要提升权限（管理员/root）。
+更新前保留备份路径，失败时读取 `UpdateResult.BackupPath` 和 `StepLogs`。如果业务要求强恢复，显式调用 `RollbackAsync(backupPath)`，并在 UI 中提示用户可能仍需重启或重新插拔设备。
