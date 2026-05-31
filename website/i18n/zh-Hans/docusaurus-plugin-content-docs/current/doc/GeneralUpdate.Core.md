@@ -534,7 +534,7 @@ await new GeneralUpdateBootstrap()
 
 ## 生命周期钩子：IUpdateHooks
 
-`IUpdateHooks` 适合处理“更新前检查、下载完成后处理、更新完成后清理、启动应用前准备、异常处理”等业务逻辑。
+`IUpdateHooks` 适合处理“更新前检查、下载完成后处理、更新完成后清理、启动应用前准备、异常处理”等业务逻辑。它也是一个非常灵活的开放点：在 Linux 或 macOS 上，更新后的可执行文件可能需要重新赋予执行权限，或者需要先执行企业内部的授权脚本、签名校验脚本、权限修复脚本，再启动主程序；这些操作都可以放在 `OnBeforeStartAppAsync` 中完成。
 
 ```csharp
 using GeneralUpdate.Core.Hooks;
@@ -575,6 +575,40 @@ public sealed class ProductUpdateHooks : IUpdateHooks
 await new GeneralUpdateBootstrap()
     .SetConfig(request)
     .Hooks<ProductUpdateHooks>()
+    .LaunchAsync();
+```
+
+Linux/macOS 场景可以直接注册内置的 `UnixPermissionHooks`，让 Core 在启动应用前执行 `chmod +x`：
+
+```csharp
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .Hooks<UnixPermissionHooks>()
+    .LaunchAsync();
+```
+
+如果需要执行自己的赋权脚本，可以封装一个无参 hook 适配器，再通过 `Hooks<T>()` 注册：
+
+```csharp
+using GeneralUpdate.Core.Hooks;
+
+public sealed class ProductPermissionHooks : IUpdateHooks
+{
+    private readonly CustomPermissionHooks _inner =
+        new("/opt/my-product/scripts/fix-permissions.sh");
+
+    public Task OnBeforeStartAppAsync(HookContext ctx)
+        => _inner.OnBeforeStartAppAsync(ctx);
+
+    public Task<bool> OnBeforeUpdateAsync(HookContext ctx) => Task.FromResult(true);
+    public Task OnDownloadCompletedAsync(DownloadContext ctx) => Task.CompletedTask;
+    public Task OnAfterUpdateAsync(HookContext ctx) => Task.CompletedTask;
+    public Task OnUpdateErrorAsync(HookContext ctx, Exception ex) => Task.CompletedTask;
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .Hooks<ProductPermissionHooks>()
     .LaunchAsync();
 ```
 
