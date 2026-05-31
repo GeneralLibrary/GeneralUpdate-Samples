@@ -26,7 +26,6 @@ Core 负责“执行更新”，不负责生成更新包，也不直接管理服
 | 校验与应用补丁 | 是 | 支持 Hash 校验、压缩包处理、差分补丁管道。 |
 | 文件替换与重启应用 | 是 | `Upgrade` / `OssUpgrade` 角色用于独立升级程序。 |
 | 生成差分包 | 否 | 推荐使用 `GeneralUpdate.Tools`。 |
-| 固件升级 | 否 | 固件升级组件不在本页范围内。 |
 
 ## 入口类：GeneralUpdateBootstrap
 
