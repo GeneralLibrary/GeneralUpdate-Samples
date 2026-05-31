@@ -175,7 +175,7 @@ public GeneralUpdateBootstrap SetSource(
     string? token = null)
 ```
 
-`SetSource` is a lightweight entry point when identity metadata is discovered elsewhere, such as from `generalupdate.manifest.json`. When you need precise control over every manifest identity field, prefer `ManifestInfo.Load().ToUpdateRequest()` followed by `SetConfig(request)`.
+`SetSource` is a lightweight entry point when identity metadata is provided by `generalupdate.manifest.json`, leaving only the server endpoint and secret in application code.
 
 ```csharp
 await new GeneralUpdateBootstrap()
@@ -336,22 +336,35 @@ The `GeneralUpdate.Tools` configuration flow parses the main-app and updater `.c
 
 The sample publishing flow in the configuration UI also calls `SamplePublisherService.PublishAsync(...)` to place the main-app output, updater output, and manifest into one runnable sample directory. New users therefore do not need to hand-write a complete `UpdateRequest`: they can generate the manifest with Tools and only add server endpoints and secrets in application code.
 
-### How Core reads the manifest
+### Using the manifest with the bootstrap
 
-Core provides `ManifestInfo`:
+With the manifest in place, application code does not need to care about identity fields such as `MainAppName`, `ClientVersion`, `UpdateAppName`, `UpgradeClientVersion`, `ProductId`, or `UpdatePath`, and it does not need to load `generalupdate.manifest.json` manually. The bootstrap reads `InstallPath/generalupdate.manifest.json` internally during the update workflow and carries that identity metadata into version checking, downloading, updater launch, and version write-back.
+
+When the install directory is the current application directory, pass only the server endpoint and secret to `SetSource`:
 
 ```csharp
+await new GeneralUpdateBootstrap()
+    .SetSource(
+        updateUrl: "https://update.example.com/api/upgrade/verification",
+        appSecretKey: "your-app-secret",
+        reportUrl: "https://update.example.com/api/upgrade/report")
+    .SetOption(Option.AppType, AppType.Client)
+    .LaunchAsync();
+```
+
+If the actual install directory is not the current process base directory, provide `InstallPath` through `UpdateRequest` while still keeping manifest identity fields out of code:
+
+```csharp
+using GeneralUpdate.Core;
 using GeneralUpdate.Core.Configuration;
 
-var manifest = ManifestInfo.Load();
-if (manifest == null)
-    throw new FileNotFoundException("generalupdate.manifest.json was not found.");
-
-var request = manifest.ToUpdateRequest();
-request.UpdateUrl = "https://update.example.com/api/upgrade/verification";
-request.ReportUrl = "https://update.example.com/api/upgrade/report";
-request.AppSecretKey = "your-app-secret";
-request.InstallPath = AppDomain.CurrentDomain.BaseDirectory;
+var request = new UpdateRequest
+{
+    UpdateUrl = "https://update.example.com/api/upgrade/verification",
+    ReportUrl = "https://update.example.com/api/upgrade/report",
+    AppSecretKey = "your-app-secret",
+    InstallPath = @"C:\Program Files\MyProduct"
+};
 
 await new GeneralUpdateBootstrap()
     .SetConfig(request)
@@ -359,42 +372,9 @@ await new GeneralUpdateBootstrap()
     .LaunchAsync();
 ```
 
-`ManifestInfo.Load()` reads from `AppDomain.CurrentDomain.BaseDirectory` by default. `ManifestInfo.Load(path)` reads a specific file. `ToUpdateRequest()` converts the manifest into a minimal `UpdateRequest`, but it does not populate server URLs or secrets.
+The recommended responsibility split is:
 
-At the beginning of the standard workflow, `ClientStrategy` also calls `AppMetadataDiscoverer.Discover(context)` and fills empty identity fields from `InstallPath/generalupdate.manifest.json`. The precedence rule matters: **values already provided in code win; the manifest only fills empty fields**. This lets you use the manifest as the default identity source while still overriding individual fields in special environments.
-
-### Recommended configuration pattern
-
-For application code, the clearest pattern is "manifest for identity, code/environment for server and secrets".
-
-```csharp
-using GeneralUpdate.Core;
-using GeneralUpdate.Core.Configuration;
-
-static UpdateRequest CreateRequestFromManifest()
-{
-    var manifest = ManifestInfo.Load()
-        ?? throw new InvalidOperationException("Missing generalupdate.manifest.json.");
-
-    var request = manifest.ToUpdateRequest();
-    request.UpdateUrl = "https://update.example.com/api/upgrade/verification";
-    request.ReportUrl = "https://update.example.com/api/upgrade/report";
-    request.AppSecretKey = Environment.GetEnvironmentVariable("GENERALUPDATE_APP_SECRET")
-        ?? throw new InvalidOperationException("Missing update secret.");
-    request.InstallPath = AppDomain.CurrentDomain.BaseDirectory;
-
-    return request;
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(CreateRequestFromManifest())
-    .SetOption(Option.AppType, AppType.Client)
-    .LaunchAsync();
-```
-
-This keeps the split explicit:
-
-| No longer hard-coded | Still provided by code or environment |
+| Provided by manifest | Provided by code or environment |
 | --- | --- |
 | `MainAppName`, `ClientVersion`, `UpdateAppName`, `UpgradeClientVersion`, `ProductId`, `UpdatePath` | `UpdateUrl`, `ReportUrl`, `AppSecretKey`, `Scheme`, `Token`, events, extension points, runtime options |
 

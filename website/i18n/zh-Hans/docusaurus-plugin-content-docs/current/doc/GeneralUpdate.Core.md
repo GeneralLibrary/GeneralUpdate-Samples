@@ -177,7 +177,7 @@ public GeneralUpdateBootstrap SetSource(
     string? token = null)
 ```
 
-`SetSource` 是轻配置入口，适合把应用身份信息放到 `generalupdate.manifest.json` 或运行时发现机制里，只在代码中指定服务端入口和密钥。若需要精确控制清单中的每个身份字段，建议使用后文的 `ManifestInfo.Load().ToUpdateRequest()` 再调用 `SetConfig(request)`。
+`SetSource` 是轻配置入口，适合把应用身份信息放到 `generalupdate.manifest.json`，只在代码中指定服务端入口和密钥。
 
 ```csharp
 await new GeneralUpdateBootstrap()
@@ -338,22 +338,35 @@ Tools 生成的 JSON 使用小驼峰字段名，Core 中对应类型是 `Manifes
 
 配置界面的发布样例流程还会调用 `SamplePublisherService.PublishAsync(...)`，把主程序输出、升级程序输出和清单一起组织到可运行样例目录中。因此新手不需要从零手写完整 `UpdateRequest`，可以先用 Tools 生成清单，再在应用代码中补充服务端入口和密钥。
 
-### Core 如何读取清单
+### 配合引导类使用
 
-Core 侧提供 `ManifestInfo`：
+使用清单后，业务代码不需要关心 `MainAppName`、`ClientVersion`、`UpdateAppName`、`UpgradeClientVersion`、`ProductId`、`UpdatePath` 这些身份字段，也不需要手动读取 `generalupdate.manifest.json`。引导类启动更新流程时会在内部读取 `InstallPath/generalupdate.manifest.json`，并把清单中的应用身份信息带入后续的版本检查、下载、启动升级程序和版本回写流程。
+
+默认安装目录就是当前应用目录时，只需要把服务端入口和密钥传给 `SetSource`：
 
 ```csharp
+await new GeneralUpdateBootstrap()
+    .SetSource(
+        updateUrl: "https://update.example.com/api/upgrade/verification",
+        appSecretKey: "your-app-secret",
+        reportUrl: "https://update.example.com/api/upgrade/report")
+    .SetOption(Option.AppType, AppType.Client)
+    .LaunchAsync();
+```
+
+如果应用的实际安装目录不是当前进程基目录，只需要在 `UpdateRequest` 中补充 `InstallPath`，仍然不需要把清单中的身份字段重复写进代码：
+
+```csharp
+using GeneralUpdate.Core;
 using GeneralUpdate.Core.Configuration;
 
-var manifest = ManifestInfo.Load();
-if (manifest == null)
-    throw new FileNotFoundException("generalupdate.manifest.json was not found.");
-
-var request = manifest.ToUpdateRequest();
-request.UpdateUrl = "https://update.example.com/api/upgrade/verification";
-request.ReportUrl = "https://update.example.com/api/upgrade/report";
-request.AppSecretKey = "your-app-secret";
-request.InstallPath = AppDomain.CurrentDomain.BaseDirectory;
+var request = new UpdateRequest
+{
+    UpdateUrl = "https://update.example.com/api/upgrade/verification",
+    ReportUrl = "https://update.example.com/api/upgrade/report",
+    AppSecretKey = "your-app-secret",
+    InstallPath = @"C:\Program Files\MyProduct"
+};
 
 await new GeneralUpdateBootstrap()
     .SetConfig(request)
@@ -361,42 +374,9 @@ await new GeneralUpdateBootstrap()
     .LaunchAsync();
 ```
 
-`ManifestInfo.Load()` 默认从 `AppDomain.CurrentDomain.BaseDirectory` 读取清单；`ManifestInfo.Load(path)` 可以从指定文件读取。`ToUpdateRequest()` 会把清单转换成一个最小 `UpdateRequest`，但不会填充服务端地址和密钥。
+推荐的职责拆分是：
 
-`ClientStrategy` 在标准工作流开始时也会调用 `AppMetadataDiscoverer.Discover(context)`，从 `InstallPath/generalupdate.manifest.json` 补齐空的身份字段。优先级规则很重要：**代码中已经提供的值优先，清单只补齐空字段**。这意味着你可以用清单作为默认身份来源，同时在特殊环境中用代码覆盖某个字段。
-
-### 推荐配置方式
-
-对业务应用来说，最清晰的方式是“清单提供身份，代码提供服务端和密钥”。
-
-```csharp
-using GeneralUpdate.Core;
-using GeneralUpdate.Core.Configuration;
-
-static UpdateRequest CreateRequestFromManifest()
-{
-    var manifest = ManifestInfo.Load()
-        ?? throw new InvalidOperationException("Missing generalupdate.manifest.json.");
-
-    var request = manifest.ToUpdateRequest();
-    request.UpdateUrl = "https://update.example.com/api/upgrade/verification";
-    request.ReportUrl = "https://update.example.com/api/upgrade/report";
-    request.AppSecretKey = Environment.GetEnvironmentVariable("GENERALUPDATE_APP_SECRET")
-        ?? throw new InvalidOperationException("Missing update secret.");
-    request.InstallPath = AppDomain.CurrentDomain.BaseDirectory;
-
-    return request;
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(CreateRequestFromManifest())
-    .SetOption(Option.AppType, AppType.Client)
-    .LaunchAsync();
-```
-
-这种写法的好处是：
-
-| 不再硬编码 | 仍由代码或环境提供 |
+| 由 manifest 提供 | 由代码或环境提供 |
 | --- | --- |
 | `MainAppName`、`ClientVersion`、`UpdateAppName`、`UpgradeClientVersion`、`ProductId`、`UpdatePath` | `UpdateUrl`、`ReportUrl`、`AppSecretKey`、`Scheme`、`Token`、事件、扩展点、运行选项 |
 
