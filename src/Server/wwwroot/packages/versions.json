@@ -1,9 +1,70 @@
 [
-  {
-    "PacketName": "packet_20250102230201638_1.0.0.1",
-    "Hash": "ad1a85a9169ca0083ab54ba390e085c56b9059efc3ca8aa1ec9ed857683cc4b1",
-    "Version": "1.0.0.1",
-    "Url": "http://localhost:5000/packages/packet_20250102230201638_1.0.0.1.zip",
-    "PubTime": "2025-01-02T23:48:21"
-  }
+    {
+        "PacketName":  "packet_20260531180913400_full_client_2.0.0.0",
+        "Hash":  "eeb4ce8c90a8da765a1a9e00e6d02a258f368654a621b7d1991b02cdd5f27090",
+        "Version":  "2.0.0.0",
+        "Url":  "http://localhost:5000/File/Download/eeb4ce8c90a8da765a1a9e00e6d02a258f368654a621b7d1991b02cdd5f27090",
+        "PubTime":  "2026-05-31T18:09:18",
+        "AppType":  1,
+        "Platform":  1,
+        "ProductId":  "2d974e2a-31e6-4887-9bb1-b4689e98c77a",
+        "IsForcibly":  false,
+        "Format":  ".zip",
+        "Size":  516566,
+        "IsFreeze":  false,
+        "IsCrossVersion":  false,
+        "FromVersion":  null,
+        "ToVersion":  null
+    },
+    {
+        "PacketName":  "packet_20260531180913400_full_upgrade_2.0.0.0",
+        "Hash":  "8f4ff42d68804f9a105b5c3cd59ee859ce8f8d2c32e60b38567984d6ae8ae893",
+        "Version":  "2.0.0.0",
+        "Url":  "http://localhost:5000/File/Download/8f4ff42d68804f9a105b5c3cd59ee859ce8f8d2c32e60b38567984d6ae8ae893",
+        "PubTime":  "2026-05-31T18:09:18",
+        "AppType":  2,
+        "Platform":  1,
+        "ProductId":  "2d974e2a-31e6-4887-9bb1-b4689e98c77a",
+        "IsForcibly":  false,
+        "Format":  ".zip",
+        "Size":  512475,
+        "IsFreeze":  false,
+        "IsCrossVersion":  false,
+        "FromVersion":  null,
+        "ToVersion":  null
+    },
+    {
+        "PacketName":  "packet_20260531180913400_cross_client_1.0.0.0_to_2.0.0.0",
+        "Hash":  "18a66651e76689894d0c4053da0c710584d319b0e374fddf52e6755b6f8ee524",
+        "Version":  "2.0.0.0",
+        "Url":  "http://localhost:5000/File/Download/18a66651e76689894d0c4053da0c710584d319b0e374fddf52e6755b6f8ee524",
+        "PubTime":  "2026-05-31T18:09:18",
+        "AppType":  1,
+        "Platform":  1,
+        "ProductId":  "2d974e2a-31e6-4887-9bb1-b4689e98c77a",
+        "IsForcibly":  false,
+        "Format":  ".zip",
+        "Size":  84828,
+        "IsFreeze":  false,
+        "IsCrossVersion":  true,
+        "FromVersion":  "1.0.0.0",
+        "ToVersion":  "2.0.0.0"
+    },
+    {
+        "PacketName":  "packet_20260531180913400_cross_upgrade_1.0.0.0_to_2.0.0.0",
+        "Hash":  "fb24b5065bd54f88fd3a131cecc34eef6f58d95cd20da180de12fe297f2a94d7",
+        "Version":  "2.0.0.0",
+        "Url":  "http://localhost:5000/File/Download/fb24b5065bd54f88fd3a131cecc34eef6f58d95cd20da180de12fe297f2a94d7",
+        "PubTime":  "2026-05-31T18:09:18",
+        "AppType":  2,
+        "Platform":  1,
+        "ProductId":  "2d974e2a-31e6-4887-9bb1-b4689e98c77a",
+        "IsForcibly":  false,
+        "Format":  ".zip",
+        "Size":  80735,
+        "IsFreeze":  false,
+        "IsCrossVersion":  true,
+        "FromVersion":  "1.0.0.0",
+        "ToVersion":  "2.0.0.0"
+    }
 ]

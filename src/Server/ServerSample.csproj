@@ -1,47 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="ServerSample\**" />
     <Content Update="wwwroot\packages\versions.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Update="wwwroot\packages\packet_20250102230201638_1.0.0.1.zip">
+    <Content Update="wwwroot\packages\packet_*.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="build.bat" />
-    <None Remove="ServerSample\**" />
-    <None Update="packages\packet_20250102230201638_1.0.0.1.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\packages\packet_20250102230201638_1.0.0.1.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="ServerSample\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Remove="ServerSample\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <_ContentIncludedByDefault Remove="ServerSample\obj\project.assets.json" />
-    <_ContentIncludedByDefault Remove="ServerSample\obj\ServerSample.csproj.nuget.dgspec.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>
