@@ -872,7 +872,7 @@ if (!Directory.Exists(backupDir))
 
 ### See Also
 
-- [GeneralUpdate.ClientCore](./GeneralUpdate.ClientCore.md) - Main client update component
+- [GeneralUpdate.Core](./GeneralUpdate.Core.md) - Main client update component
 - [GeneralUpdate.Core](./GeneralUpdate.Core.md) - Core update logic
 - [GitHub Source Code](https://github.com/GeneralLibrary/GeneralUpdate/tree/master/src/c%23/GeneralUpdate.Extension) - Complete source code and more examples
 - [Quick Start Guide](../quickstart/Quik%20start.md) - Getting started with GeneralUpdate

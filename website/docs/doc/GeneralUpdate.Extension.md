@@ -872,7 +872,7 @@ if (!Directory.Exists(backupDir))
 
 ### 另请参阅
 
-- [GeneralUpdate.ClientCore](./GeneralUpdate.ClientCore.md) - 主客户端更新组件
+- [GeneralUpdate.Core](./GeneralUpdate.Core.md) - 主客户端更新组件
 - [GeneralUpdate.Core](./GeneralUpdate.Core.md) - 核心更新逻辑
 - [GitHub 源代码](https://github.com/GeneralLibrary/GeneralUpdate/tree/master/src/c%23/GeneralUpdate.Extension) - 完整源代码和更多示例
 - [快速入门指南](../quickstart/Quik%20start.md) - GeneralUpdate 入门

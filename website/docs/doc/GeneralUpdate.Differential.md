@@ -402,7 +402,7 @@ await manager.GeneratePatchWithProgressAsync(
 
 5. **备份建议**
    - 在应用补丁前建议备份原始文件
-   - 可以使用 ClientCore 的 BackUp 选项自动备份
+   - 可以使用 Core 的 BackUp 选项自动备份
 
 ### 💡 最佳实践
 
