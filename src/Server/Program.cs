@@ -119,6 +119,7 @@ var handleReport = (ReportDTO request) =>
 };
 
 app.MapPost("/Update/Report", handleReport);
+app.MapPost("/Upgrade/Report", handleReport);
 
 // ──  GET /File/Download/{hash}  ───────────────────────────────────
 // Serves package files by their SHA256 hash. Supports HTTP Range
