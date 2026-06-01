@@ -113,8 +113,11 @@ Before starting to use GeneralUpdate, we need to understand some basic concepts 
 
 ##### Version Number Standards
 
-- NuGet Versioning Guidelines: https://docs.microsoft.com/zh-cn/nuget/concepts/package-versioning 
-- Assembly Versioning Guidelines: https://docs.microsoft.com/zh-cn/dotnet/standard/assembly/versioning
+GeneralUpdate follows [Semantic Versioning](https://semver.org/) core principles (`MAJOR.MINOR.PATCH`), extended with a fourth `Revision` segment (`MAJOR.MINOR.PATCH.REVISION`) for .NET `System.Version` compatibility.
+
+- Semantic Versioning: https://semver.org/
+- NuGet Versioning Guidelines: https://docs.microsoft.com/en-us/nuget/concepts/package-versioning 
+- Assembly Versioning Guidelines: https://docs.microsoft.com/en-us/dotnet/standard/assembly/versioning
 
 
 
