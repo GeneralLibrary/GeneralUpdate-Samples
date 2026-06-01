@@ -4,9 +4,9 @@ sidebar_position: 7
 
 ### 定义
 
-命名空间：GeneralUpdate.ClientCore.Hubs
+命名空间：GeneralUpdate.Core.Hubs
 
-程序集：GeneralUpdate.ClientCore.dll
+程序集：GeneralUpdate.Core.dll
 
 
 

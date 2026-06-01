@@ -4,9 +4,9 @@ sidebar_position: 7
 
 ### Definition
 
-Namespace: GeneralUpdate.ClientCore.Hubs
+Namespace: GeneralUpdate.Core.Hubs
 
-Assembly: GeneralUpdate.ClientCore.dll
+Assembly: GeneralUpdate.Core.dll
 
 
 

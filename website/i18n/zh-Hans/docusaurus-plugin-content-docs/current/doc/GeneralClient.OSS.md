@@ -4,15 +4,15 @@ sidebar_position: 9
 
 ### 定义
 
-命名空间：GeneralUpdate.ClientCore
+命名空间：GeneralUpdate.Core
 
-程序集：GeneralUpdate.ClientCore.dll
+程序集：GeneralUpdate.Core.dll
 
 
 
 **OSS**
 
-OSS的全称是对象存储服务（Object Storage Service），做服务端技术栈开发的小伙伴肯定对这个不陌生在 各大云服务器厂商都会提供类似的服务,说简单点就是一个文件服务器。例如：阿里云OSS、腾讯云COS、华为云OBS，其实它们只是名字不一样功能服务都差不多。然后本更新组件新功能的实现思路非常相似那么就 选择了OSS来为该功能命名，而且方便开发者一眼能get到这个功能的作用（需要使用组件 GeneralUpdate.ClientCore、GeneralUpdate.Core）。
+OSS的全称是对象存储服务（Object Storage Service），做服务端技术栈开发的小伙伴肯定对这个不陌生在 各大云服务器厂商都会提供类似的服务,说简单点就是一个文件服务器。例如：阿里云OSS、腾讯云COS、华为云OBS，其实它们只是名字不一样功能服务都差不多。然后本更新组件新功能的实现思路非常相似那么就 选择了OSS来为该功能命名，而且方便开发者一眼能get到这个功能的作用（需要使用组件 GeneralUpdate.Core）。
 
 
 
@@ -83,8 +83,8 @@ GeneralClientOSS：
 
 ```c#
 using System.Text;
-using GeneralUpdate.ClientCore;
-using GeneralUpdate.Common.Shared.Object;
+using GeneralUpdate.Core;
+
 
 var paramsOSS = new GlobalConfigInfoOSS
 {

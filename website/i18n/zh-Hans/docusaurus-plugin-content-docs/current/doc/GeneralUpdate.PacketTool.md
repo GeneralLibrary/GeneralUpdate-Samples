@@ -743,7 +743,7 @@ MyExtension/
 
 - **[GeneralUpdate.Core](./GeneralUpdate.Core.md)** - 核心更新组件
 - **[GeneralUpdate.Extension](./GeneralUpdate.Extension.md)** - 扩展管理系统
-- **[GeneralUpdate.ClientCore](./GeneralUpdate.ClientCore.md)** - 客户端更新组件
+- **[GeneralUpdate.Core](./GeneralUpdate.Core.md)** - 客户端更新组件
 - **[快速入门指南](../quickstart/Quik%20start.md)** - GeneralUpdate 快速入门 GeneralUpdate quick start
 
 ### 外部资源
