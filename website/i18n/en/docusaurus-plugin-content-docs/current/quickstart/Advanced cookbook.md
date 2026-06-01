@@ -51,7 +51,7 @@ For most products:
 
 - **Dev side**: CI runs `generate_packages.ps1` + Tools to produce patches
 - **Server side**: One HTTP Server hosting `versions.json` and `.zip` files; optionally OSS mode with static storage
-- **Client side**: Client references `GeneralUpdate.ClientCore`, Upgrade references `GeneralUpdate.Core`
+- **Client side**: Both Client and Upgrade reference `GeneralUpdate.Core` (since the latest version, the former `GeneralUpdate.ClientCore` and `GeneralUpdate.Common` have been merged into `GeneralUpdate.Core`)
 
 ```text
 CI (GitHub Actions)                     Server (HTTP / OSS)
@@ -202,17 +202,23 @@ Confirm before every release:
 
 ### 4.1 Version number conventions
 
-GeneralUpdate uses `Major.Minor.Build.Revision` four-part versioning:
+GeneralUpdate follows [Semantic Versioning](https://semver.org/) (SemVer) core principles. On top of SemVer `MAJOR.MINOR.PATCH`, a fourth `Revision` segment is added for .NET `System.Version` compatibility, forming the `Major.Minor.Build.Revision` four-part scheme:
 
 ```text
 2.0.0.0
-│ │ │ └── Revision
-│ │ └──── Build
-│ └────── Minor
-└──────── Major
+│ │ │ └── Revision — .NET 4th segment, not in SemVer standard
+│ │ └──── Build    — maps to SemVer PATCH
+│ └────── Minor    — maps to SemVer MINOR
+└──────── Major    — maps to SemVer MAJOR
 ```
 
-Server compares with `new Version(string)` — keep the numeric format.
+Version rules:
+- **Major**: incremented for incompatible API changes
+- **Minor**: incremented for backwards-compatible new functionality
+- **Build** (patch): incremented for backwards-compatible bug fixes
+- **Revision**: internal revision, typically `0`; only distinguished in .NET assembly versions
+
+Server compares with `new Version(string)` — keep the numeric format. See [Semantic Versioning 2.0.0](https://semver.org/) for details.
 
 ### 4.2 Update modes
 

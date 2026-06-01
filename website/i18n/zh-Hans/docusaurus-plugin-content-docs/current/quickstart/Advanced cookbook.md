@@ -51,7 +51,7 @@ title: 高级实战手册
 
 - **开发端**：CI 环境运行 `generate_packages.ps1` + Tools 生成补丁
 - **服务端**：一台 HTTP Server 托管 `versions.json` 和 `.zip` 文件；可选 OSS 模式用静态存储
-- **客户端**：Client 引用 `GeneralUpdate.ClientCore`，Upgrade 引用 `GeneralUpdate.Core`
+- **客户端**：Client 和 Upgrade 统一引用 `GeneralUpdate.Core`（自最新版本起，原 `GeneralUpdate.ClientCore` 和 `GeneralUpdate.Common` 已合并到 `GeneralUpdate.Core`）
 
 ```text
 CI (GitHub Actions)                     Server (HTTP / OSS)
@@ -202,17 +202,23 @@ jobs:
 
 ### 4.1 版本号规范
 
-GeneralUpdate 使用 `Major.Minor.Build.Revision` 四段式版本号：
+GeneralUpdate 遵循[语义化版本](https://semver.org/lang/zh-CN/)（SemVer）规范的核心原则。在 SemVer `MAJOR.MINOR.PATCH` 的基础上，为兼容 .NET `System.Version`，扩展了第四个 `Revision` 段，形成 `Major.Minor.Build.Revision` 四段式版本号：
 
 ```text
 2.0.0.0
-│ │ │ └── Revision（修订号）
-│ │ └──── Build（构建号）
-│ └────── Minor（次版本号）
-└──────── Major（主版本号）
+│ │ │ └── Revision（修订号）— 对应 .NET 第四段，非 SemVer 标准
+│ │ └──── Build（构建号）   — 对应 SemVer PATCH
+│ └────── Minor（次版本号） — 对应 SemVer MINOR
+└──────── Major（主版本号） — 对应 SemVer MAJOR
 ```
 
-Server 使用 `new Version(string)` 进行比较，因此请保持数字格式。
+版本号规则：
+- **Major**（主版本号）：不兼容的 API 修改时递增
+- **Minor**（次版本号）：向下兼容的功能新增时递增
+- **Build**（构建号/补丁号）：向下兼容的问题修正时递增
+- **Revision**（修订号）：内部修订，通常为 `0`，仅在 .NET 程序集版本中区分
+
+Server 使用 `new Version(string)` 进行比较，因此请保持纯数字格式。更多细节参见 [语义化版本 2.0.0](https://semver.org/lang/zh-CN/)。
 
 ### 4.2 更新模式
 
