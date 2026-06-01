@@ -2,734 +2,345 @@
 sidebar_position: 11
 ---
 
-### Introduction
+# GeneralUpdate.Tools
 
-GeneralUpdate.Tools is a desktop application developed using Avalonia that supports Windows / Linux / Mac cross-platform. This tool provides developers with three core functional modules for managing software updates and extensions.
+## What this is
 
-| Repository URL                                        |
-| ----------------------------------------------------- |
-| https://github.com/GeneralLibrary/GeneralUpdate.Tools |
+GeneralUpdate.Tools is a cross-platform desktop application built on Avalonia 12 (Windows / Linux / macOS). It helps you generate and manage patch packages, extension packages, version manifests, and run local update simulations as part of your software release workflow. It does not replace your CI/CD system — it consolidates the repetitive tasks of "package, verify, validate" into a single visual tool.
 
-| Feature                          | Supported | Remarks                                                                                                                               |
-| -------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Build patch package              | Yes       | Compares the previous version with the current version to identify updated, newly added, or deleted files.                            |
-| Build OSS version configuration  | Yes       | Easily generates OSS version configuration files.                                                                                     |
-| Extension Manager                | Yes       | Package and manage application extensions.                                                                                            |
+Repository: [https://github.com/GeneralLibrary/GeneralUpdate.Tools](https://github.com/GeneralLibrary/GeneralUpdate.Tools)
 
-![](imgs\tool.png)
+## Download & Run
 
-![](imgs\tool2.png)
+### Option 1: Run from source (recommended for developers)
 
-![](imgs\tool3.png)
+The tool targets .NET 10. Make sure you have [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) installed:
 
----
-
-## Feature Descriptions
-
-### 1. Build Patch Package
-
-#### Function Introduction
-
-The Patch Package Builder is used to create differential update packages. By comparing the old version with the new version, it only packages the changed files, significantly reducing the update package size and download time.
-
-#### Parameter Description
-
-| Name         | Remarks                                                                                                                                                                                                                                                                                        |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Source path  | Path to the folder of the previous version.                                                                                                                                                                                                                                                    |
-| Target path  | Path to the folder of the current version.                                                                                                                                                                                                                                                     |
-| Patch path   | Path where the final update patch package will be generated.                                                                                                                                                                                                                                   |
-| Build        | Recursively compares all project files (DLL, exe, etc.) in the Source path and Target path folders. Analyzes the list of files to be updated through binary difference check and incremental check, then packages the update files according to the folder structure.                         |
-| Clear        | Clears the currently entered content.                                                                                                                                                                                                                                                          |
-
----
-
-### 2. Build OSS Version Configuration
-
-#### Function Introduction
-
-The OSS Version Configuration Builder is used to generate `version.json` configuration files, which contain metadata information about the update package, informing the client application how to obtain and verify the update package.
-
-#### Parameter Description
-
-| Name                | Remarks                                                                       |
-| ------------------- | ----------------------------------------------------------------------------- |
-| Release date time   | Release time of the update package.                                           |
-| PacketName          | Name of the update package.                                                   |
-| Hash                | Hash value of the update package (for integrity verification).                |
-| Version             | Version number of the update package.                                         |
-| Download address    | Download URL of the update package.                                           |
-| Get hash            | Function to retrieve the hash value of the update package.                    |
-| Append              | Appends new update information to the existing version details.               |
-| Clear               | Clears all filled-in content.                                                 |
-| Copy                | Copies the generated content to the clipboard.                                |
-| Build               | Generates the OSS version configuration file (.json) to the local disk.       |
-
----
-
-### 3. Extension Manager
-
-#### Function Introduction
-
-The Extension Manager (ExtensionView) is one of the core features of GeneralUpdate.Tools, used to package application extensions into distributable standard formats. This tool automatically creates extension packages containing all necessary metadata, supports platform-specific configurations, dependency management, and custom properties, making it ideal for building plugin systems and extension marketplaces.
-
-#### Core Features
-
-- **Complete Metadata Management**: Supports standard fields such as extension name, version, description, publisher, license, etc.
-- **Platform Support**: Can specify target platforms (Windows / Linux / MacOS)
-- **Version Compatibility**: Define minimum and maximum host version requirements
-- **Dependency Management**: Declare dependencies on other extensions
-- **Automatic Packaging**: Automatically compress extension directory and generate manifest.json
-- **Custom Properties**: Supports adding additional key-value pair metadata
-- **Category Tags**: Organize and discover extensions through category tags
-
----
-
-## Extension Manager Usage Guide
-
-### Basic Information Fields
-
-#### Extension Name
-
-**Description**: Unique identifier for the extension. It is recommended to use lowercase letters and hyphens without spaces.
-
-**Example**: `my-awesome-plugin`, `data-exporter`
-
----
-
-#### Display Name
-
-**Description**: User-friendly display name that will be shown in extension lists and detail pages.
-
-**Example**: `My Awesome Plugin`, `Data Exporter Tool`
-
----
-
-#### Version
-
-**Description**: Extension version number. It is recommended to follow Semantic Versioning (SemVer) specification in the format `Major.Minor.Patch.Build`.
-
-**Example**: `1.0.0.0`, `2.1.3.0`
-
----
-
-#### Description
-
-**Description**: Detailed description of the extension's functionality, telling users the purpose and features of the extension. Supports multi-line text.
-
-**Example**:
-```
-This extension adds powerful data export capabilities to your application,
-supporting multiple formats including CSV, Excel, and JSON.
+```powershell
+git clone https://github.com/GeneralLibrary/GeneralUpdate.Tools.git
+cd GeneralUpdate.Tools\src
+dotnet run --project GeneralUpdate.Tools.csproj
 ```
 
----
+### Option 2: Download pre-built binaries
 
-#### Publisher
+Go to [GeneralUpdate.Tools Releases](https://github.com/GeneralLibrary/GeneralUpdate.Tools/releases) and download the executable for your platform.
 
-**Description**: Publisher name or organization identifier of the extension.
+> The Simulation module internally runs `dotnet publish` to build test apps, so you need the .NET SDK for that feature. Patch / Extension / OSS / Config modules work without the SDK.
 
-**Example**: `YourCompany`, `john-doe`, `awesome-dev-team`
+## Six modules at a glance
 
----
-
-#### License
-
-**Description**: Open source license identifier used by the extension.
-
-**Example**: `MIT`, `Apache-2.0`, `GPL-3.0`, `BSD-3-Clause`
-
----
-
-#### Categories
-
-**Description**: Category tags to which the extension belongs. Multiple categories are separated by commas. Used for organizing and searching extensions.
-
-**Example**: `Tools, Productivity`, `Data, Export, Utilities`
-
-**Common Categories**:
-- `Tools` - Tools
-- `Productivity` - Productivity enhancement
-- `Data` - Data processing
-- `UI` - User interface
-- `Security` - Security
-- `Development` - Development
+| Module | What you provide | What the tool produces | Downstream consumer |
+|--------|-----------------|----------------------|---------------------|
+| **Patch** | Old version directory + new version directory | `{name}.zip` (contains `.patch` files, new files, `generalupdate.delete.json`) | Server, OSS/CDN, Core Upgrade process |
+| **Extension** | Extension source directory + metadata | `{name}_{version}.zip` (contains `manifest.json`) | `GeneralUpdate.Extension` component |
+| **OSS Config** | Package name, version, download URL, local ZIP (for hash) | `oss_config.json` (version array) | OSS client, object storage publish flow |
+| **Config** | Client/Upgrade `.csproj` files | `generalupdate.manifest.json` + `sample_output/` publish directory | Client/Upgrade bootstrap |
+| **Simulation** | Old version directory + patch ZIP | Local update server + `simulation_report.md` | Pre-release QA gate |
+| **Hash** | Local file (ZIP) | SHA256 lowercase hex string | Integrity check, server-side version records |
 
 ---
 
-### Path Configuration
+## Patch: Generate patch packages
 
-#### Extension Directory
+### What problem it solves
 
-**Description**: Source directory path containing all files of the extension. All files in this directory will be packaged into the final extension package.
+You shipped a new version, but you don't want users to download the entire install package. The Patch module compares old and new version directories and outputs only what changed: modified files become binary `.patch` diffs, new files are copied directly, and deleted files are recorded in a manifest. The resulting differential package is typically much smaller than the full publish directory.
 
-**Operation**: Click the "Pick" button to select a folder
+### Inputs
 
-**Directory Structure Example**:
+| Field | Required | Description |
+|-------|----------|-------------|
+| Old Directory | ✅ | The currently installed old version directory, e.g. `publish\v1.0.0` |
+| New Directory | ✅ | The new version directory to release, e.g. `publish\v2.0.0` |
+| Package Name | ❌ | Output ZIP name (without `.zip`); auto-generated as `patch_yyyyMMddHHmmss` if left empty |
+| Version | ✅ | Target version number in `MAJOR.MINOR.PATCH` format (e.g. `2.0.0`) or `MAJOR.MINOR.PATCH-prerelease+build` |
+| Output Directory | ❌ | Where to save the ZIP; defaults to desktop |
+
+### What the tool does internally
+
+1. Validates that old/new directories exist and version format is correct.
+2. Creates a temp directory `gupatch_yyyyMMddHHmmss`.
+3. Recursively compares old vs new: **changed files** → generate `.patch` binary diff; **new files** → copy directly; **deleted files** → record hash to `generalupdate.delete.json`.
+4. Compresses the temp directory into `{PackageName}.zip`.
+5. Deletes the temp directory; ZIP remains in Output Directory.
+
+Under the hood it calls `GeneralUpdate.Core.Pipeline.DiffPipeline.CleanAsync(oldDir, newDir, patchDir)` — the same code path your CI scripts use.
+
+### Output
+
 ```
-MyExtension/
-  ├── bin/
-  │   ├── MyExtension.dll
-  │   └── dependencies/
-  ├── resources/
-  │   ├── icons/
-  │   └── templates/
-  └── README.md
-```
-
----
-
-#### Export Path
-
-**Description**: Save directory for the final generated extension package (.zip file).
-
-**Operation**: Click the "Pick" button to select save location
-
-**Output Format**: Generated file name format: `{ExtensionName}_{Version}.zip`
-
-**Example**: `my-awesome-plugin_1.0.0.0.zip`
-
----
-
-### Dependencies
-
-#### Dependencies
-
-**Description**: List of IDs of other extensions that this extension depends on, separated by commas. The extension system will automatically handle dependency resolution and installation order.
-
-**Format**: Comma-separated list of extension GUIDs
-
-**Example**:
-```
-550e8400-e29b-41d4-a716-446655440001,
-550e8400-e29b-41d4-a716-446655440002
+{OutputDirectory}/{PackageName}.zip
+  ├── changed.dll.patch           ← binary diff
+  ├── new_file.dll                ← new file (preserving directory structure)
+  └── generalupdate.delete.json    ← deletion manifest
 ```
 
-**Use Cases**:
-- Extension requires functionality provided by other extensions
-- Sharing common libraries or resources
-- Ensuring correct loading order
+### How downstream consumes it
+
+- Place the ZIP in your Server's `wwwroot/packages/` directory and update `Url` and `Hash` in `versions.json`
+- Or upload to OSS/CDN and record the download URL in `oss_config.json`
+- Core Upgrade downloads the ZIP, then `DiffPipeline.DirtyAsync` applies patches and deletions from the manifest
 
 ---
 
-### Version Compatibility
+## Extension: Package extensions
 
-#### Min Host Version
+### What problem it solves
 
-**Description**: Minimum host application version supported by the extension. If the host version is lower than this value, the extension will be marked as incompatible.
+If you use the `GeneralUpdate.Extension` component to manage plugins/extensions, every extension release requires manually building a standard-format ZIP and generating `manifest.json`. The Extension module saves you from manual compression and hand-written JSON.
 
-**Format**: Semantic version number (without build number)
+### Inputs
 
-**Example**: `1.0.0`, `2.5.0`
+| Field | Required | Description |
+|-------|----------|-------------|
+| Name | ✅ | Unique extension identifier (lowercase + hyphens recommended), e.g. `my-data-exporter` |
+| Version | ✅ | Semantic version, e.g. `1.0.0` |
+| Description | ❌ | What the extension does |
+| Publisher | ❌ | Publisher name |
+| License | ❌ | License identifier, e.g. `MIT` |
+| Extension Directory | ✅ | Source directory containing all extension files; click Pick to select |
+| Export Directory | ❌ | Output directory; defaults to desktop |
+| Custom Properties | ❌ | Key-value pairs written to `manifest.json.customProperties` |
 
----
+### Output
 
-#### Max Host Version
-
-**Description**: Maximum host application version supported by the extension. If the host version is higher than this value, the extension will be marked as incompatible.
-
-**Format**: Semantic version number (without build number)
-
-**Example**: `3.0.0`, `2.9.9`
-
-**Compatibility Check Logic**:
 ```
-MinHostVersion ≤ Host Version ≤ MaxHostVersion
-```
-
-**Example Scenario**:
-- Host Version: `2.0.0`
-- Min Host Version: `1.5.0`
-- Max Host Version: `2.5.0`
-- Result: ✓ Compatible
-
----
-
-### Platform and Format
-
-#### Format
-
-**Description**: File format of the extension package. Currently fixed as `.zip` format, this is a read-only field.
-
-**Value**: `.zip` (Read-only)
-
----
-
-#### Release Date
-
-**Description**: Release date of the extension. Used for version tracking and displaying release timeline.
-
-**Operation**: Use the calendar picker to select a date
-
----
-
-#### Platform
-
-**Description**: Target operating system platform supported by the extension. Selecting the correct platform ensures that the extension is only installed and run on compatible systems.
-
-**Available Options**:
-- `Windows` - Only supports Windows operating system
-- `Linux` - Only supports Linux operating system
-- `MacOS` - Only supports MacOS operating system
-
-**Selection Guide**:
-- If the extension uses platform-specific APIs or libraries, select the corresponding platform
-- Cross-platform extensions can create separate versions for each platform
-- Platform selection affects the visibility and installability of extensions on different operating systems
-
----
-
-### Options
-
-#### Pre-release
-
-**Description**: Mark whether this extension version is a pre-release version (such as Alpha, Beta, RC). Pre-release versions are typically used for testing and early access.
-
-**Checkbox**: Check to indicate pre-release
-
-**Use Cases**:
-- Internal test version
-- Public beta version
-- Release candidate version
-
-**Impact**:
-- Pre-release versions may be displayed or marked separately in extension marketplaces
-- Users can choose whether to receive automatic updates for pre-release versions
-
----
-
-### Custom Properties
-
-#### Enable Custom Properties
-
-**Description**: When enabled, you can add additional key-value pair metadata for the extension, used to store extension-specific configurations or information.
-
-**Checkbox**: Check to show custom properties input area
-
----
-
-#### Add Custom Properties
-
-**Operation Steps**:
-
-1. **Enter Property Key**: Enter the property name in the "Property" field
-   - Recommended to use camelCase or hyphen-case
-   - Examples: `maxConnections`, `default-theme`, `apiEndpoint`
-
-2. **Enter Property Value**: Enter the corresponding value in the "Value" field
-   - Supports strings, numbers, and various other values
-   - Examples: `100`, `dark`, `https://api.example.com`
-
-3. **Click Add**: Click the "Add" button to add the property to the list
-
-4. **Manage Properties**:
-   - View added properties
-   - Click "Remove" to delete unwanted properties
-
-**Use Cases**:
-- Store extension-specific configuration options
-- Record extension metadata information
-- Pass initialization parameters
-- Store extension API endpoints or resource paths
-
-**Examples**:
-```json
-{
-  "maxConcurrentTasks": "5",
-  "defaultLanguage": "en-US",
-  "apiBaseUrl": "https://api.myextension.com",
-  "enableDebugMode": "false"
-}
-```
-
----
-
-## Operation Workflow
-
-### Complete Steps to Create an Extension Package
-
-#### Step 1: Prepare Extension Files
-
-Ensure your extension directory contains all necessary files:
-- Assembly files (DLLs, executables)
-- Resource files (icons, templates, configuration files)
-- Dependency libraries
-- Documentation files (README, LICENSE)
-
----
-
-#### Step 2: Open Extension Manager
-
-1. Launch GeneralUpdate.Tools
-2. Click the "Extension" tab at the top
-3. Enter the Extension Manager interface
-
----
-
-#### Step 3: Fill in Basic Information
-
-Fill in the following fields according to the field descriptions above:
-- Extension Name
-- Display Name
-- Version
-- Description
-- Publisher
-- License
-- Categories
-
----
-
-#### Step 4: Configure Paths
-
-1. **Select Extension Directory**:
-   - Click the "Pick" button next to "Extension Directory"
-   - Browse and select the folder containing extension files
-
-2. **Select Export Path**:
-   - Click the "Pick" button next to "Export Path"
-   - Select the directory to save the generated extension package
-
----
-
-#### Step 5: Configure Dependencies and Compatibility (Optional)
-
-1. **Add Dependencies** (if applicable):
-   - Enter the GUID of dependent extensions in the "Dependencies" field
-   - Separate multiple dependencies with commas
-
-2. **Set Version Compatibility**:
-   - Fill in "Min Host Version"
-   - Fill in "Max Host Version"
-
----
-
-#### Step 6: Select Platform and Options
-
-1. **Select Target Platform**:
-   - Select Windows, Linux, or MacOS from the "Platform" dropdown list
-
-2. **Set Release Date**:
-   - Use the calendar picker to select the release date
-
-3. **Mark Pre-release Version** (if applicable):
-   - Check the "Pre-release" checkbox
-
----
-
-#### Step 7: Add Custom Properties (Optional)
-
-1. Check "Enable Custom Properties"
-2. Add key-value pairs in the input boxes
-3. Click the "Add" button to add each property
-4. Add multiple custom properties as needed
-
----
-
-#### Step 8: Build Extension Package
-
-1. **Review All Information**:
-   - Ensure all required fields are correctly filled in
-   - Verify that paths are correct
-
-2. **Click Build Button**:
-   - Click the "Build" button at the bottom
-   - Wait for the packaging process to complete
-
-3. **Verify Success**:
-   - A success message will be displayed with the file name and location
-   - The generated extension package is located in the export path
-
----
-
-#### Step 9: Verify Extension Package
-
-After generation, verify that the extension package contains:
-1. All source files (compressed from extension directory)
-2. `manifest.json` file (automatically generated)
-
-You can open the .zip file with a decompression tool to inspect:
-```
-MyExtension_1.0.0.0.zip
-  ├── manifest.json          ← Extension metadata
+{ExportDirectory}/{Name}_{Version}.zip
+  ├── manifest.json               ← extension metadata
   ├── bin/
   │   └── MyExtension.dll
   ├── resources/
-  └── README.md
-```
-
----
-
-### Clear Form
-
-If you need to start over or clear all entered content:
-1. Click the "Clear" button at the bottom
-2. All fields will be reset to default values
-3. Custom properties list will be cleared
-
----
-
-## Output Results
-
-### Generated Extension Package Structure
-
-The .zip file generated by the Extension Manager has the following structure:
-
-```
-ExtensionName_Version.zip
-  ├── manifest.json                    ← Extension metadata
-  ├── [All files and folders from source directory]
   └── ...
 ```
 
----
-
-### manifest.json File Content
-
-The `manifest.json` file contains all extension metadata. Example structure:
+Example `manifest.json`:
 
 ```json
 {
-  "Name": "my-awesome-plugin",
-  "DisplayName": "My Awesome Plugin",
-  "Version": "1.0.0.0",
-  "Description": "This extension adds powerful features to your application",
-  "Publisher": "YourCompany",
-  "License": "MIT",
-  "Categories": ["Tools", "Productivity"],
-  "Dependencies": "550e8400-e29b-41d4-a716-446655440001",
-  "MinHostVersion": "1.0.0",
-  "MaxHostVersion": "2.0.0",
-  "Format": ".zip",
-  "ReleaseDate": "2026-02-12T00:00:00",
-  "IsPreRelease": false,
-  "Platform": {
-    "DisplayName": "Windows",
-    "Value": 1
-  },
-  "FileSize": 1048576,
-  "CustomProperties": {
-    "maxConnections": "100",
-    "apiEndpoint": "https://api.example.com"
-  }
+  "name": "my-data-exporter",
+  "version": "1.0.0",
+  "description": "Export data to CSV/Excel/JSON",
+  "publisher": "MyCompany",
+  "license": "MIT",
+  "dependencies": "",
+  "minHostVersion": "",
+  "maxHostVersion": "",
+  "isPreRelease": false,
+  "platform": { "displayName": "Windows", "value": 1 },
+  "format": ".zip",
+  "releaseDate": "2026-06-01T00:00:00",
+  "customProperties": { "maxConnections": "100" }
 }
 ```
 
----
+### How downstream consumes it
 
-### Field Mapping Description
-
-| UI Field            | JSON Field       | Data Type | Description                            |
-| ------------------- | ---------------- | --------- | -------------------------------------- |
-| Extension Name      | Name             | string    | Extension unique identifier            |
-| Display Name        | DisplayName      | string    | Display name                           |
-| Version             | Version          | string    | Version number                         |
-| Description         | Description      | string    | Extension description                  |
-| Publisher           | Publisher        | string    | Publisher                              |
-| License             | License          | string    | License                                |
-| Categories          | Categories       | array     | Category list                          |
-| Dependencies        | Dependencies     | string    | Dependencies (comma-separated)         |
-| Min Host Version    | MinHostVersion   | string    | Minimum host version                   |
-| Max Host Version    | MaxHostVersion   | string    | Maximum host version                   |
-| Format              | Format           | string    | File format                            |
-| Release Date        | ReleaseDate      | DateTime  | Release date                           |
-| Pre-release         | IsPreRelease     | boolean   | Is pre-release                         |
-| Platform            | Platform         | object    | Platform information                   |
-| Custom Properties   | CustomProperties | object    | Custom properties dictionary           |
+- Extension Host calls `ExtensionManager.QueryRemoteExtensionsAsync(...)` to list available extensions
+- On install, downloads the ZIP, reads `manifest.json` for compatibility checks and dependency resolution
+- See [GeneralUpdate.Extension](./GeneralUpdate.Extension.md) for details
 
 ---
 
-## Best Practices
+## OSS Config: Generate OSS version manifest
 
-### Naming Conventions
+### What problem it solves
 
-1. **Extension Name**:
-   - Use lowercase letters and hyphens
-   - Avoid spaces and special characters
-   - Keep it concise and descriptive
-   - ✓ Correct: `data-exporter`, `theme-customizer`
-   - ✗ Incorrect: `Data Exporter`, `Theme@Customizer`
+If you use OSS mode updates (static file server), you need to maintain a `versions.json` or `oss_config.json` so clients can discover available versions. The OSS Config module helps you organize version metadata and compute SHA256 hashes.
 
-2. **Version Number**:
-   - Follow Semantic Versioning
-   - Format: `Major.Minor.Patch.Build`
-   - Example: `1.0.0.0`, `2.1.3.5`
+### Inputs
 
----
+| Field | Required | Description |
+|-------|----------|-------------|
+| PacketName | ✅ | Update package name |
+| Version | ✅ | Semantic version number |
+| Url | ✅ | Full download URL clients can use |
+| SHA256 | Recommended | Click ComputeHash and select a local ZIP to auto-fill |
 
-### Directory Organization
+### Workflow
 
-Maintain a clear extension directory structure:
+1. Fill in PacketName, Version, Url.
+2. Click **ComputeHash**, select the local patch ZIP, SHA256 auto-fills.
+3. Click **Add To List** to add the entry.
+4. Repeat for all versions.
+5. Click **Export** to generate `oss_config.json`.
 
-```
-MyExtension/
-  ├── bin/                    ← Binary files
-  │   ├── MyExtension.dll
-  │   └── dependencies/
-  ├── resources/              ← Resource files
-  │   ├── icons/
-  │   ├── templates/
-  │   └── localization/
-  ├── docs/                   ← Documentation
-  │   └── README.md
-  └── LICENSE                 ← License
+### Output
+
+```json
+[
+  {
+    "PacketName": "client_1.0.0_to_2.0.0",
+    "Hash": "f2c7a8b3...",
+    "Version": "2.0.0",
+    "Url": "https://cdn.example.com/client_1.0.0_to_2.0.0.zip",
+    "ReleaseDate": ""
+  }
+]
 ```
 
----
+### How downstream consumes it
 
-### Version Compatibility Management
-
-1. **Set Reasonable Version Range**:
-   - Don't set too narrow version range
-   - Consider backward compatibility
-   - Example: Min `1.0.0`, Max `2.0.0` (Support all 1.x versions)
-
-2. **Major Version Updates**:
-   - When major changes occur in the host application, update Min/Max Host Version
-   - Create new extension versions for new major versions
+- Upload `oss_config.json` to your OSS bucket or static file server
+- OSS client reads this file to discover versions and validates Hash after download
+- See [GeneralClient.OSS](./GeneralClient.OSS.md)
 
 ---
 
-### Dependency Management
+## Config: Generate bootstrap manifest
 
-1. **Minimize Dependencies**:
-   - Only declare necessary dependencies
-   - Avoid circular dependencies
+### What problem it solves
 
-2. **Document Dependencies**:
-   - Explain in the description why these dependencies are needed
-   - Provide ways to obtain dependencies
+Client and Upgrade need to know the main app name, updater app name, version, ProductId, and UpdatePath at startup. The Config module reads your `.csproj` files to auto-extract AssemblyName and TargetFramework, then generates `generalupdate.manifest.json` — saving you from manual configuration and typos.
 
----
+### Inputs
 
-### Custom Properties Usage
+| Field | Required | Description |
+|-------|----------|-------------|
+| Client .csproj | ✅ | Path to the main app's `.csproj` file |
+| Upgrade .csproj | ❌ | Path to the updater app's `.csproj` |
+| ClientVersion | ✅ | Current client version, e.g. `1.0.0` |
+| UpgradeClientVersion | ✅ | Updater version, e.g. `1.0.0` |
+| AppType | ✅ | Client / Upgrade / OssClient / OssUpgrade |
+| ProductId | ✅ | Product identifier GUID |
+| UpdatePath | ✅ | Relative subdirectory for Upgrade, e.g. `update/` |
 
-1. **Use Cases**:
-   - Store extension-specific configurations
-   - Record technical requirements of the extension
-   - Pass initialization parameters
+### Workflow
 
-2. **Naming Recommendations**:
-   - Use camelCase
-   - Keep key names concise and clear
-   - Add prefixes to avoid conflicts
+1. Click Browse to select Client `.csproj` (required) and Upgrade `.csproj` (optional).
+2. Click **Analyze** — the tool extracts AssemblyName and fills `MainAppName` / `UpdateAppName`.
+3. Fill in Version, AppType, ProductId, UpdatePath manually.
+4. Click **Generate** to produce `generalupdate.manifest.json` in the tool's run directory.
+5. Click **Generate Sample** to additionally run `dotnet publish` and produce a runnable output directory.
 
----
+### Output
 
-### Testing and Validation
+`generalupdate.manifest.json`:
 
-1. **Pre-packaging Checks**:
-   - ✓ Verify all files are complete
-   - ✓ Check version number is correct
-   - ✓ Confirm dependencies are accurate
-   - ✓ Test extension runs on target platform
+```json
+{
+  "mainAppName": "ClientSample.exe",
+  "clientVersion": "1.0.0",
+  "appType": "Client",
+  "updateAppName": "UpgradeSample.exe",
+  "upgradeClientVersion": "1.0.0",
+  "productId": "2d974e2a-31e6-4887-9bb1-b4689e98c77a",
+  "updatePath": "update/"
+}
+```
 
-2. **Post-packaging Verification**:
-   - ✓ Extract and view file structure
-   - ✓ Check manifest.json content
-   - ✓ Verify file size is reasonable
-   - ✓ Install and test in target environment
+Generate Sample additionally outputs:
 
----
-
-### Release Management
-
-1. **Pre-release Versions**:
-   - Use pre-release flag for internal testing
-   - Collect feedback before releasing stable version
-
-2. **Version Updates**:
-   - Maintain version history
-   - Record changelog in description
-   - Provide upgrade guidance from old versions
-
----
-
-## Troubleshooting
-
-### Common Issues
-
-#### Issue 1: Build Failed
-
-**Possible Causes**:
-- Extension directory does not exist or is inaccessible
-- No write permission for export path
-- Insufficient disk space
-- Extension directory is empty
-
-**Solutions**:
-1. Verify the extension directory path is correct
-2. Check write permissions for the export path
-3. Ensure sufficient disk space
-4. Confirm the extension directory contains files
+```
+{tool-run-dir}/sample_output/
+  ├── ClientSample.exe             ← Client dotnet publish output
+  ├── generalupdate.manifest.json
+  └── update/
+      └── UpgradeSample.exe        ← Upgrade dotnet publish output
+```
 
 ---
 
-#### Issue 2: Validation Error
+## Simulation: Local update dry-run
 
-**Possible Causes**:
-- Required fields not filled
-- Version number format is incorrect
-- Invalid path format
+### What problem it solves
 
-**Solutions**:
-1. Check all required fields (name, version, directory, export path)
-2. Use correct version number format (e.g., `1.0.0.0`)
-3. Ensure paths use correct format
+You just used the Patch module to generate a package — but you're not sure it actually works in a real update flow. The Simulation module starts a local update server, builds Client/Upgrade samples, and runs a complete "discover version → download patch → apply update" loop on your machine, then outputs a PASS/FAIL report.
 
----
+### Prerequisites
 
-#### Issue 3: Generated Package Cannot Be Extracted
+- .NET 10 SDK (or newer) installed
+- `dotnet --version` works
+- Local port 5000 available (configurable)
 
-**Possible Causes**:
-- Packaging process was interrupted
-- Disk space exhausted during packaging
-- Source files are locked or in use
+### Inputs
 
-**Solutions**:
-1. Regenerate the extension package
-2. Ensure sufficient disk space
-3. Close programs using extension files
+| Field | Required | Description |
+|-------|----------|-------------|
+| Old App Directory | ✅ | The directory simulating the user's currently installed version |
+| Patch File | ✅ | The patch ZIP produced by the Patch module |
+| CurrentVersion | ✅ | Old version number (used by the simulated Client for version check) |
+| TargetVersion | ✅ | New version number (used for the server-side version source) |
+| AppType | ✅ | ClientApp = 1 / UpgradeApp = 2 |
+| Platform | ✅ | Windows = 1 / Linux = 2 |
+| AppSecretKey | ✅ | Client authentication key |
+| ProductId | ✅ | Product identifier GUID |
+| UpdatePath | ✅ | Upgrade subdirectory name, e.g. `update/` |
+| ServerPort | ❌ | Local server port, defaults to 5000 |
 
----
+### Simulation process
 
-#### Issue 4: Cannot Add Custom Properties
+1. **Validate**: old directory exists, patch ZIP exists, version format valid, .NET SDK available.
+2. **Publish Client**: `dotnet publish test_app/Client/ClientSample.csproj` to App Directory.
+3. **Publish Upgrade**: `dotnet publish test_app/Upgrade/UpgradeSample.csproj` to `UpdatePath` subdirectory.
+4. **Generate manifest**: write `generalupdate.manifest.json` in App Directory.
+5. **Prepare patch**: copy patch ZIP to internal `.server` directory, compute SHA256, write server-side version source.
+6. **Start server**: local server listens on `http://localhost:{ServerPort}`, serving `POST /Upgrade/Verification`, `POST /Upgrade/Report`, `GET /patch/{filename}`.
+7. **Run Client**: launch `ClientSample.exe` with `--server-url http://localhost:5000 --app-secret ... --client-version 1.0.0`.
+8. **Stop server**: stop after Client completes or times out.
+9. **Generate report**: inspect directory changes and output `simulation_report.md`.
 
-**Possible Causes**:
-- Property key or value is empty
-- Property key already exists
+### Output
 
-**Solutions**:
-1. Ensure both key and value are filled
-2. Use unique property key names
-3. To modify existing properties, delete and re-add
+```
+{AppDirectory}/simulation_report.md    ← simulation report (PASS/FAIL + timeline)
+```
 
----
-
-## Related Documentation
-
-### GeneralUpdate Ecosystem
-
-- **[GeneralUpdate.Core](./GeneralUpdate.Core.md)** - Core update component
-- **[GeneralUpdate.Extension](./GeneralUpdate.Extension.md)** - Extension management system
-- **[GeneralUpdate.ClientCore](./GeneralUpdate.ClientCore.md)** - Client update component
-- **[Quick Start Guide](../quickstart/Quik%20start.md)** - GeneralUpdate quick start
-
-### External Resources
-
-- **[GeneralUpdate.Tools Source Code](https://github.com/GeneralLibrary/GeneralUpdate.Tools)** - GitHub repository
-- **[GeneralUpdate Main Project](https://github.com/GeneralLibrary/GeneralUpdate)** - Main framework project
-- **[Issue Feedback](https://github.com/GeneralLibrary/GeneralUpdate.Tools/issues)** - Report issues and suggestions
+The report includes a config table, PASS/FAIL verdict, notes, and a full timeline — suitable for pasting into release notes or CI artifacts.
 
 ---
 
-## Applicable To
+## Hash: SHA256 verification
 
-| Product         | Versions                              |
-| --------------- | ------------------------------------- |
-| .NET            | 5, 6, 7, 8, 9, 10                     |
-| .NET Framework  | 4.6.1+                                |
-| .NET Standard   | 2.0                                   |
-| .NET Core       | 2.0+                                  |
-| Windows         | 10+                                   |
-| Linux           | Ubuntu 20.04+, Debian 10+, Fedora 35+ |
-| macOS           | 10.15+ (Catalina and later)           |
+### What problem it solves
+
+After uploading a patch package to CDN/OSS, you must ensure clients download the exact same file. The Hash feature computes SHA256 of a local file and outputs a lowercase hex string. You should write this value into your version manifest or server response data.
+
+### How to use
+
+In the **OSS Config** module, click **ComputeHash**, select a local ZIP file, and the SHA256 field auto-fills. You can also use this standalone to verify any file.
+
+---
+
+## Recommended release workflow
+
+This sequence chains the six modules into a complete release pipeline:
+
+```
+┌─────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│ Build    │ -> │ Patch    │ -> │ OSS/Hash │ -> │ Config   │ -> │ Simulation│
+│ old & new│    │ generate │    │ compute  │    │ generate │    │ verify    │
+└─────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
+```
+
+1. **Build release directories**: run `dotnet publish` in CI or locally to get old/new directories.
+2. **Patch**: select old/new, generate patch ZIP.
+3. **OSS Config**: compute SHA256 on the patch ZIP, fill in download URL, export `oss_config.json` (or write the same info to `versions.json` for a self-hosted Server).
+4. **Config**: select Client/Upgrade `.csproj` files, generate `generalupdate.manifest.json`.
+5. **Simulation**: select the old version directory and patch ZIP, confirm PASS.
+6. **Ship**: upload patch ZIP and OSS manifest to production.
+
+---
+
+## FAQ
+
+| Symptom | Cause & fix |
+|---------|------------|
+| Version invalid | Use `1.0.0` or `2.0.0-beta.1` format. Do not use `1.0` or `v1.0.0` |
+| Patch output empty or tiny | old/new directories may be swapped, or the two are identical. Confirm old is the installed version and new is the target version |
+| Cannot find `delete_files.json` | The current filename is `generalupdate.delete.json`, located in the patch ZIP root |
+| Simulation complains about missing SDK | Install .NET 10 SDK and verify `dotnet --version` works |
+| Simulation port conflict | Change `ServerPort` or free up local port 5000 |
+| Hash mismatch after client download | Re-compute hash on the file that was actually uploaded to CDN/OSS; check for proxy re-compression |
+| Upgrade process doesn't start | Verify `updateAppName` and `updatePath` in `generalupdate.manifest.json` match the publish directory structure |
+
+---
+
+## Related docs
+
+- [GeneralUpdate.Core](./GeneralUpdate.Core.md): Client/Upgrade main update flow
+- [GeneralUpdate.Differential](./GeneralUpdate.Differential.md): Differential algorithm Clean/Dirty modes
+- [GeneralUpdate.Extension](./GeneralUpdate.Extension.md): Extension install and version management
+- [GeneralClient.OSS](./GeneralClient.OSS.md): OSS update flow
+- [Beginner cookbook](../quickstart/Beginner cookbook.md): Complete end-to-end update walkthrough
+- [Advanced cookbook](../quickstart/Advanced cookbook.md): CI/CD integration and production releases
