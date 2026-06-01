@@ -1,8 +1,8 @@
 {
-  "label": "Quick start",
+  "label": "Quick Start",
   "position": 1,
   "link": {
     "type": "generated-index",
-    "description": "Quick start."
+    "description": "Quick start guides and hands-on cookbooks."
   }
 }

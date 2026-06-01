@@ -3,36 +3,40 @@
     "message": "Next",
     "description": "The label for version current"
   },
-  "sidebar.tutorialSidebar.category.Doc": {
-    "message": "Doc",
-    "description": "The label for category Doc in sidebar tutorialSidebar"
+  "sidebar.tutorialSidebar.category.Quick Start": {
+    "message": "快速入门",
+    "description": "The label for category Quick Start in sidebar tutorialSidebar"
   },
-  "sidebar.tutorialSidebar.category.Doc.link.generated-index.description": {
-    "message": "GeneralUpdate开源项目在线文档.",
-    "description": "The generated-index page description for category Doc in sidebar tutorialSidebar"
+  "sidebar.tutorialSidebar.category.Advanced Cookbook": {
+    "message": "高级实战手册",
+    "description": "The label for category Advanced Cookbook in sidebar tutorialSidebar"
   },
-  "sidebar.tutorialSidebar.category.Guide": {
-    "message": "Guide",
-    "description": "The label for category Guide in sidebar tutorialSidebar"
+  "sidebar.tutorialSidebar.category.Components": {
+    "message": "组件文档",
+    "description": "The label for category Components in sidebar tutorialSidebar"
   },
-  "sidebar.tutorialSidebar.category.Guide.link.generated-index.description": {
-    "message": "指南.",
-    "description": "The generated-index page description for category Guide in sidebar tutorialSidebar"
+  "sidebar.tutorialSidebar.category.Tools": {
+    "message": "工具",
+    "description": "The label for category Tools in sidebar tutorialSidebar"
   },
-  "sidebar.tutorialSidebar.category.Quik start": {
-    "message": "Quik start",
-    "description": "The label for category Quik start in sidebar tutorialSidebar"
+  "sidebar.tutorialSidebar.category.Infrastructure": {
+    "message": "基础设施",
+    "description": "The label for category Infrastructure in sidebar tutorialSidebar"
   },
-  "sidebar.tutorialSidebar.category.Quik start.link.generated-index.description": {
-    "message": "Quik start.",
-    "description": "The generated-index page description for category Quik start in sidebar tutorialSidebar"
+  "sidebar.tutorialSidebar.category.OSS Update Mode": {
+    "message": "OSS 更新模式",
+    "description": "The label for category OSS Update Mode in sidebar tutorialSidebar"
   },
-  "sidebar.tutorialSidebar.category.Release log": {
-    "message": "Release log",
-    "description": "The label for category Release log in sidebar tutorialSidebar"
+  "sidebar.tutorialSidebar.category.Utilities": {
+    "message": "工具类",
+    "description": "The label for category Utilities in sidebar tutorialSidebar"
   },
-  "sidebar.tutorialSidebar.category.Release log.link.generated-index.description": {
-    "message": "发布日志.",
-    "description": "The generated-index page description for category Release log in sidebar tutorialSidebar"
+  "sidebar.tutorialSidebar.category.Guides": {
+    "message": "指南",
+    "description": "The label for category Guides in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Release Log": {
+    "message": "发布日志",
+    "description": "The label for category Release Log in sidebar tutorialSidebar"
   }
 }
