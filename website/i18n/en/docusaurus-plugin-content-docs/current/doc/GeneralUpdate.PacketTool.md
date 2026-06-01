@@ -711,7 +711,7 @@ MyExtension/
 
 - **[GeneralUpdate.Core](./GeneralUpdate.Core.md)** - Core update component
 - **[GeneralUpdate.Extension](./GeneralUpdate.Extension.md)** - Extension management system
-- **[GeneralUpdate.ClientCore](./GeneralUpdate.ClientCore.md)** - Client update component
+- **[GeneralUpdate.Core](./GeneralUpdate.Core.md)** - Client update component
 - **[Quick Start Guide](../quickstart/Quik%20start.md)** - GeneralUpdate quick start
 
 ### External Resources

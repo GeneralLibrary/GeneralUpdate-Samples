@@ -4,13 +4,13 @@ sidebar_position: 8
 
 ### GeneralTracer
 
-Namespace: GeneralUpdate.Common.Shared
+> **Merge notice**: `GeneralUpdate.Common` has been merged into `GeneralUpdate.Core`. `GeneralTracer` now lives in the `GeneralUpdate.Core` namespace and is automatically included when you reference the `GeneralUpdate.Core` package — no separate reference needed.
 
-Assembly: GeneralUpdate.Common.dll
+Namespace: `GeneralUpdate.Core`
 
+Assembly: `GeneralUpdate.Core.dll`
 
-
-**GeneralUpdate.Common** is a common component that provides core underlying code. It generally does not need to be referenced manually and will be imported automatically when you reference **GeneralUpdate.ClientCore** or **GeneralUpdate.Core**.
+`GeneralTracer` provides trace output of internal exception information and execution flow. It is enabled by default and is included automatically when you reference `GeneralUpdate.Core`.
 
 ```c#
 public static class GeneralTracer
