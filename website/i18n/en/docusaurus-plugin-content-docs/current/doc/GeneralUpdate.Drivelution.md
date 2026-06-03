@@ -354,4 +354,4 @@ GeneralTracer.SetTracingEnabled(true);   // Re-enable for troubleshooting
 
 - [Driver Update Sample](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Hub/Samples/ImDiskQuickInstallSample.cs)
 - [GeneralUpdate Repository](https://github.com/GeneralLibrary/GeneralUpdate)
-- [Driver Guide](../guide/Driver.md)
+- [GeneralUpdate.Drivelution docs](../doc/GeneralUpdate.Drivelution.md)

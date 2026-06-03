@@ -419,5 +419,5 @@ Format: `{package-name}.{arbitrary-suffix}`, e.g. `com.example.app.generalupdate
 - [GeneralUpdate.Maui repository](https://github.com/GeneralLibrary/GeneralUpdate.Maui)
 - [GeneralUpdate.Avalonia repository](https://github.com/GeneralLibrary/GeneralUpdate.Avalonia)
 - [GeneralUpdate.Core component docs](./GeneralUpdate.Core.md)
-- [OSS update mode docs](./GeneralClient.OSS.md)
+- [GeneralUpdate.Core component docs](./GeneralUpdate.Core.md)
 - [Beginner cookbook](../quickstart/Beginner cookbook.md)
