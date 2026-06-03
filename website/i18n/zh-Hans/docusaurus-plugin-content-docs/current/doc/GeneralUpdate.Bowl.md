@@ -49,10 +49,6 @@ Bowl 是“升级后健康检查与回滚保护”，不是固件恢复、系统
 
 ### 安装
 
-```bash
-dotnet add package GeneralUpdate.Bowl
-```
-
 ### 升级模式监控
 
 升级模式适合放在升级程序或 Bowl helper 中运行。关键点是：`BackupDirectory` 指向升级前保留的备份，`TargetPath` 指向当前安装目录，`ExtendedField` 填本次升级版本号。

@@ -42,10 +42,6 @@ public static class GeneralDrivelution
 
 ### 安装
 
-```bash
-dotnet add package GeneralUpdate.Drivelution
-```
-
 或在项目文件中添加：
 
 ```xml

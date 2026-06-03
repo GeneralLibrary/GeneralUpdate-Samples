@@ -10,10 +10,6 @@ sidebar_position: 5
 **主要入口:** `GeneralUpdateBootstrap`
 **NuGet 包:** `GeneralUpdate.Core`
 
-```bash
-dotnet add package GeneralUpdate.Core
-```
-
 ## 文档大纲与知识点导航 {#knowledge-map}
 
 如果你是第一次阅读 Core 文档，可以先看这个导航，再跳到对应知识点。本文按照“入口与配置 -> 执行策略 -> 差分/下载/并发 -> 扩展点 -> 工具链关系”的顺序组织。

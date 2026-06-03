@@ -71,7 +71,6 @@ const sidebars = {
       collapsed: true,
       items: [
         'doc/GeneralSpacestation',
-        'doc/UpgradeHub',
       ],
     },
 
