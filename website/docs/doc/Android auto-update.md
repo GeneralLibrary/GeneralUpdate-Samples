@@ -419,5 +419,5 @@ Avalonia 采用**三阶段 API**，将下载验证与安装触发分离，给予
 - [GeneralUpdate.Maui 仓库](https://github.com/GeneralLibrary/GeneralUpdate.Maui)
 - [GeneralUpdate.Avalonia 仓库](https://github.com/GeneralLibrary/GeneralUpdate.Avalonia)
 - [GeneralUpdate.Core 组件文档](./GeneralUpdate.Core.md)
-- [OSS 更新模式文档](./GeneralClient.OSS.md)
+- [GeneralUpdate.Core 组件文档](./GeneralUpdate.Core.md)
 - [入门实战手册](../quickstart/Beginner cookbook.md)

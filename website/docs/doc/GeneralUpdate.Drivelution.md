@@ -554,4 +554,4 @@ GeneralTracer.SetTracingEnabled(true);
 
 - [驱动更新示例](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Hub/Samples/ImDiskQuickInstallSample.cs)
 - [GeneralUpdate 仓库](https://github.com/GeneralLibrary/GeneralUpdate)
-- [驱动指南](../guide/Driver.md)
+- [GeneralUpdate.Drivelution 组件文档](../doc/GeneralUpdate.Drivelution.md)

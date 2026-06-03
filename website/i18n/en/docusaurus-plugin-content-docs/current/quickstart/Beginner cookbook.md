@@ -13,8 +13,8 @@ This cookbook is for first-time GeneralUpdate users. The goal is not to explain 
 | --- | --- | --- | --- |
 | Hub | `src\Hub` | Interactive sample browser; run update scenarios via menu | [GeneralUpdate.Core](../doc/GeneralUpdate.Core.md) |
 | Server | `src\Server` | Returns version metadata, accepts reports, and serves package downloads | [GeneralUpdate.Core](../doc/GeneralUpdate.Core.md) |
-| Packet | `src\Server\wwwroot\packages` | Downloadable `.zip` packages and `versions.json` metadata | [GeneralUpdate.Tools](../doc/GeneralUpdate.PacketTool.md) |
-| Tools | GeneralUpdate.Tools repository | Generates patch packages, hashes, OSS manifests, and simulation reports | [GeneralUpdate.Tools](../doc/GeneralUpdate.PacketTool.md) |
+| Packet | `src\Server\wwwroot\packages` | Downloadable `.zip` packages and `versions.json` metadata | [GeneralUpdate.Tools](./GeneralUpdate.PacketTool.md) |
+| Tools | GeneralUpdate.Tools repository | Generates patch packages, hashes, OSS manifests, and simulation reports | [GeneralUpdate.Tools](./GeneralUpdate.PacketTool.md) |
 | Bowl | Integrated in Hub Samples | Monitors process failures and exports failure data | [GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl.md) |
 | Differential | Hub Samples + Core default integration | Generates old/new binary differences and applies them during updates | [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential.md) |
 
@@ -240,7 +240,20 @@ Try running each sample and observe the results in the `mock_app` directory.
 After this flow works, read these pages in order:
 
 1. [GeneralUpdate.Core](../doc/GeneralUpdate.Core.md): update strategies, event notifications, silent updates, and manifest-based minimal configuration.
-2. [GeneralUpdate.Tools](../doc/GeneralUpdate.PacketTool.md): patch packages, Hash, OSS Config, and Simulation.
+2. [GeneralUpdate.Tools](./GeneralUpdate.PacketTool.md): patch packages, Hash, OSS Config, and Simulation.
 3. [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential.md): differential algorithms, parallel processing, and Clean/Dirty.
 4. [GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl.md): crash monitoring, backup, and failure recovery.
-5. [Advanced Cookbook](./Advanced cookbook.md): production deployment, CI/CD integration, enterprise solution design.
+5. [GeneralUpdate.Tools](./GeneralUpdate.PacketTool.md): patch packages, Hash, OSS Config, and Simulation.
+
+## Sample UI
+
+Sample application interface preview:
+
+![](imgs\sampleclient.png)
+
+![](imgs\sampleupgrade.png)
+
+| Repository |
+| --- |
+| [ClientSample.sln](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Client/ClientSample.sln) |
+| [UpgradeSample.sln](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/UpgradeSample.sln) |

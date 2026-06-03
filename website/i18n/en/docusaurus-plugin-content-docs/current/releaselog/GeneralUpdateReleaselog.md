@@ -7,6 +7,16 @@ tags: [log]
 
 # 📒Release log
 
+### 📍2026-05-20 — v10.5.0-beta.2
+
+- **GeneralUpdate.Core**: 统一 `GeneralUpdateBootstrap` 入口，合并原 ClientCore 和 Core 能力；新增 `SetSource()` 轻配置入口与 `generalupdate.manifest.json` 极简接入；重构下载子系统为可替换的 5 层模型（Source/Policy/Executor/Pipeline/Orchestrator）；扩展点体系增至 10 个可替换接口
+- **GeneralUpdate.Bowl**: `BowlContext` 配置 API 稳定；优化 Windows/Linux/macOS ProcDump 集成
+- **GeneralUpdate.Differential**: 稳定 `IBinaryDiffer` 抽象；BSDIFF 4.0 + Streaming HDiff 双算法；BZip2 / Deflate 压缩
+- **GeneralUpdate.Drivelution**: 稳定跨平台驱动更新流水线；Windows pnputil / Linux insmod-dpkg-rpm / macOS kextload-installer
+- **GeneralUpdate.Extension**: 稳定 `IExtensionHost` 抽象；Zip Slip 安全解压；拓扑排序依赖解析
+- **文档**: 重构全部 5 个组件文档为统一模板；新增入门实战手册；新增软件外包服务页面
+- **Samples**: Hub 示例浏览器 9 个场景覆盖完整更新/OSS/静默/推送/差分/压缩/扩展/Bowl/驱动
+
 ### 📍2026-04-10
 
 - Add `AddListenerUpdatePrecheck(Func<UpdateInfoEventArgs, bool>)` to `GeneralClientBootstrap` — unified entry that receives the full version info and returns `true` to skip or `false` to proceed; replaces the combined use of `AddListenerUpdateInfo` + `SetCustomSkipOption`. Forced-update (`IsForcibly`) versions always proceed regardless of the callback return value.
@@ -22,11 +32,11 @@ tags: [log]
 
 
 
-- ### 📍2026-01-06 10.0.0
+### 📍2026-01-06 10.0.0
 
-  - Adapt to .NET 10 upgrade and update the versions of referenced components.
-  - Add scripted execution of GeneralUpdate via `dotnet run x.cs` for .NET 10.
-  - Refactor part of the functions.
+- Adapt to .NET 10 upgrade and update the versions of referenced components.
+- Add scripted execution of GeneralUpdate via `dotnet run x.cs` for .NET 10.
+- Refactor part of the functions.
 
 
 
@@ -45,9 +55,9 @@ tags: [log]
 
 
 
-## 📍2025-01-13 9.1.5
+## 📍2025-01-14 9.1.5
 
-- Fix the issue with incorrect value retrieval for LastVersion.
+- Fix the issue with incorrect value retrieval for LastVersion. 
 
 
 
@@ -86,7 +96,7 @@ tags: [log]
 
 
 
-## 📍2024-11-28
+## 📍2024-11-28 9.0.0
 
 - Upgrade all components to C# 13 syntax.
 
@@ -1027,7 +1037,7 @@ namespace MyProcessSample
 {
     class MyProcess
     {
-        // This code is from MSDN
+        //此段代码来自于msdn
         // Opens the Internet Explorer application.
         void OpenApplication(string myFavoritesPath)
         {

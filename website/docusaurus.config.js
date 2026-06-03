@@ -81,6 +81,23 @@ const config = {
             label: 'Doc',
           },
           {
+            type: 'dropdown',
+            label: '商务',
+            position: 'left',
+            items: [
+              {
+                type: 'doc',
+                docId: 'doc/GeneralSpacestation',
+                label: 'GeneralSpacestation',
+              },
+              {
+                type: 'doc',
+                docId: 'doc/outsourcing',
+                label: '软件外包服务',
+              },
+            ],
+          },
+          {
             href: 'https://github.com/GeneralLibrary',
             label: 'GitHub',
             position: 'right',
