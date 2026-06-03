@@ -54,10 +54,6 @@ public interface IExtensionHost
 
 ### 安装
 
-```bash
-dotnet add package GeneralUpdate.Extension
-```
-
 ### 初始化扩展宿主
 
 ```csharp

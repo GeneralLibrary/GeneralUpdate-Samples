@@ -12,10 +12,6 @@ sidebar_position: 6
 
 **NuGet 包:** `GeneralUpdate.Differential`
 
-```bash
-dotnet add package GeneralUpdate.Differential
-```
-
 ## 文档大纲与知识点导航 {#knowledge-map}
 
 如果你第一次阅读 Differential 文档，可以先看这个导航，再跳到对应知识点。本文按照“能力边界 -> 文件级 API -> 算法选择 -> 压缩格式 -> 与 Core/Tools 集成 -> 性能与扩展”的顺序组织。

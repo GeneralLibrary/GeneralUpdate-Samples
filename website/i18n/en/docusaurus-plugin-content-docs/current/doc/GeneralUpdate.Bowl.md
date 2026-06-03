@@ -4,58 +4,134 @@ sidebar_position: 3
 
 # GeneralUpdate.Bowl
 
-## Overview
+**Namespace:** `GeneralUpdate.Bowl` | **Main Entry Point:** `new Bowl().LaunchAsync(BowlContext, CancellationToken)` | **NuGet Package:** `GeneralUpdate.Bowl`
 
-**GeneralUpdate.Bowl** is the startup guard that runs after an application update. It does not download, unpack, or replace update packages. Instead, it watches the target process when the new files have been installed and the main application is starting. If startup crashes, Bowl captures a dump, writes a failure report, exports diagnostics, and, in upgrade mode, restores the backup directory to the installation directory so users are not left on a broken version.
+## 1. Component Overview
 
-**Namespace:** `GeneralUpdate.Bowl`
+### 1.1 Introduction
 
-**Assembly:** `GeneralUpdate.Bowl.dll`
+**GeneralUpdate.Bowl** is a startup watchdog component that runs after an upgrade completes. It does not download, extract, or replace update packages. Instead, after new version files are deployed and the main process is about to start or has started, it monitors the target process for startup crashes. If a crash is detected, it generates a memory dump, writes a failure report JSON, exports system diagnostics, and in Upgrade mode automatically restores the backup directory to the install directory, preventing users from being stuck on a non-bootable new version.
 
-**Current main entry:** `new Bowl().LaunchAsync(BowlContext context, CancellationToken ct = default)`
+**Core Capabilities:**
 
-## Navigation
-
-| Topic | Use it for |
+| Capability | Description |
 | --- | --- |
-| [Lifecycle placement](#lifecycle-placement) | Where Bowl belongs in the update flow |
-| [Quick start](#quick-start) | Start monitoring with the current `BowlContext` API |
-| [Crash detection and recovery flow](#crash-detection-and-recovery-flow) | What Bowl does after a crash |
-| [BowlContext options](#bowlcontext-options) | Configuration fields and recommended values |
-| [Output files](#output-files) | Where dumps, reports, diagnostics, and trace logs are written |
-| [Crash callback](#crash-callback) | Upload reports or notify users on crash |
-| [Trace logging switch](#trace-logging-switch) | Disable tracing for performance-sensitive scenarios |
-| [Platform differences](#platform-differences) | Windows, Linux, and macOS behavior |
-| [Recovery scenario](#recovery-scenario) | A practical failed-update rollback example |
-| [Migrating from the old API](#migrating-from-the-old-api) | Move from `MonitorParameter` to `BowlContext` |
+| Process Crash Monitoring | Attaches to target process via ProcDump (Windows/Linux) or lldb (macOS) to catch unhandled startup exceptions |
+| Memory Dump Snapshots | Supports Full / Mini / Heap dump types, selectable by file size and completeness |
+| Crash Report Generation | Auto-generates `{version}_fail.json` report with monitoring parameters and tool output |
+| System Diagnostics Export | On Windows, exports driver list, system info, and recent system event logs |
+| Automatic Rollback | In Upgrade mode, copies backup directory back to install directory for one-click rollback |
+| Failed Version Marking | Writes `UpgradeFail` marker; Core skips this version until server provides a higher one |
+| Event Callback | `OnCrash` callback for uploading diagnostics, notifying users, or recording audit info |
+| Standalone Monitoring | Normal mode only captures crashes and generates reports without auto-restore |
 
-## Lifecycle placement
+**Business Problems Solved:**
+- New version crashes during startup after upgrade, leaving users unable to use the app and unable to roll back
+- Developers lack crash site information (dump, system environment) to diagnose "won't start after upgrade" issues
+- Need automated rollback mechanism to reduce upgrade risk and avoid manual intervention
 
-In the full GeneralUpdate flow, Bowl belongs **after file replacement and before users rely on the newly installed version**:
+**Use Cases:**
+- Desktop app post-upgrade startup health check with automatic rollback protection
+- General process startup crash monitoring and diagnostic collection
+- Automatic diagnostics after CI/CD smoke test failures
 
-1. Core obtains update information, downloads packages, validates them, and applies updates.
-2. The Core/Upgrade process prepares to start the main application.
-3. Bowl starts as guard logic, attaches to the target process, and waits for startup exceptions.
-4. If the main application starts normally, no dump is produced and Bowl returns the monitoring result.
-5. If the main application crashes during startup, Bowl runs the failure pipeline and restores the backup when configured.
+### 1.2 Environment & Dependencies
 
-In the current Core code, the Windows `UpdateStrategy` starts the main application after the update and also starts the configured Bowl helper process. The Linux/macOS Core strategies do not provide the same automatic Bowl helper launch, so use your launcher, service script, or a separate process to call `LaunchAsync` explicitly on those platforms.
+| Item | Description |
+| --- | --- |
+| **Version** | `10.5.0-beta.2` |
+| **Target Framework** | `netstandard2.0` (.NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+) |
+| **Dependencies** | `System.Collections.Immutable`, `System.Text.Json` |
+| **Bundled Tools** | Windows: `procdump.exe` / `procdump64.exe` / `procdump64a.exe`; Linux: `procdump` deb/rpm + `install.sh`; macOS: `/usr/bin/lldb` |
+| **Compatibility** | Windows (full) / Linux (deb/rpm distros) / macOS (basic, SIP and debug permissions apply) |
 
-:::tip
-Bowl is a post-update health check and rollback guard. It is not firmware recovery, OS restore, or an update package installer. Its scope is application startup crash diagnostics and application-directory backup restoration.
-:::
+---
 
-## Quick start
+## 2. Feature List
 
-### Install
+| Feature | Description | Type | Required | Notes |
+| --- | --- | --- | --- | --- |
+| Upgrade Mode Monitoring | Monitor new version startup crash, auto-restore backup, mark failed version | Core | Recommended | `WorkModel = "Upgrade"` |
+| Standalone Monitoring | Capture crash and generate report only, no auto-restore | Core | Optional | `WorkModel = "Normal"` |
+| Full Dump | Complete memory snapshot, most detail | Core | Optional | `DumpType.Full`, largest file |
+| Mini Dump | Small memory snapshot, faster generation | Core | Optional | `DumpType.Mini`, recommended for production |
+| Heap Dump | Mini dump with heap information | Core | Optional | `DumpType.Heap`, between Mini and Full |
+| Crash Report JSON | Auto-generate structured crash report file | Core | Automatic | Output to `FailDirectory` |
+| System Diagnostics Export | Export driver list, system info, event logs (Windows) | Extended | Automatic | Windows only |
+| Auto Backup Restore | Copy backup directory back to install directory on crash | Core | Optional | `AutoRestore = true` |
+| Failed Version Marking | Write upgrade failure version; Core skips subsequently | Core | Automatic | Upgrade mode only |
+| Crash Callback | Business callback triggered on crash detection | Extended | Optional | `OnCrash` callback function |
+| Trace Logging | `GeneralTracer` runtime diagnostic logs | Extended | Optional | Enabled by default, can be disabled |
 
-```bash
-dotnet add package GeneralUpdate.Bowl
-```
+---
 
-### Upgrade-mode monitoring
+## 3. API Configuration Reference
 
-Upgrade mode is intended for an upgrader or Bowl helper process. `BackupDirectory` points to the pre-update backup, `TargetPath` points to the current installation directory, and `ExtendedField` usually stores the version being monitored.
+### 3.1 Configuration Properties (Props)
+
+**BowlContext:**
+
+| Field | Type | Default | Required | Values | Description |
+| --- | --- | --- | --- | --- | --- |
+| `ProcessNameOrId` | `string` | — | Yes | Process name or PID | Target process to monitor |
+| `DumpFileName` | `string` | — | Yes | Valid filename | Dump output filename, e.g., `"{version}_fail.dmp"` |
+| `FailFileName` | `string` | — | Yes | Valid filename | Crash report JSON filename, e.g., `"{version}_fail.json"` |
+| `TargetPath` | `string` | — | Yes | Valid directory path | App install root; backup restored here on crash |
+| `FailDirectory` | `string` | — | Yes | Valid directory path | Failure artifact output, e.g., `{TargetPath}/fail/{version}` |
+| `BackupDirectory` | `string` | — | Recommended | Valid directory path | Pre-upgrade backup; must exist when `AutoRestore = true` |
+| `WorkModel` | `string` | `"Upgrade"` (after `Normalize()`) | Optional | `"Upgrade"` / `"Normal"` | Work mode: upgrade rollback / standalone monitoring |
+| `ExtendedField` | `string` | `null` | Optional | — | Extended field, typically the version number |
+| `TimeoutMs` | `int` | `30000` (after `Normalize()`) | Optional | Positive integer (ms) | Monitoring subprocess timeout |
+| `DumpType` | `DumpType` | `DumpType.Full` (after `Normalize()`) | Optional | `Full(0)`, `Mini(1)`, `Heap(2)` | Dump capture type |
+| `AutoRestore` | `bool` | `false` | Optional | `true` / `false` | Auto-restore backup; set `true` in upgrade mode |
+| `OnCrash` | `Func<CrashInfo, CancellationToken, Task>?` | `null` | Optional | — | Crash event callback, fires only when dump detected |
+
+**DumpType Enum:**
+
+| Value | Code | Windows ProcDump Flag | Characteristics |
+| --- | --- | --- | --- |
+| `Full` | `0` | `-ma` | Complete memory snapshot, most detail, largest file |
+| `Mini` | `1` | `-mm` | Small snapshot, fast generation, recommended for production |
+| `Heap` | `2` | `-mh` | Small dump with heap info, between Mini and Full |
+
+### 3.2 Instance Methods
+
+**Bowl:**
+
+| Method | Parameters | Returns | Use Case | Notes |
+| --- | --- | --- | --- | --- |
+| `LaunchAsync(BowlContext, CancellationToken)` | `context` — execution context (call `Normalize()` first); `ct` — cancellation token | `Task<BowlResult>` | Start crash monitoring daemon | Three phases: prepare → run → handle crash if dump found |
+
+**BowlContext:**
+
+| Method | Parameters | Returns | Use Case | Notes |
+| --- | --- | --- | --- | --- |
+| `Normalize()` | None | `BowlContext` | Apply defaults (`WorkModel` → `"Upgrade"`, `TimeoutMs` → `30000`, `DumpType` → `Full`) | Returns new instance; does not modify original |
+
+### 3.3 Callback Events
+
+| Event | Callback Parameters | Trigger Timing | Usage Notes |
+| --- | --- | --- | --- |
+| `OnCrash` | `CrashInfo` — `DumpFilePath`, `CrashReportPath`, `Version`, `ExitCode`; `CancellationToken` | After dump file is detected | Use for uploading diagnostics, notifying users "new version rolled back", recording audit. Callback exceptions are logged to trace but don't block `LaunchAsync` return |
+
+---
+
+## 4. Advanced Examples
+
+### 4.1 Extension Points Overview
+
+Bowl's primary extension point is the `BowlContext.OnCrash` callback. Internal strategy interfaces (`IBowlStrategy`, `ICrashReporter`, `ISystemInfoProvider`) are internal; contribute to the GeneralUpdate repository for new platform support or custom report logic.
+
+| Extension Point | Type | Description |
+| --- | --- | --- |
+| `OnCrash` Callback | `Func<CrashInfo, CancellationToken, Task>?` | Configured in `BowlContext`, triggered on crash |
+| `GeneralTracer` Logging | Static class | Toggle via `SetTracingEnabled` |
+
+### 4.2 Examples by Scenario
+
+#### Scenario 1: Upgrade Mode Monitoring + Crash Alert Upload
+
+**Description:** Desktop app upgrades to new version; Bowl monitors for startup crash. On crash, auto-rollback and upload diagnostics to internal log platform.
 
 ```csharp
 using GeneralUpdate.Bowl;
@@ -73,28 +149,38 @@ var context = new BowlContext
     BackupDirectory = Path.Combine(installPath, version),
     WorkModel = "Upgrade",
     ExtendedField = version,
-    TimeoutMs = 30_000,
-    DumpType = DumpType.Full,
+    TimeoutMs = 60_000,
+    DumpType = DumpType.Mini,
     AutoRestore = true,
-    OnCrash = (info, ct) =>
+    OnCrash = async (info, ct) =>
     {
-        Console.WriteLine($"Crash dump: {info.DumpFilePath}");
-        Console.WriteLine($"Crash report: {info.CrashReportPath}");
-        return Task.CompletedTask;
+        var zipPath = Path.Combine(
+            Path.GetDirectoryName(info.DumpFilePath)!,
+            $"crash_{info.Version}_{DateTimeOffset.Now:yyyyMMddHHmmss}.zip");
+        System.IO.Compression.ZipFile.CreateFromDirectory(
+            Path.GetDirectoryName(info.DumpFilePath)!, zipPath);
+
+        using var client = new HttpClient();
+        var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(File.OpenRead(zipPath)), "file", Path.GetFileName(zipPath));
+        content.Add(new StringContent(info.Version), "version");
+        content.Add(new StringContent(info.ExitCode.ToString()), "exitCode");
+        await client.PostAsync("https://logs.example.com/api/crash", content, ct);
+
+        Console.WriteLine($"Version {info.Version} crashed (exit code {info.ExitCode}).");
+        Console.WriteLine("Diagnostics uploaded. Previous version restored.");
     }
 };
 
 BowlResult result = await new Bowl().LaunchAsync(context);
 
 if (result.DumpCaptured && result.Restored)
-{
-    Console.WriteLine("The upgraded version crashed and the backup was restored.");
-}
+    Console.WriteLine("Crash detected and backup restored.");
 ```
 
-### Standalone monitoring
+#### Scenario 2: Standalone Monitoring (Non-Upgrade)
 
-`Normal` mode only captures crash artifacts and invokes callbacks. It does not restore backups and does not write the `UpgradeFail` failed-version marker.
+**Description:** General-purpose worker process startup crash monitoring; collect diagnostics only, no auto-rollback.
 
 ```csharp
 var context = new BowlContext
@@ -112,193 +198,168 @@ var context = new BowlContext
 };
 
 BowlResult result = await new Bowl().LaunchAsync(context);
+
+if (result.DumpCaptured)
+{
+    Console.WriteLine($"Dump captured at: {result.DumpFilePath}");
+    Console.WriteLine($"Report at: {result.CrashReportPath}");
+}
 ```
 
-## Crash detection and recovery flow
+---
 
-`LaunchAsync` uses a simple signal: the platform strategy starts the monitoring tool and writes to `FailDirectory`; Bowl then checks whether `{FailDirectory}/{DumpFileName}` exists. If the dump file exists, startup is treated as failed.
+## 5. Basic Usage Examples
 
-| Stage | Current implementation |
-| --- | --- |
-| Prepare monitoring | Selects `WindowsBowlStrategy`, `LinuxBowlStrategy`, or `MacBowlStrategy` based on the OS |
-| Capture exception | Windows uses ProcDump; Linux tries to install and call ProcDump; macOS uses basic `lldb` support |
-| Detect crash | Checks for the configured dump file in `FailDirectory` |
-| Generate report | Writes `{version}_fail.json` with monitoring parameters and tool output |
-| Export diagnostics | On Windows, runs `Applications/Windows/export.bat` for driver info, system info, and recent system logs |
-| Restore backup | Only when `WorkModel == "Upgrade"` and `AutoRestore == true`, copies `BackupDirectory` back over `TargetPath` |
-| Mark failed version | In upgrade mode, writes `UpgradeFail = ExtendedField`; Core later skips updates at or below that failed version |
-| Notify application | If `OnCrash` is configured, passes dump path, report path, version, and exit code |
+### 5.1 Quick Start (Minimal Demo)
 
-`TimeoutMs` is the monitoring child process timeout. If the timeout expires and no dump exists, Bowl does not run the recovery pipeline. In integrations, treat `DumpCaptured` as the primary crash signal instead of relying only on `Success`.
+```csharp
+using GeneralUpdate.Bowl;
 
-## BowlContext options
+var context = new BowlContext
+{
+    ProcessNameOrId = "MyApp.exe",
+    DumpFileName = "fail.dmp",
+    FailFileName = "fail.json",
+    TargetPath = AppDomain.CurrentDomain.BaseDirectory,
+    FailDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fail"),
+    BackupDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backup"),
+}.Normalize();
 
-| Option | Meaning | Recommendation |
-| --- | --- | --- |
-| `ProcessNameOrId` | Target process name or PID | Process name works on Windows; PID is preferred on Linux |
-| `DumpFileName` | Dump file name | Include the version, for example `2.0.0_fail.dmp` |
-| `FailFileName` | Crash report JSON file name | Match the dump version, for example `2.0.0_fail.json` |
-| `TargetPath` | Current application installation root | Backup restoration copies files back here |
-| `FailDirectory` | Failure artifact output directory | Use `Path.Combine(TargetPath, "fail", version)` |
-| `BackupDirectory` | Pre-update backup directory | Must exist and be complete when `AutoRestore` is enabled |
-| `WorkModel` | `Upgrade` or `Normal` | Use `Upgrade` for post-update rollback; use `Normal` for standalone crash capture |
-| `ExtendedField` | Extension field, currently used mainly as version | Written to `UpgradeFail` in upgrade mode |
-| `TimeoutMs` | Monitoring child process timeout | Normalizes to 30000 ms by default; increase for slow-starting apps |
-| `DumpType` | `Full`, `Mini`, or `Heap` | Use `Mini` for smaller production artifacts; use `Full` for hard issues |
-| `AutoRestore` | Whether to restore backups automatically | Set explicitly to `true` for upgrade rollback |
-| `OnCrash` | Single crash callback | Use it to upload reports, notify users, or write business logs |
+BowlResult result = await new Bowl().LaunchAsync(context);
+Console.WriteLine($"Success: {result.Success}, Dump captured: {result.DumpCaptured}");
+```
 
-### Choosing DumpType
+### 5.2 Basic Parameter Combination
 
-| Type | Windows ProcDump flag | Characteristics |
-| --- | --- | --- |
-| `Full` | `-ma` | Most complete data, largest file, best for hard-to-reproduce issues |
-| `Mini` | `-mm` | Smaller and faster, a good production default |
-| `Heap` | `-mh` | Mini dump with heap information; between Mini and Full |
+```csharp
+var version = "2.0.0";
+var installPath = @"C:\Program Files\MyApp";
 
-## Output files
+var context = new BowlContext
+{
+    ProcessNameOrId = "MyApp.exe",
+    DumpFileName = $"{version}_fail.dmp",
+    FailFileName = $"{version}_fail.json",
+    TargetPath = installPath,
+    FailDirectory = Path.Combine(installPath, "fail", version),
+    BackupDirectory = Path.Combine(installPath, version),
+    WorkModel = "Upgrade",
+    ExtendedField = version,
+    TimeoutMs = 30_000,
+    DumpType = DumpType.Full,
+    AutoRestore = true,
+    OnCrash = (info, ct) =>
+    {
+        Console.WriteLine($"Crash: {info.DumpFilePath}");
+        return Task.CompletedTask;
+    }
+};
 
-For failed upgrades, store artifacts by version:
+BowlResult result = await new Bowl().LaunchAsync(context);
+
+if (result.DumpCaptured && result.Restored)
+    Console.WriteLine("The upgraded version crashed and the backup was restored.");
+```
+
+### 5.3 Production-Ready Example
+
+Full post-upgrade Bowl daemon workflow integrated into the upgrade process:
+
+```csharp
+using GeneralUpdate.Bowl;
+
+var version = "2.0.0";
+var installPath = @"C:\Program Files\MyApp";
+
+var bowlContext = new BowlContext
+{
+    ProcessNameOrId = "MyApp.exe",
+    DumpFileName = $"{version}_fail.dmp",
+    FailFileName = $"{version}_fail.json",
+    TargetPath = installPath,
+    FailDirectory = Path.Combine(installPath, "fail", version),
+    BackupDirectory = Path.Combine(installPath, "backups", version),
+    WorkModel = "Upgrade",
+    ExtendedField = version,
+    TimeoutMs = 45_000,
+    DumpType = DumpType.Mini,
+    AutoRestore = true,
+    OnCrash = async (info, ct) =>
+    {
+        try
+        {
+            using var client = new HttpClient();
+            var crashData = new
+            {
+                version = info.Version,
+                exitCode = info.ExitCode,
+                dumpPath = info.DumpFilePath,
+                reportPath = info.CrashReportPath,
+                timestamp = DateTimeOffset.UtcNow
+            };
+            await client.PostAsJsonAsync(
+                "https://monitor.mycompany.com/api/crash-report", crashData, ct);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to upload crash report: {ex.Message}");
+        }
+    }
+};
+
+var result = await new Bowl().LaunchAsync(bowlContext);
+
+if (result.Success)
+    Console.WriteLine("New version started successfully.");
+else if (result.DumpCaptured)
+{
+    Console.WriteLine($"New version crashed (exit code: {result.ExitCode}).");
+    Console.WriteLine($"Backup restored: {result.Restored}");
+    Console.WriteLine($"Dump: {result.DumpFilePath}");
+}
+```
+
+---
+
+## 6. Global Configuration
+
+Bowl does not rely on global configuration files. All configuration is passed via `BowlContext`. Logging behavior is controlled through the static `GeneralTracer` class.
+
+### Logging Toggle
+
+```csharp
+GeneralTracer.SetTracingEnabled(false);
+var result = await new Bowl().LaunchAsync(context);
+GeneralTracer.SetTracingEnabled(true);
+```
+
+### Output File Structure
 
 ```text
 MyApp/
   fail/
     2.0.0/
-      2.0.0_fail.dmp
-      2.0.0_fail.json
-      driverInfo.txt
-      systeminfo.txt
-      systemlog.evtx
+      2.0.0_fail.dmp         # Memory dump
+      2.0.0_fail.json        # Crash report JSON
+      driverInfo.txt          # Windows driver list
+      systeminfo.txt          # OS/hardware/memory info
+      systemlog.evtx          # Windows system event log
   Logs/
-    generalupdate-trace 2026-01-01.log
+    generalupdate-trace 2026-01-01.log  # Bowl trace logs
 ```
 
-| File | Source | Contents |
-| --- | --- | --- |
-| `{version}_fail.dmp` | ProcDump or lldb | Memory snapshot from the crash |
-| `{version}_fail.json` | `CrashReporter` | Mapped `BowlContext` parameters and monitoring tool output lines |
-| `driverInfo.txt` | Windows `driverquery` | Windows driver list |
-| `systeminfo.txt` | Windows `systeminfo` | OS, hardware, memory, and related system information |
-| `systemlog.evtx` | Windows `wevtutil` | Windows System event log for the last day |
-| `Logs/generalupdate-trace yyyy-MM-dd.log` | `GeneralTracer` | Bowl runtime trace log |
+### Platform Differences
 
-Non-Windows platforms currently do not export `driverInfo.txt`, `systeminfo.txt`, or `systemlog.evtx`, but Bowl still attempts to produce the dump and failure JSON.
-
-The failure JSON is generated by the current `CrashReporter`:
-
-```json
-{
-  "Parameter": {
-    "TargetPath": "C:\\Program Files\\MyApp",
-    "FailDirectory": "C:\\Program Files\\MyApp\\fail\\2.0.0",
-    "BackupDirectory": "C:\\Program Files\\MyApp\\2.0.0",
-    "ProcessNameOrId": "MyApp.exe",
-    "DumpFileName": "2.0.0_fail.dmp",
-    "FailFileName": "2.0.0_fail.json",
-    "WorkModel": "Upgrade",
-    "ExtendedField": "2.0.0"
-  },
-  "ProcdumpOutPutLines": [
-    "ProcDump v11.0 - Sysinternals process dump utility",
-    "[10:00:03] Dump 1 initiated: C:\\Program Files\\MyApp\\fail\\2.0.0\\2.0.0_fail.dmp",
-    "[10:00:03] Dump count reached."
-  ]
-}
-```
-
-## Crash callback
-
-`OnCrash` is a single crash callback. It fires only after Bowl detects a dump and receives a `CrashInfo` payload:
-
-```csharp
-public readonly record struct CrashInfo
-{
-    public string DumpFilePath { get; init; }
-    public string CrashReportPath { get; init; }
-    public string Version { get; init; }
-    public int ExitCode { get; init; }
-}
-```
-
-Common uses:
-
-| Scenario | Approach |
-| --- | --- |
-| Upload diagnostics | Package the dump, JSON report, and Windows diagnostics, then upload them to your internal log platform |
-| Notify users | Tell the user the new version failed to start and the previous version was restored |
-| Audit business events | Record `Version`, `ExitCode`, and report paths in your own log system |
-
-Callback exceptions are written to the trace log and do not stop `LaunchAsync` from returning its final `BowlResult`. Use the `CancellationToken` for cancellation.
-
-## Trace logging switch
-
-Bowl uses the public `GeneralTracer` for runtime tracing. By default it writes to the console and creates a daily file under the runtime directory:
-
-```text
-Logs/generalupdate-trace yyyy-MM-dd.log
-```
-
-For startup-performance, disk-write, or console-output sensitive scenarios, disable tracing:
-
-```csharp
-GeneralTracer.SetTracingEnabled(false);
-
-var result = await new Bowl().LaunchAsync(context);
-
-GeneralTracer.SetTracingEnabled(true);
-```
-
-Disabling tracing reduces Bowl's own diagnostic logs, but dump and failure JSON generation do not depend on this switch. Keep tracing enabled while investigating update failures; disable it in stable production paths according to your performance policy.
-
-## Platform differences
-
-| Platform | Monitoring tool | Diagnostic export | Notes |
+| Platform | Monitoring Tool | Diagnostics Export | Notes |
 | --- | --- | --- | --- |
-| Windows | Bundled ProcDump: `procdump.exe`, `procdump64.exe`, `procdump64a.exe` | Supports `driverInfo.txt`, `systeminfo.txt`, `systemlog.evtx` | Tool path comes from `TargetPath/Applications/Windows`; sufficient dump permissions are required |
-| Linux | Bundled deb/rpm packages + `install.sh`, then `procdump` | Currently no-op | Package mapping covers Ubuntu, Debian, RHEL, CentOS, Fedora, and ClearOS; the script may require `sudo` |
-| macOS | `/usr/bin/lldb` | Currently no-op | Affected by SIP, debugging permission, and signing policy; current support is basic |
+| Windows | Built-in ProcDump (`procdump.exe`/`procdump64.exe`/`procdump64a.exe`) | Supports `driverInfo.txt`, `systeminfo.txt`, `systemlog.evtx` | Requires sufficient permissions for dumps |
+| Linux | Built-in deb/rpm + `install.sh` ProcDump install | Currently no-op | Supports Ubuntu/Debian/RHEL/CentOS/Fedora/ClearOS |
+| macOS | `/usr/bin/lldb` | Currently no-op | Affected by SIP, debug permissions, signing policy |
 
-The NuGet package outputs `Applications/**/*` as content. If you self-deploy, make sure these files are not trimmed, otherwise the platform strategy may report that monitoring tooling is unavailable or fail to start the tool process.
+---
 
-## Recovery scenario
+## Related Resources
 
-Suppose a user upgrades from `1.0.0` to `2.0.0` and the new version crashes immediately:
-
-1. The update flow first stores the previous version in `BackupDirectory`, for example `C:\Program Files\MyApp\2.0.0`.
-2. The new version is copied into `TargetPath`.
-3. The main application starts, while Bowl monitors startup with `ProcessNameOrId = "MyApp.exe"`.
-4. ProcDump captures the unhandled exception and writes `fail\2.0.0\2.0.0_fail.dmp`.
-5. Bowl writes `2.0.0_fail.json`; on Windows it also exports driver info, system info, and recent system logs.
-6. Because `WorkModel == "Upgrade"` and `AutoRestore == true`, Bowl copies `BackupDirectory` back over `TargetPath`.
-7. Bowl writes `UpgradeFail = "2.0.0"`; the next Core check skips this known-failed version while the server still returns `2.0.0` or lower, until a higher version is available.
-8. `OnCrash` can upload the diagnostic package or tell the user that the app has been restored to a working version.
-
-The goal is to reduce the risk of "the update succeeded but the new app cannot start": users return to a runnable version, and developers get the dump plus context needed to fix the issue.
-
-## Migrating from the old API
-
-The old `GeneralUpdate.Bowl.Strategys.MonitorParameter` type is obsolete. Prefer `BowlContext` and the async entry point:
-
-```csharp
-var oldParameter = new GeneralUpdate.Bowl.Strategys.MonitorParameter
-{
-    ProcessNameOrId = "MyApp.exe",
-    DumpFileName = "2.0.0_fail.dmp",
-    FailFileName = "2.0.0_fail.json",
-    TargetPath = installPath,
-    FailDirectory = Path.Combine(installPath, "fail", "2.0.0"),
-    BackupDirectory = Path.Combine(installPath, "2.0.0"),
-    WorkModel = "Upgrade",
-    ExtendedField = "2.0.0"
-};
-
-BowlContext context = Bowl.MapToContext(oldParameter);
-BowlResult result = await new Bowl().LaunchAsync(context);
-```
-
-For new code, create `BowlContext` directly instead of depending on `MonitorParameter`.
-
-## Related resources
-
-- **Samples:** [GeneralUpdate-Samples / Bowl](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Bowl)
-- **Main repository:** [GeneralUpdate](https://github.com/GeneralLibrary/GeneralUpdate)
+- [Bowl Sample Code](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Bowl)
+- [GeneralUpdate Repository](https://github.com/GeneralLibrary/GeneralUpdate)
+- [Dump Guide](../guide/Dump.md)

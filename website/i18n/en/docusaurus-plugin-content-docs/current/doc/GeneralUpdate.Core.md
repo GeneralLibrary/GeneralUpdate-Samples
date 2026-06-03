@@ -4,86 +4,477 @@ sidebar_position: 5
 
 # GeneralUpdate.Core
 
-`GeneralUpdate.Core` is the update execution core of GeneralUpdate. It provides the programmable bootstrapper, configuration model, event model, download extension points, lifecycle hooks, reporting, differential pipeline, and platform strategy extension model. This page focuses on component APIs and extension examples; end-to-end workflows belong in the cookbook.
+**Namespace:** `GeneralUpdate.Core` | **Main Entry Point:** `GeneralUpdateBootstrap` | **NuGet Package:** `GeneralUpdate.Core`
 
-**Namespace:** `GeneralUpdate.Core`
-**Primary entry point:** `GeneralUpdateBootstrap`
-**NuGet package:** `GeneralUpdate.Core`
+## 1. Component Overview
 
-```bash
-dotnet add package GeneralUpdate.Core
+### 1.1 Introduction
+
+**GeneralUpdate.Core** is the update execution engine of the GeneralUpdate ecosystem, responsible for full lifecycle update management of client applications. It provides a programmable launcher, configuration models, event notification system, download subsystem (supporting concurrency, resume, retry, verification, and post-processing pipelines), differential patch pipeline, version write-back, IPC process communication, and platform strategy extensions.
+
+**Core Capabilities:**
+
+| Capability | Description |
+| --- | --- |
+| Multi-Strategy Update Execution | Built-in standard Client/Upgrade, OSS object storage, and silent background polling strategies |
+| Configuration-Driven | Strongly-typed `UpdateRequest` or lightweight `SetSource` entry, with `generalupdate.manifest.json` for minimal configuration |
+| Download Subsystem | Pluggable download sources, executors, retry policies, post-processing pipelines, and orchestrators; defaults include concurrent downloads, resume, and SHA256 verification |
+| Differential Patch Pipeline | File-level binary diff (BSDIFF 4.0 / Streaming HDiff), directory-level comparison and batch patch distribution with parallel processing |
+| Event Notifications | 7 event callbacks (version discovery, download progress, completion, error, exception, etc.) with batch listener registration |
+| Extension Points | 10 pluggable interfaces: lifecycle hooks, status reporting, SSL certificate policy, HTTP authentication, download source/policy/executor/pipeline/orchestrator, platform strategy |
+| Manifest System | `generalupdate.manifest.json` for auto-discovery of app identity and automatic version write-back |
+| IPC Communication | Encrypted file-based context passing between main app and upgrade process |
+| SignalR Real-Time Push | Version update push via SignalR (`UpgradeHubService`), supporting peer-to-peer and broadcast, auto-reconnect, multi-event subscription |
+
+**Business Problems Solved:**
+- Desktop apps need reliable auto-update, but hand-writing update logic involves version comparison, download, verification, extraction, file replacement, and process restart
+- Full updates for large apps have high bandwidth costs; differential updates reduce download size
+- Flexible update strategies needed (silent background, user-triggered, OSS/CDN distribution)
+- Upgrade process versioning needs coordination between main app and upgrade process
+
+**Use Cases:**
+- Auto-update for WPF / WinForms / Avalonia / WinUI desktop applications
+- Unified version management for enterprise internal tools
+- Client apps distributing update packages via CDN / OSS
+- Large clients needing differential updates to reduce bandwidth
+
+### 1.2 Environment & Dependencies
+
+| Item | Description |
+| --- | --- |
+| **Version** | `10.5.0-beta.2` |
+| **Target Framework** | `netstandard2.0` (.NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+) |
+| **Dependencies** | `GeneralUpdate.Differential`, `System.Text.Json`, `Microsoft.Extensions.Logging.Abstractions` |
+| **Compatibility** | Windows (primary) / Linux / macOS; x86 / x64 / ARM64 |
+
+---
+
+## 2. Feature List
+
+| Feature | Description | Type | Required | Notes |
+| --- | --- | --- | --- | --- |
+| Standard Client Update | Main app checks version, downloads packages, launches upgrade process | Core | Required | Requires server version check API |
+| Standard Upgrade Update | Standalone upgrade process reads IPC context and executes file replacement, diff patches, version write-back | Core | Required | Launched by main app via encrypted IPC |
+| OSS Client Update | Download version config from OSS/CDN, compare, launch upgrade process | Core | Optional | Version config hosted on object storage |
+| OSS Upgrade Update | OSS-mode upgrade process downloads and extracts resource packages | Core | Optional | Paired with OssClient |
+| Silent Background Update | Background polling, silent download, upgrade on process exit | Core | Optional | Set `Option.Silent = true` |
+| Differential Patch Pipeline | File-level binary diff generation & application, directory-level batch distribution | Core | Optional | Requires `Option.PatchEnabled = true` |
+| Concurrent Downloads | Multi-asset concurrent download with resume & SHA256 verification | Core | Optional | Controlled via `Option.MaxConcurrency` |
+| Event Callbacks | 7 event types: version info, progress, completion, errors, exceptions | Core | Optional | Registered via `AddListener*` methods |
+| App Identity Manifest | `generalupdate.manifest.json` auto-discovery & version write-back | Extended | Recommended | Generated by `GeneralUpdate.Tools` |
+| Custom Download Source | Custom version list and download resource source | Extended | Optional | Implement `IDownloadSource` |
+| Custom Download Executor | Custom single-file download (HTTP/FTP/SFTP etc.) | Extended | Optional | Implement `IDownloadExecutor` |
+| Custom Retry Policy | Custom retry, timeout, circuit-breaking strategy | Extended | Optional | Implement `IDownloadPolicy` |
+| Custom Download Pipeline | Post-download processing (verification, decryption, scanning) | Extended | Optional | Implement `IDownloadPipeline` |
+| Custom Download Orchestrator | Fully replace batch download concurrency control | Extended | Optional | Implement `IDownloadOrchestrator` |
+| Lifecycle Hooks | Business logic injection: before/after update, download complete, error, before start | Extended | Optional | Implement `IUpdateHooks` |
+| Status Reporting | Report update status to your own server | Extended | Optional | Implement `IUpdateReporter` |
+| HTTP Authentication | Custom HTTP request authentication headers | Extended | Optional | Implement `IHttpAuthProvider` |
+| SSL Certificate Policy | Custom HTTPS certificate validation logic | Extended | Optional | Implement `ISslValidationPolicy` |
+| Platform Strategy | Replace platform-level file operations or launch logic | Extended | Optional | Implement `IStrategy` |
+| SignalR Real-Time Push | Server proactively pushes version update notifications to connected clients | Extended | Optional | `UpgradeHubService`, namespace `GeneralUpdate.Core.Hubs` |
+| Push Reconnect Mechanism | Auto-reconnect on disconnect (random backoff strategy), connection lifecycle management | Extended | Optional | `RandomRetryPolicy` |
+| Push Event Subscription | Four events: receive message, online status, reconnect notification, close notification | Extended | Optional | Registered via `AddListener*` methods |
+
+---
+
+## 3. API Configuration Reference
+
+### 3.1 Configuration Properties (Props)
+
+**UpdateRequest Properties:**
+
+| Field | Type | Default | Required | Values | Description |
+| --- | --- | --- | --- | --- | --- |
+| `UpdateUrl` | `string` | — | Yes | Valid absolute URL | Update check API endpoint |
+| `UpdateAppName` | `string` | `"Update.exe"` | Recommended | Valid filename | Upgrade process filename |
+| `MainAppName` | `string` | — | Recommended | Valid filename | Main app filename for restart & identification |
+| `ClientVersion` | `string` | — | Recommended | SemVer format | Current main app version |
+| `AppSecretKey` | `string` | — | Recommended | — | App key for server authentication |
+| `InstallPath` | `string` | `BaseDirectory` | Optional | Valid directory path | Application install root |
+| `ReportUrl` | `string` | `null` | Optional | Valid absolute URL | Status report API |
+| `UpdateLogUrl` | `string` | `null` | Optional | Valid absolute URL | Changelog page URL |
+| `UpgradeClientVersion` | `string` | — | Optional | SemVer format | Upgrade process version |
+| `ProductId` | `string` | — | Optional | — | Product identifier for multi-product servers |
+| `UpdatePath` | `string` | `InstallPath` | Optional | Valid directory path | Upgrade process location |
+| `Bowl` | `string` | `null` | Optional | Valid filename | Auxiliary process name to close before update |
+| `Scheme` | `string` | `null` | Optional | `"Bearer"` etc. | Auth scheme |
+| `Token` | `string` | `null` | Optional | — | Auth token |
+| `Files` | `List<string>` | `null` | Optional | — | Files to skip during update |
+| `Formats` | `List<string>` | `null` | Optional | — | Extensions to skip during update |
+| `Directories` | `List<string>` | `null` | Optional | — | Directories to skip during update |
+| `DriverDirectory` | `string` | `null` | Optional | Valid directory path | Driver update directory |
+
+**Option Runtime Options:**
+
+| Field | Type | Default | Required | Values | Description |
+| --- | --- | --- | --- | --- | --- |
+| `Option.AppType` | `AppType` | `Client` | Yes | `Client(1)`, `Upgrade(2)`, `OssClient(3)`, `OssUpgrade(4)` | Current process role |
+| `Option.DiffMode` | `DiffMode` | `Serial` | Optional | `Serial`, `Parallel` | Download execution mode |
+| `Option.Encoding` | `Encoding` | `UTF8` | Optional | `Encoding` instance | Archive processing encoding |
+| `Option.Format` | `Format` | `Zip` | Optional | `Zip` | Package format |
+| `Option.DownloadTimeout` | `int?` | `30` | Optional | Positive integer (sec) | Download timeout |
+| `Option.PatchEnabled` | `bool?` | `true` | Optional | `true` / `false` | Enable differential patching |
+| `Option.BackupEnabled` | `bool?` | `true` | Optional | `true` / `false` | Backup files before update |
+| `Option.Silent` | `bool` | `false` | Optional | `true` / `false` | Enable silent polling |
+| `Option.SilentPollIntervalMinutes` | `int` | `60` | Optional | Positive integer | Polling interval (minutes) |
+| `Option.LaunchClientAfterUpdate` | `bool` | `true` | Optional | `true` / `false` | Launch main app after upgrade |
+| `Option.MaxConcurrency` | `int` | `3` | Optional | `1` ~ `ProcessorCount × 2` | Max download concurrency |
+| `Option.EnableResume` | `bool` | `true` | Optional | `true` / `false` | Enable HTTP Range resume |
+| `Option.RetryCount` | `int` | `3` | Optional | Non-negative integer | Download retry count |
+| `Option.VerifyChecksum` | `bool` | `true` | Optional | `true` / `false` | Verify download file hash |
+| `Option.RetryInterval` | `TimeSpan` | `1s` | Optional | Positive `TimeSpan` | Download retry interval |
+
+### 3.2 Instance Methods
+
+**GeneralUpdateBootstrap:**
+
+| Method | Parameters | Returns | Use Case | Notes |
+| --- | --- | --- | --- | --- |
+| `LaunchAsync()` | None | `Task<GeneralUpdateBootstrap>` | Final entry for all Core scenarios | Auto-selects strategy based on `Option.AppType` |
+| `Cancel()` | None | `void` | UI "Cancel Update" button | Triggers internal `CancellationTokenSource` |
+| `SetConfig(UpdateRequest)` | `configInfo` | `GeneralUpdateBootstrap` | Explicit update configuration | Calls `Validate()` on key fields |
+| `SetConfig(string)` | `filePath` — JSON config file path | `GeneralUpdateBootstrap` | Read config from file | Supports relative/absolute paths; UTF-8 JSON |
+| `SetSource(...)` | `updateUrl`, `appSecretKey`, `reportUrl?`, `scheme?`, `token?` | `GeneralUpdateBootstrap` | Lightweight entry with manifest | Identity info filled by manifest |
+| `SetOption(Option<T>, T)` | `option` — key, `value` — value | `GeneralUpdateBootstrap` | Set runtime options | Pass `null` to reset nullable options |
+| `UseDiffPipeline(Action<DiffPipelineBuilder>)` | `configure` — delegate | `GeneralUpdateBootstrap` | Replace or tune diff pipeline | Default used if not called |
+| `AddListenerUpdateInfo(...)` | `EventHandler<UpdateInfoEventArgs>` | `GeneralUpdateBootstrap` | Receive server version info | Also fires when no update available |
+| `AddListenerUpdatePrecheck(...)` | `Func<UpdateInfoEventArgs, bool>` | `GeneralUpdateBootstrap` | Pre-download check | Return `true` to skip non-forced update |
+| `AddListenerProgress(...)` | `EventHandler<ProgressEventArgs>` | `GeneralUpdateBootstrap` | Progress bar, status text | Contains both download & diff progress |
+| `AddListenerMultiDownloadCompleted(...)` | `EventHandler<MultiDownloadCompletedEventArgs>` | `GeneralUpdateBootstrap` | Mark single asset download completion | Not "all downloads complete" |
+| `AddListenerMultiAllDownloadCompleted(...)` | `EventHandler<MultiAllDownloadCompletedEventArgs>` | `GeneralUpdateBootstrap` | Post-all-downloads processing | Includes `FailedVersions` summary |
+| `AddListenerMultiDownloadError(...)` | `EventHandler<MultiDownloadErrorEventArgs>` | `GeneralUpdateBootstrap` | Log single download failure | Overall success still determined by `MultiAllDownloadCompleted` |
+| `AddListenerMultiDownloadStatistics(...)` | `EventHandler<MultiDownloadStatisticsEventArgs>` | `GeneralUpdateBootstrap` | Display speed & ETA | Prefer `AddListenerProgress` for new code |
+| `AddListenerException(...)` | `EventHandler<ExceptionEventArgs>` | `GeneralUpdateBootstrap` | Report exceptions, show errors | Notification only; no automatic retry |
+| `AddEventListener<TListener>()` | Generic — listener type | `GeneralUpdateBootstrap` | Batch register event listeners | `T` must implement `IUpdateEventListener` |
+| `Hooks<T>()` | Generic — hook type | `GeneralUpdateBootstrap` | Register lifecycle hooks | `T` needs parameterless constructor |
+| `UpdateReporter<T>()` | Generic — reporter type | `GeneralUpdateBootstrap` | Register status reporter | — |
+| `SslPolicy<T>()` | Generic — SSL policy type | `GeneralUpdateBootstrap` | Custom HTTPS certificate validation | Don't unconditionally return `true` in production |
+| `HttpAuth<T>()` | Generic — auth provider type | `GeneralUpdateBootstrap` | Custom HTTP auth | — |
+| `DownloadSource<T>()` | Generic — download source type | `GeneralUpdateBootstrap` | Custom version list source | — |
+| `DownloadPolicy<T>()` | Generic — download policy type | `GeneralUpdateBootstrap` | Custom retry/timeout policy | — |
+| `DownloadExecutor<T>()` | Generic — executor type | `GeneralUpdateBootstrap` | Custom single-file download | — |
+| `DownloadPipeline<T>()` | Generic — pipeline type | `GeneralUpdateBootstrap` | Custom post-download processing | — |
+| `DownloadOrchestrator<T>()` | Generic — orchestrator type | `GeneralUpdateBootstrap` | Fully replace batch download | Only when complete replacement needed |
+| `Strategy<T>()` | Generic — strategy type | `GeneralUpdateBootstrap` | Custom platform strategy | — |
+
+**UpgradeHubService:**
+
+| Method | Parameters | Returns | Use Case | Notes |
+| --- | --- | --- | --- | --- |
+| `UpgradeHubService(string, string?, string?)` | `url` — SignalR Hub URL; `token` — optional ID4 auth token; `appkey` — optional client unique ID | — (constructor) | Create push service instance | `appkey` used for server-side targeted push; recommended to use a fixed GUID |
+| `StartAsync()` | None | `Task` | Establish SignalR long-lived connection | Can re-call after `StopAsync` |
+| `StopAsync()` | None | `Task` | Gracefully stop connection, retain reconnect ability | Suitable when app goes to background |
+| `DisposeAsync()` | None | `Task` | Fully release Hub and all resources | Cannot be reused after disposal |
+| `AddListenerReceive(Action<string>)` | `receiveMessageCallback` | `void` | Subscribe to server push messages | Message content is JSON string from server |
+| `AddListenerOnline(Action<string>)` | `onlineMessageCallback` | `void` | Subscribe to online/offline status changes | — |
+| `AddListenerReconnected(Func<string?, Task>?)` | `reconnectedCallback` | `void` | Subscribe to reconnect success notification | Parameter is new connectionId (may be null) |
+| `AddListenerClosed(Func<Exception?, Task>)` | `closeCallback` | `void` | Subscribe to connection close notification | Exception is null for normal close |
+
+### 3.3 Callback Events
+
+| Event | Callback Parameters | Trigger Timing | Usage Notes |
+| --- | --- | --- | --- |
+| `AddListenerUpdateInfo` | `UpdateInfoEventArgs` — `Info.Code`, `Info.Body` (`VersionEntry` list) | After version comparison in standard Client strategy | No update → `Code = 404`; has update → `Body` contains `VersionEntry` list |
+| `AddListenerUpdatePrecheck` | `Func<UpdateInfoEventArgs, bool>` — return `true` to skip (non-forced), `false` to continue | After `UpdateInfo`, before download | For disk space check, network check, user confirmation dialog |
+| `AddListenerProgress` | `ProgressEventArgs` — `Progress` (download) or `DiffProgress` (diff) | Download progress or diff progress updates | Only one of `Progress` / `DiffProgress` is non-null per event |
+| `AddListenerMultiDownloadCompleted` | `MultiDownloadCompletedEventArgs` — `Version`, `IsCompleted` | Single asset download completion | Not "all downloads complete" |
+| `AddListenerMultiAllDownloadCompleted` | `MultiAllDownloadCompletedEventArgs` — `IsAllDownloadCompleted`, `FailedVersions` | After all download tasks complete | Failure details in `FailedVersions` |
+| `AddListenerMultiDownloadError` | `MultiDownloadErrorEventArgs` — `Exception`, `Version` | Single download failure | Record failures for display/monitoring |
+| `AddListenerMultiDownloadStatistics` | `MultiDownloadStatisticsEventArgs` — `Speed`, `Remaining`, `BytesReceived` | Legacy/compat download statistics | New code should use `AddListenerProgress` |
+| `AddListenerException` | `ExceptionEventArgs` — `Exception`, `Message` | When strategies catch exceptions | Notification only; no automatic retry |
+
+**UpgradeHubService Push Events:**
+
+| Event | Callback Parameters | Trigger Timing | Usage Notes |
+| --- | --- | --- | --- |
+| `AddListenerReceive` | `Action<string>` — message content (JSON string) | When server pushes version update | Message format determined by server |
+| `AddListenerOnline` | `Action<string>` — status description | When online/offline status changes | Use for UI status display |
+| `AddListenerReconnected` | `Func<string?, Task>?` — new connectionId | After successful reconnect | Can refresh client state |
+| `AddListenerClosed` | `Func<Exception?, Task>` — close reason (null = normal) | When connection closes | Use for logging and cleanup |
+
+---
+
+## 4. Advanced Examples
+
+### 4.1 Extension Points Overview
+
+Core provides 10 extension registration methods via `AbstractBootstrap`, all returning the bootstrap instance for fluent chaining. All registered types must have parameterless constructors.
+
+| Extension Interface | Registration Method | Scope |
+| --- | --- | --- |
+| `IUpdateHooks` | `Hooks<T>()` | Update lifecycle hooks |
+| `IUpdateReporter` | `UpdateReporter<T>()` | Status reporting |
+| `ISslValidationPolicy` | `SslPolicy<T>()` | HTTPS certificate validation |
+| `IHttpAuthProvider` | `HttpAuth<T>()` | HTTP request authentication |
+| `IDownloadSource` | `DownloadSource<T>()` | Version list & download source |
+| `IDownloadPolicy` | `DownloadPolicy<T>()` | Download retry/timeout/circuit-breaker |
+| `IDownloadExecutor` | `DownloadExecutor<T>()` | Single file download |
+| `IDownloadPipeline` | `DownloadPipeline<T>()` | Post-download processing |
+| `IDownloadOrchestrator` | `DownloadOrchestrator<T>()` | Batch download orchestration |
+| `IStrategy` | `Strategy<T>()` | Platform-level update strategy |
+
+### 4.2 Examples by Scenario
+
+#### Scenario 1: Custom Diff Algorithm with Parallelism
+
+**Description:** Large projects wanting faster client-side patch application with `StreamingHdiffDiffer` and parallelism 4.
+
+```csharp
+using GeneralUpdate.Core;
+using GeneralUpdate.Core.Differential;
+using GeneralUpdate.Core.Pipeline;
+using GeneralUpdate.Differential.Differ;
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .UseDiffPipeline(builder =>
+    {
+        builder
+            .UseDiffer(new StreamingHdiffDiffer())
+            .WithParallelism(4)
+            .WithStopOnFirstError(true);
+    })
+    .SetOption(Option.PatchEnabled, true)
+    .SetOption(Option.AppType, AppType.Client)
+    .LaunchAsync();
 ```
 
-## Outline and topic map {#knowledge-map}
+#### Scenario 2: Custom Lifecycle Hooks
 
-If this is your first time reading the Core documentation, start from this map and jump to the topic you need. The page is organized as "entry and configuration -> execution strategies -> differential/download/concurrency -> extension points -> tooling relationship".
+**Description:** Check disk space before update, write logs after update, grant execute permissions on Linux/macOS.
 
-| What you want to learn | Read |
-| --- | --- |
-| What Core does and does not own | [Responsibility boundary](#responsibility-boundary) |
-| How to start a standard update | [GeneralUpdateBootstrap](#entry-point-generalupdatebootstrap), [Standard update strategy](#standard-update-strategy) |
-| How to use minimal update configuration | [generalupdate.manifest.json](#application-identity-manifest-generalupdatemanifestjson), [Minimal configuration model](#minimal-configuration-model), [Using the manifest with the bootstrap](#using-the-manifest-with-the-bootstrap) |
-| How `Client`, `Upgrade`, `OssClient`, and `OssUpgrade` differ | [Execution strategy overview](#execution-strategies) |
-| When silent update downloads and when it replaces files | [Silent update strategy](#silent-update-strategy) |
-| Which differential algorithms exist and how to choose one | [Differential algorithms and patch pipeline](#differential-pipeline) |
-| How download and patch work use concurrency and threads | [Download concurrency and differential parallelism](#download-diff-concurrency) |
-| How to receive update notifications | [Event API](#event-api) |
-| How to disable logs to reduce runtime overhead | [Logging and performance](#logging-performance) |
-| How to extend downloads, validation, auth, hooks, or platform strategy | [Extension points](#extension-points) |
-| How Core consumes artifacts generated by Tools | [Relationship with GeneralUpdate.Tools](#relationship-with-generalupdatetools) |
+```csharp
+using GeneralUpdate.Core.Hooks;
 
-## Responsibility boundary
+public sealed class ProductUpdateHooks : IUpdateHooks
+{
+    public Task<bool> OnBeforeUpdateAsync(HookContext ctx)
+    {
+        var drive = new DriveInfo(Path.GetPathRoot(ctx.InstallPath)!);
+        if (drive.AvailableFreeSpace < 500L * 1024 * 1024)
+            return Task.FromResult(false); // Reject update
+        return Task.FromResult(true);
+    }
 
-Core executes updates. It does not generate update packages or manage the server backend.
+    public Task OnDownloadCompletedAsync(DownloadContext ctx) => Task.CompletedTask;
 
-| Capability | Owned by Core | Notes |
-| --- | --- | --- |
-| Load update configuration | Yes | Via `UpdateRequest`, JSON config, `SetSource`, or IPC. |
-| Query server version metadata | Yes | `Client` / `OssClient` builds the download plan. |
-| Download update packages | Yes | Source, executor, policy, pipeline, and orchestrator are replaceable. |
-| Verify and apply patches | Yes | Hash verification, archive handling, and differential patching are supported. |
-| Replace files and restart app | Yes | `Upgrade` / `OssUpgrade` is used by the updater process. |
-| Generate differential packages | No | Use `GeneralUpdate.Tools`. |
+    public Task OnAfterUpdateAsync(HookContext ctx)
+    {
+        File.AppendAllText(
+            Path.Combine(ctx.InstallPath, "update-history.log"),
+            $"{DateTimeOffset.Now:O} {ctx.CurrentVersion} -> {ctx.TargetVersion}{Environment.NewLine}");
+        return Task.CompletedTask;
+    }
 
-## Entry point: GeneralUpdateBootstrap
+    public Task OnUpdateErrorAsync(HookContext ctx, Exception ex)
+    {
+        File.AppendAllText(Path.Combine(ctx.InstallPath, "update-error.log"), $"{ex}{Environment.NewLine}");
+        return Task.CompletedTask;
+    }
 
-`GeneralUpdateBootstrap` is Core's main facade. It inherits `AbstractBootstrap<GeneralUpdateBootstrap, IStrategy>`, so it includes both its own methods and the extension registration methods from the base class.
+    public Task OnBeforeStartAppAsync(HookContext ctx) => Task.CompletedTask;
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .Hooks<ProductUpdateHooks>()
+    .SetOption(Option.AppType, AppType.Client)
+    .LaunchAsync();
+```
+
+#### Scenario 3: Custom Download Source (Private Service/Config Center)
+
+**Description:** Pull download asset lists from an internal config center instead of the standard version check API.
+
+```csharp
+using GeneralUpdate.Core.Download.Abstractions;
+using GeneralUpdate.Core.Download.Models;
+
+public sealed class ConfigCenterDownloadSource : IDownloadSource
+{
+    public async Task<DownloadSourceResult> ListAsync(CancellationToken token = default)
+    {
+        var assets = new[]
+        {
+            new DownloadAsset(
+                Name: "MyApp-2.0.0.zip",
+                Url: "https://cdn.internal.example.com/releases/MyApp-2.0.0.zip",
+                Size: 50_000_000,
+                SHA256: "abc123...",
+                Version: "2.0.0")
+        };
+        return new DownloadSourceResult
+        {
+            Assets = assets,
+            HasMainUpdate = true,
+            HasUpgradeUpdate = false
+        };
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .DownloadSource<ConfigCenterDownloadSource>()
+    .SetOption(Option.AppType, AppType.Client)
+    .LaunchAsync();
+```
+
+#### Scenario 4: Custom HTTP Authentication
+
+**Description:** Append JWT Bearer Token to all HTTP requests from Core.
+
+```csharp
+using GeneralUpdate.Core.Security;
+
+public sealed class JwtAuthProvider : IHttpAuthProvider
+{
+    private readonly string _token = Environment.GetEnvironmentVariable("UPDATE_JWT_TOKEN") ?? "";
+
+    public Task ApplyAuthAsync(HttpRequestMessage request, CancellationToken token = default)
+    {
+        request.Headers.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _token);
+        return Task.CompletedTask;
+    }
+}
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .HttpAuth<JwtAuthProvider>()
+    .SetOption(Option.AppType, AppType.Client)
+    .LaunchAsync();
+```
+
+#### Scenario 5: Silent Update + Process Exit Trigger
+
+**Description:** Main app polls for updates in background, triggers upgrade on process exit.
 
 ```csharp
 using GeneralUpdate.Core;
 
-var bootstrap = new GeneralUpdateBootstrap();
+var bootstrap = new GeneralUpdateBootstrap()
+    .SetSource(
+        updateUrl: "https://update.example.com/api/upgrade/verification",
+        appSecretKey: "your-app-secret")
+    .SetOption(Option.AppType, AppType.Client)
+    .SetOption(Option.Silent, true)
+    .SetOption(Option.SilentPollIntervalMinutes, 30)
+    .SetOption(Option.LaunchClientAfterUpdate, true)
+    .AddListenerException((_, e) => Console.WriteLine($"Update error: {e.Message}"));
+
+await bootstrap.LaunchAsync();
+
+// On app exit: launch upgrade if prepared
+AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+{
+    if (bootstrap.SilentOrchestrator?.HasPreparedUpdate == true)
+        bootstrap.SilentOrchestrator.TryLaunchUpgrade();
+};
 ```
 
-### Method overview
+#### Scenario 6: SignalR Real-Time Push + Standard Update
 
-| Method | Purpose | Typical use |
-| --- | --- | --- |
-| `LaunchAsync()` | Starts the update workflow using the current `Option.AppType`. | Final call in every Core scenario. |
-| `Cancel()` | Requests cancellation of the current update operation. | A Cancel button in a desktop UI. |
-| `SetConfig(UpdateRequest)` | Configures updates with a strongly typed object. | Explicit main-app configuration. |
-| `SetConfig(string)` | Loads `UpdateRequest` from a JSON file. | `update_config.json` or another config file. |
-| `SetSource(...)` | Supplies only URL, secret, report URL, scheme, and token. | Lightweight setup. |
-| `SetOption(Option<T>, T)` | Sets runtime options. | Role, timeout, concurrency, patching, silent update. |
-| `UseDiffPipeline(Action<DiffPipelineBuilder>)` | Customizes the differential pipeline. | Replace differ, set parallelism, collect patch progress. |
-| `AddListenerUpdatePrecheck(Func<UpdateInfoEventArgs, bool>)` | Runs a pre-download decision callback. | Disk-space check, network check, user confirmation. |
-| `AddListener...` | Registers a single event callback. | UI, logs, telemetry. |
-| `AddEventListener<TListener>()` | Registers all event callbacks through a listener class. | Encapsulated event handling. |
-
-### LaunchAsync
+**Description:** Use `UpgradeHubService` for server push notifications alongside `GeneralUpdateBootstrap` for standard updates. Server can push notifications immediately when new versions are available.
 
 ```csharp
-public Task<GeneralUpdateBootstrap> LaunchAsync()
+using GeneralUpdate.Core;
+using GeneralUpdate.Core.Hubs;
+
+// 1. Start SignalR push listener
+var hub = new UpgradeHubService(
+    "http://localhost:5000/UpgradeHub",
+    appkey: "dfeb5833-975e-4afb-88f1-6278ee9aeff6");
+
+hub.AddListenerReceive(async (message) =>
+{
+    Console.WriteLine($"Push notification: {message}");
+    // Trigger update check or notify user in UI
+});
+
+hub.AddListenerOnline((info) =>
+    Console.WriteLine($"Online status: {info}"));
+
+hub.AddListenerReconnected((connectionId) =>
+{
+    Console.WriteLine($"Reconnected, connectionId={connectionId}");
+    return Task.CompletedTask;
+});
+
+hub.AddListenerClosed((exception) =>
+{
+    Console.WriteLine(exception != null
+        ? $"Connection closed abnormally: {exception.Message}"
+        : "Connection closed normally");
+    return Task.CompletedTask;
+});
+
+await hub.StartAsync();
+
+// 2. Standard update flow
+await new GeneralUpdateBootstrap()
+    .SetSource(
+        updateUrl: "https://update.example.com/api/upgrade/verification",
+        appSecretKey: "your-app-secret")
+    .SetOption(Option.AppType, AppType.Client)
+    .AddListenerException((_, e) => Console.WriteLine(e.Exception))
+    .LaunchAsync();
+
+// 3. Cleanup on exit
+// await hub.StopAsync();
+// await hub.DisposeAsync();
 ```
 
-`LaunchAsync` reads `Option.AppType` and selects a role strategy:
+#### Scenario 7: DI Container Registration for UpgradeHubService
 
-| `Option.AppType` | Strategy | Description |
-| --- | --- | --- |
-| `AppType.Client` | `ClientStrategy` | Main-app side: check version, download packages, prepare context, launch updater. |
-| `AppType.Upgrade` | `UpdateStrategy` | Updater side: read IPC context and replace files. |
-| `AppType.OssClient` | `OssStrategy` | OSS main-app update role. |
-| `AppType.OssUpgrade` | `OssStrategy` | OSS updater role. |
+**Description:** Register `IUpgradeHubService` in Prism / Generic Host / ASP.NET Core DI containers.
+
+```csharp
+using GeneralUpdate.Core.Hubs;
+
+// Prism example
+protected override void RegisterTypes(IContainerRegistry containerRegistry)
+{
+    containerRegistry.Register<IUpgradeHubService, UpgradeHubService>();
+}
+
+public MainWindowViewModel(IUpgradeHubService hubService)
+{
+    hubService.AddListenerReceive((message) =>
+        Console.WriteLine($"Push: {message}"));
+    _ = hubService.StartAsync();
+}
+
+// Generic Host / ASP.NET Core example
+builder.Services.AddSingleton<IUpgradeHubService>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    return new UpgradeHubService(
+        config["HubUrl"]!,
+        appkey: config["AppSecretKey"]);
+});
+```
+
+---
+
+## 5. Basic Usage Examples
+
+### 5.1 Quick Start (Minimal Demo)
+
+Minimal config using manifest for identity auto-discovery:
+
+```csharp
+using GeneralUpdate.Core;
+
+await new GeneralUpdateBootstrap()
+    .SetSource(
+        updateUrl: "https://update.example.com/api/upgrade/verification",
+        appSecretKey: "your-app-secret")
+    .SetOption(Option.AppType, AppType.Client)
+    .LaunchAsync();
+```
+
+Upgrade process entry point (`Update.exe`):
 
 ```csharp
 await new GeneralUpdateBootstrap()
@@ -92,139 +483,7 @@ await new GeneralUpdateBootstrap()
     .LaunchAsync();
 ```
 
-When the updater is launched by the main app, Core restores the update context through encrypted file IPC. In that case the updater normally does not call `SetConfig` again.
-
-## Execution strategy overview {#execution-strategies}
-
-Core includes three upper-level execution strategies: standard update, OSS update, and silent update. They are not separate public APIs. `LaunchAsync()` selects them from `Option.AppType`, `Option.Silent`, and the current configuration.
-
-| Strategy | Trigger | Main roles | Best for |
-| --- | --- | --- | --- |
-| [Standard update strategy](#standard-update-strategy) | `Option.AppType = AppType.Client` or `AppType.Upgrade`, with `Option.Silent = false` | Main app checks/downloads; updater replaces files | Desktop apps with a version-check API, standard package update, and manifest version write-back |
-| [OSS update strategy](#oss-update-strategy) | `Option.AppType = AppType.OssClient` or `AppType.OssUpgrade` | Main app downloads OSS version config; updater downloads and extracts assets | Apps whose version config and packages are hosted on object storage/CDN |
-| [Silent update strategy](#silent-update-strategy) | `Option.AppType = AppType.Client` and `Option.Silent = true` | Main app polls in the background; updater starts on process exit | Products that want no-interruption download preparation and deferred replacement |
-
-### Standard update strategy {#standard-update-strategy}
-
-Standard update is implemented by `ClientStrategy` and `UpdateStrategy`. `ClientStrategy` runs in the main application and discovers the local manifest, requests server versions, builds a download plan, downloads packages, prepares encrypted IPC context, and launches the updater. `UpdateStrategy` runs in the updater process and reads IPC context, extracts packages, applies differential patches, replaces files, writes versions back, and optionally starts the main app.
-
-The core standard workflow is:
-
-1. The main app calls `SetConfig(...)` or `SetSource(...)`, then `LaunchAsync()`.
-2. Core automatically reads `generalupdate.manifest.json` from the install directory and fills identity fields that were not explicitly provided, including `MainAppName`, `UpdateAppName`, `ClientVersion`, `UpgradeClientVersion`, `ProductId`, and `InstallPath`.
-3. `ClientStrategy` uses `DownloadSource` to get server assets and compares main-app and updater versions independently.
-4. `DownloadPlanBuilder` filters frozen packages, sorts by version, checks `MinClientVersion`, and builds the download plan.
-5. Download uses `IDownloadOrchestrator` to download assets in batch. The default orchestrator supports concurrency, resume, retry, and SHA256 verification.
-6. Core splits assets by `AppType` into updater packages and main-app packages, then dispatches by scenario.
-7. Updater packages can be applied from the main-app side first and write back `UpgradeClientVersion`; main-app packages are passed to the updater through encrypted IPC.
-8. After the updater replaces files, Core automatically writes `ClientVersion` back through the manifest system. Application code does not need to maintain the local version manually.
-
-| Scenario | Condition | Core behavior |
-| --- | --- | --- |
-| `None` | Neither main app nor updater needs update | Dispatches the no-update event and exits. |
-| `UpgradeOnly` | Only the updater needs update | The main app downloads updater packages, applies them to the updater directory, writes back `UpgradeClientVersion`, and keeps running. |
-| `MainOnly` | Only the main app needs update | The main app downloads main-app packages, writes IPC context, and launches the updater to replace main-app files. |
-| `Both` | Both main app and updater need update | Core updates the updater first and writes back `UpgradeClientVersion`, then hands main-app packages to the new updater. |
-
-```csharp
-await new GeneralUpdateBootstrap()
-    .SetSource(
-        updateUrl: "https://update.example.com/api/upgrade/verification",
-        appSecretKey: "your-app-secret",
-        reportUrl: "https://update.example.com/api/upgrade/report")
-    .SetOption(Option.AppType, AppType.Client)
-    .SetOption(Option.PatchEnabled, true)
-    .SetOption(Option.DiffMode, DiffMode.Parallel)
-    .SetOption(Option.MaxConcurrency, 4)
-    .LaunchAsync();
-```
-
-### OSS update strategy {#oss-update-strategy}
-
-OSS update uses the same `OssStrategy` with two roles: `OssClient` and `OssUpgrade`. It is intended for hosting the version JSON and update packages on OSS, S3, MinIO, CDN, or a static file server, without depending on the standard version-check API.
-
-| Role | Local behavior | Key configuration |
-| --- | --- | --- |
-| `AppType.OssClient` | Downloads the OSS version config from `UpdateUrl` into the install directory, compares the remote latest version with local `ClientVersion`, starts the updater if needed, and exits. | `UpdateUrl` points to the version config file. `MainAppName` / `UpdateAppName` can come from the manifest. |
-| `AppType.OssUpgrade` | Reads the local version config or a custom `DownloadSource`, filters assets newer than the local version, downloads them to the install directory, extracts ZIP files, deletes archives, starts the main app, and exits. | The install directory must be writable. Versions in the asset list must be comparable. |
-
-The OSS version config is saved as `{MainAppName}_versions.json` or `{UpdateAppName}_versions.json`. Registering `DownloadSource<T>()` lets the OSS updater skip the default file-reading path and return assets from your own source. Registering `DownloadOrchestrator<T>()` can fully replace the download process.
-
-```csharp
-await new GeneralUpdateBootstrap()
-    .SetSource(
-        updateUrl: "https://cdn.example.com/myapp_versions.json",
-        appSecretKey: "oss-mode-secret")
-    .SetOption(Option.AppType, AppType.OssClient)
-    .LaunchAsync();
-```
-
-```csharp
-await new GeneralUpdateBootstrap()
-    .SetOption(Option.AppType, AppType.OssUpgrade)
-    .LaunchAsync();
-```
-
-### Silent update strategy {#silent-update-strategy}
-
-Silent update only applies to `AppType.Client`. When enabled, `LaunchAsync()` enters the silent branch, creates the same fully configured `ClientStrategy` as standard update, sets `LaunchAfterPrepare` to `false`, then hands it to `SilentPollOrchestrator` for background polling.
-
-Silent mode does not reimplement update logic. It moves "check and download" into the background and defers "start updater and replace files" until process exit. The user can keep using the current process while packages are prepared, and actual replacement happens after the app exits.
-
-| Stage | Standard update | Silent update |
-| --- | --- | --- |
-| Version check | Runs once after user/code triggers update | Runs in the background every `Option.SilentPollIntervalMinutes` |
-| Download | Downloads immediately after update is found | Downloads in the background after update is found |
-| Start updater | Starts after the main app prepares update context | Starts from the `ProcessExit` handler |
-| User experience | Explicit "check/update now" flow | No-interruption update preparation |
-
-```csharp
-await new GeneralUpdateBootstrap()
-    .SetSource(
-        updateUrl: "https://update.example.com/api/upgrade/verification",
-        appSecretKey: "your-app-secret")
-    .SetOption(Option.AppType, AppType.Client)
-    .SetOption(Option.Silent, true)
-    .SetOption(Option.SilentPollIntervalMinutes, 30)
-    .SetOption(Option.LaunchClientAfterUpdate, true)
-    .LaunchAsync();
-```
-
-Silent update still uses registered `IUpdateHooks`, `IUpdateReporter`, download extensions, SSL policy, auth policy, and differential pipeline. It is "silent download preparation", not "silent in-place file replacement"; main-app files should still be replaced by the updater after the main app exits.
-
-### Cancel
-
-```csharp
-public void Cancel()
-```
-
-`Cancel` signals the internal `CancellationTokenSource`. Strategies observe the token at safe checkpoints.
-
-```csharp
-private GeneralUpdateBootstrap? _bootstrap;
-
-async Task StartUpdateAsync(UpdateRequest request)
-{
-    _bootstrap = new GeneralUpdateBootstrap()
-        .SetConfig(request)
-        .AddListenerException((_, e) => Console.WriteLine(e.Exception));
-
-    await _bootstrap.LaunchAsync();
-}
-
-void CancelUpdate()
-{
-    _bootstrap?.Cancel();
-}
-```
-
-### SetConfig(UpdateRequest)
-
-```csharp
-public GeneralUpdateBootstrap SetConfig(UpdateRequest configInfo)
-```
-
-`SetConfig(UpdateRequest)` validates the request and maps it into the internal `UpdateContext`. For non-`Upgrade` roles it also initializes the temporary update directory and blacklist matcher.
+### 5.2 Basic Parameter Combination
 
 ```csharp
 using GeneralUpdate.Core;
@@ -239,247 +498,120 @@ var request = new UpdateRequest
     InstallPath = AppDomain.CurrentDomain.BaseDirectory,
     ClientVersion = "1.0.0",
     AppSecretKey = "your-app-secret",
-    ProductId = "your-product-id",
-    Files = new List<string> { "appsettings.json" },
-    Formats = new List<string> { ".log", ".tmp" },
-    Directories = new List<string> { "logs", "cache" }
+    ProductId = "your-product-id"
 };
 
 await new GeneralUpdateBootstrap()
     .SetConfig(request)
     .SetOption(Option.AppType, AppType.Client)
-    .LaunchAsync();
-```
-
-### SetConfig(string)
-
-```csharp
-public GeneralUpdateBootstrap SetConfig(string filePath)
-```
-
-`SetConfig(string)` reads a UTF-8 JSON `UpdateRequest`. A bare filename is resolved from the app base directory; relative and absolute paths are used as provided.
-
-```json
-{
-  "updateUrl": "https://update.example.com/api/upgrade/verification",
-  "reportUrl": "https://update.example.com/api/upgrade/report",
-  "updateAppName": "UpgradeSample.exe",
-  "mainAppName": "ClientSample.exe",
-  "installPath": "C:\\Program Files\\MyApp",
-  "clientVersion": "1.0.0",
-  "appSecretKey": "your-app-secret",
-  "productId": "your-product-id"
-}
-```
-
-```csharp
-await new GeneralUpdateBootstrap()
-    .SetConfig("update_config.json")
-    .SetOption(Option.AppType, AppType.Client)
-    .LaunchAsync();
-```
-
-### SetSource
-
-```csharp
-public GeneralUpdateBootstrap SetSource(
-    string updateUrl,
-    string appSecretKey,
-    string? reportUrl = null,
-    string? scheme = null,
-    string? token = null)
-```
-
-`SetSource` is a lightweight entry point when identity metadata is provided by `generalupdate.manifest.json`, leaving only the server endpoint and secret in application code.
-
-```csharp
-await new GeneralUpdateBootstrap()
-    .SetSource(
-        updateUrl: "https://update.example.com/api/upgrade/verification",
-        appSecretKey: "your-app-secret",
-        reportUrl: "https://update.example.com/api/upgrade/report",
-        scheme: "Bearer",
-        token: "access-token")
-    .SetOption(Option.AppType, AppType.Client)
-    .LaunchAsync();
-```
-
-### UseDiffPipeline
-
-```csharp
-public GeneralUpdateBootstrap UseDiffPipeline(Action<DiffPipelineBuilder>? configure)
-```
-
-`UseDiffPipeline` customizes differential patch processing. Without it, the bootstrap builds a default pipeline using `BsdiffDiffer`, `DefaultCleanMatcher`, `DefaultDirtyMatcher`, parallelism `2`, and the Core progress reporter. For algorithm differences, patch phases, and concurrency settings, see [Differential algorithms and patch pipeline](#differential-pipeline).
-
-```csharp
-using GeneralUpdate.Core.Differential;
-using GeneralUpdate.Core.Models;
-using GeneralUpdate.Core.Pipeline;
-using GeneralUpdate.Differential.Differ;
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .UseDiffPipeline(builder =>
-    {
-        builder
-            .UseDiffer(new StreamingHdiffDiffer())
-            .UseCleanMatcher(new DefaultCleanMatcher())
-            .UseDirtyMatcher(new DefaultDirtyMatcher())
-            .WithParallelism(4)
-            .WithStopOnFirstError(true)
-            .WithProgress(new Progress<DiffProgress>(p =>
-            {
-                Console.WriteLine($"{p.Completed}/{p.Total}: {p.FileName}");
-            }));
-    })
-    .SetOption(Option.PatchEnabled, true)
-    .LaunchAsync();
-```
-
-## Differential algorithms and patch pipeline {#differential-pipeline}
-
-Core's differential support has two layers: `IBinaryDiffer` defines how a single file generates/applies a patch, and `DiffPipeline` decides which files in a directory need patches, which files are new/deleted, and how multiple files are processed in parallel. Most users only need `Option.PatchEnabled`; tune `UseDiffPipeline(...)` only when you need performance or compatibility control.
-
-### Differential algorithm types
-
-| Algorithm / implementation | Default position | Characteristics | Best for |
-| --- | --- | --- | --- |
-| `BsdiffDiffer` | Default used by `GeneralUpdateBootstrap` | Classic BSDIFF 4.0 algorithm, BZip2 by default, strong patch-format compatibility. | Projects that prioritize compatibility or already use BSDIFF-based packages. |
-| `StreamingHdiffDiffer` | Default differ when constructing `DiffPipeline` directly; can also be selected through `UseDiffPipeline` | Uses block-hash indexing for candidate matching, lower typical complexity, Deflate by default, and emits a BSDIFF-compatible patch format readable by Dirty. | Projects with large files that want to reduce patch-generation memory/CPU pressure. |
-| Custom `IBinaryDiffer` | Registered with `UseDiffPipeline(builder => builder.UseDiffer(...))` | Fully replaces the single-file binary differ. | Internal patch formats, encrypted patches, or domain-specific binary diff algorithms. |
-
-`BsdiffDiffer` can also use a custom compression provider. `BZip2CompressionProvider` is the compatible default, `DeflateCompressionProvider` favors speed, and `.NET 6+` can use `BrotliCompressionProvider` for a better compression/decompression balance. Make sure the runtime that applies patches can recognize the generated format version.
-
-```csharp
-using GeneralUpdate.Core.Pipeline;
-using GeneralUpdate.Differential.Abstractions;
-using GeneralUpdate.Differential.Differ;
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .UseDiffPipeline(builder =>
-    {
-        builder
-            .UseDiffer(new BsdiffDiffer(new DeflateCompressionProvider()))
-            .WithParallelism(4);
-    })
-    .SetOption(Option.PatchEnabled, true)
-    .LaunchAsync();
-```
-
-### Clean and Dirty phases
-
-| Phase | Method | Runs on | Purpose |
-| --- | --- | --- | --- |
-| Clean | `DiffPipeline.CleanAsync(oldDir, newDir, patchDir)` | Publishing/tooling side | Compares old and new directories, creates `.patch` files, copies new files, and writes `generalupdate.delete.json`. |
-| Dirty | `DiffPipeline.DirtyAsync(appDir, patchDir)` | Client updater side | Applies `.patch` files to old files, copies new files, and removes old files from the delete manifest. |
-
-Core mainly consumes the Dirty phase; patch generation should normally be handled by `GeneralUpdate.Tools` or your release pipeline. In standard update, after downloads finish, the updater extracts packages and calls `DiffPipeline.DirtyAsync(...)` through `PatchMiddleware` when `PatchEnabled = true`.
-
-### Download concurrency and differential parallelism {#download-diff-concurrency}
-
-Core supports two layers of multithreaded work: the download phase can download multiple assets concurrently, and the differential phase can process multiple file patches in parallel. The built-in standard flow completes the current download plan before entering extract/diff/replace. If you need a finer-grained download/apply pipeline, take over with a custom `IDownloadOrchestrator` or custom `IStrategy`.
-
-| Layer | Control API | Default behavior | Notes |
-| --- | --- | --- | --- |
-| Batch download concurrency | `Option.DiffMode` + `Option.MaxConcurrency` | `DiffMode.Serial` forces download concurrency to `1`; `DiffMode.Parallel` uses `MaxConcurrency`, clamped to `1` through `Environment.ProcessorCount * 2`. | `DefaultDownloadOrchestrator` uses `SemaphoreSlim` and supports retry, resume, and verification. |
-| Differential file parallelism | `UseDiffPipeline(...WithParallelism(n))` | Bootstrap default is `2`. | `DiffPipeline` creates tasks per file and limits simultaneous patch generation/application with `SemaphoreSlim`. |
-| Post-download processing | `DownloadPipeline<T>()` | Default SHA256 verification. | Runs after each successful asset download; can be replaced with decryption, scanning, or extra validation. |
-
-```csharp
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
     .SetOption(Option.DiffMode, DiffMode.Parallel)
-    .SetOption(Option.MaxConcurrency, 6)
-    .UseDiffPipeline(builder =>
+    .SetOption(Option.MaxConcurrency, 4)
+    .SetOption(Option.PatchEnabled, true)
+    .AddListenerProgress((_, e) =>
     {
-        builder
-            .UseDiffer(new StreamingHdiffDiffer())
-            .WithParallelism(4);
+        if (e.Progress != null)
+            Console.WriteLine($"{e.Progress.AssetName}: {e.Progress.Percentage:F1}%");
     })
+    .AddListenerException((_, e) => Console.WriteLine(e.Exception))
     .LaunchAsync();
 ```
 
-Higher concurrency is not always better. Increase `Option.MaxConcurrency` when the network is slow but disk is fast; increase `WithParallelism` when there are many patch files and the device has SSD storage; lower both for HDDs, low-end machines, or silent background updates to avoid hurting main-app responsiveness.
-
-## Configuration model: UpdateRequest
-
-`UpdateRequest` is the main external configuration object. It inherits `UpdateConfiguration` and validates required fields in `Validate()`.
-
-### Required or strongly recommended properties
-
-| Property | Description |
-| --- | --- |
-| `UpdateUrl` | Version-check API URL. Must be an absolute URL. |
-| `UpdateAppName` | Updater executable name. Defaults to `Update.exe`. |
-| `MainAppName` | Main application executable name. |
-| `ClientVersion` | Current main application version. |
-| `AppSecretKey` | Secret shared with the update server. |
-| `InstallPath` | Application install directory. Defaults to the current app base directory. |
-
-### Optional properties
-
-| Property | Description |
-| --- | --- |
-| `ReportUrl` | Update status report API. |
-| `UpdateLogUrl` | Update log page URL. |
-| `UpgradeClientVersion` | Updater application's own version. |
-| `ProductId` | Product identifier when one server manages multiple products. |
-| `UpdatePath` | Directory containing the updater; falls back to `InstallPath`. |
-| `Bowl` | Helper process name to close before update. |
-| `Scheme` / `Token` | Request authentication metadata. |
-| `Files` | Specific files to skip during update. |
-| `Formats` | File extensions to skip, such as `.log`. |
-| `Directories` | Directories to skip. |
-
-### UpdateRequestBuilder
-
-`UpdateRequestBuilder` provides a fluent builder and validates on `Build()`.
+### 5.2.1 SignalR Real-Time Push Quick Start
 
 ```csharp
+using GeneralUpdate.Core.Hubs;
+
+// Create push client
+var hub = new UpgradeHubService(
+    "http://localhost:5000/UpgradeHub",
+    appkey: Guid.NewGuid().ToString());
+
+// Subscribe to push messages
+hub.AddListenerReceive((message) =>
+{
+    Console.WriteLine($"Push notification: {message}");
+});
+
+// Establish connection
+await hub.StartAsync();
+
+Console.WriteLine("Connected, waiting for server push...");
+Console.ReadLine();
+
+// Stop connection (retain reconnect ability)
+await hub.StopAsync();
+
+// Release resources (cannot be reused)
+await hub.DisposeAsync();
+```
+
+### 5.3 Production-Ready Example
+
+Full Client-side update with events, diff pipeline, concurrency control, and status reporting:
+
+```csharp
+using GeneralUpdate.Core;
 using GeneralUpdate.Core.Configuration;
+using GeneralUpdate.Core.Pipeline;
+using GeneralUpdate.Core.Models;
+using GeneralUpdate.Core.Download;
+using GeneralUpdate.Differential.Differ;
 
 var request = new UpdateRequestBuilder()
-    .SetUpdateUrl("https://update.example.com/api/upgrade/verification")
-    .SetReportUrl("https://update.example.com/api/upgrade/report")
-    .SetUpgradeAppName("UpgradeSample.exe")
-    .SetMainAppName("ClientSample.exe")
+    .SetUpdateUrl("https://update.mycompany.com/api/upgrade/verification")
+    .SetReportUrl("https://update.mycompany.com/api/upgrade/report")
+    .SetUpgradeAppName("MyApp.Upgrade.exe")
+    .SetMainAppName("MyApp.exe")
     .SetClientVersion("1.0.0")
-    .SetAppSecretKey("your-app-secret")
-    .SetProductId("your-product-id")
+    .SetUpgradeClientVersion("1.0.0")
+    .SetAppSecretKey("prod-secret-key")
+    .SetProductId("my-product")
     .SetInstallPath(AppDomain.CurrentDomain.BaseDirectory)
-    .SetFiles(new List<string> { "appsettings.json" })
-    .SetFormats(new List<string> { ".log", ".tmp" })
-    .SetDirectories(new List<string> { "logs" })
     .Build();
+
+var bootstrap = new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .SetOption(Option.AppType, AppType.Client)
+    .SetOption(Option.DiffMode, DiffMode.Parallel)
+    .SetOption(Option.MaxConcurrency, 4)
+    .SetOption(Option.DownloadTimeout, 120)
+    .SetOption(Option.PatchEnabled, true)
+    .SetOption(Option.BackupEnabled, true)
+    .SetOption(Option.VerifyChecksum, true)
+    .SetOption(Option.RetryCount, 5)
+    .SetOption(Option.RetryInterval, TimeSpan.FromSeconds(2))
+    .UseDiffPipeline(builder => builder
+        .UseDiffer(new StreamingHdiffDiffer())
+        .WithParallelism(4))
+    .AddListenerUpdateInfo((_, e) =>
+    {
+        Console.WriteLine(e.Info?.Code == "404"
+            ? "Already up to date."
+            : $"Found {e.Info?.Body?.Count ?? 0} version(s).");
+    })
+    .AddListenerProgress((_, e) =>
+    {
+        if (e.Progress != null)
+            Console.WriteLine($"[Download] {e.Progress.AssetName}: {e.Progress.Percentage:F1}%");
+        if (e.DiffProgress != null)
+            Console.WriteLine($"[Patch] {e.DiffProgress.CurrentFile}: {e.DiffProgress.Completed}/{e.DiffProgress.Total}");
+    })
+    .AddListenerMultiAllDownloadCompleted((_, e) =>
+    {
+        Console.WriteLine(e.IsAllDownloadCompleted
+            ? "All downloads completed."
+            : $"Failed: {e.FailedVersions.Count}");
+    })
+    .AddListenerException((_, e) => Console.WriteLine($"Error: {e.Message}"));
+
+await bootstrap.LaunchAsync();
 ```
 
-`UpdateRequestBuilder.Create()` attempts to load `update_config.json` from the app runtime directory and throws `FileNotFoundException` if it is missing.
+---
 
-```csharp
-var request = UpdateRequestBuilder.Create().Build();
-```
+## 6. Global Configuration
 
-## Application identity manifest: generalupdate.manifest.json
-
-`generalupdate.manifest.json` is the application identity manifest generated by `GeneralUpdate.Tools` and consumed by Core. Its main value is **saving developer setup and maintenance time**: Tools writes stable metadata such as the main executable name, current version, updater executable name, product ID, and updater directory into the manifest, and Core consumes that information at runtime. Application code only needs to provide runtime or sensitive values such as server URLs, secrets, and tokens.
-
-In other words, with the manifest model, integrating GeneralUpdate no longer requires hand-writing a large complete `UpdateRequest`. Generate `generalupdate.manifest.json` with Tools during publishing, provide a small set of sensitive values at runtime, and the update workflow can start directly. This is the recommended minimal configuration path for Core.
-
-Place the file in the application install directory, the same directory referenced by `UpdateRequest.InstallPath`. By default, `InstallPath` is `AppDomain.CurrentDomain.BaseDirectory`, so desktop applications normally place the manifest in the main app output root.
-
-```text
-MyProduct/
-├─ ClientSample.exe
-├─ generalupdate.manifest.json
-└─ update/
-   └─ UpgradeSample.exe
-```
-
-### Manifest structure
-
-The JSON generated by Tools uses camelCase property names. The Core-side type is `ManifestInfo`.
+### Manifest Configuration
 
 ```json
 {
@@ -493,717 +625,44 @@ The JSON generated by Tools uses camelCase property names. The Core-side type is
 }
 ```
 
-| JSON field | Core field | Description |
+### Configuration Priority
+
+| Priority | Source | Description |
 | --- | --- | --- |
-| `mainAppName` | `MainAppName` | Main application executable name. Used to restart the app after update and identify the current product. |
-| `clientVersion` | `ClientVersion` | Current main application version. Core sends it to the server to check whether a main-app update exists. |
-| `appType` | `AppType` | Current process role, such as `Client`, `Upgrade`, `OssClient`, or `OssUpgrade`. |
-| `updateAppName` | `UpdateAppName` | Updater executable name. Defaults to `Update.exe`. |
-| `upgradeClientVersion` | `UpgradeClientVersion` | Updater application's own version. Core uses it to decide whether the updater must be updated first. |
-| `productId` | `ProductId` | Product identifier for servers that manage multiple products. |
-| `updatePath` | `UpdatePath` | Directory containing the updater. It can be relative to `InstallPath`, for example `update/`. |
+| 1 (Highest) | Code: `SetConfig(UpdateRequest)` or `SetSource(...)` | Overrides all other sources |
+| 2 | `generalupdate.manifest.json` fields | Auto-fills fields not explicitly set in code |
+| 3 (Lowest) | Component internal defaults | `UpdateAppName = "Update.exe"`, `InstallPath = BaseDirectory`, etc. |
 
-The manifest intentionally does not include `UpdateUrl`, `ReportUrl`, `AppSecretKey`, `Scheme`, or `Token`. This keeps Tools responsible for build-time identity metadata while secrets still come from application code, a configuration service, or the deployment environment.
+### Version Write-Back
 
-### Minimal configuration model {#minimal-configuration-model}
+After a successful update, Core automatically writes back the version to `generalupdate.manifest.json`:
 
-The manifest model splits update configuration into two parts:
-
-| Configuration type | Provided by | Why split it this way |
-| --- | --- | --- |
-| Stable identity metadata | `GeneralUpdate.Tools` generates it into `generalupdate.manifest.json` | These values come from projects, versions, and publish directories. Repeating them in code is error-prone and increases the time needed to onboard every application. |
-| Runtime / sensitive values | Application code, configuration service, environment variables, or deployment system | Server endpoints, secrets, and tokens may differ by environment and should not be fixed into the publishable manifest. |
-
-The most common integration path is:
-
-1. Generate `generalupdate.manifest.json` with `GeneralUpdate.Tools` and ship it with the application.
-2. When starting updates, configure only `UpdateUrl`, `AppSecretKey`, `ReportUrl`, and any required authentication values.
-3. Let `GeneralUpdateBootstrap` read the manifest internally, fill application identity, versions, and updater location, then write the local version back after a successful update.
-
-This keeps the developer-facing configuration down to "sensitive values + a few runtime options". It reduces boilerplate and avoids repeatedly maintaining main-app names, updater names, local versions, and product IDs across applications.
-
-### How Tools generates the manifest
-
-The `GeneralUpdate.Tools` configuration flow parses the main-app and updater `.csproj` files, validates version values, and emits `generalupdate.manifest.json`.
-
-| Tools step | Responsibility |
+| Scenario | Write-Back Field |
 | --- | --- |
-| `CsprojParseStep` | Parses the main application `.csproj`; if an updater `.csproj` is provided, parses it as well. |
-| `SemverValidateStep` | Validates that `ClientVersion` and `UpgradeClientVersion` use semver, for example `1.0.0`. |
-| `ManifestBuildStep` | Fills missing `MainAppName` / `UpdateAppName` from `.csproj` `AssemblyName` values. |
-| `FileEmitStep` | Writes the manifest to the output directory with the fixed name `generalupdate.manifest.json`. |
+| Main app update completes | `ClientVersion` |
+| Upgrade process update completes | `UpgradeClientVersion` |
 
-The sample publishing flow in the configuration UI also calls `SamplePublisherService.PublishAsync(...)` to place the main-app output, updater output, and manifest into one runnable sample directory. New users therefore do not need to hand-write a complete `UpdateRequest`: they can generate the manifest with Tools and only add server endpoints and secrets in application code.
-
-### Using the manifest with the bootstrap
-
-With the manifest in place, application code does not need to care about identity fields such as `MainAppName`, `ClientVersion`, `UpdateAppName`, `UpgradeClientVersion`, `ProductId`, or `UpdatePath`, and it does not need to load `generalupdate.manifest.json` manually. The bootstrap reads `InstallPath/generalupdate.manifest.json` internally during the update workflow and carries that identity metadata into version checking, downloading, updater launch, and version write-back.
-
-When the install directory is the current application directory, pass only the server endpoint and secret to `SetSource`:
-
-```csharp
-await new GeneralUpdateBootstrap()
-    .SetSource(
-        updateUrl: "https://update.example.com/api/upgrade/verification",
-        appSecretKey: "your-app-secret",
-        reportUrl: "https://update.example.com/api/upgrade/report")
-    .SetOption(Option.AppType, AppType.Client)
-    .LaunchAsync();
-```
-
-If the actual install directory is not the current process base directory, provide `InstallPath` through `UpdateRequest` while still keeping manifest identity fields out of code:
-
-```csharp
-using GeneralUpdate.Core;
-using GeneralUpdate.Core.Configuration;
-
-var request = new UpdateRequest
-{
-    UpdateUrl = "https://update.example.com/api/upgrade/verification",
-    ReportUrl = "https://update.example.com/api/upgrade/report",
-    AppSecretKey = "your-app-secret",
-    InstallPath = @"C:\Program Files\MyProduct"
-};
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .SetOption(Option.AppType, AppType.Client)
-    .LaunchAsync();
-```
-
-The recommended responsibility split is:
-
-| Provided by manifest | Provided by code or environment |
-| --- | --- |
-| `MainAppName`, `ClientVersion`, `UpdateAppName`, `UpgradeClientVersion`, `ProductId`, `UpdatePath` | `UpdateUrl`, `ReportUrl`, `AppSecretKey`, `Scheme`, `Token`, events, extension points, runtime options |
-
-### Version write-back
-
-In the `generalupdate.manifest.json` model, the manifest is also the local version state file. Developers generate it with Tools for the first release, but they do not need to write application code that updates the local version after every successful update. After an update succeeds, Core automatically writes the applied version back to the same `generalupdate.manifest.json` under the install directory:
-
-| Scenario | Field written back |
-| --- | --- |
-| Main application update completed | `ClientVersion` |
-| Updater self-update completed | `UpgradeClientVersion` |
-
-On the next polling cycle or process start, the bootstrap validates from the latest local version stored in the manifest instead of the build-time version. The purpose of write-back is to move local version maintenance into Core's update workflow, so application code does not need to maintain `ClientVersion` or `UpgradeClientVersion` separately. This requires the install directory to be writable; if the application is installed under a restricted directory, ensure the updater has permission to update the manifest file.
-
-## Runtime options: Option
-
-Core uses strongly typed `Option<T>` values and sets them with `SetOption`.
-
-```csharp
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .SetOption(Option.AppType, AppType.Client)
-    .SetOption(Option.MaxConcurrency, 4)
-    .SetOption(Option.VerifyChecksum, true)
-    .LaunchAsync();
-```
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `Option.AppType` | `AppType` | `Client` | Current process role. |
-| `Option.DiffMode` | `DiffMode` | `Serial` | Execution mode. `Serial` makes the default download orchestrator download serially; `Parallel` allows concurrency based on `Option.MaxConcurrency`. |
-| `Option.Encoding` | `Encoding` | `UTF8` | Package processing encoding. |
-| `Option.Format` | `Format` | `Zip` | Package archive format. |
-| `Option.DownloadTimeout` | `int?` | `30` | Download timeout in seconds. |
-| `Option.PatchEnabled` | `bool?` | `true` | Enables differential patch handling. |
-| `Option.BackupEnabled` | `bool?` | `true` | Backs up replaced files. |
-| `Option.Silent` | `bool` | `false` | Enables silent polling updates. |
-| `Option.SilentPollIntervalMinutes` | `int` | `60` | Silent polling interval. |
-| `Option.LaunchClientAfterUpdate` | `bool` | `true` | Starts the main app after update. |
-| `Option.MaxConcurrency` | `int` | `3` | Max concurrency for the default download orchestrator; the actual value is clamped to a safe range. |
-| `Option.EnableResume` | `bool` | `true` | Enables resumable downloads. |
-| `Option.RetryCount` | `int` | `3` | Download retry count. |
-| `Option.VerifyChecksum` | `bool` | `true` | Verifies downloaded file hashes. |
-| `Option.RetryInterval` | `TimeSpan` | `1s` | Delay between retries. |
-
-Passing `null` to a nullable option removes the custom value and falls back to the default.
-
-## Events {#event-api}
-
-Events are for observing update state. Complex business flow should be implemented with `IUpdateHooks` or documented in cookbook workflows.
-
-### Individual callbacks
-
-Individual callbacks are useful when you want to subscribe to one notification directly in the bootstrap chain. Core dispatches events through the global `EventManager` by `EventArgs` type. Multiple callbacks can be registered for the same type. If one callback throws, the exception is written through `GeneralTracer` and other callbacks are still invoked.
-
-Callbacks may be raised from the update workflow thread, download task threads, or differential task threads. They are not marshalled back to the UI thread automatically. WPF, Avalonia, WinUI, MAUI, and similar clients should switch to the Dispatcher / SynchronizationContext before touching UI state. Expensive business work should also be queued to background workers so it does not block download or differential parallelism.
-
-| Method | Argument type | Trigger in the current code | Important fields | Recommended use |
-| --- | --- | --- | --- | --- |
-| `AddListenerUpdateInfo` | `UpdateInfoEventArgs` | Fired by the standard `Client` strategy after version comparison. When no update is needed, it still fires once with `Info.Code = 404` and an empty `Info.Body`; when updates are needed, `Info.Body` contains the `VersionEntry` list to download. | `Info.Code`, `Info.Message`, `Info.Body`; `VersionEntry` includes `RecordId`, `Name`, `Version`, `Url`, `Hash`, `AppType`, `IsForcibly`, `UpgradeMode`, `FromVersion`, `ToVersion`, and more. | Show release notes, update count, forced-update hints, or log version metadata. Do not replace files here. |
-| `AddListenerUpdatePrecheck` | `Func<UpdateInfoEventArgs, bool>` | Runs after `UpdateInfo` and before hooks/download. In the current `ClientStrategy.CanSkip` implementation, returning `true` skips this non-forced update; returning `false` continues. Forced updates do not enter the skip check. | Same input as `UpdateInfoEventArgs`; it can read all `VersionEntry` items involved in this update, including version numbers, release notes, hashes, package URLs, upgrade modes, and cross-version ranges. | Make lightweight pre-download decisions. You can also format the version information into a dialog so the user can read the update contents and decide whether to continue. Use `IUpdateHooks.OnBeforeUpdateAsync` for asynchronous, cancelable, or side-effecting workflows. |
-| `AddListenerProgress` | `ProgressEventArgs` | Fired when the default download path reports `DownloadProgress`; also fired when the differential Clean / Dirty pipeline reports `DiffProgress`. Exactly one of `Progress` or `DiffProgress` is non-null in a single event. | Download: `Progress.AssetName`, `BytesDownloaded`, `TotalBytes`, `Percentage`, `Status`. Differential: `DiffProgress.Completed`, `Total`, `CurrentFile`, `Percentage`, `IsComplete`, `Error`. | Update progress bars, status text, downloaded size, and differential patch progress. Prefer this event for default download progress. |
-| `AddListenerMultiDownloadCompleted` | `MultiDownloadCompletedEventArgs` | Fired when `DownloadProgressReporter` receives `DownloadStatus.Completed`. In the default bridge, `Version` carries `AssetName`; custom downloaders may pass their own object. | `Version`, `IsCompleted`. | Mark one asset/reporting item as completed or append a download log entry. Do not treat it as "all downloads completed". |
-| `AddListenerMultiAllDownloadCompleted` | `MultiAllDownloadCompletedEventArgs` | Fired once after `DefaultDownloadOrchestrator` waits for all download tasks. With parallel downloads, this happens after every task has completed and failed results have been collected. | `IsAllDownloadCompleted`; `FailedVersions` is the failure detail list, with entries shaped as `(asset, errorMessage)`. | Refresh overall UI, write a failure summary, or decide whether to show a retry entry after all downloads finish. |
-| `AddListenerMultiDownloadError` | `MultiDownloadErrorEventArgs` | Fired when `DownloadProgressReporter` receives `DownloadStatus.Failed`. In the default bridge, `Version` may be the `AssetName`. | `Exception`, `Version`. | Log one failed asset, show the failed item, or send external monitoring data. Use `MultiAllDownloadCompleted` for final overall success/failure. |
-| `AddListenerMultiDownloadStatistics` | `MultiDownloadStatisticsEventArgs` | Compatibility event for legacy download statistics or custom download implementations. The current default download orchestration mainly reports through `AddListenerProgress` and does not synthesize this statistics event. | `Version`, `Remaining`, `Speed`, `TotalBytesToReceive`, `BytesReceived`, `ProgressPercentage`. | Use it only if your downloader still dispatches this event and you need remaining-time/speed UI. New code should prefer `AddListenerProgress`. |
-| `AddListenerException` | `ExceptionEventArgs` | Fired when `GeneralUpdateBootstrap`, platform strategies, standard strategy, OSS strategy, or update strategy catches an exception. | `Exception`, `Message`. | Report exceptions, show error text, or write business logs. This notification means Core caught and surfaced the exception; it does not imply automatic retry. |
-
-Items in `UpdateInfoEventArgs.Info.Body` are packages that Core needs to process after version comparison, app-type filtering, and download-plan construction. They are not merely a raw HTTP response passthrough. Read `VersionEntry` properties directly when you need download URLs, hashes, forced-update flags, or cross-version differential ranges.
-
-`AddListenerUpdatePrecheck` is easy to misread. In the current code, returning `true` means "skip this non-forced update", not "continue downloading". It fits the "confirm before download" scenario: collect version numbers, release notes, package sizes, and upgrade types from `UpdateInfoEventArgs.Info.Body`, show them in a dialog, then return `false` when the user accepts the update. Return `true` when the user chooses later, disk space is low, or the current network is not allowed. If you only need to display server version metadata and do not need skip/continue control, subscribe to `AddListenerUpdateInfo` instead.
-
-```csharp
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .AddListenerUpdateInfo((_, e) =>
-    {
-        Console.WriteLine($"Versions from server: {e.Info?.Body?.Count ?? 0}");
-    })
-    .AddListenerUpdatePrecheck(e =>
-    {
-        var versions = e.Info?.Body;
-        var hasUpdate = (versions?.Count ?? 0) > 0;
-        var enoughDisk = DriveInfo.GetDrives()
-            .Where(d => d.IsReady)
-            .Any(d => d.AvailableFreeSpace > 1024L * 1024 * 1024);
-        var userRejected = versions != null && !ShowUpdateDialog(versions);
-
-        // In the current implementation, true means "skip non-forced update";
-        // false means "continue".
-        return !hasUpdate || !enoughDisk || userRejected;
-    })
-    .AddListenerMultiDownloadCompleted((_, e) =>
-    {
-        Console.WriteLine($"{e.Version}: {(e.IsCompleted ? "completed" : "failed")}");
-    })
-    .AddListenerMultiAllDownloadCompleted((_, e) =>
-    {
-        Console.WriteLine(e.IsAllDownloadCompleted
-            ? "All downloads completed."
-            : $"Failed downloads: {e.FailedVersions.Count}");
-    })
-    .AddListenerMultiDownloadError((_, e) =>
-    {
-        Console.WriteLine($"Download failed: {e.Version}");
-        Console.WriteLine(e.Exception);
-    })
-    .AddListenerProgress((_, e) =>
-    {
-        if (e.Progress != null)
-            Console.WriteLine($"Download {e.Progress.AssetName}: {e.Progress.Percentage:F1}% {e.Progress.Status}");
-
-        if (e.DiffProgress != null)
-            Console.WriteLine($"Patch: {e.DiffProgress.Completed}/{e.DiffProgress.Total} {e.DiffProgress.CurrentFile}");
-    })
-    .AddListenerException((_, e) =>
-    {
-        Console.WriteLine(e.Message);
-        Console.WriteLine(e.Exception);
-    })
-    .LaunchAsync();
-```
-
-### Listener class
-
-Implement `IUpdateEventListener` to centralize event handling. Inherit `UpdateEventListenerBase` if you only need some events.
-
-```csharp
-using GeneralUpdate.Core.Download;
-using GeneralUpdate.Core.Event;
-
-public sealed class ConsoleUpdateListener : UpdateEventListenerBase
-{
-    public override void OnUpdateInfo(UpdateInfoEventArgs args)
-    {
-        Console.WriteLine($"Update count: {args.Info?.Body?.Count ?? 0}");
-    }
-
-    public override void OnProgress(ProgressEventArgs args)
-    {
-        if (args.Progress != null)
-            Console.WriteLine($"{args.Progress.AssetName}: {args.Progress.Percentage:F1}%");
-    }
-
-    public override void OnException(ExceptionEventArgs args)
-    {
-        Console.WriteLine(args.Exception);
-    }
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .AddEventListener<ConsoleUpdateListener>()
-    .LaunchAsync();
-```
-
-## Logging and performance {#logging-performance}
-
-Core includes `GeneralTracer`, enabled by default. It writes through `System.Diagnostics.Trace`: on Windows it also writes to the debug output window, it writes to the console, and it creates `Logs/generalupdate-trace yyyy-MM-dd.log` under the application base directory. The file listener writes through a background queue, but every log still performs an enable check, timestamp formatting, stack-frame lookup, and queue/output work. Disable tracing in performance-sensitive scenarios.
-
-| API | Purpose |
-| --- | --- |
-| `GeneralTracer.SetTracingEnabled(false)` | Disables Core log output. `Debug` / `Info` / `Warn` / `Error` / `Fatal` return quickly, and Trace listeners are filtered. |
-| `GeneralTracer.SetTracingEnabled(true)` | Re-enables log output for diagnostics, canary builds, or user issue investigation. |
-| `GeneralTracer.IsTracingEnabled()` | Reads the current tracing switch. |
-| `GeneralTracer.Dispose()` | Disposes the file listener and clears Trace listeners. Usually only use it in tests, short-lived tooling processes, or when you intentionally take over Trace listeners. |
-
-Set the logging switch early in application startup so download, verification, differential, and replacement logs use the same policy.
+### Logging Configuration
 
 ```csharp
 using GeneralUpdate.Core;
 
-if (performanceMode)
-{
-    GeneralTracer.SetTracingEnabled(false);
-}
+// Disable logging (performance-sensitive scenarios)
+GeneralTracer.SetTracingEnabled(false);
 
-await new GeneralUpdateBootstrap()
-    .SetSource(
-        updateUrl: "https://update.example.com/api/upgrade/verification",
-        appSecretKey: "your-app-secret")
-    .SetOption(Option.AppType, AppType.Client)
-    .LaunchAsync();
+// Re-enable (troubleshooting)
+GeneralTracer.SetTracingEnabled(true);
+
+// Release logging resources
+GeneralTracer.Dispose();
 ```
 
-Disabling logs is useful for low-power devices, slow I/O terminals, silent background polling, large-scale automated updates, or products that are highly sensitive to startup time. Keep tracing available for diagnostics because Core logs strategy dispatch, download orchestration, verification, differential work, hooks, and exception paths.
-
-## Extension points
-
-All extension registration methods are provided by `AbstractBootstrap` and can be chained.
-
-| Registration method | Interface | Scope |
-| --- | --- | --- |
-| `Hooks<T>()` | `IUpdateHooks` | Lifecycle callbacks. |
-| `UpdateReporter<T>()` | `IUpdateReporter` | Update status reporting. |
-| `SslPolicy<T>()` | `ISslValidationPolicy` | HTTPS certificate validation. |
-| `HttpAuth<T>()` | `IHttpAuthProvider` | HTTP request authentication. |
-| `DownloadSource<T>()` | `IDownloadSource` | Version manifest and asset source. |
-| `DownloadPolicy<T>()` | `IDownloadPolicy` | Retry, timeout, circuit breaker. |
-| `DownloadExecutor<T>()` | `IDownloadExecutor` | Single-file download implementation. |
-| `DownloadPipeline<T>()` | `IDownloadPipeline` | Post-download verification or transformation. |
-| `DownloadOrchestrator<T>()` | `IDownloadOrchestrator` | Full batch download orchestration. |
-| `Strategy<T>()` | `IStrategy` | Platform-level update strategy. |
-
-Registered types must have a parameterless constructor because Core creates them with `new()` or reflection. If dependencies are required, wrap them in a parameterless adapter.
-
-## Lifecycle hooks: IUpdateHooks
-
-`IUpdateHooks` is best for business logic before update, after download, after update, before app start, and on errors. It is also a flexible open extension point: on Linux or macOS, updated executables may need execute permission restored, or an organization may need to run an internal authorization, signature-check, or permission-repair script before the main app starts. Put that work in `OnBeforeStartAppAsync`.
-
-```csharp
-using GeneralUpdate.Core.Hooks;
-
-public sealed class ProductUpdateHooks : IUpdateHooks
-{
-    public Task<bool> OnBeforeUpdateAsync(HookContext ctx)
-    {
-        Console.WriteLine($"Before update: {ctx.CurrentVersion} -> {ctx.TargetVersion}");
-        return Task.FromResult(true);
-    }
-
-    public Task OnDownloadCompletedAsync(DownloadContext ctx)
-    {
-        Console.WriteLine($"Downloaded {ctx.AssetName}, success={ctx.Success}, path={ctx.LocalPath}");
-        return Task.CompletedTask;
-    }
-
-    public Task OnAfterUpdateAsync(HookContext ctx)
-    {
-        File.WriteAllText(Path.Combine(ctx.InstallPath, "last-update.txt"), DateTimeOffset.Now.ToString("O"));
-        return Task.CompletedTask;
-    }
-
-    public Task OnUpdateErrorAsync(HookContext ctx, Exception ex)
-    {
-        File.AppendAllText(Path.Combine(ctx.InstallPath, "update-error.log"), ex + Environment.NewLine);
-        return Task.CompletedTask;
-    }
-
-    public Task OnBeforeStartAppAsync(HookContext ctx)
-    {
-        Console.WriteLine($"Starting app from {ctx.InstallPath}");
-        return Task.CompletedTask;
-    }
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .Hooks<ProductUpdateHooks>()
-    .LaunchAsync();
-```
-
-On Linux/macOS, you can register the built-in `UnixPermissionHooks` to let Core run `chmod +x` before starting the app:
-
-```csharp
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .Hooks<UnixPermissionHooks>()
-    .LaunchAsync();
-```
-
-If you need to run your own permission script, wrap it in a parameterless hook adapter and register that adapter with `Hooks<T>()`:
-
-```csharp
-using GeneralUpdate.Core.Hooks;
-
-public sealed class ProductPermissionHooks : IUpdateHooks
-{
-    private readonly CustomPermissionHooks _inner =
-        new("/opt/my-product/scripts/fix-permissions.sh");
-
-    public Task OnBeforeStartAppAsync(HookContext ctx)
-        => _inner.OnBeforeStartAppAsync(ctx);
-
-    public Task<bool> OnBeforeUpdateAsync(HookContext ctx) => Task.FromResult(true);
-    public Task OnDownloadCompletedAsync(DownloadContext ctx) => Task.CompletedTask;
-    public Task OnAfterUpdateAsync(HookContext ctx) => Task.CompletedTask;
-    public Task OnUpdateErrorAsync(HookContext ctx, Exception ex) => Task.CompletedTask;
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .Hooks<ProductPermissionHooks>()
-    .LaunchAsync();
-```
-
-Built-in hook types:
-
-| Type | Description |
-| --- | --- |
-| `NoOpUpdateHooks` | Default no-op implementation. |
-| `UnixPermissionHooks` | Runs `chmod +x` before starting the app on Unix-like systems. |
-| `CustomPermissionHooks` | Runs a custom permission script; wrap it before using `Hooks<T>()` because its constructor requires arguments. |
-
-## Status reporting: IUpdateReporter
-
-`IUpdateReporter` reports update status to a server or local telemetry.
-
-```csharp
-using GeneralUpdate.Core.Download.Reporting;
-
-public sealed class ConsoleUpdateReporter : IUpdateReporter
-{
-    public Task ReportAsync(UpdateReport report, CancellationToken token = default)
-    {
-        Console.WriteLine($"Report: record={report.RecordId}, status={report.Status}, type={report.Type}");
-        return Task.CompletedTask;
-    }
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .UpdateReporter<ConsoleUpdateReporter>()
-    .LaunchAsync();
-```
-
-The built-in `HttpUpdateReporter` posts JSON to `ReportUrl`:
-
-```json
-{
-  "recordId": 123,
-  "status": 1,
-  "type": 1
-}
-```
-
-| Enum | Value | Description |
-| --- | --- | --- |
-| `UpdateStatus.Updating` | `1` | Updating. |
-| `UpdateStatus.Success` | `2` | Update succeeded. |
-| `UpdateStatus.Failure` | `3` | Update failed. |
-
-## HTTP authentication: IHttpAuthProvider
-
-`IHttpAuthProvider` adds authentication to outgoing Core HTTP requests.
-
-```csharp
-using GeneralUpdate.Core.Security;
-
-public sealed class StaticBearerAuthProvider : IHttpAuthProvider
-{
-    public Task ApplyAuthAsync(HttpRequestMessage request, CancellationToken token = default)
-    {
-        request.Headers.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "access-token");
-
-        return Task.CompletedTask;
-    }
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .HttpAuth<StaticBearerAuthProvider>()
-    .LaunchAsync();
-```
-
-Core includes `NoOpAuthProvider`, `BearerTokenAuthProvider`, `ApiKeyAuthProvider`, and `HmacAuthProvider`. Some require constructor parameters, so create a parameterless wrapper when registering through `HttpAuth<T>()`.
-
-## HTTPS certificate policy: ISslValidationPolicy
-
-`ISslValidationPolicy` controls HTTPS certificate validation. The default `StrictSslValidationPolicy` accepts only certificates without SSL policy errors.
-
-```csharp
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using GeneralUpdate.Core.Security;
-
-public sealed class DevelopmentSslPolicy : ISslValidationPolicy
-{
-    public bool ValidateCertificate(
-        X509Certificate2? certificate,
-        X509Chain? chain,
-        SslPolicyErrors sslPolicyErrors)
-    {
-        return sslPolicyErrors == SslPolicyErrors.None
-            || certificate?.Issuer.Contains("CN=Local Dev Root") == true;
-    }
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .SslPolicy<DevelopmentSslPolicy>()
-    .LaunchAsync();
-```
-
-Do not unconditionally return `true` in production.
-
-## Download source: IDownloadSource
-
-`IDownloadSource` returns assets to download. Use it for private services, file servers, config centers, or custom cloud storage.
-
-```csharp
-using GeneralUpdate.Core.Download.Abstractions;
-using GeneralUpdate.Core.Download.Models;
-
-public sealed class StaticDownloadSource : IDownloadSource
-{
-    public Task<DownloadSourceResult> ListAsync(CancellationToken token = default)
-    {
-        var assets = new[]
-        {
-            new DownloadAsset(
-                Name: "app-1.0.1.zip",
-                Url: "https://cdn.example.com/releases/app-1.0.1.zip",
-                Size: 25_000_000,
-                SHA256: "expected-sha256",
-                Version: "1.0.1")
-        };
-
-        return Task.FromResult(new DownloadSourceResult
-        {
-            Assets = assets,
-            HasMainUpdate = true,
-            HasUpgradeUpdate = false
-        });
-    }
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .DownloadSource<StaticDownloadSource>()
-    .LaunchAsync();
-```
-
-## Retry policy: IDownloadPolicy
-
-`IDownloadPolicy` wraps download actions and can implement retry, timeout, circuit breaker, or throttling.
-
-```csharp
-using GeneralUpdate.Core.Download.Abstractions;
-
-public sealed class TwoAttemptDownloadPolicy : IDownloadPolicy
-{
-    public async Task<T> ExecuteAsync<T>(
-        Func<CancellationToken, Task<T>> action,
-        CancellationToken token = default)
-    {
-        try
-        {
-            return await action(token);
-        }
-        catch when (!token.IsCancellationRequested)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(2), token);
-            return await action(token);
-        }
-    }
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .DownloadPolicy<TwoAttemptDownloadPolicy>()
-    .LaunchAsync();
-```
-
-When `DownloadOrchestrator<T>()` is also registered, the custom orchestrator owns whether and how policy is used.
-
-## Single-file download: IDownloadExecutor
-
-`IDownloadExecutor` downloads one `DownloadAsset` to a destination path. Use it for FTP, SFTP, private protocols, or custom HTTP clients.
-
-```csharp
-using GeneralUpdate.Core.Download.Abstractions;
-using GeneralUpdate.Core.Download.Models;
-
-public sealed class MirrorDownloadExecutor : IDownloadExecutor
-{
-    private readonly HttpClient _client = new();
-
-    public async Task<DownloadResult> ExecuteAsync(
-        DownloadAsset asset,
-        string destPath,
-        IProgress<DownloadProgress>? progress = null,
-        CancellationToken token = default)
-    {
-        var started = DateTimeOffset.Now;
-        await using var input = await _client.GetStreamAsync(asset.Url, token);
-        await using var output = File.Create(destPath);
-        await input.CopyToAsync(output, token);
-
-        var fileInfo = new FileInfo(destPath);
-        return new DownloadResult(asset, destPath, fileInfo.Length, DateTimeOffset.Now - started, 0, true, null);
-    }
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .DownloadExecutor<MirrorDownloadExecutor>()
-    .LaunchAsync();
-```
-
-## Post-download pipeline: IDownloadPipeline
-
-`IDownloadPipeline` runs after a file is downloaded. Use it for hash verification, decryption, antivirus scanning, or format conversion.
-
-```csharp
-using GeneralUpdate.Core.Download.Abstractions;
-
-public sealed class AntivirusPipeline : IDownloadPipeline
-{
-    public Task<string> ProcessAsync(string downloadedPath, CancellationToken token = default)
-    {
-        if (!File.Exists(downloadedPath))
-            throw new FileNotFoundException("Downloaded file not found.", downloadedPath);
-
-        Console.WriteLine($"Scanning {downloadedPath}");
-        return Task.FromResult(downloadedPath);
-    }
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .DownloadPipeline<AntivirusPipeline>()
-    .LaunchAsync();
-```
-
-Core first tries to construct a pipeline with a `string` constructor for the expected hash. If not available, it uses the parameterless constructor.
-
-## Batch download orchestration: IDownloadOrchestrator
-
-`IDownloadOrchestrator` is the highest-level download extension point. It owns batch download, concurrency, retry, progress, and result aggregation.
-
-```csharp
-using GeneralUpdate.Core.Download.Abstractions;
-using GeneralUpdate.Core.Download.Executors;
-using GeneralUpdate.Core.Download.Models;
-
-public sealed class SerialDownloadOrchestrator : IDownloadOrchestrator
-{
-    private readonly IDownloadExecutor _executor = new HttpDownloadExecutor(new HttpClient());
-
-    public async Task<DownloadReport> ExecuteAsync(
-        DownloadPlan plan,
-        string destDir,
-        int maxConcurrency = 3,
-        IProgress<DownloadProgress>? progress = null,
-        CancellationToken token = default)
-    {
-        var results = new List<DownloadResult>();
-        var started = DateTimeOffset.Now;
-
-        foreach (var asset in plan.Assets)
-        {
-            var destPath = Path.Combine(destDir, asset.Name);
-            results.Add(await _executor.ExecuteAsync(asset, destPath, progress, token));
-        }
-
-        return new DownloadReport(
-            results,
-            results.Where(r => r.Success).Sum(r => r.DownloadedBytes),
-            DateTimeOffset.Now - started,
-            results.Count(r => r.Success),
-            results.Count(r => !r.Success));
-    }
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .DownloadOrchestrator<SerialDownloadOrchestrator>()
-    .LaunchAsync();
-```
-
-Implement an orchestrator only when you need to replace the entire download behavior. Most cases only need `IDownloadExecutor`, `IDownloadPolicy`, or `IDownloadPipeline`.
-
-## Platform strategy: IStrategy
-
-`IStrategy` is the highest-level update strategy interface. Core includes `ClientStrategy`, `UpdateStrategy`, `OssStrategy`, and Windows/Linux/macOS platform strategies. Implement it only when you need to replace platform-level file operations or app startup logic.
-
-```csharp
-using GeneralUpdate.Core.Configuration;
-using GeneralUpdate.Core.Download.Reporting;
-using GeneralUpdate.Core.Hooks;
-using GeneralUpdate.Core.Strategy;
-
-public sealed class LoggingStrategy : IStrategy
-{
-    private UpdateContext? _context;
-
-    public IUpdateHooks Hooks { get; set; } = new NoOpUpdateHooks();
-    public IUpdateReporter Reporter { get; set; } = new HttpUpdateReporter();
-
-    public void Create(UpdateContext parameter)
-    {
-        _context = parameter;
-    }
-
-    public async Task ExecuteAsync()
-    {
-        if (_context == null)
-            throw new InvalidOperationException("Strategy was not initialized.");
-
-        Console.WriteLine($"Custom strategy executing in {_context.InstallPath}");
-        await Hooks.OnBeforeUpdateAsync(new HookContext(
-            _context.UpdateAppName,
-            _context.InstallPath,
-            _context.ClientVersion,
-            _context.LastVersion,
-            _context.AppType ?? AppType.Client));
-    }
-
-    public Task StartAppAsync()
-    {
-        Console.WriteLine("Custom start app logic.");
-        return Task.CompletedTask;
-    }
-}
-
-await new GeneralUpdateBootstrap()
-    .SetConfig(request)
-    .Strategy<LoggingStrategy>()
-    .LaunchAsync();
-```
-
-> Silent update is not a separate extension interface. It is a built-in execution strategy. See [Silent update strategy](#silent-update-strategy) for configuration and lifecycle details.
-
-## Relationship with GeneralUpdate.Tools
-
-Core consumes manifests and packages. `GeneralUpdate.Tools` helps generate and validate those artifacts.
-
-| Tools capability | Core consumption point |
-| --- | --- |
-| Patch Package | `Option.PatchEnabled`, `UseDiffPipeline`, differential patch processing. |
-| Manifest Generator | `ManifestInfo`, `AppMetadataDiscoverer`, version write-back. |
-| Extension Package | Distributed as package content and consumed by download/deploy flow. |
-| OSS Config | `OssClient` / `OssUpgrade` roles. |
-| Hash / Simulation / Report | `Option.VerifyChecksum`, post-download verification, and status reporting. |
-
-## Related samples
-
-- [Upgrade sample](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/Program.cs)
-- [OSS upgrade sample](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/OSS/OSSUpgradeSample)
-- [GeneralUpdate repository](https://github.com/GeneralLibrary/GeneralUpdate)
-- [GeneralUpdate.Tools repository](https://github.com/GeneralLibrary/GeneralUpdate.Tools)
+---
+
+## Related Resources
+
+- [GeneralUpdate Repository](https://github.com/GeneralLibrary/GeneralUpdate)
+- [Samples Code](https://github.com/GeneralLibrary/GeneralUpdate-Samples)
+- [GeneralUpdate.Tools](https://github.com/GeneralLibrary/GeneralUpdate.Tools)
+- [Quick Start](../quickstart/Quik%20start.md)
+- [Architecture Guide](../guide/Architecture.md)
