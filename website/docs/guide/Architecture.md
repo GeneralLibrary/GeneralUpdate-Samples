@@ -310,7 +310,7 @@ await new GeneralClientBootstrap()
     // 自定义下载重试策略
     .DownloadPolicy<CustomRetryPolicy>()
     // 自定义认证提供者
-    .UpdateAuth<BearerTokenAuthProvider>()
+    .HttpAuth<BearerTokenAuthProvider>()
     // 生命周期钩子
     .Hooks<CustomUpdateHooks>()
     .SetConfig(config)

@@ -121,7 +121,7 @@ var config = new Configinfo
 
 // 或者通过 AbstractBootstrap 注入
 await new GeneralClientBootstrap()
-    .UpdateAuth<BearerTokenAuthProvider>()
+    .HttpAuth<BearerTokenAuthProvider>()
     .SetConfig(config)
     .LaunchAsync();
 ```

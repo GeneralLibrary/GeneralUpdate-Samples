@@ -212,7 +212,7 @@ GeneralUpdate provides rich extensibility through `AbstractBootstrap`'s CRTP pat
 await new GeneralClientBootstrap()
     .SslPolicy<CustomSslPolicy>()
     .DownloadPolicy<CustomRetryPolicy>()
-    .UpdateAuth<BearerTokenAuthProvider>()
+    .HttpAuth<BearerTokenAuthProvider>()
     .Hooks<CustomUpdateHooks>()
     .SetConfig(config)
     .LaunchAsync();
