@@ -6,7 +6,11 @@ sidebar_position: 5
 
 ## Component Overview
 
-**GeneralUpdate.Core** is one of the most essential components of the GeneralUpdate framework, providing complete upgrade execution capabilities. Unlike ClientCore, the Core component runs as an independent upgrade assistant program and is responsible for performing actual file replacement, version upgrades, and system update operations after the main program closes. Through process startup and parameter passing, Core receives update instructions from ClientCore and safely completes the main program's upgrade tasks.
+**GeneralUpdate.Core** is the unified core component of the GeneralUpdate framework. As of the latest version, the previously separate `GeneralUpdate.ClientCore` (client-side update management) and `GeneralUpdate.Common` (shared foundation) have been merged into `GeneralUpdate.Core`. A single `GeneralUpdate.Core` package reference now provides:
+
+- **Client update management** (formerly ClientCore): version checking, package download, integrity validation, launching the upgrade process
+- **Upgrade execution engine** (formerly Core): standalone process upgrade, file replacement, differential patch application, driver installation
+- **Shared infrastructure** (formerly Common): lifecycle tracing, download engine, serialization, and other low-level capabilities
 
 **Namespace:** `GeneralUpdate.Core`  
 **Assembly:** `GeneralUpdate.Core.dll`
@@ -57,9 +61,6 @@ dotnet add package GeneralUpdate.Core
 The following example demonstrates how to configure and launch the upgrade process in the upgrade assistant program:
 
 ```csharp
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Internal;
-using GeneralUpdate.Common.Shared.Object;
 using GeneralUpdate.Core;
 
 try
@@ -222,7 +223,7 @@ public enum UpdateOption
 
 ### Packet Class
 
-Upgrade package information class, passed from ClientCore to Core via parameters:
+Upgrade package information class, passed from the client (formerly ClientCore, now merged into Core) to the upgrade process via parameters:
 
 ```csharp
 public class Packet
@@ -351,9 +352,6 @@ public class Packet
 ### Example 1: Basic Upgrade Process
 
 ```csharp
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Internal;
-using GeneralUpdate.Common.Shared.Object;
 using GeneralUpdate.Core;
 
 try
@@ -383,13 +381,12 @@ catch (Exception e)
 
 ### Example 2: Enable Driver Upgrade
 
-Driver upgrades are configured via the `DriverDirectory` field in `Configinfo` on the `GeneralUpdate.ClientCore` side. The `DrivelutionMiddleware` in `GeneralUpdate.Core` automatically processes driver installation.
+Driver upgrades are configured via the `DriverDirectory` field in `Configinfo` (now located in `GeneralUpdate.Core`). The `DrivelutionMiddleware` automatically processes driver installation.
 
-On the `ClientCore` side:
+On the client side:
 
 ```csharp
-using GeneralUpdate.ClientCore;
-using GeneralUpdate.Common.Shared.Object;
+using GeneralUpdate.Core;
 
 var config = new Configinfo
 {
@@ -427,8 +424,6 @@ await new GeneralUpdateBootstrap()
 
 ```csharp
 using GeneralUpdate.Core;
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Shared.Object;
 
 await new GeneralUpdateBootstrap()
     // Download statistics
@@ -485,8 +480,7 @@ await new GeneralUpdateBootstrap()
 
 ```csharp
 using GeneralUpdate.Core;
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Shared.Object;
+
 
 // Record upgrade start time
 var startTime = DateTime.Now;
@@ -531,7 +525,7 @@ await new GeneralUpdateBootstrap()
    - The main program must be completely closed during upgrade, otherwise file replacement will fail
 
 2. **Parameter Passing**
-   - ClientCore passes configuration to Core via Base64 encoded parameters
+   - Client passes configuration to Core via Base64 encoded parameters (formerly ClientCore, now merged into Core)
    - Ensure parameters are not truncated or corrupted during passing
 
 3. **File Permissions**
@@ -544,7 +538,7 @@ await new GeneralUpdateBootstrap()
 
 5. **Rollback Mechanism**
    - Core does not directly provide rollback functionality, but backup files are preserved
-   - For rollback, use ClientCore's backup functionality
+   - Core provides built-in backup and rollback, no extra components needed
 
 ### 💡 Best Practices
 
@@ -571,4 +565,5 @@ await new GeneralUpdateBootstrap()
 
 - **Sample Code**: [View GitHub Examples](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/Program.cs)
 - **Main Repository**: [GeneralUpdate Project](https://github.com/GeneralLibrary/GeneralUpdate)
-- **Related Components**: [GeneralUpdate.ClientCore](./GeneralUpdate.ClientCore.md) | [GeneralUpdate.Bowl](./GeneralUpdate.Bowl.md)
+- **Related Components**: [GeneralUpdate.Bowl](./GeneralUpdate.Bowl.md) | [GeneralUpdate.Drivelution](./GeneralUpdate.Drivelution.md)
+- **Migration note**: `GeneralUpdate.ClientCore` and `GeneralUpdate.Common` have been merged into `GeneralUpdate.Core`. When migrating, replace `using GeneralUpdate.ClientCore` / `using GeneralUpdate.Common.*` with `using GeneralUpdate.Core` and remove the old NuGet package references.

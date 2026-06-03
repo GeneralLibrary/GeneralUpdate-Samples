@@ -6,7 +6,11 @@ sidebar_position: 5
 
 ## 组件概览
 
-**GeneralUpdate.Core** 是 GeneralUpdate 框架最核心的组件之一,提供了完整的升级执行能力。与 ClientCore 不同,Core 组件作为独立的升级助手程序运行,负责在主程序关闭后执行实际的文件替换、版本升级和系统更新操作。通过进程启动和参数传递的方式,Core 接收来自 ClientCore 的更新指令,并安全地完成主程序的升级任务。
+**GeneralUpdate.Core** 是 GeneralUpdate 框架的统一核心组件。自最新版本起，原先独立的 `GeneralUpdate.ClientCore`（客户端更新管理）和 `GeneralUpdate.Common`（公共基础代码）已合并到 `GeneralUpdate.Core` 中。现在只需引用一个 `GeneralUpdate.Core` 包即可同时获得：
+
+- **客户端更新管理**（原 ClientCore）：版本检查、更新包下载、完整性验证、拉起升级程序
+- **升级执行引擎**（原 Core）：独立进程升级、文件替换、差分包应用、驱动安装
+- **公共基础设施**（原 Common）：生命周期追踪、下载引擎、序列化等底层能力
 
 **命名空间:** `GeneralUpdate.Core`  
 **程序集:** `GeneralUpdate.Core.dll`
@@ -57,9 +61,6 @@ dotnet add package GeneralUpdate.Core
 以下示例展示了如何在升级助手程序中配置和启动升级流程:
 
 ```csharp
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Internal;
-using GeneralUpdate.Common.Shared.Object;
 using GeneralUpdate.Core;
 
 try
@@ -222,7 +223,7 @@ public enum UpdateOption
 
 ### Packet 类
 
-升级包信息类,由 ClientCore 通过参数传递给 Core:
+升级包信息类，由客户端（原 ClientCore，现已合并到 Core）通过参数传递给升级程序：
 
 ```csharp
 public class Packet
@@ -351,9 +352,6 @@ public class Packet
 ### 示例 1:基本升级流程
 
 ```csharp
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Internal;
-using GeneralUpdate.Common.Shared.Object;
 using GeneralUpdate.Core;
 
 try
@@ -383,13 +381,12 @@ catch (Exception e)
 
 ### 示例 2：启用驱动升级
 
-驱动升级通过 `GeneralUpdate.ClientCore` 中的 `Configinfo.DriverDirectory` 字段传入驱动目录，`GeneralUpdate.Core` 中的 `DrivelutionMiddleware` 会自动处理驱动安装。
+驱动升级通过 `Configinfo.DriverDirectory` 字段传入驱动目录（`Configinfo` 现在位于 `GeneralUpdate.Core` 中），`DrivelutionMiddleware` 会自动处理驱动安装。
 
-在 `ClientCore` 侧配置：
+在客户端侧配置：
 
 ```csharp
-using GeneralUpdate.ClientCore;
-using GeneralUpdate.Common.Shared.Object;
+using GeneralUpdate.Core;
 
 var config = new Configinfo
 {
@@ -427,8 +424,6 @@ await new GeneralUpdateBootstrap()
 
 ```csharp
 using GeneralUpdate.Core;
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Shared.Object;
 
 await new GeneralUpdateBootstrap()
     // 下载统计
@@ -485,8 +480,6 @@ await new GeneralUpdateBootstrap()
 
 ```csharp
 using GeneralUpdate.Core;
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Shared.Object;
 
 // 记录升级开始时间
 var startTime = DateTime.Now;
@@ -531,7 +524,7 @@ await new GeneralUpdateBootstrap()
    - 升级时主程序必须完全关闭,否则文件替换会失败
 
 2. **参数传递**
-   - ClientCore 通过 Base64 编码的参数传递配置给 Core
+   - 客户端通过 Base64 编码的参数传递配置给 Core（原 ClientCore 现已合并到 Core）
    - 确保参数传递过程中不会被截断或损坏
 
 3. **文件权限**
@@ -544,7 +537,7 @@ await new GeneralUpdateBootstrap()
 
 5. **回滚机制**
    - Core 不直接提供回滚功能,但保留了备份文件
-   - 如需回滚,可使用 ClientCore 的备份功能
+   - Core 提供内置的备份与回滚机制，无需额外组件
 
 ### 💡 最佳实践
 
@@ -571,4 +564,5 @@ await new GeneralUpdateBootstrap()
 
 - **示例代码**:[查看 GitHub 示例](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/Program.cs)
 - **主仓库**:[GeneralUpdate 项目](https://github.com/GeneralLibrary/GeneralUpdate)
-- **相关组件**:[GeneralUpdate.ClientCore](./GeneralUpdate.ClientCore.md) | [GeneralUpdate.Bowl](./GeneralUpdate.Bowl.md)
+- **相关组件**:[GeneralUpdate.Bowl](./GeneralUpdate.Bowl.md) | [GeneralUpdate.Drivelution](./GeneralUpdate.Drivelution.md)
+- **迁移说明**：`GeneralUpdate.ClientCore` 和 `GeneralUpdate.Common` 已合并到 `GeneralUpdate.Core`。迁移时只需将 `using GeneralUpdate.ClientCore` / `using GeneralUpdate.Common.*` 替换为 `using GeneralUpdate.Core`，并移除旧的 NuGet 包引用。

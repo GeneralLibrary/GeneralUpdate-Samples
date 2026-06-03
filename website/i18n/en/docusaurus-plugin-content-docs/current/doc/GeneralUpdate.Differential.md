@@ -403,7 +403,7 @@ await manager.GeneratePatchWithProgressAsync(
 
 5. **Backup Recommendations**
    - Recommended to backup original files before applying patches
-   - Can use ClientCore's BackUp option for automatic backup
+   - Can use Core's BackUp option for automatic backup
 
 ### 💡 Best Practices
 

@@ -4,13 +4,13 @@ sidebar_position: 8
 
 ### GeneralTracer
 
-Namespace: GeneralUpdate.Common.Shared
+> **合并说明**：`GeneralUpdate.Common` 已合并到 `GeneralUpdate.Core`。`GeneralTracer` 现在位于 `GeneralUpdate.Core` 命名空间内，引用 `GeneralUpdate.Core` 包即可自动获得，无需单独引用。
 
-Assembly: GeneralUpdate.Common.dll
+命名空间: `GeneralUpdate.Core`
 
+程序集: `GeneralUpdate.Core.dll`
 
-
-**GeneralUpdate.Common** is a common component that provides core underlying code. It generally does not need to be referenced manually and will be imported automatically when you reference **GeneralUpdate.ClientCore** or **GeneralUpdate.Core**.
+`GeneralTracer` 提供组件内部异常信息和执行流程的追踪输出。它默认启用，引用 `GeneralUpdate.Core` 时会自动包含。
 
 ```c#
 public static class GeneralTracer
