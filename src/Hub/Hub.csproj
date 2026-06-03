@@ -4,40 +4,14 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <!-- NuGet / 本地dll 切换: true=NuGet, false=本地dll -->
-    <UseNuGet>false</UseNuGet>
   </PropertyGroup>
 
-  <!-- ========== NuGet 模式（正式发布用） ========== -->
-  <ItemGroup Condition="'$(UseNuGet)' == 'true'">
-    <PackageReference Include="GeneralUpdate.Core"         Version="10.*" />
-    <PackageReference Include="GeneralUpdate.Differential"  Version="10.*" />
-    <PackageReference Include="GeneralUpdate.Drivelution"   Version="10.*" />
-    <PackageReference Include="GeneralUpdate.Extension"     Version="10.*" />
-    <PackageReference Include="GeneralUpdate.Bowl"          Version="10.*" />
-  </ItemGroup>
-
-  <!-- ========== 本地 dll 模式（开发联调用） ========== -->
-  <ItemGroup Condition="'$(UseNuGet)' != 'true'">
-    <Reference Include="GeneralUpdate.Core">
-      <HintPath>libs\GeneralUpdate.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="GeneralUpdate.Differential">
-      <HintPath>libs\GeneralUpdate.Differential.dll</HintPath>
-    </Reference>
-    <Reference Include="GeneralUpdate.Drivelution">
-      <HintPath>libs\GeneralUpdate.Drivelution.dll</HintPath>
-    </Reference>
-    <Reference Include="GeneralUpdate.Extension">
-      <HintPath>libs\GeneralUpdate.Extension.dll</HintPath>
-    </Reference>
-    <Reference Include="GeneralUpdate.Bowl">
-      <HintPath>libs\GeneralUpdate.Bowl.dll</HintPath>
-    </Reference>
-
-    <!-- 本地 DLL 的传递依赖 -->
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  <ItemGroup>
+    <PackageReference Include="GeneralUpdate.Core"         Version="10.5.0-beta.2" />
+    <PackageReference Include="GeneralUpdate.Differential"  Version="10.5.0-beta.2" />
+    <PackageReference Include="GeneralUpdate.Drivelution"   Version="10.5.0-beta.2" />
+    <PackageReference Include="GeneralUpdate.Extension"     Version="10.5.0-beta.2" />
+    <PackageReference Include="GeneralUpdate.Bowl"          Version="10.5.0-beta.2" />
   </ItemGroup>
 
   <!-- Push 示例需要自托管 SignalR Hub -->
@@ -53,7 +27,7 @@
   </ItemGroup>
 
   <!-- Bowl 进程守护需要 procdump 工具 -->
-  <ItemGroup Condition="'$(UseNuGet)' != 'true'">
+  <ItemGroup>
     <Content Include="libs\Applications\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Applications\%(RecursiveDir)%(Filename)%(Extension)</Link>
