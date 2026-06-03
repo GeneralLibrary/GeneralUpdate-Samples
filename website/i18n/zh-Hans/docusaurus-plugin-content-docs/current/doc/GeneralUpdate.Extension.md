@@ -2,877 +2,590 @@
 sidebar_position: 12
 ---
 
-### 定义
+# GeneralUpdate.Extension
 
-命名空间：GeneralUpdate.Extension
+## 组件概览
 
-程序集：GeneralUpdate.Extension.dll
+**GeneralUpdate.Extension** 是面向 .NET 应用的扩展管理组件，设计目标是让宿主程序具备类似 VS Code 的扩展生态能力：从远程服务查询扩展、下载扩展包、安装或更新到本地目录，并在这个过程中处理版本兼容、平台匹配、依赖扩展、SHA256 校验、失败回滚和事件通知。
 
-**NuGet 包**：GeneralUpdate.Extension
+它适合用于把主程序和可选能力拆开发布的场景，例如报表、认证、行业插件、客户定制模块、脚本执行器等。主程序只需要集成 `GeneralExtensionHost`，扩展包可以独立发布、独立更新，也可以通过 Tools 侧的打包流程生成标准 ZIP 包后交给 Extension 组件安装和管理。
 
+**命名空间:** `GeneralUpdate.Extension`
 
+**程序集:** `GeneralUpdate.Extension.dll`
+**NuGet 包:** `GeneralUpdate.Extension`
 
-GeneralUpdate.Extension 是一个受 VS Code 启发的 .NET 应用程序扩展管理系统。它提供完整的插件/扩展管理功能，包括扩展下载、安装、更新、版本兼容性检查、平台支持、依赖关系解析和回滚机制。
-
-```c#
-public class GeneralExtensionHost : IExtensionHost
+```csharp
+public interface IExtensionHost
 {
-    public IExtensionCatalog ExtensionCatalog { get; }
-    public event EventHandler<ExtensionUpdateEventArgs>? ExtensionUpdateStatusChanged;
+    IExtensionCatalog ExtensionCatalog { get; }
+    event EventHandler<ExtensionUpdateEventArgs>? ExtensionUpdateStatusChanged;
+
+    Task<HttpResponseDTO<PagedResultDTO<ExtensionDTO>>> QueryExtensionsAsync(ExtensionQueryDTO query);
+    Task<bool> DownloadExtensionAsync(string extensionId, string savePath);
+    Task<bool> UpdateExtensionAsync(string extensionId);
+    Task<bool> InstallExtensionAsync(string extensionPath, bool rollbackOnFailure = true);
+    Task<Dictionary<string, bool>> UpdateExtensionsAsync(IEnumerable<string> extensionIds, CancellationToken cancellationToken = default);
+    bool IsExtensionCompatible(ExtensionMetadata extension);
+    void SetAutoUpdate(string extensionId, bool autoUpdate);
+    void SetGlobalAutoUpdate(bool enabled);
 }
 ```
 
+---
 
+## 阅读导航
 
-### 快速开始
+| 主题 | 说明 |
+| --- | --- |
+| [快速开始](#快速开始) | 最小配置、查询扩展、更新扩展 |
+| [核心流程](#核心流程) | 查询、下载、安装、更新、回滚、卸载分别做什么 |
+| [扩展元数据与 manifest](#扩展元数据与-manifest) | `ExtensionMetadata`、服务端 DTO、本地 `manifest.json` |
+| [扩展包结构与 Tools 打包关系](#扩展包结构与-tools-打包关系) | ZIP 命名、包内文件、发布侧与消费侧的分工 |
+| [兼容性、平台与依赖](#兼容性平台与依赖) | Host 版本范围、`TargetPlatform`、依赖递归安装 |
+| [事件通知与自动更新开关](#事件通知与自动更新开关) | 状态事件、全局/单扩展自动更新配置 |
+| [服务器 API 契约](#服务器-api-契约) | `/Query` 与 `/Download/{extensionId}` 的真实调用方式 |
+| [高级扩展点](#高级扩展点) | DI Builder、自定义 HttpClient、生命周期钩子 |
+| [最佳实践](#最佳实践) | 生产环境接入建议 |
 
-最基本的使用示例，初始化扩展主机并查询远程扩展 [[查看完整示例]](https://github.com/GeneralLibrary/GeneralUpdate/blob/master/src/c%23/GeneralUpdate.Extension/Examples/ExtensionExample.cs)。
+---
 
-```c#
-using GeneralUpdate.Extension;
-using GeneralUpdate.Extension.Core;
-using GeneralUpdate.Extension.Common.Models;
+## 快速开始
+
+### 安装
+
+```bash
+dotnet add package GeneralUpdate.Extension
+```
+
+### 初始化扩展宿主
+
+```csharp
 using GeneralUpdate.Extension.Common.DTOs;
+using GeneralUpdate.Extension.Common.Enums;
+using GeneralUpdate.Extension.Common.Models;
+using GeneralUpdate.Extension.Core;
 
-// 1. 初始化扩展主机
 var options = new ExtensionHostOptions
 {
-    ServerUrl = "https://extensions.example.com/api",
-    BearerToken = "your-bearer-token",          // 可选：用于身份验证
-    HostVersion = "1.0.0",                      // 您的应用程序版本
-    ExtensionsDirectory = "./extensions"         // 扩展安装目录
-};
-
-var host = new GeneralExtensionHost(options);
-
-// 2. 订阅更新事件
-host.ExtensionUpdateStatusChanged += (sender, e) =>
-{
-    Console.WriteLine($"扩展: {e.ExtensionName}");
-    Console.WriteLine($"状态: {e.Status}");
-    Console.WriteLine($"进度: {e.Progress}%");
-};
-
-// 3. 查询可用扩展
-var query = new ExtensionQueryDTO
-{
-    Platform = TargetPlatform.Windows,
-    HostVersion = "1.0.0",
-    PageNumber = 1,
-    PageSize = 20
-};
-
-var result = await host.QueryExtensionsAsync(query);
-if (result.Success && result.Data != null)
-{
-    foreach (var ext in result.Data.Items)
-    {
-        Console.WriteLine($"{ext.DisplayName} v{ext.Version}");
-        Console.WriteLine($"兼容: {ext.IsCompatible}");
-    }
-}
-
-// 4. 更新扩展
-bool success = await host.UpdateExtensionAsync("extension-guid");
-```
-
-
-
-### 核心功能
-
-GeneralUpdate.Extension 提供以下核心功能。
-
-#### 扩展主机 (GeneralExtensionHost)
-
-主要的扩展管理容器，提供所有扩展操作的入口点。
-
-| 方法                        | 说明                                                  |
-| --------------------------- | ------------------------------------------------------------ |
-| QueryExtensionsAsync()      | 从远程服务器查询可用扩展。支持按名称、平台、版本、状态等条件过滤。 |
-| UpdateExtensionAsync()      | 更新指定扩展。自动处理下载、兼容性检查、平台验证和安装。 |
-| DownloadExtensionAsync()    | 下载扩展包到指定路径。支持断点续传（HTTP Range 请求）。 |
-| InstallExtensionAsync()     | 安装扩展包。支持自动回滚功能，安装失败时恢复到之前状态。 |
-| IsExtensionCompatible()     | 检查扩展与当前主机版本是否兼容。                 |
-| SetAutoUpdate()             | 为指定扩展启用/禁用自动更新。                     |
-| SetGlobalAutoUpdate()       | 启用/禁用所有扩展的全局自动更新。                 |
-| IsAutoUpdateEnabled()       | 检查扩展是否启用自动更新。                         |
-
-#### 扩展目录 (ExtensionCatalog)
-
-管理本地已安装扩展的目录，使用 JSON 文件持久化存储。
-
-| 方法                              | 说明                                                  |
-| --------------------------------- | ------------------------------------------------------------ |
-| LoadInstalledExtensions()         | 从 catalog.json 加载已安装的扩展列表。               |
-| GetInstalledExtensions()          | 获取所有已安装扩展的列表。                           |
-| GetInstalledExtensionById()       | 根据扩展 ID（GUID）获取特定扩展。                     |
-| GetInstalledExtensionsByPlatform()| 获取支持指定平台的扩展列表。                         |
-| AddOrUpdateExtension()            | 添加新扩展或更新现有扩展的元数据。                   |
-| RemoveExtension()                 | 从目录中删除扩展记录。                               |
-| SaveCatalog()                     | 将目录保存到 JSON 文件。                             |
-
-#### 下载队列 (DownloadQueueManager)
-
-管理扩展下载队列，支持并发下载和状态跟踪。
-
-| 方法                     | 说明                                                  |
-| ------------------------ | ------------------------------------------------------------ |
-| EnqueueDownload()        | 将下载任务添加到队列。任务将自动排队并处理。         |
-| GetDownloadStatus()      | 获取指定下载任务的当前状态。                         |
-| CancelDownload()         | 取消正在进行的下载任务。                             |
-
-下载队列特性：
-- 默认并发下载数：3 个
-- 自动状态跟踪（排队、下载中、已完成、失败）
-- 支持断点续传
-- 事件通知下载状态变化
-
-
-
-### 扩展元数据
-
-每个扩展必须包含以下元数据信息：
-
-| 属性               | 类型            | 说明                                          |
-| ------------------ | --------------- | ---------------------------------------------------- |
-| Id                 | string          | 扩展唯一标识符（GUID 格式）                   |
-| Name               | string          | 扩展名称（唯一，小写，无空格）               |
-| DisplayName        | string          | 人类可读的显示名称                           |
-| Version            | string          | 语义化版本号（例如 "1.2.3"）                 |
-| Publisher          | string          | 发布者标识符                                 |
-| Description        | string          | 扩展描述                                     |
-| SupportedPlatforms | TargetPlatform  | 支持的平台标志（Windows/Linux/MacOS/All）    |
-| MinHostVersion     | string          | 最低兼容的主机版本                           |
-| MaxHostVersion     | string          | 最高兼容的主机版本                           |
-| Dependencies       | string          | 依赖的扩展 ID 列表（逗号分隔）               |
-| Format             | string          | 文件格式（.dll、.zip 等）                    |
-| Categories         | string          | 扩展分类（逗号分隔）                         |
-| IsPreRelease       | bool            | 是否为预发布版本                             |
-| License            | string          | 许可证标识符（例如 "MIT"、"Apache-2.0"）     |
-| FileSize           | long            | 文件大小（字节）                             |
-| Hash               | string          | 文件哈希值（SHA256）                         |
-| DownloadUrl        | string          | 下载 URL                                     |
-
-
-
-### 初始化和配置
-
-#### 基本初始化
-
-```c#
-var options = new ExtensionHostOptions
-{
-    ServerUrl = "https://extensions.example.com/api",
+    ServerUrl = "https://extensions.example.com/Extension",
+    Scheme = "Bearer",
+    Token = "your-token",
     HostVersion = "1.0.0",
     ExtensionsDirectory = "./extensions"
 };
 
 var host = new GeneralExtensionHost(options);
+
+host.ExtensionUpdateStatusChanged += (sender, e) =>
+{
+    Console.WriteLine($"{e.ExtensionId} {e.Status} {e.Progress}% {e.ErrorMessage}");
+};
 ```
 
-#### 带身份验证的初始化
+`ExtensionHostOptions` 当前可配置项如下：
 
-```c#
-var options = new ExtensionHostOptions
+| 属性 | 说明 |
+| --- | --- |
+| `ServerUrl` | 扩展服务根地址。客户端会调用 `{ServerUrl}/Query` 和 `{ServerUrl}/Download/{extensionId}` |
+| `Scheme` | Authorization 认证方案，例如 `Bearer`。为空时不设置认证头 |
+| `Token` | Authorization token。需要和 `Scheme` 同时非空才会生效 |
+| `HostVersion` | 宿主应用版本，用于 `MinHostVersion` / `MaxHostVersion` 兼容性判断 |
+| `ExtensionsDirectory` | 扩展包下载、安装和 `.backup` 目录所在位置 |
+| `CatalogPath` | 可选，本地扩展目录扫描路径；为空时使用 `ExtensionsDirectory` |
+
+### 查询和更新扩展
+
+```csharp
+var query = new ExtensionQueryDTO
 {
-    ServerUrl = "https://extensions.example.com/api",
-    BearerToken = "your-bearer-token",
-    HostVersion = "1.0.0",
-    ExtensionsDirectory = "./extensions",
-    CatalogPath = "./extensions/catalog.json"  // 可选：自定义目录文件路径
+    Platform = TargetPlatform.Windows,
+    HostVersion = options.HostVersion,
+    Status = true,
+    PageNumber = 1,
+    PageSize = 20
 };
 
-var host = new GeneralExtensionHost(options);
+var response = await host.QueryExtensionsAsync(query);
+if (response.Body != null)
+{
+    foreach (var extension in response.Body.Items)
+    {
+        Console.WriteLine($"{extension.DisplayName} v{extension.Version}, compatible: {extension.IsCompatible}");
+    }
+}
+else
+{
+    Console.WriteLine(response.Message);
+}
+
+var success = await host.UpdateExtensionAsync("extension-id");
 ```
 
-#### 订阅事件
+---
 
-```c#
+## 核心流程
+
+### 1. 查询远程扩展
+
+`QueryExtensionsAsync` 直接把 `ExtensionQueryDTO` 交给 `ExtensionHttpClient`，返回 `HttpResponseDTO<PagedResultDTO<ExtensionDTO>>`。当前响应数据在 `Body` 属性中，不是 `Data`。
+
+```csharp
+var response = await host.QueryExtensionsAsync(new ExtensionQueryDTO
+{
+    Name = "report",
+    Publisher = "general",
+    Category = "Tools",
+    Platform = TargetPlatform.Windows | TargetPlatform.Linux,
+    HostVersion = "1.2.0",
+    IsPreRelease = false,
+    PageNumber = 1,
+    PageSize = 10
+});
+
+if (response.Body == null)
+{
+    Console.WriteLine($"Query failed: {response.Code} {response.Message}");
+    return;
+}
+
+Console.WriteLine($"Total: {response.Body.TotalCount}");
+```
+
+### 2. 下载扩展包
+
+`DownloadExtensionAsync(extensionId, savePath)` 会调用远程下载接口并写入 `savePath`。底层下载器支持：
+
+- 已存在部分文件时使用 HTTP Range 续传；
+- 下载过程中通过 `ExtensionUpdateStatusChanged` 报告 `Updating` 和进度；
+- `DownloadExtensionWithResultAsync` 在底层提供更细的错误分类，例如网络错误、4xx、5xx、取消、I/O 错误。
+
+```csharp
+var downloaded = await host.DownloadExtensionAsync(
+    extensionId: "report-extension",
+    savePath: "./extensions/report-extension_1.0.0.zip");
+```
+
+### 3. 安装扩展包
+
+`InstallExtensionAsync` 只接受 `.zip` 包。安装时会根据文件名推导目录名：`name_version.zip` 会安装到 `{ExtensionsDirectory}/name`。
+
+```csharp
+var installed = await host.InstallExtensionAsync(
+    extensionPath: "./extensions/report-extension_1.0.0.zip",
+    rollbackOnFailure: true);
+```
+
+安装过程：
+
+1. 检查文件是否存在，并确认扩展包是 `.zip`。
+2. 调用 `IExtensionLifecycleHooks.OnBeforeInstallAsync`，返回 `false` 时取消安装。
+3. 如果本地已有同名扩展且开启回滚，复制旧目录到 `{ExtensionsDirectory}/.backup`。
+4. 删除旧目录，创建目标目录。
+5. 安全解压 ZIP。解压时会校验目标路径，跳过 Zip Slip 路径穿越条目。
+6. 安装成功后删除备份，并调用 `OnAfterInstallAsync`。
+7. 安装失败时尝试从备份目录恢复。
+
+### 4. 一键更新扩展
+
+`UpdateExtensionAsync(extensionId)` 是推荐入口。它会串起查询、兼容性检查、平台检查、依赖递归安装、下载、SHA256 校验、安装和 catalog 更新。
+
+```csharp
+var success = await host.UpdateExtensionAsync("report-extension");
+if (!success)
+{
+    Console.WriteLine("Update failed. Read ExtensionUpdateStatusChanged for details.");
+}
+```
+
+完整流程：
+
+1. 触发 `Queued` 事件。
+2. 用 `Id = extensionId` 查询服务端扩展信息。
+3. 将 `ExtensionDTO` 映射为 `ExtensionMetadata`。
+4. 检查宿主版本是否落在 `MinHostVersion` / `MaxHostVersion` 范围内。
+5. 检查当前 OS 是否包含在 `SupportedPlatforms`。
+6. 遇到未安装依赖时递归调用 `UpdateExtensionAsync(depId)`。
+7. 下载 `{Name}_{Version}{Format}` 到 `ExtensionsDirectory`。
+8. 如果 `Hash` 非空，计算下载文件 SHA256 并对比。
+9. 调用 `InstallExtensionAsync(..., rollbackOnFailure: true)`。
+10. 写入或更新本地 catalog 的 `manifest.json`。
+11. 成功触发 `UpdateSuccessful`，失败触发 `UpdateFailed`。
+
+### 5. 批量更新
+
+`UpdateExtensionsAsync` 会按传入顺序逐个更新扩展，并返回每个扩展的成功/失败结果。当前实现是顺序处理；如需并发策略，应在业务层控制并发数量后分别调用 `UpdateExtensionAsync`。
+
+```csharp
+var result = await host.UpdateExtensionsAsync(new[]
+{
+    "report-extension",
+    "auth-extension",
+    "theme-extension"
+}, cancellationToken);
+
+foreach (var item in result)
+{
+    Console.WriteLine($"{item.Key}: {item.Value}");
+}
+```
+
+### 6. 回滚
+
+回滚由 `InstallExtensionAsync` 负责，核心是备份旧目录、失败时恢复旧目录。它适合覆盖安装或更新失败场景；首次安装失败时因为没有旧目录，通常没有可恢复内容。
+
+备份目录位于：
+
+```text
+{ExtensionsDirectory}/.backup/{extensionName}_{yyyyMMddHHmmss}
+```
+
+### 7. 卸载
+
+`IExtensionHost` 当前没有暴露 `UninstallExtensionAsync`。卸载能力在 `IExtensionCatalog.RemoveInstalledExtension(extensionId)` 中，调用后会移除内存记录，并尝试删除对应扩展目录。
+
+```csharp
+host.ExtensionCatalog.RemoveInstalledExtension("report-extension");
+```
+
+如果业务需要审批、停用、卸载前检查或卸载后清理，可以在应用层封装卸载服务，并复用 `IExtensionLifecycleHooks.OnBeforeUninstallAsync` / `OnAfterUninstallAsync` 的语义保持一致。
+
+---
+
+## 扩展元数据与 manifest
+
+### ExtensionMetadata
+
+`ExtensionMetadata` 是 Extension 组件本地安装、catalog 持久化和兼容性判断使用的核心模型。
+
+| 属性 | 说明 |
+| --- | --- |
+| `Id` | 扩展唯一 ID。依赖、查询、更新、卸载都以它为关键标识 |
+| `Name` | 扩展目录名和包名建议使用的稳定名称，例如 `report-extension` |
+| `DisplayName` | 展示名称 |
+| `Version` | 扩展版本。兼容性比较使用 .NET `Version.TryParse`，建议使用 `1.2.3` 或 `1.2.3.0` |
+| `FileSize` | 扩展包大小，单位字节 |
+| `UploadTime` | 上传时间 |
+| `Status` | 是否启用 |
+| `Description` | 描述 |
+| `Format` | 包格式。当前安装实现要求 `.zip` |
+| `Hash` | 可选 SHA256。非空时更新流程会校验下载文件 |
+| `Publisher` | 发布者 |
+| `License` | 许可证 |
+| `Categories` | 逗号分隔分类 |
+| `SupportedPlatforms` | `TargetPlatform` 位标志 |
+| `MinHostVersion` | 最低宿主版本 |
+| `MaxHostVersion` | 最高宿主版本 |
+| `ReleaseDate` | 发布时间 |
+| `Dependencies` | 逗号分隔的依赖扩展 ID |
+| `IsPreRelease` | 是否预发布 |
+| `DownloadUrl` | 下载地址元数据；当前默认下载调用仍使用 `{ServerUrl}/Download/{extensionId}` |
+| `CustomProperties` | JSON 字符串形式的自定义属性 |
+
+### 服务端 DTO 与本地 manifest
+
+服务端查询返回 `ExtensionDTO`，其中 `Categories` 和 `Dependencies` 是 `List<string>`；客户端会把它们映射为本地 `ExtensionMetadata` 的逗号分隔字符串。
+
+本地安装 catalog 不再是单个 `catalog.json`。当前实现会扫描 `CatalogPath` 下的子目录，并读取每个扩展目录中的：
+
+```text
+manifest.json
+```
+
+`AddOrUpdateInstalledExtension` 会把每个扩展写入独立目录：
+
+```text
+{CatalogPath}/{safe-extension-name}/manifest.json
+```
+
+写入时使用 `manifest.json.tmp -> manifest.json` 的方式尽量保证原子替换；`LoadInstalledExtensions` 会清理遗留的 `.tmp` 文件，并跳过包含 `.backup` 的目录。
+
+示例 manifest：
+
+```json
+{
+  "Id": "report-extension",
+  "Name": "report-extension",
+  "DisplayName": "Report Extension",
+  "Version": "1.0.0",
+  "Status": true,
+  "Description": "Adds PDF and Excel reports.",
+  "Format": ".zip",
+  "Hash": "6f5902ac237024bdd0c176cb93063dc4...",
+  "Publisher": "GeneralLibrary",
+  "License": "MIT",
+  "Categories": "Reports,Tools",
+  "SupportedPlatforms": 7,
+  "MinHostVersion": "1.0.0",
+  "MaxHostVersion": "2.0.0",
+  "Dependencies": "base-extension",
+  "IsPreRelease": false
+}
+```
+
+`SupportedPlatforms` 是 `[Flags]` 枚举，`All = Windows | Linux | MacOS = 7`。
+
+---
+
+## 扩展包结构与 Tools 打包关系
+
+Extension 组件负责“消费”扩展包：下载、校验、解压、安装、回滚和登记 manifest。Tools 或 CI/CD 负责“生产”扩展包：编译扩展、生成元数据、计算 SHA256、压缩为 ZIP、上传到扩展服务。
+
+推荐包名：
+
+```text
+{Name}_{Version}.zip
+```
+
+例如：
+
+```text
+report-extension_1.0.0.zip
+```
+
+推荐 ZIP 内容：
+
+```text
+report-extension_1.0.0.zip
+├─ manifest.json          # 推荐放入包内，供业务和 catalog 复用
+├─ extension.dll          # 扩展主体程序集
+├─ extension.deps.json    # .NET 依赖描述
+├─ README.md
+├─ CHANGELOG.md
+└─ LICENSE.txt
+```
+
+当前 `InstallExtensionAsync` 本身不强制读取包内 `manifest.json`，它主要负责安全解压和回滚；`UpdateExtensionAsync` 会使用服务端返回的 `ExtensionDTO` 更新本地 catalog。因此生产侧必须保证服务端元数据与 ZIP 包内容一致。
+
+发布侧建议流程：
+
+1. 编译扩展项目。
+2. 准备 `manifest.json`，字段对齐 `ExtensionMetadata`。
+3. 生成 `{Name}_{Version}.zip`。
+4. 计算 ZIP 的 SHA256，写入服务端 `Hash`。
+5. 上传 ZIP 和 `ExtensionDTO` 元数据。
+6. 宿主应用通过 `QueryExtensionsAsync` 查询，通过 `UpdateExtensionAsync` 消费。
+
+打包基础可参考 [Packaging](../guide/Packaging.md)。高级 Cookbook 的扩展发布流水线会在任务 [#54](https://github.com/GeneralLibrary/GeneralUpdate-Samples/issues/54) 中展开，建议在那里把 Tools 打包、清单生成、哈希计算、上传和宿主灰度消费串成完整流水线。
+
+---
+
+## 兼容性、平台与依赖
+
+### 版本兼容性
+
+`VersionCompatibilityChecker.IsCompatible` 使用 `HostVersion` 与扩展的 `MinHostVersion`、`MaxHostVersion` 比较：
+
+- `HostVersion` 为空：视为不限制，返回兼容；
+- `HostVersion` 无法被 `Version.TryParse` 解析：不兼容；
+- `MinHostVersion` 非空且无法解析：不兼容；
+- `MaxHostVersion` 非空且无法解析：不兼容；
+- 宿主版本必须满足 `MinHostVersion <= HostVersion <= MaxHostVersion`。
+
+| HostVersion | MinHostVersion | MaxHostVersion | 结果 |
+| --- | --- | --- | --- |
+| `1.5.0` | `1.0.0` | `2.0.0` | 兼容 |
+| `1.5.0` | `1.6.0` | `2.0.0` | 不兼容 |
+| `1.5.0` | `1.0.0` | `1.4.0` | 不兼容 |
+| `1.5.0` | 空 | 空 | 兼容 |
+
+```csharp
+var extension = host.ExtensionCatalog.GetInstalledExtensionById("report-extension");
+if (extension != null && host.IsExtensionCompatible(extension))
+{
+    Console.WriteLine("Compatible");
+}
+```
+
+### 平台匹配
+
+```csharp
+[Flags]
+public enum TargetPlatform
+{
+    None = 0,
+    Windows = 1,
+    Linux = 2,
+    MacOS = 4,
+    All = Windows | Linux | MacOS
+}
+```
+
+`PlatformMatcher` 通过 `RuntimeInformation` 自动识别当前系统，并用位运算判断扩展是否支持当前平台。
+
+```csharp
+var metadata = new ExtensionMetadata
+{
+    Id = "report-extension",
+    Name = "report-extension",
+    SupportedPlatforms = TargetPlatform.Windows | TargetPlatform.Linux
+};
+```
+
+### 依赖处理
+
+`ExtensionMetadata.Dependencies` 是逗号分隔的扩展 ID。`DependencyList` 会把它解析为列表。`UpdateExtensionAsync` 发现未安装依赖时，会先递归更新依赖，再安装当前扩展。
+
+```csharp
+var metadata = new ExtensionMetadata
+{
+    Id = "report-extension",
+    Dependencies = "base-extension,chart-extension"
+};
+```
+
+`DependencyResolver` 还提供依赖解析能力，可以基于本地 catalog 识别缺失依赖并检测循环依赖。需要注意：`UpdateExtensionAsync` 当前依赖安装是根据服务端返回的当前扩展元数据逐项递归处理；生产侧要确保依赖扩展也能通过同一个扩展服务查询和下载。
+
+---
+
+## 事件通知与自动更新开关
+
+### ExtensionUpdateStatusChanged
+
+扩展更新事件提供单个扩展的状态变化通知：
+
+| 字段 | 说明 |
+| --- | --- |
+| `ExtensionId` | 扩展 ID |
+| `ExtensionName` | 扩展名称，部分阶段可能为空 |
+| `Status` | `Queued`、`Updating`、`UpdateSuccessful`、`UpdateFailed` |
+| `Progress` | 0-100，下载中会更新 |
+| `ErrorMessage` | 失败原因 |
+
+```csharp
 host.ExtensionUpdateStatusChanged += (sender, e) =>
 {
     switch (e.Status)
     {
         case ExtensionUpdateStatus.Queued:
-            Console.WriteLine($"{e.ExtensionName} 已加入队列");
+            Console.WriteLine($"{e.ExtensionId} queued");
             break;
         case ExtensionUpdateStatus.Updating:
-            Console.WriteLine($"{e.ExtensionName} 更新中... {e.Progress}%");
+            Console.WriteLine($"{e.ExtensionId} downloading {e.Progress}%");
             break;
         case ExtensionUpdateStatus.UpdateSuccessful:
-            Console.WriteLine($"{e.ExtensionName} 更新成功！");
+            Console.WriteLine($"{e.ExtensionName ?? e.ExtensionId} updated");
             break;
         case ExtensionUpdateStatus.UpdateFailed:
-            Console.WriteLine($"{e.ExtensionName} 更新失败: {e.ErrorMessage}");
+            Console.WriteLine($"{e.ExtensionId} failed: {e.ErrorMessage}");
             break;
     }
 };
 ```
 
+### 自动更新开关
 
+`SetGlobalAutoUpdate` 设置全局默认值，`SetAutoUpdate` 设置单个扩展的覆盖值。`IExtensionHost` 暴露了设置方法；`GeneralExtensionHost` 还提供 `IsAutoUpdateEnabled(extensionId)` 用于读取当前结果。
 
-### 查询远程扩展
+```csharp
+var concreteHost = new GeneralExtensionHost(options);
 
-#### 基本查询
+concreteHost.SetGlobalAutoUpdate(true);
+concreteHost.SetAutoUpdate("large-extension", false);
 
-```c#
-var query = new ExtensionQueryDTO
-{
-    PageNumber = 1,
-    PageSize = 20
-};
-
-var result = await host.QueryExtensionsAsync(query);
-if (result.Success && result.Data != null)
-{
-    Console.WriteLine($"找到 {result.Data.TotalCount} 个扩展");
-    foreach (var ext in result.Data.Items)
-    {
-        Console.WriteLine($"• {ext.DisplayName} v{ext.Version}");
-        Console.WriteLine($"  发布者: {ext.Publisher}");
-        Console.WriteLine($"  兼容: {ext.IsCompatible}");
-    }
-}
+var enabled = concreteHost.IsAutoUpdateEnabled("large-extension");
 ```
 
-#### 高级查询（带过滤条件）
+这些开关只保存于当前 `GeneralExtensionHost` 实例内存中，组件不会自动启动后台轮询。应用层应自行决定何时扫描需要更新的扩展，并根据开关调用 `UpdateExtensionAsync`。
 
-```c#
-var query = new ExtensionQueryDTO
-{
-    Name = "my-extension",                    // 按名称搜索
-    Platform = TargetPlatform.Windows,        // 只查询 Windows 扩展
-    HostVersion = "1.0.0",                    // 检查与此版本的兼容性
-    Status = true,                            // 只查询已启用的扩展
-    BeginDate = DateTime.Now.AddMonths(-1),   // 最近一个月的扩展
-    EndDate = DateTime.Now,
-    PageNumber = 1,
-    PageSize = 50
-};
+---
 
-var result = await host.QueryExtensionsAsync(query);
-```
+## 服务器 API 契约
 
+当前 `ExtensionHttpClient` 使用两个端点。
 
+### 查询
 
-### 安装和更新扩展
-
-#### 自动更新扩展
-
-最简单的方式，一次调用完成所有操作：
-
-```c#
-// UpdateExtensionAsync 自动执行以下步骤：
-// 1. 从服务器查询扩展信息
-// 2. 检查版本兼容性
-// 3. 检查平台支持
-// 4. 下载扩展包
-// 5. 安装扩展
-// 6. 更新本地目录
-
-string extensionId = "550e8400-e29b-41d4-a716-446655440000";
-bool success = await host.UpdateExtensionAsync(extensionId);
-
-if (success)
-{
-    Console.WriteLine("扩展更新成功！");
-}
-else
-{
-    Console.WriteLine("扩展更新失败，请检查事件获取详细信息");
-}
-```
-
-#### 手动下载和安装
-
-分步骤控制安装过程：
-
-```c#
-// 步骤 1：下载扩展
-string extensionId = "550e8400-e29b-41d4-a716-446655440000";
-string savePath = "./downloads/my-extension.zip";
-
-bool downloaded = await host.DownloadExtensionAsync(extensionId, savePath);
-
-if (downloaded)
-{
-    // 步骤 2：安装扩展（带回滚功能）
-    bool installed = await host.InstallExtensionAsync(
-        extensionPath: savePath,
-        rollbackOnFailure: true  // 失败时自动回滚
-    );
-    
-    if (installed)
-    {
-        Console.WriteLine("扩展安装成功！");
-    }
-    else
-    {
-        Console.WriteLine("安装失败，已自动回滚");
-    }
-}
-```
-
-
-
-### 管理已安装扩展
-
-#### 列出所有扩展
-
-```c#
-var extensions = host.ExtensionCatalog.GetInstalledExtensions();
-
-Console.WriteLine($"已安装 {extensions.Count} 个扩展：");
-foreach (var ext in extensions)
-{
-    Console.WriteLine($"• {ext.DisplayName} v{ext.Version}");
-    Console.WriteLine($"  ID: {ext.Id}");
-    Console.WriteLine($"  状态: {(ext.Status == true ? "启用" : "禁用")}");
-    Console.WriteLine($"  平台: {ext.SupportedPlatforms}");
-}
-```
-
-#### 获取特定扩展
-
-```c#
-string extensionId = "550e8400-e29b-41d4-a716-446655440000";
-var extension = host.ExtensionCatalog.GetInstalledExtensionById(extensionId);
-
-if (extension != null)
-{
-    Console.WriteLine($"扩展名称: {extension.DisplayName}");
-    Console.WriteLine($"版本: {extension.Version}");
-    Console.WriteLine($"发布者: {extension.Publisher}");
-    Console.WriteLine($"描述: {extension.Description}");
-}
-else
-{
-    Console.WriteLine("未找到扩展");
-}
-```
-
-#### 按平台筛选扩展
-
-```c#
-var windowsExtensions = host.ExtensionCatalog
-    .GetInstalledExtensionsByPlatform(TargetPlatform.Windows);
-
-Console.WriteLine($"Windows 扩展: {windowsExtensions.Count} 个");
-
-var linuxExtensions = host.ExtensionCatalog
-    .GetInstalledExtensionsByPlatform(TargetPlatform.Linux);
-
-Console.WriteLine($"Linux 扩展: {linuxExtensions.Count} 个");
-```
-
-
-
-### 版本兼容性
-
-GeneralUpdate.Extension 自动检查版本兼容性，确保扩展与主机应用程序版本匹配。
-
-#### 兼容性规则
-
-扩展必须满足以下条件才被视为兼容：
-1. 扩展的 MinHostVersion ≤ 主机版本
-2. 扩展的 MaxHostVersion ≥ 主机版本
-3. 两个条件必须同时满足
-
-#### 示例
-
-假设主机版本为 1.5.0：
-
-| 扩展 MinHostVersion | 扩展 MaxHostVersion | 结果     |
-| ------------------- | ------------------- | -------- |
-| 1.0.0               | 2.0.0               | ✓ 兼容   |
-| 1.6.0               | 2.0.0               | ✗ 不兼容 |
-| 1.0.0               | 1.4.0               | ✗ 不兼容 |
-| 1.5.0               | 1.5.0               | ✓ 兼容   |
-
-#### 检查兼容性
-
-```c#
-var extension = host.ExtensionCatalog.GetInstalledExtensionById(extensionId);
-if (extension != null)
-{
-    bool isCompatible = host.IsExtensionCompatible(extension);
-    
-    if (isCompatible)
-    {
-        Console.WriteLine("✓ 扩展与当前版本兼容");
-    }
-    else
-    {
-        Console.WriteLine("✗ 扩展与当前版本不兼容");
-        Console.WriteLine($"  需要主机版本: {extension.MinHostVersion} - {extension.MaxHostVersion}");
-        Console.WriteLine($"  当前主机版本: {options.HostVersion}");
-    }
-}
-```
-
-
-
-### 平台支持
-
-GeneralUpdate.Extension 支持多平台扩展，可以为不同操作系统提供不同的扩展版本。
-
-#### 平台标志
-
-```c#
-// 单个平台
-TargetPlatform.Windows    // 仅 Windows
-TargetPlatform.Linux      // 仅 Linux
-TargetPlatform.MacOS      // 仅 macOS
-
-// 多平台（使用位标志组合）
-TargetPlatform.Windows | TargetPlatform.Linux  // Windows 和 Linux
-TargetPlatform.All                              // 所有平台
-```
-
-#### 自动平台检测
-
-系统自动检测当前运行平台，并筛选兼容的扩展：
-
-```c#
-// 查询时自动按平台过滤
-var query = new ExtensionQueryDTO
-{
-    Platform = TargetPlatform.Windows  // 只返回支持 Windows 的扩展
-};
-
-var result = await host.QueryExtensionsAsync(query);
-```
-
-#### 平台特定扩展
-
-```c#
-// 示例：为不同平台设置扩展元数据
-var extension = new ExtensionMetadata
-{
-    Name = "my-extension",
-    DisplayName = "My Extension",
-    Version = "1.0.0",
-    // 仅支持 Windows 和 Linux
-    SupportedPlatforms = TargetPlatform.Windows | TargetPlatform.Linux
-};
-```
-
-
-
-### 依赖关系解析
-
-GeneralUpdate.Extension 自动处理扩展之间的依赖关系。
-
-#### 依赖关系特性
-
-1. **自动解析传递依赖**：如果 A 依赖 B，B 依赖 C，系统会自动识别并安装 C。
-2. **循环依赖检测**：自动检测并防止循环依赖。
-3. **正确的安装顺序**：按依赖顺序安装（先安装被依赖项）。
-4. **缺失依赖检查**：安装前检查所有依赖是否可用。
-
-#### 定义依赖关系
-
-在扩展元数据中使用逗号分隔的 GUID 列表：
-
-```c#
-var extension = new ExtensionMetadata
-{
-    Id = "550e8400-e29b-41d4-a716-446655440001",
-    Name = "my-extension",
-    DisplayName = "My Extension",
-    Version = "1.0.0",
-    // 依赖两个其他扩展
-    Dependencies = "550e8400-e29b-41d4-a716-446655440002,550e8400-e29b-41d4-a716-446655440003"
-};
-```
-
-#### 依赖自动处理
-
-```c#
-// UpdateExtensionAsync 自动处理依赖：
-// 1. 识别所有依赖项
-// 2. 检查是否已安装
-// 3. 下载并安装缺失的依赖
-// 4. 按正确顺序安装
-
-bool success = await host.UpdateExtensionAsync(extensionId);
-// 系统会自动安装所有必需的依赖扩展
-```
-
-
-
-### 回滚机制
-
-InstallExtensionAsync 支持自动回滚功能，在安装失败时恢复到之前的状态。
-
-#### 工作原理
-
-1. **创建备份**：安装前，系统备份现有扩展（如果存在）。
-2. **尝试安装**：执行扩展安装操作。
-3. **成功时**：删除备份文件。
-4. **失败时**：自动从备份恢复，撤销所有更改。
-
-#### 使用回滚功能
-
-```c#
-bool success = await host.InstallExtensionAsync(
-    extensionPath: "./downloads/extension.zip",
-    rollbackOnFailure: true  // 启用自动回滚
-);
-
-if (!success)
-{
-    Console.WriteLine("安装失败，但已自动回滚到之前的版本");
-    Console.WriteLine("您的扩展目录保持不变");
-}
-```
-
-#### 最佳实践
-
-- 生产环境中**始终启用回滚**（`rollbackOnFailure: true`）
-- 确保有足够的磁盘空间用于备份
-- 监控备份目录（默认为 `<ExtensionsDirectory>/.backup`）
-
-
-
-### 自动更新设置
-
-GeneralUpdate.Extension 支持扩展的自动更新功能。
-
-#### 为单个扩展启用自动更新
-
-```c#
-string extensionId = "550e8400-e29b-41d4-a716-446655440000";
-
-// 启用自动更新
-host.SetAutoUpdate(extensionId, true);
-
-// 禁用自动更新
-host.SetAutoUpdate(extensionId, false);
-
-// 检查状态
-bool autoUpdateEnabled = host.IsAutoUpdateEnabled(extensionId);
-Console.WriteLine($"自动更新: {(autoUpdateEnabled ? "启用" : "禁用")}");
-```
-
-#### 全局自动更新
-
-```c#
-// 为所有扩展启用自动更新
-host.SetGlobalAutoUpdate(true);
-
-// 禁用全局自动更新
-host.SetGlobalAutoUpdate(false);
-```
-
-
-
-### 下载队列管理
-
-下载队列管理器处理并发下载，提供状态跟踪和取消功能。
-
-#### 队列特性
-
-- 默认并发下载限制：3 个同时下载
-- 自动状态跟踪
-- 支持取消正在进行的下载
-- 支持断点续传（HTTP Range 请求）
-
-#### 下载状态
-
-下载任务可能处于以下状态之一：
-
-```c#
-public enum ExtensionUpdateStatus
-{
-    Queued,            // 已加入队列，等待下载
-    Updating,          // 正在下载/更新
-    UpdateSuccessful,  // 下载/更新成功
-    UpdateFailed       // 下载/更新失败
-}
-```
-
-#### 监控下载
-
-```c#
-host.ExtensionUpdateStatusChanged += (sender, e) =>
-{
-    Console.WriteLine($"扩展: {e.ExtensionName ?? e.ExtensionId}");
-    Console.WriteLine($"状态: {e.Status}");
-    
-    if (e.Status == ExtensionUpdateStatus.Updating)
-    {
-        Console.WriteLine($"进度: {e.Progress}%");
-    }
-    
-    if (e.Status == ExtensionUpdateStatus.UpdateFailed)
-    {
-        Console.WriteLine($"错误: {e.ErrorMessage}");
-    }
-};
-```
-
-
-
-### 服务器 API 要求
-
-GeneralUpdate.Extension 需要服务器提供以下 API 端点：
-
-#### 查询扩展
-
-```
-POST {ServerUrl}/extensions
+```http
+GET {ServerUrl}/Query
 Content-Type: application/json
-Authorization: Bearer {BearerToken}
+Authorization: {Scheme} {Token}
 
-请求体: ExtensionQueryDTO
-响应: HttpResponseDTO<PagedResultDTO<ExtensionDTO>>
+ExtensionQueryDTO JSON body
 ```
 
-#### 下载扩展
+这里是 **GET + JSON Body**。这不是常见 HTTP 风格，但当前客户端源码明确按这个服务端契约实现。如果经过代理、网关或 API 平台时出现兼容性问题，需要服务端和客户端一起改为 POST 或 query string。
 
+响应：
+
+```csharp
+HttpResponseDTO<PagedResultDTO<ExtensionDTO>>
 ```
-GET {ServerUrl}/extensions/{id}
-Authorization: Bearer {BearerToken}
 
-响应: 文件流（支持 HTTP Range 请求以实现断点续传）
+### 下载
+
+```http
+GET {ServerUrl}/Download/{extensionId}
+Authorization: {Scheme} {Token}
+Range: bytes={existingLength}-
 ```
 
+服务端应支持普通文件流下载，最好同时支持 HTTP Range，便于客户端断点续传。客户端遇到 `416 RequestedRangeNotSatisfiable` 会视为文件已经完整下载。
 
+---
 
-### 完整使用示例
+## 高级扩展点
 
-以下是一个完整的示例，展示了扩展管理的主要操作：
+### 使用 ExtensionHostBuilder 和 DI
 
-```c#
-using GeneralUpdate.Extension;
-using GeneralUpdate.Extension.Core;
-using GeneralUpdate.Extension.Common.Models;
-using GeneralUpdate.Extension.Common.DTOs;
-using GeneralUpdate.Extension.Common.Enums;
-using System;
-using System.Threading.Tasks;
+`ExtensionHostBuilder` 会注册默认服务，同时允许业务替换任意服务：
 
-public class ExtensionManagerExample
-{
-    public static async Task Main()
+```csharp
+var host = new ExtensionHostBuilder()
+    .WithOptions(options)
+    .ConfigureServices(services =>
     {
-        // 1. 初始化扩展主机
-        var options = new ExtensionHostOptions
-        {
-            ServerUrl = "https://extensions.example.com/api",
-            BearerToken = "your-bearer-token",
-            HostVersion = "1.0.0",
-            ExtensionsDirectory = "./extensions"
-        };
+        services.AddSingleton<IExtensionLifecycleHooks, MyLifecycleHooks>();
+        services.AddSingleton<IExtensionHttpClient>(sp =>
+            new ExtensionHttpClient(options.ServerUrl, options.Scheme, options.Token, sharedHttpClient));
+    })
+    .Build();
+```
 
-        var host = new GeneralExtensionHost(options);
+默认注册包括：
 
-        // 2. 订阅更新事件
-        host.ExtensionUpdateStatusChanged += (sender, e) =>
-        {
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {e.ExtensionName}");
-            Console.WriteLine($"  状态: {e.Status}");
-            
-            if (e.Status == ExtensionUpdateStatus.Updating)
-            {
-                Console.WriteLine($"  进度: {e.Progress}%");
-            }
-            
-            if (e.Status == ExtensionUpdateStatus.UpdateFailed)
-            {
-                Console.WriteLine($"  错误: {e.ErrorMessage}");
-            }
-        };
+- `IExtensionHttpClient -> ExtensionHttpClient`
+- `IVersionCompatibilityChecker -> VersionCompatibilityChecker`
+- `IDownloadQueueManager -> DownloadQueueManager`
+- `IPlatformMatcher -> PlatformMatcher`
+- `IPlatformServices -> RuntimePlatformServices`
+- `IExtensionMetadataMapper -> DefaultExtensionMetadataMapper`
+- `IExtensionCatalog -> ExtensionCatalog`
+- `IDependencyResolver -> DependencyResolver`
+- `IExtensionLifecycleHooks -> DefaultExtensionLifecycleHooks`
+- `IExtensionHost -> GeneralExtensionHost`
 
-        // 3. 查询远程扩展
-        Console.WriteLine("=== 查询远程扩展 ===\n");
-        var query = new ExtensionQueryDTO
-        {
-            Platform = TargetPlatform.Windows,
-            HostVersion = options.HostVersion,
-            Status = true,
-            PageNumber = 1,
-            PageSize = 10
-        };
+### 生命周期钩子
 
-        var queryResult = await host.QueryExtensionsAsync(query);
-        if (queryResult.Success && queryResult.Data != null)
-        {
-            Console.WriteLine($"找到 {queryResult.Data.TotalCount} 个扩展:\n");
-            
-            foreach (var ext in queryResult.Data.Items)
-            {
-                Console.WriteLine($"• {ext.DisplayName} v{ext.Version}");
-                Console.WriteLine($"  ID: {ext.Id}");
-                Console.WriteLine($"  发布者: {ext.Publisher}");
-                Console.WriteLine($"  兼容: {ext.IsCompatible}");
-                Console.WriteLine($"  平台: {ext.SupportedPlatforms}");
-                Console.WriteLine();
-            }
-        }
+`IExtensionLifecycleHooks` 用于在安装、激活、停用、卸载前后接入业务逻辑。当前 `GeneralExtensionHost` 已在安装前后调用 `OnBeforeInstallAsync` 和 `OnAfterInstallAsync`；激活、停用、卸载钩子可供业务层封装对应流程时复用。
 
-        // 4. 更新特定扩展
-        Console.WriteLine("\n=== 更新扩展 ===\n");
-        string extensionId = "550e8400-e29b-41d4-a716-446655440000";
-        
-        bool updateSuccess = await host.UpdateExtensionAsync(extensionId);
-        if (updateSuccess)
-        {
-            Console.WriteLine("✓ 扩展更新成功！");
-        }
-        else
-        {
-            Console.WriteLine("✗ 扩展更新失败");
-        }
-
-        // 5. 列出已安装的扩展
-        Console.WriteLine("\n=== 已安装的扩展 ===\n");
-        var installed = host.ExtensionCatalog.GetInstalledExtensions();
-        Console.WriteLine($"总共 {installed.Count} 个已安装扩展:\n");
-        
-        foreach (var ext in installed)
-        {
-            Console.WriteLine($"• {ext.DisplayName} v{ext.Version}");
-            Console.WriteLine($"  状态: {(ext.Status == true ? "启用" : "禁用")}");
-            Console.WriteLine($"  平台: {ext.SupportedPlatforms}");
-            
-            // 检查兼容性
-            bool compatible = host.IsExtensionCompatible(ext);
-            Console.WriteLine($"  兼容: {(compatible ? "是" : "否")}");
-            Console.WriteLine();
-        }
-
-        // 6. 配置自动更新
-        Console.WriteLine("\n=== 配置自动更新 ===\n");
-        host.SetGlobalAutoUpdate(true);
-        Console.WriteLine("✓ 已启用全局自动更新");
-        
-        // 为特定扩展禁用自动更新
-        host.SetAutoUpdate(extensionId, false);
-        Console.WriteLine($"✓ 已为扩展 {extensionId} 禁用自动更新");
+```csharp
+public sealed class MyLifecycleHooks : DefaultExtensionLifecycleHooks
+{
+    public override Task<bool> OnBeforeInstallAsync(
+        ExtensionMetadata extension,
+        string? packagePath,
+        CancellationToken cancellationToken = default)
+    {
+        Console.WriteLine($"Installing {packagePath}");
+        return Task.FromResult(true);
     }
 }
 ```
 
+### 下载队列
 
+`DownloadQueueManager` 提供独立队列类型，默认最大并发数为 3，支持 `Enqueue`、`GetTask`、`CancelTask`、`GetActiveTasks` 和 `DownloadStatusChanged` 事件。当前队列管理器本身只负责队列状态和并发槽位，真实下载逻辑由宿主更新流程中的 `ExtensionHttpClient` 完成；如果要做应用级并发下载，可以在业务层组合队列、HTTP 客户端和安装流程。
 
-### 最佳实践
+---
 
-1. **始终订阅事件**：在执行任何操作前订阅 `ExtensionUpdateStatusChanged` 事件，以监控进度和错误。
+## 最佳实践
 
-2. **使用回滚功能**：生产环境中安装扩展时始终启用 `rollbackOnFailure: true`。
-
-3. **检查兼容性**：安装前使用 `IsExtensionCompatible()` 检查扩展兼容性。
-
-4. **合理分页**：查询扩展时使用适当的 `PageSize`（建议 10-50），避免一次加载过多数据。
-
-5. **安全存储令牌**：Bearer Token 应安全存储，不要硬编码在代码中。
-
-6. **监控磁盘空间**：确保有足够的磁盘空间用于下载和备份。
-
-7. **验证扩展元数据**：安装前验证扩展的元数据完整性和哈希值。
-
-8. **处理网络错误**：实现重试逻辑处理网络临时故障。
-
-9. **日志记录**：记录所有扩展操作和错误，便于故障排查。
-
-10. **定期清理**：定期清理下载缓存和备份目录，释放磁盘空间。
-
-
-
-### 故障排除
-
-#### 问题：扩展下载失败
-
-**可能原因**：
-- 网络连接问题
-- 服务器不可用
-- Bearer Token 无效或过期
-
-**解决方案**：
-```c#
-// 检查事件参数中的错误信息
-host.ExtensionUpdateStatusChanged += (sender, e) =>
-{
-    if (e.Status == ExtensionUpdateStatus.UpdateFailed)
-    {
-        Console.WriteLine($"下载失败: {e.ErrorMessage}");
-        // 记录详细信息用于调试
-    }
-};
-
-// 实现重试逻辑
-int maxRetries = 3;
-for (int i = 0; i < maxRetries; i++)
-{
-    bool success = await host.UpdateExtensionAsync(extensionId);
-    if (success) break;
-    
-    await Task.Delay(TimeSpan.FromSeconds(5)); // 等待后重试
-}
-```
-
-#### 问题：扩展显示不兼容
-
-**解决方案**：
-```c#
-var extension = host.ExtensionCatalog.GetInstalledExtensionById(extensionId);
-if (extension != null && !host.IsExtensionCompatible(extension))
-{
-    Console.WriteLine("扩展版本要求:");
-    Console.WriteLine($"  最低主机版本: {extension.MinHostVersion}");
-    Console.WriteLine($"  最高主机版本: {extension.MaxHostVersion}");
-    Console.WriteLine($"  当前主机版本: {options.HostVersion}");
-    
-    // 检查是否有兼容的版本可用
-    var query = new ExtensionQueryDTO
-    {
-        Name = extension.Name,
-        HostVersion = options.HostVersion
-    };
-    var result = await host.QueryExtensionsAsync(query);
-    // 检查是否有兼容版本
-}
-```
-
-#### 问题：安装失败但未回滚
-
-**解决方案**：
-确保启用了回滚选项：
-```c#
-bool success = await host.InstallExtensionAsync(
-    extensionPath: savePath,
-    rollbackOnFailure: true  // 必须设置为 true
-);
-```
-
-检查备份目录权限：
-```c#
-string backupDir = Path.Combine(options.ExtensionsDirectory, ".backup");
-if (!Directory.Exists(backupDir))
-{
-    Directory.CreateDirectory(backupDir);
-}
-// 确保有写入权限
-```
-
-
-
-### 适用于
-
-| 产品           | 版本                                  |
-| -------------- | ------------------------------------- |
-| .NET Standard  | 2.0                                   |
-| .NET Framework | 4.6.1+                                |
-| .NET Core      | 2.0+                                  |
-| .NET           | 5, 6, 7, 8, 9, 10                     |
-| Mono           | 5.4+                                  |
-| Xamarin.iOS    | 10.14+                                |
-| Xamarin.Android| 8.0+                                  |
-
-### 另请参阅
-
-- [GeneralUpdate.Core](./GeneralUpdate.Core.md) - 主客户端更新组件
-- [GeneralUpdate.Core](./GeneralUpdate.Core.md) - 核心更新逻辑
-- [GitHub 源代码](https://github.com/GeneralLibrary/GeneralUpdate/tree/master/src/c%23/GeneralUpdate.Extension) - 完整源代码和更多示例
-- [快速入门指南](../quickstart/Quik%20start.md) - GeneralUpdate 入门
+1. 生产环境始终使用 `.zip` 扩展包，并采用 `{Name}_{Version}.zip` 命名。
+2. 服务端 `Hash` 建议填写 ZIP 的 SHA256，让 `UpdateExtensionAsync` 自动校验完整性。
+3. `HostVersion`、`MinHostVersion`、`MaxHostVersion` 使用标准可解析版本号。
+4. 本地 catalog 使用每个扩展独立 `manifest.json`，不要再按旧文档维护单个 `catalog.json`。
+5. `SupportedPlatforms` 按实际 OS 能力填写，不要为了省事全部写 `All`。
+6. 依赖扩展必须能被同一个服务端通过 ID 查询和下载，否则递归安装会失败。
+7. 大型扩展建议服务端支持 HTTP Range，并在 UI 中展示 `ExtensionUpdateStatusChanged` 的进度。
+8. 自动更新开关只是策略状态，不是后台任务调度器；扫描、定时、灰度和审批应由应用层控制。

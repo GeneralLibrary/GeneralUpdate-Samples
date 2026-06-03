@@ -2,877 +2,590 @@
 sidebar_position: 12
 ---
 
-### Definition
+# GeneralUpdate.Extension
 
-Namespace: GeneralUpdate.Extension
+## Overview
 
-Assembly: GeneralUpdate.Extension.dll
+**GeneralUpdate.Extension** is the extension management component for .NET applications. It gives a host application a VS Code-like extension model: query extensions from a remote service, download packages, install or update them into a local directory, and handle host-version compatibility, platform matching, extension dependencies, SHA256 validation, rollback, and update events.
 
-**NuGet Package**: GeneralUpdate.Extension
+It is useful when optional capabilities should ship independently from the main app, such as report modules, authentication plugins, industry-specific integrations, customer customizations, or scripting extensions. The host integrates `GeneralExtensionHost`; extension packages can then be produced by Tools or CI/CD, published as ZIP files, and consumed by the Extension component.
 
+**Namespace:** `GeneralUpdate.Extension`
 
+**Assembly:** `GeneralUpdate.Extension.dll`
+**NuGet package:** `GeneralUpdate.Extension`
 
-GeneralUpdate.Extension is a VS Code-inspired extension management system for .NET applications. It provides complete plugin/extension management capabilities, including extension download, installation, updates, version compatibility checking, platform support, dependency resolution, and rollback mechanisms.
-
-```c#
-public class GeneralExtensionHost : IExtensionHost
+```csharp
+public interface IExtensionHost
 {
-    public IExtensionCatalog ExtensionCatalog { get; }
-    public event EventHandler<ExtensionUpdateEventArgs>? ExtensionUpdateStatusChanged;
+    IExtensionCatalog ExtensionCatalog { get; }
+    event EventHandler<ExtensionUpdateEventArgs>? ExtensionUpdateStatusChanged;
+
+    Task<HttpResponseDTO<PagedResultDTO<ExtensionDTO>>> QueryExtensionsAsync(ExtensionQueryDTO query);
+    Task<bool> DownloadExtensionAsync(string extensionId, string savePath);
+    Task<bool> UpdateExtensionAsync(string extensionId);
+    Task<bool> InstallExtensionAsync(string extensionPath, bool rollbackOnFailure = true);
+    Task<Dictionary<string, bool>> UpdateExtensionsAsync(IEnumerable<string> extensionIds, CancellationToken cancellationToken = default);
+    bool IsExtensionCompatible(ExtensionMetadata extension);
+    void SetAutoUpdate(string extensionId, bool autoUpdate);
+    void SetGlobalAutoUpdate(bool enabled);
 }
 ```
 
+---
 
+## Navigation
 
-### Quick Start
+| Topic | What it covers |
+| --- | --- |
+| [Quick start](#quick-start) | Minimal configuration, querying, and updating |
+| [Core workflow](#core-workflow) | Query, download, install, update, rollback, and uninstall |
+| [Metadata and manifest](#metadata-and-manifest) | `ExtensionMetadata`, server DTOs, and local `manifest.json` |
+| [Package structure and Tools packaging](#package-structure-and-tools-packaging) | ZIP naming, package contents, producer/consumer roles |
+| [Compatibility, platform, and dependencies](#compatibility-platform-and-dependencies) | Host version range, `TargetPlatform`, recursive dependency installation |
+| [Events and auto-update settings](#events-and-auto-update-settings) | Status events and global/per-extension auto-update flags |
+| [Server API contract](#server-api-contract) | The actual `/Query` and `/Download/{extensionId}` calls |
+| [Advanced extension points](#advanced-extension-points) | DI builder, custom HttpClient, lifecycle hooks |
+| [Best practices](#best-practices) | Production integration guidance |
 
-The most basic usage example: initialize the extension host and query remote extensions [[View Full Example]](https://github.com/GeneralLibrary/GeneralUpdate/blob/master/src/c%23/GeneralUpdate.Extension/Examples/ExtensionExample.cs).
+---
 
-```c#
-using GeneralUpdate.Extension;
-using GeneralUpdate.Extension.Core;
-using GeneralUpdate.Extension.Common.Models;
+## Quick start
+
+### Install
+
+```bash
+dotnet add package GeneralUpdate.Extension
+```
+
+### Create an extension host
+
+```csharp
 using GeneralUpdate.Extension.Common.DTOs;
+using GeneralUpdate.Extension.Common.Enums;
+using GeneralUpdate.Extension.Common.Models;
+using GeneralUpdate.Extension.Core;
 
-// 1. Initialize extension host
 var options = new ExtensionHostOptions
 {
-    ServerUrl = "https://extensions.example.com/api",
-    BearerToken = "your-bearer-token",          // Optional: for authentication
-    HostVersion = "1.0.0",                      // Your application version
-    ExtensionsDirectory = "./extensions"         // Extension installation directory
-};
-
-var host = new GeneralExtensionHost(options);
-
-// 2. Subscribe to update events
-host.ExtensionUpdateStatusChanged += (sender, e) =>
-{
-    Console.WriteLine($"Extension: {e.ExtensionName}");
-    Console.WriteLine($"Status: {e.Status}");
-    Console.WriteLine($"Progress: {e.Progress}%");
-};
-
-// 3. Query available extensions
-var query = new ExtensionQueryDTO
-{
-    Platform = TargetPlatform.Windows,
-    HostVersion = "1.0.0",
-    PageNumber = 1,
-    PageSize = 20
-};
-
-var result = await host.QueryExtensionsAsync(query);
-if (result.Success && result.Data != null)
-{
-    foreach (var ext in result.Data.Items)
-    {
-        Console.WriteLine($"{ext.DisplayName} v{ext.Version}");
-        Console.WriteLine($"Compatible: {ext.IsCompatible}");
-    }
-}
-
-// 4. Update extension
-bool success = await host.UpdateExtensionAsync("extension-guid");
-```
-
-
-
-### Core Features
-
-GeneralUpdate.Extension provides the following core features.
-
-#### Extension Host (GeneralExtensionHost)
-
-The main extension management container that provides the entry point for all extension operations.
-
-| Method                      | Description                                                  |
-| --------------------------- | ------------------------------------------------------------ |
-| QueryExtensionsAsync()      | Query available extensions from remote server. Supports filtering by name, platform, version, status, etc. |
-| UpdateExtensionAsync()      | Update specified extension. Automatically handles download, compatibility check, platform validation, and installation. |
-| DownloadExtensionAsync()    | Download extension package to specified path. Supports resumable download (HTTP Range requests). |
-| InstallExtensionAsync()     | Install extension package. Supports automatic rollback functionality, restoring to previous state on installation failure. |
-| IsExtensionCompatible()     | Check if extension is compatible with current host version. |
-| SetAutoUpdate()             | Enable/disable auto-update for specified extension.         |
-| SetGlobalAutoUpdate()       | Enable/disable global auto-update for all extensions.       |
-| IsAutoUpdateEnabled()       | Check if auto-update is enabled for extension.              |
-
-#### Extension Catalog (ExtensionCatalog)
-
-Manages the catalog of locally installed extensions with persistent storage using JSON files.
-
-| Method                              | Description                                                  |
-| ----------------------------------- | ------------------------------------------------------------ |
-| LoadInstalledExtensions()           | Load list of installed extensions from catalog.json.        |
-| GetInstalledExtensions()            | Get list of all installed extensions.                       |
-| GetInstalledExtensionById()         | Get specific extension by extension ID (GUID).              |
-| GetInstalledExtensionsByPlatform()  | Get list of extensions that support specified platform.     |
-| AddOrUpdateExtension()              | Add new extension or update existing extension metadata.    |
-| RemoveExtension()                   | Remove extension record from catalog.                       |
-| SaveCatalog()                       | Save catalog to JSON file.                                  |
-
-#### Download Queue (DownloadQueueManager)
-
-Manages extension download queue with support for concurrent downloads and status tracking.
-
-| Method                  | Description                                                  |
-| ----------------------- | ------------------------------------------------------------ |
-| EnqueueDownload()       | Add download task to queue. Task will be automatically queued and processed. |
-| GetDownloadStatus()     | Get current status of specified download task.              |
-| CancelDownload()        | Cancel ongoing download task.                               |
-
-Download queue features:
-- Default concurrent download limit: 3
-- Automatic status tracking (Queued, Downloading, Completed, Failed)
-- Supports resumable downloads
-- Event notification for download status changes
-
-
-
-### Extension Metadata
-
-Each extension must include the following metadata information:
-
-| Property           | Type            | Description                                          |
-| ------------------ | --------------- | ---------------------------------------------------- |
-| Id                 | string          | Extension unique identifier (GUID format)           |
-| Name               | string          | Extension name (unique, lowercase, no spaces)       |
-| DisplayName        | string          | Human-readable display name                         |
-| Version            | string          | Semantic version number (e.g., "1.2.3")             |
-| Publisher          | string          | Publisher identifier                                |
-| Description        | string          | Extension description                               |
-| SupportedPlatforms | TargetPlatform  | Supported platform flags (Windows/Linux/MacOS/All)  |
-| MinHostVersion     | string          | Minimum compatible host version                     |
-| MaxHostVersion     | string          | Maximum compatible host version                     |
-| Dependencies       | string          | List of dependent extension IDs (comma-separated)   |
-| Format             | string          | File format (.dll, .zip, etc.)                      |
-| Categories         | string          | Extension categories (comma-separated)              |
-| IsPreRelease       | bool            | Whether this is a pre-release version               |
-| License            | string          | License identifier (e.g., "MIT", "Apache-2.0")      |
-| FileSize           | long            | File size (bytes)                                   |
-| Hash               | string          | File hash value (SHA256)                            |
-| DownloadUrl        | string          | Download URL                                        |
-
-
-
-### Initialization and Configuration
-
-#### Basic Initialization
-
-```c#
-var options = new ExtensionHostOptions
-{
-    ServerUrl = "https://extensions.example.com/api",
+    ServerUrl = "https://extensions.example.com/Extension",
+    Scheme = "Bearer",
+    Token = "your-token",
     HostVersion = "1.0.0",
     ExtensionsDirectory = "./extensions"
 };
 
 var host = new GeneralExtensionHost(options);
+
+host.ExtensionUpdateStatusChanged += (sender, e) =>
+{
+    Console.WriteLine($"{e.ExtensionId} {e.Status} {e.Progress}% {e.ErrorMessage}");
+};
 ```
 
-#### Initialization with Authentication
+`ExtensionHostOptions` currently contains:
 
-```c#
-var options = new ExtensionHostOptions
+| Property | Description |
+| --- | --- |
+| `ServerUrl` | Extension service base URL. The client calls `{ServerUrl}/Query` and `{ServerUrl}/Download/{extensionId}` |
+| `Scheme` | Authorization scheme, for example `Bearer`. Empty values disable the header |
+| `Token` | Authorization token. It is only used when both `Scheme` and `Token` are non-empty |
+| `HostVersion` | Host application version used by `MinHostVersion` / `MaxHostVersion` checks |
+| `ExtensionsDirectory` | Directory for downloaded packages, installed extensions, and `.backup` |
+| `CatalogPath` | Optional local catalog scan path. Defaults to `ExtensionsDirectory` |
+
+### Query and update
+
+```csharp
+var query = new ExtensionQueryDTO
 {
-    ServerUrl = "https://extensions.example.com/api",
-    BearerToken = "your-bearer-token",
-    HostVersion = "1.0.0",
-    ExtensionsDirectory = "./extensions",
-    CatalogPath = "./extensions/catalog.json"  // Optional: custom catalog file path
+    Platform = TargetPlatform.Windows,
+    HostVersion = options.HostVersion,
+    Status = true,
+    PageNumber = 1,
+    PageSize = 20
 };
 
-var host = new GeneralExtensionHost(options);
+var response = await host.QueryExtensionsAsync(query);
+if (response.Body != null)
+{
+    foreach (var extension in response.Body.Items)
+    {
+        Console.WriteLine($"{extension.DisplayName} v{extension.Version}, compatible: {extension.IsCompatible}");
+    }
+}
+else
+{
+    Console.WriteLine(response.Message);
+}
+
+var success = await host.UpdateExtensionAsync("extension-id");
 ```
 
-#### Subscribing to Events
+---
 
-```c#
+## Core workflow
+
+### 1. Query remote extensions
+
+`QueryExtensionsAsync` sends an `ExtensionQueryDTO` through `ExtensionHttpClient` and returns `HttpResponseDTO<PagedResultDTO<ExtensionDTO>>`. Current response data is in `Body`, not `Data`.
+
+```csharp
+var response = await host.QueryExtensionsAsync(new ExtensionQueryDTO
+{
+    Name = "report",
+    Publisher = "general",
+    Category = "Tools",
+    Platform = TargetPlatform.Windows | TargetPlatform.Linux,
+    HostVersion = "1.2.0",
+    IsPreRelease = false,
+    PageNumber = 1,
+    PageSize = 10
+});
+
+if (response.Body == null)
+{
+    Console.WriteLine($"Query failed: {response.Code} {response.Message}");
+    return;
+}
+
+Console.WriteLine($"Total: {response.Body.TotalCount}");
+```
+
+### 2. Download a package
+
+`DownloadExtensionAsync(extensionId, savePath)` downloads the remote package to `savePath`. The lower-level downloader supports:
+
+- HTTP Range resume when a partial file already exists;
+- `Updating` progress notifications through `ExtensionUpdateStatusChanged`;
+- detailed error classification in `DownloadExtensionWithResultAsync`, including network errors, 4xx, 5xx, cancellation, and I/O errors.
+
+```csharp
+var downloaded = await host.DownloadExtensionAsync(
+    extensionId: "report-extension",
+    savePath: "./extensions/report-extension_1.0.0.zip");
+```
+
+### 3. Install a package
+
+`InstallExtensionAsync` accepts `.zip` packages only. The target directory is inferred from the file name: `name_version.zip` installs to `{ExtensionsDirectory}/name`.
+
+```csharp
+var installed = await host.InstallExtensionAsync(
+    extensionPath: "./extensions/report-extension_1.0.0.zip",
+    rollbackOnFailure: true);
+```
+
+Install steps:
+
+1. Verify that the file exists and is a `.zip`.
+2. Call `IExtensionLifecycleHooks.OnBeforeInstallAsync`; `false` cancels the install.
+3. If the extension already exists and rollback is enabled, copy the old directory to `{ExtensionsDirectory}/.backup`.
+4. Delete the old directory and create the target directory.
+5. Safely extract the ZIP. Zip Slip path traversal entries are skipped.
+6. Delete the backup and call `OnAfterInstallAsync` on success.
+7. Attempt to restore from backup on failure.
+
+### 4. Update in one call
+
+`UpdateExtensionAsync(extensionId)` is the recommended entry point. It connects querying, compatibility checks, platform checks, recursive dependency installation, download, SHA256 validation, install, and catalog updates.
+
+```csharp
+var success = await host.UpdateExtensionAsync("report-extension");
+if (!success)
+{
+    Console.WriteLine("Update failed. Read ExtensionUpdateStatusChanged for details.");
+}
+```
+
+Full flow:
+
+1. Raise `Queued`.
+2. Query server metadata with `Id = extensionId`.
+3. Map `ExtensionDTO` to `ExtensionMetadata`.
+4. Check the host version against `MinHostVersion` / `MaxHostVersion`.
+5. Check whether the current OS is included in `SupportedPlatforms`.
+6. Recursively call `UpdateExtensionAsync(depId)` for missing dependencies.
+7. Download `{Name}_{Version}{Format}` into `ExtensionsDirectory`.
+8. If `Hash` is non-empty, compute and compare the downloaded file SHA256.
+9. Call `InstallExtensionAsync(..., rollbackOnFailure: true)`.
+10. Add or update the local catalog `manifest.json`.
+11. Raise `UpdateSuccessful` on success or `UpdateFailed` on failure.
+
+### 5. Bulk update
+
+`UpdateExtensionsAsync` updates the given extension IDs sequentially and returns a success flag per extension. If you need parallelism, control concurrency in the application layer and call `UpdateExtensionAsync` for each extension.
+
+```csharp
+var result = await host.UpdateExtensionsAsync(new[]
+{
+    "report-extension",
+    "auth-extension",
+    "theme-extension"
+}, cancellationToken);
+
+foreach (var item in result)
+{
+    Console.WriteLine($"{item.Key}: {item.Value}");
+}
+```
+
+### 6. Rollback
+
+Rollback belongs to `InstallExtensionAsync`. It backs up the previous directory and restores it if replacement fails. It is useful for update/overwrite scenarios; a first install usually has no previous directory to restore.
+
+Backup path:
+
+```text
+{ExtensionsDirectory}/.backup/{extensionName}_{yyyyMMddHHmmss}
+```
+
+### 7. Uninstall
+
+`IExtensionHost` does not currently expose `UninstallExtensionAsync`. The available uninstall primitive is `IExtensionCatalog.RemoveInstalledExtension(extensionId)`, which removes the in-memory record and attempts to delete the extension directory.
+
+```csharp
+host.ExtensionCatalog.RemoveInstalledExtension("report-extension");
+```
+
+If you need approval, disable-before-delete, pre-uninstall checks, or cleanup hooks, wrap this in an application service and reuse the semantics of `IExtensionLifecycleHooks.OnBeforeUninstallAsync` / `OnAfterUninstallAsync`.
+
+---
+
+## Metadata and manifest
+
+### ExtensionMetadata
+
+`ExtensionMetadata` is the core local model for installed extensions, catalog persistence, and compatibility checks.
+
+| Property | Description |
+| --- | --- |
+| `Id` | Unique extension ID. Dependencies, query, update, and uninstall all use this key |
+| `Name` | Stable extension name, recommended for package and directory naming |
+| `DisplayName` | Human-readable name |
+| `Version` | Extension version. Compatibility sorting uses .NET `Version.TryParse`; prefer `1.2.3` or `1.2.3.0` |
+| `FileSize` | Package size in bytes |
+| `UploadTime` | Upload timestamp |
+| `Status` | Enabled flag |
+| `Description` | Description |
+| `Format` | Package format. Current install logic requires `.zip` |
+| `Hash` | Optional SHA256. Non-empty values are verified during update |
+| `Publisher` | Publisher |
+| `License` | License identifier |
+| `Categories` | Comma-separated categories |
+| `SupportedPlatforms` | `TargetPlatform` flags |
+| `MinHostVersion` | Minimum host version |
+| `MaxHostVersion` | Maximum host version |
+| `ReleaseDate` | Release date |
+| `Dependencies` | Comma-separated dependency extension IDs |
+| `IsPreRelease` | Pre-release flag |
+| `DownloadUrl` | Download URL metadata; the default client still downloads from `{ServerUrl}/Download/{extensionId}` |
+| `CustomProperties` | Custom metadata as a JSON string |
+
+### Server DTO and local manifest
+
+The server query returns `ExtensionDTO`, where `Categories` and `Dependencies` are `List<string>`. The client maps those lists to comma-separated strings in local `ExtensionMetadata`.
+
+The local catalog is not a single `catalog.json`. Current code scans child directories under `CatalogPath` and reads each extension's:
+
+```text
+manifest.json
+```
+
+`AddOrUpdateInstalledExtension` writes each extension to its own directory:
+
+```text
+{CatalogPath}/{safe-extension-name}/manifest.json
+```
+
+Writes use a `manifest.json.tmp -> manifest.json` replacement pattern. `LoadInstalledExtensions` cleans orphaned `.tmp` files and skips directories containing `.backup`.
+
+Example manifest:
+
+```json
+{
+  "Id": "report-extension",
+  "Name": "report-extension",
+  "DisplayName": "Report Extension",
+  "Version": "1.0.0",
+  "Status": true,
+  "Description": "Adds PDF and Excel reports.",
+  "Format": ".zip",
+  "Hash": "6f5902ac237024bdd0c176cb93063dc4...",
+  "Publisher": "GeneralLibrary",
+  "License": "MIT",
+  "Categories": "Reports,Tools",
+  "SupportedPlatforms": 7,
+  "MinHostVersion": "1.0.0",
+  "MaxHostVersion": "2.0.0",
+  "Dependencies": "base-extension",
+  "IsPreRelease": false
+}
+```
+
+`SupportedPlatforms` is a `[Flags]` enum. `All = Windows | Linux | MacOS = 7`.
+
+---
+
+## Package structure and Tools packaging
+
+The Extension component consumes extension packages: download, validate, extract, install, rollback, and register manifests. Tools or CI/CD produces them: build the extension, generate metadata, compute SHA256, create a ZIP, and publish it to the extension service.
+
+Recommended package name:
+
+```text
+{Name}_{Version}.zip
+```
+
+Example:
+
+```text
+report-extension_1.0.0.zip
+```
+
+Recommended ZIP contents:
+
+```text
+report-extension_1.0.0.zip
+├─ manifest.json          # Recommended for business and catalog reuse
+├─ extension.dll          # Extension assembly
+├─ extension.deps.json    # .NET dependency description
+├─ README.md
+├─ CHANGELOG.md
+└─ LICENSE.txt
+```
+
+`InstallExtensionAsync` does not require or parse the package `manifest.json` by itself; it focuses on safe extraction and rollback. `UpdateExtensionAsync` updates the local catalog from the server-provided `ExtensionDTO`. Therefore, the producer side must keep server metadata and ZIP contents aligned.
+
+Recommended publishing flow:
+
+1. Build the extension project.
+2. Prepare `manifest.json` with fields matching `ExtensionMetadata`.
+3. Create `{Name}_{Version}.zip`.
+4. Compute the ZIP SHA256 and store it in the server `Hash`.
+5. Upload the ZIP and `ExtensionDTO` metadata.
+6. Let the host query with `QueryExtensionsAsync` and consume with `UpdateExtensionAsync`.
+
+For packaging basics, see [Packaging](../guide/Packaging.md). The advanced cookbook extension release pipeline will be covered in task [#54](https://github.com/GeneralLibrary/GeneralUpdate-Samples/issues/54), where Tools packaging, manifest generation, hash calculation, upload, and staged host consumption should be connected into one workflow.
+
+---
+
+## Compatibility, platform, and dependencies
+
+### Version compatibility
+
+`VersionCompatibilityChecker.IsCompatible` compares `HostVersion` with `MinHostVersion` and `MaxHostVersion`:
+
+- Empty `HostVersion`: no constraint, compatible;
+- Unparseable `HostVersion`: incompatible;
+- Non-empty unparseable `MinHostVersion`: incompatible;
+- Non-empty unparseable `MaxHostVersion`: incompatible;
+- Host version must satisfy `MinHostVersion <= HostVersion <= MaxHostVersion`.
+
+| HostVersion | MinHostVersion | MaxHostVersion | Result |
+| --- | --- | --- | --- |
+| `1.5.0` | `1.0.0` | `2.0.0` | Compatible |
+| `1.5.0` | `1.6.0` | `2.0.0` | Incompatible |
+| `1.5.0` | `1.0.0` | `1.4.0` | Incompatible |
+| `1.5.0` | empty | empty | Compatible |
+
+```csharp
+var extension = host.ExtensionCatalog.GetInstalledExtensionById("report-extension");
+if (extension != null && host.IsExtensionCompatible(extension))
+{
+    Console.WriteLine("Compatible");
+}
+```
+
+### Platform matching
+
+```csharp
+[Flags]
+public enum TargetPlatform
+{
+    None = 0,
+    Windows = 1,
+    Linux = 2,
+    MacOS = 4,
+    All = Windows | Linux | MacOS
+}
+```
+
+`PlatformMatcher` detects the current OS through `RuntimeInformation` and checks support with flag operations.
+
+```csharp
+var metadata = new ExtensionMetadata
+{
+    Id = "report-extension",
+    Name = "report-extension",
+    SupportedPlatforms = TargetPlatform.Windows | TargetPlatform.Linux
+};
+```
+
+### Dependencies
+
+`ExtensionMetadata.Dependencies` is a comma-separated list of extension IDs. `DependencyList` parses it into a list. `UpdateExtensionAsync` recursively installs missing dependencies before the current extension.
+
+```csharp
+var metadata = new ExtensionMetadata
+{
+    Id = "report-extension",
+    Dependencies = "base-extension,chart-extension"
+};
+```
+
+`DependencyResolver` can also resolve dependencies from the local catalog, report missing dependencies, and detect circular dependencies. The current `UpdateExtensionAsync` path installs dependencies from the current extension's server metadata, so producer-side metadata must ensure every dependency can be queried and downloaded by ID from the same extension service.
+
+---
+
+## Events and auto-update settings
+
+### ExtensionUpdateStatusChanged
+
+The update event reports status changes for one extension:
+
+| Field | Description |
+| --- | --- |
+| `ExtensionId` | Extension ID |
+| `ExtensionName` | Extension name; can be empty in some phases |
+| `Status` | `Queued`, `Updating`, `UpdateSuccessful`, `UpdateFailed` |
+| `Progress` | 0-100, updated during download |
+| `ErrorMessage` | Failure reason |
+
+```csharp
 host.ExtensionUpdateStatusChanged += (sender, e) =>
 {
     switch (e.Status)
     {
         case ExtensionUpdateStatus.Queued:
-            Console.WriteLine($"{e.ExtensionName} added to queue");
+            Console.WriteLine($"{e.ExtensionId} queued");
             break;
         case ExtensionUpdateStatus.Updating:
-            Console.WriteLine($"{e.ExtensionName} updating... {e.Progress}%");
+            Console.WriteLine($"{e.ExtensionId} downloading {e.Progress}%");
             break;
         case ExtensionUpdateStatus.UpdateSuccessful:
-            Console.WriteLine($"{e.ExtensionName} update successful!");
+            Console.WriteLine($"{e.ExtensionName ?? e.ExtensionId} updated");
             break;
         case ExtensionUpdateStatus.UpdateFailed:
-            Console.WriteLine($"{e.ExtensionName} update failed: {e.ErrorMessage}");
+            Console.WriteLine($"{e.ExtensionId} failed: {e.ErrorMessage}");
             break;
     }
 };
 ```
 
+### Auto-update settings
 
+`SetGlobalAutoUpdate` sets the global default, and `SetAutoUpdate` sets a per-extension override. `IExtensionHost` exposes the setters; concrete `GeneralExtensionHost` also provides `IsAutoUpdateEnabled(extensionId)` for reading the effective value.
 
-### Querying Remote Extensions
+```csharp
+var concreteHost = new GeneralExtensionHost(options);
 
-#### Basic Query
+concreteHost.SetGlobalAutoUpdate(true);
+concreteHost.SetAutoUpdate("large-extension", false);
 
-```c#
-var query = new ExtensionQueryDTO
-{
-    PageNumber = 1,
-    PageSize = 20
-};
-
-var result = await host.QueryExtensionsAsync(query);
-if (result.Success && result.Data != null)
-{
-    Console.WriteLine($"Found {result.Data.TotalCount} extensions");
-    foreach (var ext in result.Data.Items)
-    {
-        Console.WriteLine($"• {ext.DisplayName} v{ext.Version}");
-        Console.WriteLine($"  Publisher: {ext.Publisher}");
-        Console.WriteLine($"  Compatible: {ext.IsCompatible}");
-    }
-}
+var enabled = concreteHost.IsAutoUpdateEnabled("large-extension");
 ```
 
-#### Advanced Query (with Filters)
+These flags are stored in memory on the current `GeneralExtensionHost` instance. The component does not start a background polling job. Your application should decide when to scan for updates and call `UpdateExtensionAsync` according to the flags.
 
-```c#
-var query = new ExtensionQueryDTO
-{
-    Name = "my-extension",                    // Search by name
-    Platform = TargetPlatform.Windows,        // Only query Windows extensions
-    HostVersion = "1.0.0",                    // Check compatibility with this version
-    Status = true,                            // Only query enabled extensions
-    BeginDate = DateTime.Now.AddMonths(-1),   // Extensions from last month
-    EndDate = DateTime.Now,
-    PageNumber = 1,
-    PageSize = 50
-};
+---
 
-var result = await host.QueryExtensionsAsync(query);
-```
+## Server API contract
 
+`ExtensionHttpClient` currently uses two endpoints.
 
+### Query
 
-### Installing and Updating Extensions
-
-#### Auto-Update Extension
-
-The simplest way, completing all operations with one call:
-
-```c#
-// UpdateExtensionAsync automatically performs the following steps:
-// 1. Query extension information from server
-// 2. Check version compatibility
-// 3. Check platform support
-// 4. Download extension package
-// 5. Install extension
-// 6. Update local catalog
-
-string extensionId = "550e8400-e29b-41d4-a716-446655440000";
-bool success = await host.UpdateExtensionAsync(extensionId);
-
-if (success)
-{
-    Console.WriteLine("Extension updated successfully!");
-}
-else
-{
-    Console.WriteLine("Extension update failed, check events for details");
-}
-```
-
-#### Manual Download and Install
-
-Step-by-step control of the installation process:
-
-```c#
-// Step 1: Download extension
-string extensionId = "550e8400-e29b-41d4-a716-446655440000";
-string savePath = "./downloads/my-extension.zip";
-
-bool downloaded = await host.DownloadExtensionAsync(extensionId, savePath);
-
-if (downloaded)
-{
-    // Step 2: Install extension (with rollback functionality)
-    bool installed = await host.InstallExtensionAsync(
-        extensionPath: savePath,
-        rollbackOnFailure: true  // Automatic rollback on failure
-    );
-    
-    if (installed)
-    {
-        Console.WriteLine("Extension installed successfully!");
-    }
-    else
-    {
-        Console.WriteLine("Installation failed, automatically rolled back");
-    }
-}
-```
-
-
-
-### Managing Installed Extensions
-
-#### List All Extensions
-
-```c#
-var extensions = host.ExtensionCatalog.GetInstalledExtensions();
-
-Console.WriteLine($"{extensions.Count} extensions installed:");
-foreach (var ext in extensions)
-{
-    Console.WriteLine($"• {ext.DisplayName} v{ext.Version}");
-    Console.WriteLine($"  ID: {ext.Id}");
-    Console.WriteLine($"  Status: {(ext.Status == true ? "Enabled" : "Disabled")}");
-    Console.WriteLine($"  Platform: {ext.SupportedPlatforms}");
-}
-```
-
-#### Get Specific Extension
-
-```c#
-string extensionId = "550e8400-e29b-41d4-a716-446655440000";
-var extension = host.ExtensionCatalog.GetInstalledExtensionById(extensionId);
-
-if (extension != null)
-{
-    Console.WriteLine($"Extension Name: {extension.DisplayName}");
-    Console.WriteLine($"Version: {extension.Version}");
-    Console.WriteLine($"Publisher: {extension.Publisher}");
-    Console.WriteLine($"Description: {extension.Description}");
-}
-else
-{
-    Console.WriteLine("Extension not found");
-}
-```
-
-#### Filter Extensions by Platform
-
-```c#
-var windowsExtensions = host.ExtensionCatalog
-    .GetInstalledExtensionsByPlatform(TargetPlatform.Windows);
-
-Console.WriteLine($"Windows extensions: {windowsExtensions.Count}");
-
-var linuxExtensions = host.ExtensionCatalog
-    .GetInstalledExtensionsByPlatform(TargetPlatform.Linux);
-
-Console.WriteLine($"Linux extensions: {linuxExtensions.Count}");
-```
-
-
-
-### Version Compatibility
-
-GeneralUpdate.Extension automatically checks version compatibility to ensure extensions match the host application version.
-
-#### Compatibility Rules
-
-An extension is considered compatible if it meets the following conditions:
-1. Extension's MinHostVersion ≤ Host version
-2. Extension's MaxHostVersion ≥ Host version
-3. Both conditions must be satisfied simultaneously
-
-#### Example
-
-Assuming host version is 1.5.0:
-
-| Extension MinHostVersion | Extension MaxHostVersion | Result          |
-| ------------------------ | ------------------------ | --------------- |
-| 1.0.0                    | 2.0.0                    | ✓ Compatible    |
-| 1.6.0                    | 2.0.0                    | ✗ Incompatible  |
-| 1.0.0                    | 1.4.0                    | ✗ Incompatible  |
-| 1.5.0                    | 1.5.0                    | ✓ Compatible    |
-
-#### Checking Compatibility
-
-```c#
-var extension = host.ExtensionCatalog.GetInstalledExtensionById(extensionId);
-if (extension != null)
-{
-    bool isCompatible = host.IsExtensionCompatible(extension);
-    
-    if (isCompatible)
-    {
-        Console.WriteLine("✓ Extension is compatible with current version");
-    }
-    else
-    {
-        Console.WriteLine("✗ Extension is not compatible with current version");
-        Console.WriteLine($"  Required host version: {extension.MinHostVersion} - {extension.MaxHostVersion}");
-        Console.WriteLine($"  Current host version: {options.HostVersion}");
-    }
-}
-```
-
-
-
-### Platform Support
-
-GeneralUpdate.Extension supports multi-platform extensions, allowing different extension versions for different operating systems.
-
-#### Platform Flags
-
-```c#
-// Single platform
-TargetPlatform.Windows    // Windows only
-TargetPlatform.Linux      // Linux only
-TargetPlatform.MacOS      // macOS only
-
-// Multiple platforms (using bitwise flag combination)
-TargetPlatform.Windows | TargetPlatform.Linux  // Windows and Linux
-TargetPlatform.All                              // All platforms
-```
-
-#### Automatic Platform Detection
-
-The system automatically detects the current running platform and filters compatible extensions:
-
-```c#
-// Automatically filter by platform when querying
-var query = new ExtensionQueryDTO
-{
-    Platform = TargetPlatform.Windows  // Only return extensions that support Windows
-};
-
-var result = await host.QueryExtensionsAsync(query);
-```
-
-#### Platform-Specific Extensions
-
-```c#
-// Example: Set extension metadata for different platforms
-var extension = new ExtensionMetadata
-{
-    Name = "my-extension",
-    DisplayName = "My Extension",
-    Version = "1.0.0",
-    // Only supports Windows and Linux
-    SupportedPlatforms = TargetPlatform.Windows | TargetPlatform.Linux
-};
-```
-
-
-
-### Dependency Resolution
-
-GeneralUpdate.Extension automatically handles dependencies between extensions.
-
-#### Dependency Features
-
-1. **Automatic transitive dependency resolution**: If A depends on B, and B depends on C, the system automatically identifies and installs C.
-2. **Circular dependency detection**: Automatically detects and prevents circular dependencies.
-3. **Correct installation order**: Installs in dependency order (dependencies installed first).
-4. **Missing dependency check**: Checks if all dependencies are available before installation.
-
-#### Defining Dependencies
-
-Use comma-separated GUID list in extension metadata:
-
-```c#
-var extension = new ExtensionMetadata
-{
-    Id = "550e8400-e29b-41d4-a716-446655440001",
-    Name = "my-extension",
-    DisplayName = "My Extension",
-    Version = "1.0.0",
-    // Depends on two other extensions
-    Dependencies = "550e8400-e29b-41d4-a716-446655440002,550e8400-e29b-41d4-a716-446655440003"
-};
-```
-
-#### Automatic Dependency Handling
-
-```c#
-// UpdateExtensionAsync automatically handles dependencies:
-// 1. Identify all dependencies
-// 2. Check if already installed
-// 3. Download and install missing dependencies
-// 4. Install in correct order
-
-bool success = await host.UpdateExtensionAsync(extensionId);
-// System will automatically install all required dependent extensions
-```
-
-
-
-### Rollback Mechanism
-
-InstallExtensionAsync supports automatic rollback functionality, restoring to the previous state when installation fails.
-
-#### How It Works
-
-1. **Create backup**: Before installation, the system backs up the existing extension (if it exists).
-2. **Attempt installation**: Execute extension installation operation.
-3. **On success**: Delete backup files.
-4. **On failure**: Automatically restore from backup, undoing all changes.
-
-#### Using Rollback Functionality
-
-```c#
-bool success = await host.InstallExtensionAsync(
-    extensionPath: "./downloads/extension.zip",
-    rollbackOnFailure: true  // Enable automatic rollback
-);
-
-if (!success)
-{
-    Console.WriteLine("Installation failed, but automatically rolled back to previous version");
-    Console.WriteLine("Your extension directory remains unchanged");
-}
-```
-
-#### Best Practices
-
-- **Always enable rollback** in production (`rollbackOnFailure: true`)
-- Ensure sufficient disk space for backups
-- Monitor backup directory (default: `<ExtensionsDirectory>/.backup`)
-
-
-
-### Auto-Update Settings
-
-GeneralUpdate.Extension supports auto-update functionality for extensions.
-
-#### Enable Auto-Update for Individual Extension
-
-```c#
-string extensionId = "550e8400-e29b-41d4-a716-446655440000";
-
-// Enable auto-update
-host.SetAutoUpdate(extensionId, true);
-
-// Disable auto-update
-host.SetAutoUpdate(extensionId, false);
-
-// Check status
-bool autoUpdateEnabled = host.IsAutoUpdateEnabled(extensionId);
-Console.WriteLine($"Auto-update: {(autoUpdateEnabled ? "Enabled" : "Disabled")}");
-```
-
-#### Global Auto-Update
-
-```c#
-// Enable auto-update for all extensions
-host.SetGlobalAutoUpdate(true);
-
-// Disable global auto-update
-host.SetGlobalAutoUpdate(false);
-```
-
-
-
-### Download Queue Management
-
-The download queue manager handles concurrent downloads, providing status tracking and cancellation capabilities.
-
-#### Queue Features
-
-- Default concurrent download limit: 3 simultaneous downloads
-- Automatic status tracking
-- Support for canceling ongoing downloads
-- Supports resumable downloads (HTTP Range requests)
-
-#### Download Status
-
-Download tasks can be in one of the following states:
-
-```c#
-public enum ExtensionUpdateStatus
-{
-    Queued,            // Added to queue, waiting for download
-    Updating,          // Downloading/updating
-    UpdateSuccessful,  // Download/update successful
-    UpdateFailed       // Download/update failed
-}
-```
-
-#### Monitoring Downloads
-
-```c#
-host.ExtensionUpdateStatusChanged += (sender, e) =>
-{
-    Console.WriteLine($"Extension: {e.ExtensionName ?? e.ExtensionId}");
-    Console.WriteLine($"Status: {e.Status}");
-    
-    if (e.Status == ExtensionUpdateStatus.Updating)
-    {
-        Console.WriteLine($"Progress: {e.Progress}%");
-    }
-    
-    if (e.Status == ExtensionUpdateStatus.UpdateFailed)
-    {
-        Console.WriteLine($"Error: {e.ErrorMessage}");
-    }
-};
-```
-
-
-
-### Server API Requirements
-
-GeneralUpdate.Extension requires the server to provide the following API endpoints:
-
-#### Query Extensions
-
-```
-POST {ServerUrl}/extensions
+```http
+GET {ServerUrl}/Query
 Content-Type: application/json
-Authorization: Bearer {BearerToken}
+Authorization: {Scheme} {Token}
 
-Request Body: ExtensionQueryDTO
-Response: HttpResponseDTO<PagedResultDTO<ExtensionDTO>>
+ExtensionQueryDTO JSON body
 ```
 
-#### Download Extension
+This is **GET with a JSON body**. That is not common HTTP style, but the current client implements this server contract explicitly. If proxies, gateways, or API platforms reject it, client and server should be changed together to POST or query-string parameters.
 
+Response:
+
+```csharp
+HttpResponseDTO<PagedResultDTO<ExtensionDTO>>
 ```
-GET {ServerUrl}/extensions/{id}
-Authorization: Bearer {BearerToken}
 
-Response: File stream (supports HTTP Range requests for resumable downloads)
+### Download
+
+```http
+GET {ServerUrl}/Download/{extensionId}
+Authorization: {Scheme} {Token}
+Range: bytes={existingLength}-
 ```
 
+The server should return a file stream and preferably support HTTP Range for resume. The client treats `416 RequestedRangeNotSatisfiable` as an already-complete download.
 
+---
 
-### Complete Usage Example
+## Advanced extension points
 
-Here is a complete example demonstrating the main operations of extension management:
+### ExtensionHostBuilder and DI
 
-```c#
-using GeneralUpdate.Extension;
-using GeneralUpdate.Extension.Core;
-using GeneralUpdate.Extension.Common.Models;
-using GeneralUpdate.Extension.Common.DTOs;
-using GeneralUpdate.Extension.Common.Enums;
-using System;
-using System.Threading.Tasks;
+`ExtensionHostBuilder` registers default services and allows the application to replace any of them:
 
-public class ExtensionManagerExample
-{
-    public static async Task Main()
+```csharp
+var host = new ExtensionHostBuilder()
+    .WithOptions(options)
+    .ConfigureServices(services =>
     {
-        // 1. Initialize extension host
-        var options = new ExtensionHostOptions
-        {
-            ServerUrl = "https://extensions.example.com/api",
-            BearerToken = "your-bearer-token",
-            HostVersion = "1.0.0",
-            ExtensionsDirectory = "./extensions"
-        };
+        services.AddSingleton<IExtensionLifecycleHooks, MyLifecycleHooks>();
+        services.AddSingleton<IExtensionHttpClient>(sp =>
+            new ExtensionHttpClient(options.ServerUrl, options.Scheme, options.Token, sharedHttpClient));
+    })
+    .Build();
+```
 
-        var host = new GeneralExtensionHost(options);
+Default registrations:
 
-        // 2. Subscribe to update events
-        host.ExtensionUpdateStatusChanged += (sender, e) =>
-        {
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {e.ExtensionName}");
-            Console.WriteLine($"  Status: {e.Status}");
-            
-            if (e.Status == ExtensionUpdateStatus.Updating)
-            {
-                Console.WriteLine($"  Progress: {e.Progress}%");
-            }
-            
-            if (e.Status == ExtensionUpdateStatus.UpdateFailed)
-            {
-                Console.WriteLine($"  Error: {e.ErrorMessage}");
-            }
-        };
+- `IExtensionHttpClient -> ExtensionHttpClient`
+- `IVersionCompatibilityChecker -> VersionCompatibilityChecker`
+- `IDownloadQueueManager -> DownloadQueueManager`
+- `IPlatformMatcher -> PlatformMatcher`
+- `IPlatformServices -> RuntimePlatformServices`
+- `IExtensionMetadataMapper -> DefaultExtensionMetadataMapper`
+- `IExtensionCatalog -> ExtensionCatalog`
+- `IDependencyResolver -> DependencyResolver`
+- `IExtensionLifecycleHooks -> DefaultExtensionLifecycleHooks`
+- `IExtensionHost -> GeneralExtensionHost`
 
-        // 3. Query remote extensions
-        Console.WriteLine("=== Querying Remote Extensions ===\n");
-        var query = new ExtensionQueryDTO
-        {
-            Platform = TargetPlatform.Windows,
-            HostVersion = options.HostVersion,
-            Status = true,
-            PageNumber = 1,
-            PageSize = 10
-        };
+### Lifecycle hooks
 
-        var queryResult = await host.QueryExtensionsAsync(query);
-        if (queryResult.Success && queryResult.Data != null)
-        {
-            Console.WriteLine($"Found {queryResult.Data.TotalCount} extensions:\n");
-            
-            foreach (var ext in queryResult.Data.Items)
-            {
-                Console.WriteLine($"• {ext.DisplayName} v{ext.Version}");
-                Console.WriteLine($"  ID: {ext.Id}");
-                Console.WriteLine($"  Publisher: {ext.Publisher}");
-                Console.WriteLine($"  Compatible: {ext.IsCompatible}");
-                Console.WriteLine($"  Platform: {ext.SupportedPlatforms}");
-                Console.WriteLine();
-            }
-        }
+`IExtensionLifecycleHooks` lets applications add logic before or after install, activation, deactivation, and uninstall. Current `GeneralExtensionHost` calls `OnBeforeInstallAsync` and `OnAfterInstallAsync`; activation, deactivation, and uninstall hooks can be reused by application-level wrappers for those flows.
 
-        // 4. Update specific extension
-        Console.WriteLine("\n=== Updating Extension ===\n");
-        string extensionId = "550e8400-e29b-41d4-a716-446655440000";
-        
-        bool updateSuccess = await host.UpdateExtensionAsync(extensionId);
-        if (updateSuccess)
-        {
-            Console.WriteLine("✓ Extension updated successfully!");
-        }
-        else
-        {
-            Console.WriteLine("✗ Extension update failed");
-        }
-
-        // 5. List installed extensions
-        Console.WriteLine("\n=== Installed Extensions ===\n");
-        var installed = host.ExtensionCatalog.GetInstalledExtensions();
-        Console.WriteLine($"Total {installed.Count} installed extensions:\n");
-        
-        foreach (var ext in installed)
-        {
-            Console.WriteLine($"• {ext.DisplayName} v{ext.Version}");
-            Console.WriteLine($"  Status: {(ext.Status == true ? "Enabled" : "Disabled")}");
-            Console.WriteLine($"  Platform: {ext.SupportedPlatforms}");
-            
-            // Check compatibility
-            bool compatible = host.IsExtensionCompatible(ext);
-            Console.WriteLine($"  Compatible: {(compatible ? "Yes" : "No")}");
-            Console.WriteLine();
-        }
-
-        // 6. Configure auto-update
-        Console.WriteLine("\n=== Configuring Auto-Update ===\n");
-        host.SetGlobalAutoUpdate(true);
-        Console.WriteLine("✓ Global auto-update enabled");
-        
-        // Disable auto-update for specific extension
-        host.SetAutoUpdate(extensionId, false);
-        Console.WriteLine($"✓ Auto-update disabled for extension {extensionId}");
+```csharp
+public sealed class MyLifecycleHooks : DefaultExtensionLifecycleHooks
+{
+    public override Task<bool> OnBeforeInstallAsync(
+        ExtensionMetadata extension,
+        string? packagePath,
+        CancellationToken cancellationToken = default)
+    {
+        Console.WriteLine($"Installing {packagePath}");
+        return Task.FromResult(true);
     }
 }
 ```
 
+### Download queue
 
+`DownloadQueueManager` is an independent queue type with a default max concurrency of 3. It supports `Enqueue`, `GetTask`, `CancelTask`, `GetActiveTasks`, and `DownloadStatusChanged`. The queue currently manages status and concurrency slots; the actual download in the host update path is performed by `ExtensionHttpClient`. For application-level parallel downloads, compose the queue, HTTP client, and install flow in your own service.
 
-### Best Practices
+---
 
-1. **Always subscribe to events**: Subscribe to `ExtensionUpdateStatusChanged` event before performing any operations to monitor progress and errors.
+## Best practices
 
-2. **Use rollback functionality**: Always enable `rollbackOnFailure: true` when installing extensions in production.
-
-3. **Check compatibility**: Use `IsExtensionCompatible()` to check extension compatibility before installation.
-
-4. **Reasonable pagination**: Use appropriate `PageSize` (recommended 10-50) when querying extensions to avoid loading too much data at once.
-
-5. **Secure token storage**: Bearer Token should be stored securely, not hardcoded in code.
-
-6. **Monitor disk space**: Ensure sufficient disk space for downloads and backups.
-
-7. **Verify extension metadata**: Validate extension metadata integrity and hash values before installation.
-
-8. **Handle network errors**: Implement retry logic to handle temporary network failures.
-
-9. **Logging**: Log all extension operations and errors for troubleshooting.
-
-10. **Regular cleanup**: Regularly clean up download cache and backup directories to free disk space.
-
-
-
-### Troubleshooting
-
-#### Issue: Extension Download Failed
-
-**Possible Causes**:
-- Network connection issues
-- Server unavailable
-- Bearer Token invalid or expired
-
-**Solutions**:
-```c#
-// Check error information in event arguments
-host.ExtensionUpdateStatusChanged += (sender, e) =>
-{
-    if (e.Status == ExtensionUpdateStatus.UpdateFailed)
-    {
-        Console.WriteLine($"Download failed: {e.ErrorMessage}");
-        // Log detailed information for debugging
-    }
-};
-
-// Implement retry logic
-int maxRetries = 3;
-for (int i = 0; i < maxRetries; i++)
-{
-    bool success = await host.UpdateExtensionAsync(extensionId);
-    if (success) break;
-    
-    await Task.Delay(TimeSpan.FromSeconds(5)); // Wait before retrying
-}
-```
-
-#### Issue: Extension Shows as Incompatible
-
-**Solutions**:
-```c#
-var extension = host.ExtensionCatalog.GetInstalledExtensionById(extensionId);
-if (extension != null && !host.IsExtensionCompatible(extension))
-{
-    Console.WriteLine("Extension version requirements:");
-    Console.WriteLine($"  Minimum host version: {extension.MinHostVersion}");
-    Console.WriteLine($"  Maximum host version: {extension.MaxHostVersion}");
-    Console.WriteLine($"  Current host version: {options.HostVersion}");
-    
-    // Check if compatible version is available
-    var query = new ExtensionQueryDTO
-    {
-        Name = extension.Name,
-        HostVersion = options.HostVersion
-    };
-    var result = await host.QueryExtensionsAsync(query);
-    // Check for compatible version
-}
-```
-
-#### Issue: Installation Failed but Did Not Rollback
-
-**Solutions**:
-Ensure rollback option is enabled:
-```c#
-bool success = await host.InstallExtensionAsync(
-    extensionPath: savePath,
-    rollbackOnFailure: true  // Must be set to true
-);
-```
-
-Check backup directory permissions:
-```c#
-string backupDir = Path.Combine(options.ExtensionsDirectory, ".backup");
-if (!Directory.Exists(backupDir))
-{
-    Directory.CreateDirectory(backupDir);
-}
-// Ensure write permissions
-```
-
-
-
-### Applies To
-
-| Product            | Versions                              |
-| ------------------ | ------------------------------------- |
-| .NET Standard      | 2.0                                   |
-| .NET Framework     | 4.6.1+                                |
-| .NET Core          | 2.0+                                  |
-| .NET               | 5, 6, 7, 8, 9, 10                     |
-| Mono               | 5.4+                                  |
-| Xamarin.iOS        | 10.14+                                |
-| Xamarin.Android    | 8.0+                                  |
-
-### See Also
-
-- [GeneralUpdate.Core](./GeneralUpdate.Core.md) - Main client update component
-- [GeneralUpdate.Core](./GeneralUpdate.Core.md) - Core update logic
-- [GitHub Source Code](https://github.com/GeneralLibrary/GeneralUpdate/tree/master/src/c%23/GeneralUpdate.Extension) - Complete source code and more examples
-- [Quick Start Guide](../quickstart/Quik%20start.md) - Getting started with GeneralUpdate
+1. Use `.zip` extension packages in production and name them `{Name}_{Version}.zip`.
+2. Store the ZIP SHA256 in server `Hash` so `UpdateExtensionAsync` can verify integrity.
+3. Use parseable versions for `HostVersion`, `MinHostVersion`, and `MaxHostVersion`.
+4. Use one `manifest.json` per extension directory; do not rely on the old single `catalog.json` model.
+5. Set `SupportedPlatforms` to real OS support instead of defaulting everything to `All`.
+6. Ensure every dependency can be queried and downloaded by ID from the same extension service.
+7. For large packages, support HTTP Range on the server and show `ExtensionUpdateStatusChanged` progress in the UI.
+8. Auto-update flags are policy state, not a scheduler. Scanning, timing, staged rollout, and approval belong in the application layer.
