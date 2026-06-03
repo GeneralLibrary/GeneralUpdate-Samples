@@ -1,8 +1,8 @@
 {
-  "label": "Guides",
-  "position": 7,
+  "label": "Help",
+  "position": 3,
   "link": {
     "type": "generated-index",
-    "description": "Platform and operations guides."
+    "description": "Platform and operations help guides."
   }
 }

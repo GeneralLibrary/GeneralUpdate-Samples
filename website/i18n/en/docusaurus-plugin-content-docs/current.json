@@ -7,33 +7,13 @@
     "message": "Quick Start",
     "description": "The label for category Quick Start in sidebar tutorialSidebar"
   },
-  "sidebar.tutorialSidebar.category.Advanced Cookbook": {
-    "message": "Advanced Cookbook",
-    "description": "The label for category Advanced Cookbook in sidebar tutorialSidebar"
-  },
   "sidebar.tutorialSidebar.category.Components": {
     "message": "Components",
     "description": "The label for category Components in sidebar tutorialSidebar"
   },
-  "sidebar.tutorialSidebar.category.Tools": {
-    "message": "Tools",
-    "description": "The label for category Tools in sidebar tutorialSidebar"
-  },
-  "sidebar.tutorialSidebar.category.Infrastructure": {
-    "message": "Infrastructure",
-    "description": "The label for category Infrastructure in sidebar tutorialSidebar"
-  },
-  "sidebar.tutorialSidebar.category.OSS Update Mode": {
-    "message": "OSS Update Mode",
-    "description": "The label for category OSS Update Mode in sidebar tutorialSidebar"
-  },
-  "sidebar.tutorialSidebar.category.Utilities": {
-    "message": "Utilities",
-    "description": "The label for category Utilities in sidebar tutorialSidebar"
-  },
-  "sidebar.tutorialSidebar.category.Guides": {
-    "message": "Guides",
-    "description": "The label for category Guides in sidebar tutorialSidebar"
+  "sidebar.tutorialSidebar.category.帮助": {
+    "message": "Help",
+    "description": "The label for category 帮助 in sidebar tutorialSidebar"
   },
   "sidebar.tutorialSidebar.category.Release Log": {
     "message": "Release Log",

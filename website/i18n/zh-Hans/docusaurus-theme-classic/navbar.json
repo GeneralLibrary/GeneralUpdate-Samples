@@ -7,24 +7,24 @@
     "message": "GeneralLibrary Logo",
     "description": "The alt text of navbar logo"
   },
-  "item.label.文档": {
+  "item.label.Doc": {
     "message": "文档",
-    "description": "Navbar item with label 文档"
+    "description": "Navbar item with label Doc"
   },
-  "item.label.生态伙伴": {
-    "message": "生态伙伴",
-    "description": "Navbar item with label 生态伙伴"
-  },
-  "item.label.企业合作": {
-    "message": "企业合作",
-    "description": "Navbar item with label 企业合作"
-  },
-  "item.label.关于": {
-    "message": "关于",
-    "description": "Navbar item with label 关于"
+  "item.label.商务": {
+    "message": "商务",
+    "description": "Navbar item with label 商务"
   },
   "item.label.GitHub": {
     "message": "GitHub",
     "description": "Navbar item with label GitHub"
+  },
+  "item.label.GeneralSpacestation": {
+    "message": "GeneralSpacestation",
+    "description": "Navbar item with label GeneralSpacestation"
+  },
+  "item.label.软件外包服务": {
+    "message": "软件外包服务",
+    "description": "Navbar item with label 软件外包服务"
   }
 }

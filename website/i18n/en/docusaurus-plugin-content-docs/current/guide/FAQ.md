@@ -279,7 +279,7 @@ Sample projects provide a simple server example. For production, implement your 
 
 ## Related Resources
 
-- **[Architecture](./Architecture.md)** — System architecture overview
-- **[Configuration Reference](./Configuration.md)** — All configuration options
-- **[Pipeline Guide](./Pipeline.md)** — Middleware pipeline
-- **[Security Guide](./Security.md)** — Security best practices
+- **[GeneralUpdate.Core](../doc/GeneralUpdate.Core.md)** — Core update engine
+- **[Beginner Cookbook](../quickstart/Beginner%20cookbook.md)** — Run through the full update loop
+- **[GeneralUpdate.Tools](../quickstart/GeneralUpdate.PacketTool.md)** — Packaging tools
+- **[GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl.md)** — Crash monitoring & rollback

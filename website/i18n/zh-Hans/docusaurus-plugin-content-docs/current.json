@@ -7,33 +7,13 @@
     "message": "快速入门",
     "description": "The label for category Quick Start in sidebar tutorialSidebar"
   },
-  "sidebar.tutorialSidebar.category.Advanced Cookbook": {
-    "message": "高级实战手册",
-    "description": "The label for category Advanced Cookbook in sidebar tutorialSidebar"
-  },
   "sidebar.tutorialSidebar.category.Components": {
     "message": "组件文档",
     "description": "The label for category Components in sidebar tutorialSidebar"
   },
-  "sidebar.tutorialSidebar.category.Tools": {
-    "message": "工具",
-    "description": "The label for category Tools in sidebar tutorialSidebar"
-  },
-  "sidebar.tutorialSidebar.category.Infrastructure": {
-    "message": "基础设施",
-    "description": "The label for category Infrastructure in sidebar tutorialSidebar"
-  },
-  "sidebar.tutorialSidebar.category.OSS Update Mode": {
-    "message": "OSS 更新模式",
-    "description": "The label for category OSS Update Mode in sidebar tutorialSidebar"
-  },
-  "sidebar.tutorialSidebar.category.Utilities": {
-    "message": "工具类",
-    "description": "The label for category Utilities in sidebar tutorialSidebar"
-  },
-  "sidebar.tutorialSidebar.category.Guides": {
-    "message": "指南",
-    "description": "The label for category Guides in sidebar tutorialSidebar"
+  "sidebar.tutorialSidebar.category.帮助": {
+    "message": "帮助",
+    "description": "The label for category 帮助 in sidebar tutorialSidebar"
   },
   "sidebar.tutorialSidebar.category.Release Log": {
     "message": "发布日志",
