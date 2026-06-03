@@ -4,11 +4,9 @@ sidebar_position: 5
 
 # GeneralUpdate.Core
 
-`GeneralUpdate.Core` 是 GeneralUpdate 的更新执行核心，重点提供可编程的启动器、配置模型、事件模型、下载子系统扩展点、生命周期钩子、状态上报、差分管道和平台策略扩展。本页聚焦组件 API、属性和扩展方式；完整端到端上手流程会放到 cookbook 中。
+**命名空间:** `GeneralUpdate.Core` | **主要入口:** `GeneralUpdateBootstrap` | **NuGet 包:** `GeneralUpdate.Core`
 
-**命名空间:** `GeneralUpdate.Core`
-**主要入口:** `GeneralUpdateBootstrap`
-**NuGet 包:** `GeneralUpdate.Core`
+`GeneralUpdate.Core` 是 GeneralUpdate 的更新执行核心，重点提供可编程的启动器、配置模型、事件模型、下载子系统扩展点、生命周期钩子、状态上报、差分管道和平台策略扩展。本页聚焦组件 API、属性和扩展方式；完整端到端上手流程会放到 cookbook 中。
 
 ## 文档大纲与知识点导航 {#knowledge-map}
 
