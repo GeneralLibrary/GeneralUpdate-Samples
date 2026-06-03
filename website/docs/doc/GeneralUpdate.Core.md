@@ -881,5 +881,5 @@ GeneralTracer.Dispose();
 - [GeneralUpdate 仓库](https://github.com/GeneralLibrary/GeneralUpdate)
 - [Samples 示例代码](https://github.com/GeneralLibrary/GeneralUpdate-Samples)
 - [GeneralUpdate.Tools](https://github.com/GeneralLibrary/GeneralUpdate.Tools)
-- [快速开始](../quickstart/Quik%20start.md)
-- [架构指南](../guide/Architecture.md)
+- [入门实战手册](../quickstart/Beginner%20cookbook.md)
+- [组件文档](./GeneralUpdate.Core.md)

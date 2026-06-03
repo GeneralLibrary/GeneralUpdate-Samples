@@ -217,5 +217,5 @@ Before deploying, verify:
 
 - **[GeneralUpdate.Tools](../doc/GeneralUpdate.PacketTool)** — Patch and config generation tool
 - **[Permission Guide](./Permission.md)** — Windows UAC permission handling
-- **[Quick Start](../quickstart/Quik start)** — 5-minute quickstart
-- **[Architecture](./Architecture.md)** — Overall deployment architecture
+- **[Beginner Cookbook](../quickstart/Beginner%20cookbook.md)** — Complete update walkthrough
+- **[GeneralUpdate.Core](../doc/GeneralUpdate.Core.md)** — Core update engine architecture
