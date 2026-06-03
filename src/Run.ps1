@@ -7,14 +7,21 @@
     Add -BuildLibs to recompile component DLLs from source.
 
 .PARAMETER BuildLibs
-    Rebuild all component DLLs from C:\github code\GeneralUpdate\src\c# and copy to Hub/libs/
+    Rebuild all component DLLs from source and copy to Hub/libs/
+
+.PARAMETER GeneralUpdateSrc
+    Path to GeneralUpdate source root (default: auto-detect sibling repo)
 
 .EXAMPLE
-    .\Run.ps1                  # Normal use
-    .\Run.ps1 -BuildLibs       # Rebuild DLLs after component code changes
+    .\Run.ps1                              # Normal use
+    .\Run.ps1 -BuildLibs                    # Rebuild DLLs after component code changes
+    .\Run.ps1 -BuildLibs -GeneralUpdateSrc "D:\repos\GeneralUpdate\src\c#"
 #>
 
-param([switch]$BuildLibs)
+param(
+    [switch]$BuildLibs,
+    [string]$GeneralUpdateSrc
+)
 
 $ErrorActionPreference = "Stop"
 # Script is in src/ — Hub is in src/Hub/
@@ -23,7 +30,23 @@ $hubDir = Join-Path $PSScriptRoot "Hub"
 # ── Optional: Rebuild component DLLs from source ──
 if ($BuildLibs) {
     Write-Host "[BuildLibs] Building components and copying DLLs..." -ForegroundColor Cyan
-    $sourceRoot = "C:\github code\GeneralUpdate\src\c#"
+
+    # Auto-detect GeneralUpdate source root if not provided.
+    # Default: sibling repo at ../GeneralUpdate/src/c# relative to the Samples repo root.
+    if (-not $GeneralUpdateSrc) {
+        $samplesRepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+        $candidate = Join-Path $samplesRepoRoot "..\GeneralUpdate\src\c#"
+        if (Test-Path $candidate) {
+            $GeneralUpdateSrc = $candidate
+        }
+        else {
+            Write-Host "  [ERROR] Cannot find GeneralUpdate source. Provide -GeneralUpdateSrc <path>." -ForegroundColor Red
+            Write-Host "  Expected sibling repo at: $candidate" -ForegroundColor Yellow
+            exit 1
+        }
+    }
+    $sourceRoot = $GeneralUpdateSrc
+    Write-Host "  Source: $sourceRoot" -ForegroundColor Gray
     $libsDir     = Join-Path $hubDir "libs"
 
     Remove-Item -Recurse -Force $libsDir -ErrorAction SilentlyContinue

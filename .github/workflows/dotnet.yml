@@ -24,8 +24,10 @@ jobs:
       with:
         dotnet-version: 10.0.x
 
-    - name: Restore & Build ServerSample
+    - name: Build ServerSample
       run: dotnet build ./src/Server/ServerSample.sln
 
-    - name: Restore & Build Hub (NuGet mode)
-      run: dotnet build ./src/Hub/Hub.csproj -p:UseNuGet=true
+    # Hub build requires local DLLs (libs/) or matching NuGet packages.
+    # Enable when NuGet packages are published from latest GeneralUpdate source.
+    # - name: Build Hub (NuGet mode)
+    #   run: dotnet build ./src/Hub/Hub.csproj -p:UseNuGet=true

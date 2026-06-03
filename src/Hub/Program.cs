@@ -68,13 +68,20 @@ class Program
                 break;
             }
 
-            if (!int.TryParse(line, out var index) || index < 1 || index > _samples.Count)
+            if (!int.TryParse(line, out var index) || index < 1)
             {
                 Console.WriteLine("  无效选项，请重新选择");
                 continue;
             }
 
-            await RunSampleAsync(_samples[index - 1]);
+            var sample = _samples.FirstOrDefault(s => s.Index == index);
+            if (sample == null)
+            {
+                Console.WriteLine("  无效选项，请重新选择");
+                continue;
+            }
+
+            await RunSampleAsync(sample);
         }
     }
 
