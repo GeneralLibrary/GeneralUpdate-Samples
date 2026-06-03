@@ -315,4 +315,4 @@ Auto-generated configuration file `generalupdate.manifest.json`:
 - **[Architecture](./Architecture.md)** — Overall system architecture
 - **[Pipeline Guide](./Pipeline.md)** — Middleware pipeline internals
 - **[Security Guide](./Security.md)** — Security configuration
-- **[GeneralUpdate.Tools](../doc/GeneralUpdate.PacketTool.md)** — Config generation tool
+- **[GeneralUpdate.Tools](../doc/GeneralUpdate.PacketTool)** — Config generation tool

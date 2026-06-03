@@ -250,5 +250,5 @@ public class FileScanMiddleware : IMiddleware
 ## Related Resources
 
 - **[Architecture](./Architecture.md)** — Pipeline within overall architecture
-- **[GeneralUpdate.Differential](../doc/GeneralUpdate.Differential.md)** — BSDiff differential algorithm
+- **[GeneralUpdate.Differential](../doc/GeneralUpdate.Differential)** — BSDiff differential algorithm
 - **[Configuration Reference](./Configuration.md)** — Pipeline-related config options

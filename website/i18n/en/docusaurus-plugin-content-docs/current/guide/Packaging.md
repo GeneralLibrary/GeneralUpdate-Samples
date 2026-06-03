@@ -23,7 +23,7 @@ This guide covers how to package your application with its update system for dis
 6. Enter package name and version
 7. Click "Build"
 
-See the [GeneralUpdate.Tools documentation](../doc/GeneralUpdate.PacketTool.md) for details.
+See the [GeneralUpdate.Tools documentation](../doc/GeneralUpdate.PacketTool) for details.
 
 ### Using the Differential API Programmatically
 
@@ -215,7 +215,7 @@ Before deploying, verify:
 
 ## Related Resources
 
-- **[GeneralUpdate.Tools](../doc/GeneralUpdate.PacketTool.md)** — Patch and config generation tool
+- **[GeneralUpdate.Tools](../doc/GeneralUpdate.PacketTool)** — Patch and config generation tool
 - **[Permission Guide](./Permission.md)** — Windows UAC permission handling
-- **[Quick Start](../quickstart/Quik%20start.md)** — 5-minute quickstart
+- **[Quick Start](../quickstart/Quik start)** — 5-minute quickstart
 - **[Architecture](./Architecture.md)** — Overall deployment architecture

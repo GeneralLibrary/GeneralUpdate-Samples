@@ -8,8 +8,6 @@ sidebar_position: 1
 
 GeneralUpdate 是一个跨平台 .NET 自动更新框架，采用**客户端-升级助手-服务端**三层架构。整个更新流程涉及多个独立进程和组件的协同工作。
 
-![架构图](imgs/architecture.png)
-
 ---
 
 ## 整体架构
@@ -352,4 +350,4 @@ await new GeneralClientBootstrap()
 - **[Pipeline 详解](./Pipeline.md)** — 中间件管道工作原理
 - **[配置参考](./Configuration.md)** — 完整配置选项
 - **[安全指南](./Security.md)** — 安全架构详解
-- **[快速入门](../quickstart/Quik%20start.md)** — 5 分钟快速上手
+- **[快速入门](../quickstart/Quik start)** — 5 分钟快速上手

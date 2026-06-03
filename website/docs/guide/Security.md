@@ -423,5 +423,5 @@ Bowl 在更新完成后监控新进程的运行状态：
 
 - **[系统架构](./Architecture.md)** — 了解安全机制在整体架构中的位置
 - **[配置参考](./Configuration.md)** — 安全相关配置项
-- **[GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl.md)** — Bowl 崩溃监控
-- **[GeneralUpdate.ClientCore](../doc/GeneralUpdate.ClientCore.md)** — 客户端配置与安全选项
+- **[GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl)** — Bowl 崩溃监控
+- **[GeneralUpdate.Core](../doc/GeneralUpdate.Core)** — 客户端配置与安全选项

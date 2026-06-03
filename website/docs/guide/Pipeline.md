@@ -419,5 +419,5 @@ public class PrePostHookMiddleware : IMiddleware
 ## 相关资源
 
 - **[系统架构](./Architecture.md)** — 了解整体架构与管道在其中的位置
-- **[GeneralUpdate.Differential](../doc/GeneralUpdate.Differential.md)** — BSDiff 差分算法详解
+- **[GeneralUpdate.Differential](../doc/GeneralUpdate.Differential)** — BSDiff 差分算法详解
 - **[配置参考](./Configuration.md)** — 管道相关配置选项

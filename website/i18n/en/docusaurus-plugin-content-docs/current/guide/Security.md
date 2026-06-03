@@ -233,5 +233,5 @@ Bowl monitors the new process after update completion:
 
 - **[Architecture](./Architecture.md)** — Security in overall architecture
 - **[Configuration Reference](./Configuration.md)** — Security-related config options
-- **[GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl.md)** — Crash monitoring
-- **[GeneralUpdate.ClientCore](../doc/GeneralUpdate.ClientCore.md)** — Client security options
+- **[GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl)** — Crash monitoring
+- **[GeneralUpdate.Core](../doc/GeneralUpdate.Core)** — Client security options

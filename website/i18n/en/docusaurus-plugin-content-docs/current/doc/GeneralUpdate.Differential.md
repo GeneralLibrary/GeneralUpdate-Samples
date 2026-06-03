@@ -4,446 +4,447 @@ sidebar_position: 6
 
 # GeneralUpdate.Differential
 
-## Component Overview
+`GeneralUpdate.Differential` is the binary differential component in GeneralUpdate. It focuses on one low-level problem: old file + patch file = new file. It provides replaceable file-level differ algorithms, patch compression abstractions, and BSDIFF-compatible patch read/write support. Directory comparison, batch patch generation, parallel scheduling, deleted-file handling, and update orchestration are handled by `GeneralUpdate.Core` through `DiffPipeline`, or by `GeneralUpdate.Tools` on the publishing side.
 
-**GeneralUpdate.Differential** is the core component responsible for binary differential updates in the GeneralUpdate framework. This component provides powerful differential algorithms that can accurately identify file changes between two versions, generate efficient incremental patch packages, and support patch restoration operations. By using differential updates, you can significantly reduce update package size and download time, making it particularly suitable for scenarios with frequent update releases.
+**Namespaces:** `GeneralUpdate.Differential`, `GeneralUpdate.Differential.Differ`, `GeneralUpdate.Differential.Abstractions`
 
-**Namespace:** `GeneralUpdate.Differential`  
-**Assembly:** `GeneralUpdate.Core.dll`
+**Main entry points:** `IBinaryDiffer`, `BsdiffDiffer`, `StreamingHdiffDiffer`
 
-```csharp
-public sealed class DifferentialCore
-```
-
----
-
-## Core Features
-
-### 1. Incremental Identification
-- Accurately identify added, modified, and deleted files
-- Intelligent file version comparison
-- Support skipping specified files and formats
-
-### 2. Binary Patch Generation
-- Efficient binary differential algorithm
-- Minimize patch file size
-- Fast patch generation speed
-
-### 3. Patch Restoration
-- Safe patch application process
-- Automatic handling of file dependencies
-- Integrity verification mechanism
-
-### 4. Blacklist Support
-- File-level blacklist
-- Format-level blacklist
-- Flexible filtering rules
-
----
-
-## Quick Start
-
-### Installation
-
-Install GeneralUpdate.Differential via NuGet (included in Core package):
+**NuGet package:** `GeneralUpdate.Differential`
 
 ```bash
-dotnet add package GeneralUpdate.Core
+dotnet add package GeneralUpdate.Differential
 ```
 
-### Initialization and Usage
+## Documentation outline and topic navigation {#knowledge-map}
 
-The following example demonstrates how to use DifferentialCore for incremental identification and patch operations:
+If this is your first time reading the Differential documentation, start with this map and jump to the topic you need. The page is organized as "boundaries -> file-level API -> algorithm selection -> compression format -> Core/Tools integration -> performance and extension points".
+
+| What you want to learn | Recommended section |
+| --- | --- |
+| What Differential is responsible for | [Component boundaries](#component-boundaries) |
+| What `Clean` and `Dirty` mean | [Clean and Dirty semantics](#clean-and-dirty-semantics) |
+| How to generate and apply a patch for one file | [Single-file quick start](#single-file-quick-start) |
+| Whether Core users need to integrate Differential manually | [Relationship with GeneralUpdate.Core](#relationship-with-generalupdatecore) |
+| Which algorithms exist and how to choose one | [Differ algorithm selection](#differ-algorithm-selection) |
+| How the BSDIFF header and compression byte work | [Patch format and compression providers](#patch-format-and-compression-providers) |
+| How directory-level differential updates are enabled in Core | [Relationship with GeneralUpdate.Core](#relationship-with-generalupdatecore) |
+| What Tools uses when building differential packages | [Relationship with GeneralUpdate.Tools](#relationship-with-generalupdatetools) |
+| Whether downloads and diff work can run in parallel | [Concurrency model and performance guidance](#concurrency-model-and-performance-guidance) |
+| How large projects can improve differential build throughput | [Parallel differential work for large projects](#parallel-differential-work-for-large-projects) |
+| How to plug in a custom differ or compression provider | [Extension points](#extension-points) |
+
+## Component boundaries
+
+Differential is a low-level file patching library, not a complete update orchestrator. This boundary is important because older documentation mentioned concepts such as `DifferentialCore`, blacklists, and directory batch processing, but those are not the current public API of this component.
+
+| Capability | Owned by Differential | Notes |
+| --- | --- | --- |
+| Generate a binary patch for one file | Yes | Done through `IBinaryDiffer.CleanAsync(oldFile, newFile, patchFile)`. |
+| Apply a binary patch for one file | Yes | Done through `IBinaryDiffer.DirtyAsync(oldFile, outputNewFile, patchFile)`. |
+| Differ algorithm implementations | Yes | Current main implementations are `BsdiffDiffer` and `StreamingHdiffDiffer`. |
+| Compress and decompress patch data | Yes | Abstracted by `ICompressionProvider`; BZip2 and Deflate are available, with .NET 6+ Brotli reserved in source. |
+| Compare old and new directories | No | Handled by matchers in `GeneralUpdate.Core.Pipeline.DiffPipeline`. |
+| Copy new files, write delete manifests, name batch patches | No | Handled by `DiffPipeline`, which writes `.patch` files, copies new files, and writes `generalupdate.delete.json`. |
+| Build update packages | No | Prefer `GeneralUpdate.Tools`, which calls the Core differential pipeline. |
+| Download, verify, unzip, write back versions, restart apps | No | These belong to the `GeneralUpdate.Core` update flow. |
+
+> The current source does not contain the old `DifferentialCore` singleton mentioned by previous docs. When using Differential directly, program against `IBinaryDiffer` and concrete differ implementations. For directory-level behavior, use Core's `DiffPipeline`.
+
+## Clean and Dirty semantics {#clean-and-dirty-semantics}
+
+Differential follows the two terms used by the GeneralUpdate differential flow:
+
+| Term | Method | Input | Output | Common location |
+| --- | --- | --- | --- | --- |
+| `Clean` | `CleanAsync` | Old file, new file, patch path | `.patch` file | Build/publishing side |
+| `Dirty` | `DirtyAsync` | Old file, output new-file path, patch path | Restored new file | Client upgrade side |
+
+File-level patch application does not overwrite the old file directly. It writes the restored result to the `newFilePath` you pass in. At the directory level, Core's `DiffPipeline` writes to a temporary file first and replaces the original only after the patch is applied successfully, avoiding corruption if patch application fails.
+
+## Single-file quick start
+
+This example only demonstrates the low-level single-file capability. If you already use `GeneralUpdate.Core`, Core integrates Differential by default, so you do not need to manually integrate or directly call this component for the normal update flow. If you need to compare two directories, generate many `.patch` files, copy added files, or handle deleted files, go to [Relationship with GeneralUpdate.Core](#relationship-with-generalupdatecore).
 
 ```csharp
-using GeneralUpdate.Differential;
+using GeneralUpdate.Differential.Abstractions;
+using GeneralUpdate.Differential.Differ;
 
-// Identify increments and generate binary patches
-var sourcePath = @"D:\packet\app";        // Old version path
-var targetPath = @"D:\packet\release";    // New version path
-var patchPath = @"D:\packet\patch";       // Patch output path
+IBinaryDiffer differ = new BsdiffDiffer();
 
-await DifferentialCore.Instance?.Clean(sourcePath, targetPath, patchPath);
+var oldFile = @"D:\releases\1.0.0\app.dll";
+var newFile = @"D:\releases\1.0.1\app.dll";
+var patchFile = @"D:\patches\app.dll.patch";
+var outputFile = @"D:\restore\app.dll";
 
-// Apply patches (restoration)
-await DifferentialCore.Instance?.Dirty(sourcePath, patchPath);
+// Generate patch: oldFile + newFile -> patchFile
+await differ.CleanAsync(oldFile, newFile, patchFile);
+
+// Apply patch: oldFile + patchFile -> outputFile
+await differ.DirtyAsync(oldFile, outputFile, patchFile);
 ```
 
----
+Both `CleanAsync` and `DirtyAsync` accept a `CancellationToken`. The current implementations observe cancellation when work starts and at Core pipeline scheduling points; the inner algorithm loops do not check cancellation for every byte, so canceling a large file may complete only after the current file finishes processing.
 
-## Core API Reference
+## Core API
 
-### DifferentialCore Class
+### IBinaryDiffer
 
-#### Instance Property
-
-Get the singleton instance of DifferentialCore.
+`IBinaryDiffer` is the shared abstraction for all file-level differ algorithms, and it is the key interface used by Core's differential pipeline.
 
 ```csharp
-public static DifferentialCore Instance { get; }
-```
-
-#### Clean Method
-
-Perform incremental identification, deleted file identification, and generate binary patch files.
-
-**Method Signature:**
-
-```csharp
-public async Task Clean(string sourcePath, string targetPath, string patchPath = null)
-```
-
-**Parameters:**
-- `sourcePath`: Path to the old version folder
-- `targetPath`: Path to the new version folder
-- `patchPath`: Directory to store discovered incremental update files (optional)
-
-**Function Description:**
-1. Compare sourcePath and targetPath directories
-2. Identify added, modified, and deleted files
-3. Generate binary differential patches for modified files
-4. Save patches and added files to patchPath
-
-**Example:**
-```csharp
-// Generate patch package from v1.0.0 to v1.1.0
-var source = @"D:\MyApp\v1.0.0";
-var target = @"D:\MyApp\v1.1.0";
-var patch = @"D:\MyApp\patches\v1.1.0";
-
-await DifferentialCore.Instance.Clean(source, target, patch);
-// Result: patch directory contains all necessary incremental update files
-```
-
-#### Dirty Method
-
-Apply patches to update old version files to the new version.
-
-**Method Signature:**
-
-```csharp
-public async Task Dirty(string appPath, string patchPath)
-```
-
-**Parameters:**
-- `appPath`: Client application directory (current version)
-- `patchPath`: Path to the patch files
-
-**Function Description:**
-1. Read patch files from patchPath
-2. Apply patches to corresponding files in appPath
-3. Handle copying of added files
-4. Handle removal of deleted files
-
-**Example:**
-```csharp
-// Apply patches to current application
-var appDir = AppDomain.CurrentDomain.BaseDirectory;
-var patchDir = Path.Combine(appDir, "temp", "patches");
-
-await DifferentialCore.Instance.Dirty(appDir, patchDir);
-// Result: application updated to new version
-```
-
----
-
-## Practical Usage Examples
-
-### Example 1: Basic Patch Generation
-
-```csharp
-using GeneralUpdate.Differential;
-
-public async Task GeneratePatchAsync()
+public interface IBinaryDiffer
 {
-    try
+    Task DirtyAsync(
+        string oldFilePath,
+        string newFilePath,
+        string patchFilePath,
+        CancellationToken cancellationToken = default);
+
+    Task CleanAsync(
+        string oldFilePath,
+        string newFilePath,
+        string patchFilePath,
+        CancellationToken cancellationToken = default);
+}
+```
+
+| Parameter | Meaning |
+| --- | --- |
+| `oldFilePath` | Path to the old-version file. Required when generating and applying patches. |
+| `newFilePath` | In `CleanAsync`, the source new-version file; in `DirtyAsync`, the restored output file. |
+| `patchFilePath` | Path to the patch file. `CleanAsync` writes it; `DirtyAsync` reads it. |
+
+### BsdiffDiffer
+
+`BsdiffDiffer` implements the BSDIFF 4.0 file-level binary diff algorithm. It reads the old and new files into memory, uses suffix sorting to find matching blocks, then writes control, diff, and extra sections.
+
+```csharp
+using GeneralUpdate.Differential.Differ;
+
+var differ = new BsdiffDiffer();
+await differ.CleanAsync(oldFile, newFile, patchFile);
+await differ.DirtyAsync(oldFile, outputFile, patchFile);
+```
+
+| Feature | Notes |
+| --- | --- |
+| Default compression | `BZip2CompressionProvider`, for compatibility with legacy BSDIFF patches. |
+| Replaceable compression | The constructor accepts an `ICompressionProvider`. |
+| Patch compatibility | Supports legacy 32-byte BSDIFF headers and the current 33-byte extended header. |
+| Best fit | Compatibility-focused scenarios where file size is manageable and stable patch size matters. |
+| Resource profile | Patch generation reads both old and new files, so large single files require memory planning. |
+
+`BsdiffDiffer` also keeps `Clean(...)` and `Dirty(...)` methods. New code should prefer `IBinaryDiffer.CleanAsync` and `DirtyAsync` so the algorithm can be swapped later.
+
+### StreamingHdiffDiffer
+
+`StreamingHdiffDiffer` is the other differ implementation in the current source. It builds a block-level FNV-1a hash index to pre-filter candidate positions, extends matches at byte level, and writes a BSDIFF-compatible patch structure.
+
+```csharp
+using GeneralUpdate.Differential.Abstractions;
+using GeneralUpdate.Differential.Differ;
+
+var differ = new StreamingHdiffDiffer(
+    compressionProvider: new DeflateCompressionProvider(optimalLevel: true),
+    blockSize: 64 * 1024,
+    maxWindowSize: 128 * 1024 * 1024);
+
+await differ.CleanAsync(oldFile, newFile, patchFile);
+await differ.DirtyAsync(oldFile, outputFile, patchFile);
+```
+
+| Feature | Notes |
+| --- | --- |
+| Default compression | `DeflateCompressionProvider`. |
+| Block size | `BlockSize` defaults to 64 KB and is used to build the old-file block hash index. |
+| Window budget | `MaxWindowSize` defaults to 128 MB and affects the memory window used during patch generation. |
+| Patch application | `DirtyAsync` delegates to `BsdiffDiffer` patch application logic. |
+| Best fit | Faster candidate matching and directory-level builds that should align with `DiffPipeline` defaults. |
+
+The current implementation is not a full external-memory streaming differ. If a single file exceeds `MaxWindowSize`, only the budgeted window participates in the calculation. For very large files, validate restoration results in your publishing pipeline, increase `MaxWindowSize`, or choose `BsdiffDiffer` or another implementation that better fits the file size.
+
+## Differ algorithm selection
+
+Differential currently includes two file-level differ algorithms. Both write a BSDIFF-compatible patch structure, but their match strategy, default compression, and performance priorities are different.
+
+| Comparison | `BsdiffDiffer` | `StreamingHdiffDiffer` |
+| --- | --- | --- |
+| Core idea | Classic BSDIFF 4.0; uses suffix sorting to find long matches between old and new files. | Builds an old-file index with block-level FNV-1a hashes, filters candidate blocks quickly, then extends matches at byte level. |
+| Default compression | BZip2 (`0x00`). | Deflate (`0x01`). |
+| Patch application | Implements BSDIFF Dirty logic directly. | `DirtyAsync` delegates to `BsdiffDiffer`, so the apply phase remains BSDIFF-compatible. |
+| Generation efficiency | More fine-grained matching and stable behavior for localized or dispersed changes, but suffix sorting and full file loading cost CPU and memory. | Faster when block matches are effective; can become slower when changes are dispersed and block-hash hits are rare. |
+| Client-side apply performance | Default BZip2 decompression is more expensive when many patches are applied. | Default Deflate decompression is faster and friendlier for applying many client patches. |
+| Patch-size tendency | Usually aims for fine-grained matches and much more stable patch size. | Speed-first; patch size strongly depends on change distribution, block size, and window budget. When block hits are poor, the patch can approach the full file size. |
+| Memory profile | Reads the old and new files during generation, so large single files need memory planning. | Uses `BlockSize` and `MaxWindowSize` to control the matching window; very large single files need validation or tuning. |
+| Compatibility | Best when legacy BSDIFF/BZip2 compatibility matters. | Best for new projects, directory-level batch diffs, and Core `DiffPipeline` default builds. |
+
+As a rule of thumb, `BsdiffDiffer` leans toward compatibility and stable patch size, while `StreamingHdiffDiffer` leans toward faster client-side apply and tunable parameters. If patch size matters most or changes are dispersed, start with `BsdiffDiffer`. If client-side apply speed matters more and your own benchmarks show acceptable patch size, consider `StreamingHdiffDiffer`.
+
+### Benchmark reference {#benchmark-reference}
+
+The following numbers come from a local microbenchmark against the current source. They are meant to give developers an order-of-magnitude reference, not a performance guarantee across all projects. The test used Windows x64, a .NET Release build, and synthetic 2-4 MB files. Real results depend on CPU, disk, file type, change ratio, compression level, and parallelism.
+
+| Scenario | `BsdiffDiffer` clean | `StreamingHdiffDiffer` clean | `BsdiffDiffer` dirty | `StreamingHdiffDiffer` dirty | `BsdiffDiffer` patch size | `StreamingHdiffDiffer` patch size |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 MB text, small line changes/inserts | 484 ms | 2059 ms | 55 ms | 36 ms | 0.05% | 3.50% |
+| 4 MB binary, contiguous local block change | 1030 ms | 318 ms | 55 ms | 11 ms | 2.58% | 100.04% |
+| 4 MB binary, dispersed random byte changes | 757 ms | 4176 ms | 70 ms | 30 ms | 2.18% | 100.27% |
+
+Practical estimates from this benchmark:
+
+| Metric | Reference conclusion |
+| --- | --- |
+| Patch size | `BsdiffDiffer` produced patches around 0.05%-2.58% of the new file in these scenarios; `StreamingHdiffDiffer` produced around 3.50%-100%. If package size is the top priority, test `BsdiffDiffer` first. |
+| Client-side apply speed | `StreamingHdiffDiffer` defaults to Deflate and applied patches about 1.5-5x faster in this benchmark. The difference matters more when many files are applied. |
+| Generation speed | There is no absolute winner: `StreamingHdiffDiffer` was about 3.2x faster for the contiguous binary block change, while `BsdiffDiffer` was about 4.3-5.5x faster for text and dispersed random changes. |
+| Large project choice | For large projects, evaluate total patch size, build time, and client apply time together. If many files can be processed independently, `WithParallelism(...)` often affects total time more than small differences in a single differ. |
+
+> The key takeaway is directional: `BsdiffDiffer` more often produces small patches, while `StreamingHdiffDiffer` applies patches faster, but patch size and generation speed are very sensitive to the shape of file changes. Before production release, benchmark with your own application artifacts.
+
+Recommended choices:
+
+| Scenario | Recommendation |
+| --- | --- |
+| Low-level single-file patching with maximum compatibility | Use `new BsdiffDiffer()`. |
+| Directory-level batch patches through Core `DiffPipeline` | Benchmark the default configuration first; if patch size is too large, explicitly switch to `BsdiffDiffer`; then combine it with `WithParallelism(...)` to improve throughput. |
+| Client-side decompression performance is more important | Prefer Deflate patches: `StreamingHdiffDiffer` defaults, or `new BsdiffDiffer(new DeflateCompressionProvider())`. |
+| Existing patches are legacy BSDIFF/BZip2 | Apply them with `BsdiffDiffer`; 32-byte headers are treated as BZip2. |
+| Large projects with many DLLs, resources, or plugin files | Use Core `DiffPipeline` for file-level parallelism instead of calling Differential file by file in a serial loop. |
+
+## Patch format and compression providers {#patch-format-and-compression-providers}
+
+Differential writes BSDIFF-style patches. The current implementation writes a 33-byte extended header:
+
+| Offset | Length | Meaning |
+| --- | --- | --- |
+| `0` | 8 | Magic string `"BSDIFF40"`. |
+| `8` | 8 | Compressed control-section length. |
+| `16` | 8 | Compressed diff-section length. |
+| `24` | 8 | New-file length. |
+| `32` | 1 | Compression format version. |
+
+Patch application is also compatible with legacy 32-byte headers. If the 33rd format byte is absent, the patch is treated as a BZip2 legacy patch.
+
+### ICompressionProvider
+
+`ICompressionProvider` wraps the control, diff, and extra sections in compression streams.
+
+```csharp
+public interface ICompressionProvider
+{
+    byte FormatVersion { get; }
+
+    Stream CreateCompressStream(
+        Stream output,
+        CancellationToken cancellationToken = default);
+
+    Stream CreateDecompressStream(
+        Stream input,
+        CancellationToken cancellationToken = default);
+}
+```
+
+| Provider | Format byte | Current availability | Notes |
+| --- | --- | --- | --- |
+| `BZip2CompressionProvider` | `0x00` | Available | Default for `BsdiffDiffer`; compatible with legacy BSDIFF patches. |
+| `DeflateCompressionProvider` | `0x01` | Available | BCL `DeflateStream`; friendlier decompression speed for client updates. |
+| `BrotliCompressionProvider` | `0x02` | Reserved in source behind `NET6_0_OR_GREATER` | The current `GeneralUpdate.Differential` project targets `netstandard2.0`, and the patch reader currently recognizes only `0x00` and `0x01`, so do not use Brotli for production update packages. |
+
+When customizing compression, generated patches must use a format byte that the patch reader can recognize. For production use today, prefer BZip2 or Deflate.
+
+```csharp
+using GeneralUpdate.Differential.Abstractions;
+using GeneralUpdate.Differential.Differ;
+
+var differ = new BsdiffDiffer(
+    new DeflateCompressionProvider(optimalLevel: false));
+
+await differ.CleanAsync(oldFile, newFile, patchFile);
+await differ.DirtyAsync(oldFile, outputFile, patchFile);
+```
+
+## Relationship with GeneralUpdate.Core {#relationship-with-generalupdatecore}
+
+`GeneralUpdate.Core` builds directory-level differential updates on top of Differential through `DiffPipeline`. It is responsible for:
+
+1. Comparing the old and new directories.
+2. Finding changed files and calling `IBinaryDiffer.CleanAsync` to generate `.patch` files.
+3. Copying added files into the patch directory.
+4. Writing `generalupdate.delete.json` for deleted files.
+5. Applying patches on the client by calling `IBinaryDiffer.DirtyAsync` in parallel, writing temporary files first, then replacing originals after success.
+
+If you use `GeneralUpdate.Core` in an application update flow, Core integrates Differential by default and includes the differential pipeline out of the box. In other words, normal update integration does not require extra installation, initialization, or direct calls to `GeneralUpdate.Differential`. As long as you use the Core update flow and enable patch update behavior as needed, Core creates the differ, applies patches, and performs directory-level orchestration internally.
+
+Use `UseDiffPipeline` only for advanced configuration, such as replacing the default differ algorithm, tuning parallelism, changing error behavior, or plugging in custom matchers:
+
+```csharp
+using GeneralUpdate.Core;
+using GeneralUpdate.Core.Models;
+using GeneralUpdate.Differential.Differ;
+
+await new GeneralUpdateBootstrap()
+    .SetSource(
+        updateUrl: "https://update.example.com/api/upgrade/verification",
+        appSecretKey: "your-app-secret")
+    .SetOption(Option.AppType, AppType.Client)
+    .SetOption(Option.PatchEnabled, true)
+    .UseDiffPipeline(builder => builder
+        .UseDiffer(new StreamingHdiffDiffer())
+        .WithParallelism(4)
+        .WithStopOnFirstError(true))
+    .LaunchAsync();
+```
+
+There are two default layers in the current source:
+
+| Usage | Default differ |
+| --- | --- |
+| Direct `new DiffPipeline()` or `new DiffPipelineBuilder().Build()` | `StreamingHdiffDiffer` |
+| `GeneralUpdateBootstrap` without an explicit `UseDiffPipeline(...)` | `BsdiffDiffer`, parallelism 2, with `DiffProgressReporter` |
+
+For regular users, Differential can be treated as a built-in Core capability that does not need separate integration. Call `UseDiffPipeline(...)` only when you want Core to use a specific algorithm or custom differential behavior.
+
+## Relationship with GeneralUpdate.Tools {#relationship-with-generalupdatetools}
+
+`GeneralUpdate.Tools` targets the publishing side and helps developers build update artifacts. The current `DiffService` creates `new DiffPipeline()` and calls:
+
+```csharp
+await pipeline.CleanAsync(oldDir, newDir, patchDir);
+```
+
+In other words, Tools uses Core's `DiffPipeline` to build directory-level differential packages, and `DiffPipeline` calls Differential's `IBinaryDiffer` for each changed file. For most developers, the recommended path is:
+
+1. Use Tools to compare the old and new version directories and generate the patch directory plus manifest artifacts.
+2. Use Core on the client to check versions, download packages, and apply patches.
+3. Use Differential directly only when experimenting with custom algorithms, compression formats, or single-file patching.
+
+This layering keeps business code simple: Tools builds artifacts, Core runs updates, and Differential handles low-level file diffs.
+
+## Concurrency model and performance guidance
+
+A Differential differ instance does not store mutable shared state for a specific patch operation. As long as the supplied `ICompressionProvider` is thread-safe, the built-in differ implementations can be called concurrently by Core's pipeline. The built-in BZip2 and Deflate providers create a new compression stream for each call and are suitable for concurrent use.
+
+Real "multi-threaded diff" normally happens at the Core `DiffPipeline` layer:
+
+```csharp
+var pipeline = new DiffPipelineBuilder()
+    .UseDiffer(new StreamingHdiffDiffer())
+    .WithParallelism(4)
+    .Build();
+
+await pipeline.CleanAsync(oldDir, newDir, patchDir);
+```
+
+### Parallel differential work for large projects {#parallel-differential-work-for-large-projects}
+
+Large desktop projects are usually not one huge file. They are often composed of the main executable, many DLLs, plugins, resource files, runtime files, and configuration files. Core `DiffPipeline` splits the directory comparison result into file-level tasks, and each changed file independently calls `IBinaryDiffer.CleanAsync` to produce a patch. That means `WithParallelism(...)` can process multiple files at the same time.
+
+This parallel model matters for large projects:
+
+1. The publishing side can generate `.patch` files for multiple changed files at once, shortening package build time.
+2. The client side can also apply multiple file patches in parallel, reducing the upgrade window.
+3. Core orchestrates new-file copying, delete manifest handling, and differential patch generation, so developers do not need to write custom thread scheduling.
+4. Parallelism can be tuned for the machine: higher on build servers, lower on resource-sensitive clients.
+
+| Parameter/strategy | Guidance |
+| --- | --- |
+| `WithParallelism(1)` | Resource-sensitive devices, HDDs, or low-memory environments. |
+| `WithParallelism(2)` | Balanced default for most desktop applications. |
+| `WithParallelism(4-8)` | Multi-core CPUs, SSDs, build machines, or publishing servers. |
+| BZip2 | Better compatibility, but higher client-side decompression cost. |
+| Deflate | Friendlier decompression speed for applying many client patches. |
+| Large files | Measure generation time, memory peak, and restoration correctness; do not look only at patch size. |
+
+Parallel differential work is best for large projects with many independently processable files. A single very large file is still handled internally by the selected differ algorithm; `WithParallelism(8)` does not split one file into eight parallel chunks. It improves throughput across multiple files.
+
+Downloads and differential work can run in parallel at the upper update-flow level: Core can download multiple resources concurrently, and the patch application phase can process files in parallel. Differential itself only computes the patch for one file and does not manage network download threads.
+
+## Extension points
+
+### Custom differ algorithm
+
+Implement `IBinaryDiffer` to plug another algorithm into Core. This is useful when integrating a native library, optimizing specific file types, or replacing the built-in algorithms.
+
+```csharp
+using GeneralUpdate.Differential.Abstractions;
+
+public sealed class MyBinaryDiffer : IBinaryDiffer
+{
+    public Task CleanAsync(
+        string oldFilePath,
+        string newFilePath,
+        string patchFilePath,
+        CancellationToken cancellationToken = default)
     {
-        // Version paths
-        var oldVersion = @"D:\MyApp\1.0.0";
-        var newVersion = @"D:\MyApp\1.0.1";
-        var patchOutput = @"D:\MyApp\patches\1.0.1";
-        
-        Console.WriteLine("Starting patch generation...");
-        
-        // Generate patches
-        await DifferentialCore.Instance.Clean(oldVersion, newVersion, patchOutput);
-        
-        Console.WriteLine($"Patch generation complete! Output directory: {patchOutput}");
-        
-        // Display patch information
-        var patchFiles = Directory.GetFiles(patchOutput, "*.*", SearchOption.AllDirectories);
-        Console.WriteLine($"Generated {patchFiles.Length} patch files");
-        
-        long totalSize = patchFiles.Sum(f => new FileInfo(f).Length);
-        Console.WriteLine($"Total patch size: {totalSize / 1024.0:F2} KB");
+        // Generate patchFilePath from oldFilePath and newFilePath.
+        throw new NotImplementedException();
     }
-    catch (Exception ex)
+
+    public Task DirtyAsync(
+        string oldFilePath,
+        string newFilePath,
+        string patchFilePath,
+        CancellationToken cancellationToken = default)
     {
-        Console.WriteLine($"Patch generation failed: {ex.Message}");
+        // Restore newFilePath from oldFilePath and patchFilePath.
+        throw new NotImplementedException();
     }
 }
 ```
 
-### Example 2: Apply Patches
+```csharp
+var pipeline = new DiffPipelineBuilder()
+    .UseDiffer(new MyBinaryDiffer())
+    .WithParallelism(4)
+    .Build();
+```
+
+Your custom algorithm must ensure that patches produced by `CleanAsync` can be applied correctly by the same algorithm's `DirtyAsync`. If the patch will be consumed by Core clients, the publishing side and client side must use the same differ implementation.
+
+### Custom compression provider
+
+If you want to keep the BSDIFF-compatible patch structure but change how the control, diff, and extra sections are compressed, implement `ICompressionProvider`.
 
 ```csharp
-using GeneralUpdate.Differential;
+using GeneralUpdate.Differential.Abstractions;
 
-public async Task ApplyPatchAsync()
+public sealed class MyCompressionProvider : ICompressionProvider
 {
-    try
+    public byte FormatVersion => 0x01;
+
+    public Stream CreateCompressStream(
+        Stream output,
+        CancellationToken cancellationToken = default)
     {
-        // Application directory
-        var appDirectory = @"D:\MyApp\current";
-        // Patch directory
-        var patchDirectory = @"D:\MyApp\patches\1.0.1";
-        
-        Console.WriteLine("Starting patch application...");
-        
-        // Verify patch exists
-        if (!Directory.Exists(patchDirectory))
-        {
-            throw new DirectoryNotFoundException($"Patch directory not found: {patchDirectory}");
-        }
-        
-        // Apply patches
-        await DifferentialCore.Instance.Dirty(appDirectory, patchDirectory);
-        
-        Console.WriteLine("Patch applied successfully! Application updated to new version.");
+        return new DeflateStream(
+            output,
+            CompressionLevel.Optimal,
+            leaveOpen: true);
     }
-    catch (Exception ex)
+
+    public Stream CreateDecompressStream(
+        Stream input,
+        CancellationToken cancellationToken = default)
     {
-        Console.WriteLine($"Patch application failed: {ex.Message}");
+        return new DeflateStream(
+            input,
+            CompressionMode.Decompress,
+            leaveOpen: true);
     }
 }
 ```
 
-### Example 3: Complete Patch Workflow
+Do not allocate a new `FormatVersion` casually. Current `BsdiffDiffer.DirtyAsync` recognizes only BZip2 (`0x00`) and Deflate (`0x01`). If you introduce a new format, you must also extend the patch reader, otherwise clients cannot apply the patch.
 
-```csharp
-using GeneralUpdate.Differential;
-using System.IO.Compression;
+## Practical guidance
 
-public class PatchManager
-{
-    // Generate and package patches
-    public async Task<string> CreatePatchPackageAsync(
-        string oldVersionPath, 
-        string newVersionPath, 
-        string outputPath)
-    {
-        try
-        {
-            // 1. Generate patch files
-            var tempPatchDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            Directory.CreateDirectory(tempPatchDir);
-            
-            Console.WriteLine($"Generating patches...");
-            await DifferentialCore.Instance.Clean(oldVersionPath, newVersionPath, tempPatchDir);
-            
-            // 2. Compress patch files
-            var patchZipPath = Path.Combine(outputPath, "patch_1.0.1.zip");
-            Console.WriteLine($"Packaging patches...");
-            
-            if (File.Exists(patchZipPath))
-                File.Delete(patchZipPath);
-                
-            ZipFile.CreateFromDirectory(tempPatchDir, patchZipPath, 
-                CompressionLevel.Optimal, false);
-            
-            // 3. Clean up temp files
-            Directory.Delete(tempPatchDir, true);
-            
-            var patchSize = new FileInfo(patchZipPath).Length;
-            Console.WriteLine($"Patch package created successfully: {patchZipPath}");
-            Console.WriteLine($"Patch package size: {patchSize / 1024.0:F2} KB");
-            
-            return patchZipPath;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Patch package creation failed: {ex.Message}");
-            throw;
-        }
-    }
-    
-    // Extract and apply patches
-    public async Task ApplyPatchPackageAsync(string appPath, string patchZipPath)
-    {
-        try
-        {
-            // 1. Extract patch package
-            var tempExtractDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            Directory.CreateDirectory(tempExtractDir);
-            
-            Console.WriteLine($"Extracting patch package...");
-            ZipFile.ExtractToDirectory(patchZipPath, tempExtractDir);
-            
-            // 2. Apply patches
-            Console.WriteLine($"Applying patches...");
-            await DifferentialCore.Instance.Dirty(appPath, tempExtractDir);
-            
-            // 3. Clean up temp files
-            Directory.Delete(tempExtractDir, true);
-            
-            Console.WriteLine($"Patch applied successfully!");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Patch package application failed: {ex.Message}");
-            throw;
-        }
-    }
-}
+| Scenario | Recommended approach |
+| --- | --- |
+| Regular application differential updates | Use `GeneralUpdate.Tools` to build artifacts and Core on the client. |
+| Need control over directory-level parallelism, error handling, and progress | Use Core's `DiffPipelineBuilder`. |
+| Need to validate one file's patch behavior | Use `IBinaryDiffer` directly. |
+| Patch size and application speed both matter | Benchmark BZip2, Deflate, and different algorithms on the same file set before choosing a default. |
+| Packages must remain compatible with older clients | Conservatively use `BsdiffDiffer` + BZip2, or ensure clients already support the Deflate extended header. |
 
-// Usage example
-var manager = new PatchManager();
-
-// Create patch package
-var patchZip = await manager.CreatePatchPackageAsync(
-    @"D:\MyApp\1.0.0",
-    @"D:\MyApp\1.0.1",
-    @"D:\MyApp\releases"
-);
-
-// Apply patch package
-await manager.ApplyPatchPackageAsync(
-    @"D:\MyApp\current",
-    patchZip
-);
-```
-
-### Example 4: Patch Operations with Progress Display
-
-```csharp
-using GeneralUpdate.Differential;
-
-public class ProgressivePatchManager
-{
-    public async Task GeneratePatchWithProgressAsync(
-        string sourcePath, 
-        string targetPath, 
-        string patchPath,
-        IProgress<string> progress)
-    {
-        try
-        {
-            progress?.Report("Starting file difference scan...");
-            
-            // In actual scenarios, you can add progress reports before and after Clean
-            await DifferentialCore.Instance.Clean(sourcePath, targetPath, patchPath);
-            
-            progress?.Report("Patch generation complete!");
-            
-            // Statistics
-            var files = Directory.GetFiles(patchPath, "*.*", SearchOption.AllDirectories);
-            progress?.Report($"Generated {files.Length} patch files");
-        }
-        catch (Exception ex)
-        {
-            progress?.Report($"Error: {ex.Message}");
-            throw;
-        }
-    }
-    
-    public async Task ApplyPatchWithProgressAsync(
-        string appPath, 
-        string patchPath,
-        IProgress<string> progress)
-    {
-        try
-        {
-            progress?.Report("Starting patch application...");
-            
-            await DifferentialCore.Instance.Dirty(appPath, patchPath);
-            
-            progress?.Report("Patch applied successfully!");
-        }
-        catch (Exception ex)
-        {
-            progress?.Report($"Error: {ex.Message}");
-            throw;
-        }
-    }
-}
-
-// Usage example
-var manager = new ProgressivePatchManager();
-var progress = new Progress<string>(msg => Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {msg}"));
-
-await manager.GeneratePatchWithProgressAsync(
-    @"D:\MyApp\1.0.0",
-    @"D:\MyApp\1.0.1",
-    @"D:\MyApp\patches\1.0.1",
-    progress
-);
-```
-
----
-
-## Notes and Warnings
-
-### ⚠️ Important Notes
-
-1. **File Name Restrictions**
-   - Cannot include files with the same name but different extensions (e.g., file.txt and file.log)
-   - Recommended to use unique file naming conventions
-
-2. **Directory Structure**
-   - The relative structure of source and target directories should remain consistent
-   - Directory hierarchy is preserved during patch generation
-
-3. **Disk Space**
-   - Ensure sufficient disk space for storing patch files
-   - Binary differential patches are usually smaller than complete files, but still require temporary space
-
-4. **File Locking**
-   - When applying patches, ensure target files are not locked by other processes
-   - Recommended to apply patches after the application is closed
-
-5. **Backup Recommendations**
-   - Recommended to backup original files before applying patches
-   - Can use ClientCore's BackUp option for automatic backup
-
-### 💡 Best Practices
-
-- **Version Management**: Maintain separate patch packages for each version for easier version tracking and rollback
-- **Patch Validation**: Perform validation testing after generating patches to ensure they can be applied correctly
-- **Incremental Updates**: Prioritize differential updates over full updates, which can save 50%-90% of download size
-- **Error Handling**: Implement complete exception capture and error recovery mechanisms
-- **Performance Optimization**: For large files, the performance advantage of the differential algorithm is more pronounced
-
-### 🔍 How It Works
-
-**Clean Method Workflow:**
-1. Scan all files in source and target directories
-2. Compare MD5 hash values of files to identify changes
-3. For modified files, use binary differential algorithm to generate patches
-4. For added files, copy directly to patch directory
-5. Record list of deleted files
-
-**Dirty Method Workflow:**
-1. Read all files in patch directory
-2. For patch files, apply to corresponding original files
-3. For added files, copy directly to application directory
-4. Remove corresponding files according to deletion list
-5. Verify update integrity
-
----
-
-## Applicable Platforms
-
-| Product        | Version       |
-| -------------- | ------------- |
-| .NET               | 5, 6, 7, 8, 9, 10  |
-| .NET Framework     | 4.6.1             |
-| .NET Standard      | 2.0               |
-| .NET Core          | 2.0               |
-
----
-
-## Related Resources
-
-- **Sample Code**: [View GitHub Examples](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Diff)
-- **Main Repository**: [GeneralUpdate Project](https://github.com/GeneralLibrary/GeneralUpdate)
-- **Packaging Tool**: The GeneralUpdate.PacketTool project depends on this component for differential packaging
+Differential's value is that it compresses complex binary diff behavior into a stable file-level abstraction. Application developers can focus on when to update, what to download, and how to inform users, while Core, Tools, and Differential handle patch generation and application together.

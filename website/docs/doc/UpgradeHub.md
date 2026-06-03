@@ -6,10 +6,10 @@ sidebar_position: 7
 
 ## 组件概览
 
-**UpgradeHubService** 是基于 SignalR 的实时版本推送服务，集成在 `GeneralUpdate.ClientCore` 中。服务端通过 `UpgradeHub` 向已连接的客户端主动推送版本更新通知，客户端通过 `UpgradeHubService` 订阅并接收消息，支持点对点（一对一）和广播（一对多）两种推送模式。
+**UpgradeHubService** 是基于 SignalR 的实时版本推送服务，集成在 `GeneralUpdate.Core` 中。服务端通过 `UpgradeHub` 向已连接的客户端主动推送版本更新通知，客户端通过 `UpgradeHubService` 订阅并接收消息，支持点对点（一对一）和广播（一对多）两种推送模式。
 
-**命名空间：** `GeneralUpdate.ClientCore.Hubs`  
-**程序集：** `GeneralUpdate.ClientCore.dll`
+**命名空间：** `GeneralUpdate.Core.Hubs`  
+**程序集：** `GeneralUpdate.Core.dll`
 
 ```csharp
 public class UpgradeHubService : IUpgradeHubService
@@ -45,10 +45,10 @@ public class UpgradeHubService : IUpgradeHubService
 
 ### 安装
 
-`UpgradeHubService` 包含在 `GeneralUpdate.ClientCore` 中，无需单独安装：
+`UpgradeHubService` 包含在 `GeneralUpdate.Core` 中，无需单独安装：
 
 ```bash
-dotnet add package GeneralUpdate.ClientCore
+dotnet add package GeneralUpdate.Core
 ```
 
 ### 初始化与使用
@@ -56,7 +56,7 @@ dotnet add package GeneralUpdate.ClientCore
 以下示例展示了如何在客户端应用中接收服务端推送的版本更新消息：
 
 ```csharp
-using GeneralUpdate.ClientCore.Hubs;
+using GeneralUpdate.Core.Hubs;
 
 // 创建 UpgradeHubService 实例
 // url    — SignalR Hub 订阅地址
@@ -239,7 +239,7 @@ public Task DisposeAsync()
 ### 示例 1：基本推送订阅
 
 ```csharp
-using GeneralUpdate.ClientCore.Hubs;
+using GeneralUpdate.Core.Hubs;
 
 var hub = new UpgradeHubService("http://localhost:5000/UpgradeHub",
     appkey: Guid.NewGuid().ToString());
@@ -255,7 +255,7 @@ await hub.StartAsync();
 ### 示例 2：完整生命周期管理
 
 ```csharp
-using GeneralUpdate.ClientCore.Hubs;
+using GeneralUpdate.Core.Hubs;
 
 var hub = new UpgradeHubService(
     "http://localhost:5000/UpgradeHub",
@@ -285,12 +285,12 @@ finally
 
 ```csharp
 using System.Text;
-using GeneralUpdate.ClientCore;
-using GeneralUpdate.ClientCore.Hubs;
-using GeneralUpdate.Common.Download;
-using GeneralUpdate.Common.Internal;
-using GeneralUpdate.Common.Internal.Bootstrap;
-using GeneralUpdate.Common.Shared.Object;
+using GeneralUpdate.Core;
+using GeneralUpdate.Core.Hubs;
+
+
+
+
 
 // 1. 启动 SignalR 推送监听
 var hub = new UpgradeHubService("http://localhost:5000/UpgradeHub",
@@ -363,4 +363,4 @@ await new GeneralClientBootstrap()
 
 - **示例代码：** [查看 GitHub 示例](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Push/Program.cs)
 - **主仓库：** [GeneralUpdate 项目](https://github.com/GeneralLibrary/GeneralUpdate)
-- **相关组件：** [GeneralUpdate.ClientCore](./GeneralUpdate.ClientCore.md) | [GeneralUpdate.Core](./GeneralUpdate.Core.md)
+- **相关组件：** [GeneralUpdate.Core](./GeneralUpdate.Core.md) | [GeneralUpdate.Core](./GeneralUpdate.Core.md)

@@ -527,4 +527,4 @@ public record BlackPolicy
 - **[系统架构](./Architecture.md)** — 了解整体架构
 - **[Pipeline 详解](./Pipeline.md)** — 中间件管道工作原理
 - **[安全指南](./Security.md)** — 安全配置
-- **[GeneralUpdate.Tools](../doc/GeneralUpdate.PacketTool.md)** — 配置生成工具
+- **[GeneralUpdate.Tools](../doc/GeneralUpdate.PacketTool)** — 配置生成工具

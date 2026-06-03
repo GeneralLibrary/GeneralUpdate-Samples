@@ -4,15 +4,15 @@ sidebar_position: 9
 
 ### Definition
 
-Namespace: GeneralUpdate.ClientCore
+Namespace: GeneralUpdate.Core
 
-Assembly: GeneralUpdate.ClientCore.dll
+Assembly: GeneralUpdate.Core.dll
 
 
 
 **OSS**
 
-OSS stands for Object Storage Service. For those developing server-side technology stacks, this term is likely familiar, as major cloud service providers offer similar services. Simply put, it's a file server. Examples include Alibaba Cloud OSS, Tencent Cloud COS, and Huawei Cloud OBS. While they have different names, their functionalities are quite similar. The new feature of this update component is implemented in a very similar manner, so we chose OSS to name this feature, making it easy for developers to quickly understand its purpose (requires the use of components GeneralUpdate.ClientCore, GeneralUpdate.Core).
+OSS stands for Object Storage Service. For those developing server-side technology stacks, this term is likely familiar, as major cloud service providers offer similar services. Simply put, it's a file server. Examples include Alibaba Cloud OSS, Tencent Cloud COS, and Huawei Cloud OBS. While they have different names, their functionalities are quite similar. The new feature of this update component is implemented in a very similar manner, so we chose OSS to name this feature, making it easy for developers to quickly understand its purpose (requires the use of the GeneralUpdate.Core component).
 
 
 
@@ -84,8 +84,8 @@ GeneralClientOSS :
 
 ```c#
 using System.Text;
-using GeneralUpdate.ClientCore;
-using GeneralUpdate.Common.Shared.Object;
+using GeneralUpdate.Core;
+
 
 var paramsOSS = new GlobalConfigInfoOSS
 {

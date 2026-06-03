@@ -221,7 +221,7 @@ await new GeneralClientBootstrap()
 
 如果仍有占用：
 1. 检查是否有后台服务未关闭
-2. 使用 [文件占用指南](./File%20occupancy.md) 中的 `handle.exe` 排查
+2. 使用 [文件占用指南](./File occupancy) 中的 `handle.exe` 排查
 3. 考虑使用强制重启后更新策略
 
 ### Q17: Linux/macOS 上文件权限怎么处理？

@@ -225,4 +225,4 @@ await new GeneralClientBootstrap()
 - **[Pipeline Guide](./Pipeline.md)** — Middleware pipeline internals
 - **[Configuration Reference](./Configuration.md)** — All configuration options
 - **[Security Guide](./Security.md)** — Security architecture
-- **[Quick Start](../quickstart/Quik%20start.md)** — 5-minute quickstart
+- **[Quick Start](../quickstart/Quik start)** — 5-minute quickstart

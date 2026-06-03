@@ -24,7 +24,7 @@ sidebar_position: 6
 6. 填写包名和版本号
 7. 点击「构建」
 
-详细说明请参考 [GeneralUpdate.Tools 文档](../doc/GeneralUpdate.PacketTool.md)。
+详细说明请参考 [GeneralUpdate.Tools 文档](../doc/GeneralUpdate.PacketTool)。
 
 ### 使用 Differential API 编程生成
 
@@ -279,7 +279,7 @@ jobs:
 
 ## 相关资源
 
-- **[GeneralUpdate.Tools](../doc/GeneralUpdate.PacketTool.md)** — 补丁包和配置生成工具
+- **[GeneralUpdate.Tools](../doc/GeneralUpdate.PacketTool)** — 补丁包和配置生成工具
 - **[权限指南](./Permission.md)** — Windows UAC 权限处理
-- **[快速入门](../quickstart/Quik%20start.md)** — 5 分钟快速上手
+- **[快速入门](../quickstart/Quik start)** — 5 分钟快速上手
 - **[系统架构](./Architecture.md)** — 了解整体打包部署架构

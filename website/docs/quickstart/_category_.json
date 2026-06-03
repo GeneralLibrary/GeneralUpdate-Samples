@@ -1,8 +1,8 @@
 {
-  "label": "Quik start",
+  "label": "Quick Start",
   "position": 1,
   "link": {
     "type": "generated-index",
-    "description": "Quik start."
+    "description": "快速入门与实战手册。"
   }
 }
