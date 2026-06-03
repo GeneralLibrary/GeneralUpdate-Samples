@@ -58,7 +58,7 @@ public class SilentUpdateSample : ISample
         Console.WriteLine("已启动 ✓");
         Console.WriteLine();
 
-        // 模拟应用运行
+        // 模拟应用运行 — 同时等待后台轮询完成更新准备
         Console.WriteLine("══ 应用运行中 (后台静默轮询) ══");
         for (int i = 0; i < 5 && !ct.IsCancellationRequested; i++)
         {
@@ -66,9 +66,41 @@ public class SilentUpdateSample : ISample
             await Task.Delay(1000, ct);
         }
 
+        // 等待后台轮询完成（最多等 60 秒）
+        Console.WriteLine();
+        Console.WriteLine("══ 等待后台更新准备完成... ══");
+        var waited = 0;
+        while (bootstrap.SilentOrchestrator?.HasPreparedUpdate != true && waited < 60 && !ct.IsCancellationRequested)
+        {
+            await Task.Delay(500, ct);
+            waited++;
+        }
+
         Console.WriteLine();
         Console.WriteLine("══ 退出时自动准备更新包 ══");
-        Console.WriteLine("  退出时自动准备更新包 ✓ (下次启动生效)");
+
+        if (bootstrap.SilentOrchestrator?.HasPreparedUpdate == true)
+        {
+            Console.WriteLine("  更新包已准备完毕，正在启动升级...");
+            var launched = bootstrap.SilentOrchestrator.TryLaunchUpgrade();
+            if (launched)
+            {
+                Console.WriteLine("  升级进程已启动 ✓ (当前进程即将退出)");
+                Console.WriteLine();
+                Console.WriteLine("══ 完成 ✓ ══");
+                Environment.Exit(0);
+            }
+            else
+            {
+                Console.WriteLine("  无待应用的客户端更新包");
+            }
+        }
+        else
+        {
+            Console.WriteLine("  更新尚未准备完成（后台轮询可能仍在运行中）");
+            Console.WriteLine("  提示：退出 Hub 时将自动触发升级");
+        }
+
         Console.WriteLine();
         Console.WriteLine("══ 完成 ✓ ══");
     }

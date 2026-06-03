@@ -181,6 +181,9 @@ class Program
             CreateNoWindow = true
         };
         var proc = Process.Start(psi)!;
+        // 异步消费 stdout / stderr，防止管道缓冲区满导致构建进程阻塞
+        _ = Task.Run(async () => { while (await proc.StandardOutput.ReadLineAsync() is { } line) { } });
+        _ = Task.Run(async () => { while (await proc.StandardError.ReadLineAsync() is { } line) { } });
         await proc.WaitForExitAsync();
         Console.WriteLine(proc.ExitCode == 0 ? "✓" : "✗");
     }
@@ -214,6 +217,10 @@ class Program
             }
         };
         _serverProcess.Start();
+
+        // 异步消费 stdout / stderr，防止管道缓冲区满导致 Server 进程阻塞
+        _ = Task.Run(async () => { while (await _serverProcess.StandardOutput.ReadLineAsync() is { } line) { } });
+        _ = Task.Run(async () => { while (await _serverProcess.StandardError.ReadLineAsync() is { } line) { } });
 
         // 轮询等待就绪
         using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };

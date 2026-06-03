@@ -61,6 +61,7 @@ public class CompleteUpdateSample : ISample
             ReportUrl = $"{config.ServerUrl}/Upgrade/Report",
             AppSecretKey = config.AppSecretKey,
             InstallPath = mockAppDir,
+            UpdatePath = baseDir,  // Hub.exe 所在目录，用于启动升级进程
             ClientVersion = config.ClientVersion,
             MainAppName = config.MainAppName,
             UpdateAppName = config.UpgradeAppName,
@@ -92,6 +93,11 @@ public class CompleteUpdateSample : ISample
             .AddListenerMultiDownloadStatistics((_, e) =>
             {
                 Console.Write($"\r  [下载] {e.BytesReceived}/{e.TotalBytesToReceive} bytes ({e.ProgressPercentage:F0}%)  {e.Speed}");
+            })
+            .AddListenerMultiDownloadCompleted((_, e) =>
+            {
+                Console.WriteLine();
+                Console.WriteLine($"  [下载完成] {(e.IsCompleted ? "✓ 全部成功" : "✗ 存在失败")}");
             })
             .AddListenerProgress((_, e) =>
             {

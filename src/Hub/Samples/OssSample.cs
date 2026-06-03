@@ -46,8 +46,19 @@ public class OssSample : ISample
         Console.WriteLine();
         Console.WriteLine("══ 步骤 2/3 — GeneralUpdateBootstrap (OssClient) ══");
 
+        var request = new UpdateRequest
+        {
+            UpdateUrl = versionsUrl,
+            AppSecretKey = config.AppSecretKey,
+            InstallPath = ossDemoDir,
+            UpdatePath = baseDir,
+            UpdateAppName = config.UpgradeAppName,
+            MainAppName = config.MainAppName,
+            ClientVersion = config.ClientVersion
+        };
+
         var bootstrap = new GeneralUpdateBootstrap()
-            .SetSource(versionsUrl, config.AppSecretKey, installPath: ossDemoDir)
+            .SetConfig(request)
             .SetOption(Option.AppType, AppType.OssClient)
             .AddListenerUpdateInfo((_, e) =>
             {
