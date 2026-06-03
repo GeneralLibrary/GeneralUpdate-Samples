@@ -1,0 +1,9 @@
+{
+  "app": "ClientSample",
+  "version": "1.0.0.0",
+  "settings": {
+    "maxConnections": 5,
+    "timeout": 30,
+    "cacheEnabled": false
+  }
+}

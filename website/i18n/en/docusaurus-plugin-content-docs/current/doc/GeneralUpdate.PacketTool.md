@@ -15,6 +15,8 @@ GeneralUpdate.Tools is a desktop application developed using Avalonia that suppo
 | Build patch package              | Yes       | Compares the previous version with the current version to identify updated, newly added, or deleted files.                            |
 | Build OSS version configuration  | Yes       | Easily generates OSS version configuration files.                                                                                     |
 | Extension Manager                | Yes       | Package and manage application extensions.                                                                                            |
+| Simulate Update                  | Yes       | End-to-end simulation of the full update flow locally.                                                                                |
+| Config Generator                 | Yes       | Analyze .csproj files to auto-generate manifest.json and project structure.                                                           |
 
 ![](imgs\tool.png)
 
@@ -702,6 +704,152 @@ MyExtension/
 1. Ensure both key and value are filled
 2. Use unique property key names
 3. To modify existing properties, delete and re-add
+
+---
+
+### 4. Simulate Update
+
+#### Overview
+
+Simulate Update is one of GeneralUpdate.Tools' most powerful features, enabling a complete end-to-end simulation of the update flow locally. Developers can test and validate update logic without deploying a real server.
+
+**The simulation validates the following pipeline:**
+
+1. **Validate** — SemVer format, directory existence, .NET SDK version
+2. **Prepare** — Set up the app directory
+3. **Publish** — `dotnet publish` the built-in ClientSample and UpgradeSample
+4. **Generate Manifest** — Create `generalupdate.manifest.json` in the app directory
+5. **Mock Server** — Start an in-process ASP.NET Core mock update server
+6. **Run Update** — ClientSample connects → downloads patch → launches UpgradeSample → completes update
+7. **Verify** — Check update result and generate test report
+
+#### Simulation Architecture
+
+```
+┌───────────────────────────────────────────┐
+│           GeneralUpdate.Tools              │
+│                                            │
+│  ┌─────────────────────────────────────┐  │
+│  │        SimulationService             │  │
+│  │  Step1: Validate                     │  │
+│  │  Step2: Prepare                      │  │
+│  │  Step3: dotnet publish               │  │
+│  │  Step4: Start LocalUpdateServer      │  │
+│  │  Step5: Run ClientSample             │  │
+│  │  Step6: Verify                       │  │
+│  └──────────────┬──────────────────────┘  │
+│                 │                          │
+│  ┌──────────────▼──────────────────────┐  │
+│  │     LocalUpdateServer (Mock API)     │  │
+│  │  POST /Upgrade/Verification          │  │
+│  │  POST /Upgrade/Report                │  │
+│  │  GET  /patch/{filename}              │  │
+│  └─────────────────────────────────────┘  │
+└───────────────────────────────────────────┘
+```
+
+#### Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| App Directory | Root directory for ClientSample and UpgradeSample |
+| Patch File Path | Pre-built update patch package (.zip) |
+| Current Version | Simulated client current version |
+| Target Version | Simulated update target version |
+| Platform | Target OS (Windows / Linux / macOS) |
+| App Type | Client / Upgrade |
+| App Secret Key | Server verification key |
+| Product ID | Product branch identifier |
+| Update Path | Custom update path (optional) |
+| Server Port | Local mock server port (auto-selected by default) |
+
+#### Usage Steps
+
+1. Prepare a patch package using the Patch Package tab or manually
+2. Switch to the "Simulate Update" tab
+3. Configure all parameters
+4. Click "Start Simulation"
+5. Watch real-time log output showing each step
+6. Review the generated `simulation_report.md`
+
+---
+
+### 5. Config Generator
+
+#### Overview
+
+The Config Generator is a developer productivity tool that analyzes `.csproj` files and auto-generates `generalupdate.manifest.json` configuration files. It eliminates manual configuration errors.
+
+**Core capabilities:**
+- Parse `.csproj` to extract `AssemblyName`, `OutputType`, `TargetFramework`
+- Auto-fill app name, framework version fields
+- Validate SemVer version format
+- Generate standard `generalupdate.manifest.json`
+- Use `dotnet publish` to build and assemble sample project structure
+
+#### Config Pipeline
+
+The generator uses a 5-step pipeline:
+
+```
+CsprojParseStep → SemverValidateStep → ManifestBuildStep 
+  → UserConfirmStep → FileEmitStep
+```
+
+| Step | Description |
+|------|-------------|
+| **CsprojParseStep** | Parse Client and Upgrade .csproj files, extract project metadata |
+| **SemverValidateStep** | Validate ClientVersion and UpgradeClientVersion as valid SemVer |
+| **ManifestBuildStep** | Merge parsed data with user input into Manifest model |
+| **UserConfirmStep** | Reserved for CLI interactive confirmation (no-op in GUI) |
+| **FileEmitStep** | Serialize Manifest to JSON and write to disk |
+
+#### Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| Client Path | Client project `.csproj` file path (required) |
+| Upgrade Path | Upgrade project `.csproj` file path (optional) |
+| Main App Name | Auto-extracted from AssemblyName, can override |
+| Client Version | Client current version (SemVer format) |
+| Upgrade App Name | Auto-extracted from Upgrade project's AssemblyName |
+| Upgrade Client Version | Upgrade program current version |
+| App Type | Client / Upgrade |
+| Product ID | Product branch unique identifier |
+| Update Path | Custom update path (optional) |
+
+#### Usage Steps
+
+**Generate manifest:**
+1. Switch to "Config Generator" tab
+2. Browse for Client `.csproj` (required)
+3. Browse for Upgrade `.csproj` (optional)
+4. Click "Analyze" → auto-extracts AssemblyName, TargetFramework
+5. Fill in version, app type, product ID
+6. Click "Generate" → `generalupdate.manifest.json` written to disk
+
+**Generate sample structure:**
+1. Complete steps 1-5 above
+2. Click "Generate Sample Structure"
+3. Tool runs `dotnet publish` for both projects
+4. Assembles outputs with manifest into a complete sample directory
+
+---
+
+## Command Line (CLI)
+
+GeneralUpdate.Tools' Pipeline architecture supports CLI mode (in development). The `UserConfirmStep` is reserved for CLI interaction.
+
+Planned CLI usage for CI/CD integration:
+
+```bash
+GeneralUpdate.Tools config generate \
+  --client ./src/MyApp/MyApp.csproj \
+  --upgrade ./src/Upgrade/Upgrade.csproj \
+  --client-version 1.0.0.0 \
+  --product-id "your-product-id" \
+  --output ./manifest.json
+```
 
 ---
 
