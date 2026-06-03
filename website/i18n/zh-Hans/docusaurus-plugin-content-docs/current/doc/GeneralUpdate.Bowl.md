@@ -4,54 +4,145 @@ sidebar_position: 3
 
 # GeneralUpdate.Bowl
 
-## 简介
+**命名空间:** `GeneralUpdate.Bowl` | **主要入口:** `new Bowl().LaunchAsync(BowlContext, CancellationToken)` | **NuGet 包:** `GeneralUpdate.Bowl`
 
-**GeneralUpdate.Bowl** 是升级完成后的启动守护组件。它不负责下载、解压或替换升级包，而是在新版本文件落地、主程序即将启动或已经启动时，监控目标进程是否在启动阶段崩溃。如果捕获到崩溃，它会生成 Dump、写出失败报告、导出诊断信息，并在升级模式下把备份目录恢复回安装目录，避免用户一直停留在不可启动的新版本上。
+## 1. 组件简介
 
-**命名空间：** `GeneralUpdate.Bowl`
+### 1.1 组件概述
 
-**程序集：** `GeneralUpdate.Bowl.dll`
+**GeneralUpdate.Bowl** 是升级完成后的启动守护组件。它不负责下载、解压或替换升级包，而是在新版本文件落地后、主程序即将启动或已启动时，监控目标进程是否在启动阶段崩溃。如果捕获到崩溃，它会生成 Dump 内存快照、写出失败报告 JSON、导出系统诊断信息，并在升级模式下自动将备份目录恢复回安装目录，避免用户一直停留在不可启动的新版本上。
 
-**当前主要入口：** `new Bowl().LaunchAsync(BowlContext context, CancellationToken ct = default)`
+**核心能力：**
 
-## 阅读导航
-
-| 主题 | 适合解决的问题 |
+| 能力 | 说明 |
 | --- | --- |
-| [生命周期位置](#生命周期位置) | Bowl 应该在升级流程的哪个阶段运行 |
-| [快速接入](#快速接入) | 用当前 `BowlContext` API 完成一次监控 |
-| [崩溃检测与恢复流程](#崩溃检测与恢复流程) | 崩溃后组件具体做了什么 |
-| [BowlContext 参数](#bowlcontext-参数) | 每个配置项的含义和推荐值 |
-| [输出文件](#输出文件) | Dump、失败报告、系统诊断、追踪日志在哪里 |
-| [事件回调](#事件回调) | 如何在崩溃时上传报告或通知用户 |
-| [日志开关](#日志开关) | 如何为了性能关闭组件追踪日志 |
-| [平台差异](#平台差异) | Windows、Linux、macOS 的监控能力差异 |
-| [恢复场景](#恢复场景) | 一次真实升级失败回滚过程 |
-| [旧 API 迁移](#旧-api-迁移) | 从 `MonitorParameter` 迁移到 `BowlContext` |
+| 进程崩溃监控 | 通过 ProcDump（Windows/Linux）或 lldb（macOS）附加到目标进程，捕获启动期未处理异常 |
+| Dump 内存快照 | 支持 Full / Mini / Heap 三种 Dump 类型，可按需选择文件大小和完整度 |
+| 崩溃报告生成 | 自动生成包含监控参数和工具输出的 `{version}_fail.json` 报告文件 |
+| 系统诊断导出 | Windows 下自动导出驱动列表、系统信息和最近系统事件日志 |
+| 自动回滚恢复 | 升级模式下将备份目录覆盖复制回安装目录，实现一键回退到旧版本 |
+| 失败版本标记 | 写入 `UpgradeFail` 标记，Core 后续跳过该失败版本直到服务端提供更高版本 |
+| 事件回调通知 | `OnCrash` 回调允许上传诊断包、通知用户或记录审计信息 |
+| 独立监控模式 | Normal 模式只做崩溃捕获和报告输出，不自动恢复备份，适合通用进程监控 |
 
-## 生命周期位置
+**解决的业务痛点：**
+- 新版本升级后在启动阶段崩溃，用户无法使用应用且无法自行回退
+- 开发者缺少崩溃现场信息（Dump、系统环境）来定位"升级后打不开"的问题
+- 需要自动化回滚机制降低升级风险，避免人工介入
 
-在 GeneralUpdate 的完整升级链路中，Bowl 位于**文件替换完成之后、用户正式使用新版本之前**：
+**业务使用场景：**
+- 桌面应用升级后启动健康检查与自动回滚保护
+- 通用进程启动崩溃监控与诊断信息采集
+- CI/CD 冒烟测试失败后的自动诊断
 
-1. Core 获取更新信息、下载包、校验并应用更新。
-2. Core/Upgrade 进程准备启动主程序。
-3. Bowl 作为守护逻辑启动，附加到目标进程并等待启动期异常。
-4. 主程序正常启动：没有 Dump 产生，Bowl 返回本次监控结果。
-5. 主程序启动崩溃：Bowl 进入故障处理管线，生成诊断文件并按配置恢复备份。
+### 1.2 环境与依赖
 
-在当前 Core 代码中，Windows 的 `UpdateStrategy` 会在更新完成后通过 OS 策略启动主程序，并在配置了 Bowl 进程名时一并启动 Bowl 辅助进程。Linux/macOS 侧 Core 策略没有同等的 Bowl helper 自动启动能力，通常需要由你的启动器、服务脚本或独立进程显式调用 `LaunchAsync`。
+| 项目 | 说明 |
+| --- | --- |
+| **版本** | `10.5.0-beta.2` |
+| **目标框架** | `netstandard2.0`（兼容 .NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+） |
+| **依赖包** | `System.Collections.Immutable`, `System.Text.Json` |
+| **内置工具** | Windows: `procdump.exe` / `procdump64.exe` / `procdump64a.exe`；Linux: `procdump` deb/rpm 包 + `install.sh`；macOS: `/usr/bin/lldb` |
+| **兼容性** | Windows（完整支持）/ Linux（deb/rpm 发行版）/ macOS（基础支持，受 SIP 和调试权限限制） |
 
-:::tip
-Bowl 是“升级后健康检查与回滚保护”，不是固件恢复、系统还原或升级包安装器。它处理的是应用启动崩溃后的诊断与应用目录级备份恢复。
-:::
+---
 
-## 快速接入
+## 2. 组件功能列表
 
-### 安装
+| 功能名称 | 功能描述 | 类型 | 是否必填 | 备注限制 |
+| --- | --- | --- | --- | --- |
+| 升级模式监控 | 监控新版本启动崩溃，自动恢复备份、标记失败版本 | 基础 | 推荐 | `WorkModel = "Upgrade"` |
+| 独立监控模式 | 仅捕获崩溃、生成报告，不自动恢复 | 基础 | 可选 | `WorkModel = "Normal"` |
+| Full Dump | 完整内存快照，信息最完整 | 基础 | 可选 | `DumpType.Full`，文件最大 |
+| Mini Dump | 小型内存快照，生成更快 | 基础 | 可选 | `DumpType.Mini`，生产环境推荐 |
+| Heap Dump | 带堆信息的小型 Dump | 基础 | 可选 | `DumpType.Heap`，介于 Mini 和 Full 之间 |
+| 崩溃报告 JSON | 自动生成结构化崩溃报告文件 | 基础 | 自动 | 输出到 `FailDirectory` |
+| 系统诊断导出 | Windows 下导出驱动/系统信息/事件日志 | 拓展 | 自动 | Windows only |
+| 自动备份恢复 | 崩溃后将备份目录覆盖回安装目录 | 基础 | 可选 | `AutoRestore = true` |
+| 失败版本标记 | 写入升级失败版本，Core 后续跳过 | 基础 | 自动 | 升级模式下生效 |
+| 崩溃回调通知 | 检测到崩溃后触发业务回调 | 拓展 | 可选 | `OnCrash` 回调函数 |
+| 日志追踪 | `GeneralTracer` 运行时诊断日志 | 拓展 | 可选 | 默认开启，可关闭 |
 
-### 升级模式监控
+---
 
-升级模式适合放在升级程序或 Bowl helper 中运行。关键点是：`BackupDirectory` 指向升级前保留的备份，`TargetPath` 指向当前安装目录，`ExtendedField` 填本次升级版本号。
+## 3. API 配置说明
+
+### 3.1 配置字段（属性 Props）
+
+**BowlContext：**
+
+| 字段名 | 数据类型 | 默认值 | 是否必填 | 枚举/取值范围 | 说明 |
+| --- | --- | --- | --- | --- | --- |
+| `ProcessNameOrId` | `string` | — | 是 | 进程名或 PID | 要监控的目标进程名称或进程 ID |
+| `DumpFileName` | `string` | — | 是 | 有效文件名 | Dump 输出文件名，推荐 `"{version}_fail.dmp"` |
+| `FailFileName` | `string` | — | 是 | 有效文件名 | 崩溃报告 JSON 文件名，推荐 `"{version}_fail.json"` |
+| `TargetPath` | `string` | — | 是 | 有效目录路径 | 应用安装根目录，恢复备份时覆盖复制到这里 |
+| `FailDirectory` | `string` | — | 是 | 有效目录路径 | 故障文件输出目录，推荐 `{TargetPath}/fail/{version}` |
+| `BackupDirectory` | `string` | — | 推荐 | 有效目录路径 | 升级前备份目录，`AutoRestore` 打开时必须存在 |
+| `WorkModel` | `string` | `"Upgrade"`（`Normalize()` 后） | 可选 | `"Upgrade"` / `"Normal"` | 工作模式：升级回滚 / 独立监控 |
+| `ExtendedField` | `string` | `null` | 可选 | — | 扩展字段，通常存储版本号，升级模式下写入 `UpgradeFail` |
+| `TimeoutMs` | `int` | `30000`（`Normalize()` 后） | 可选 | 正整数（毫秒） | 监控子进程超时时间，按应用启动耗时调整 |
+| `DumpType` | `DumpType` | `DumpType.Full`（`Normalize()` 后） | 可选 | `Full(0)`, `Mini(1)`, `Heap(2)` | Dump 捕获类型 |
+| `AutoRestore` | `bool` | `false` | 可选 | `true` / `false` | 是否自动恢复备份，升级模式需显式设为 `true` |
+| `OnCrash` | `Func<CrashInfo, CancellationToken, Task>?` | `null` | 可选 | — | 崩溃事件回调，仅在检测到 Dump 后触发 |
+
+**DumpType 枚举：**
+
+| 枚举值 | 数值 | Windows ProcDump 参数 | 特点 |
+| --- | --- | --- | --- |
+| `Full` | `0` | `-ma` | 完整内存快照，信息最完整，文件最大 |
+| `Mini` | `1` | `-mm` | 小型快照，生成快、文件小，适合生产默认采集 |
+| `Heap` | `2` | `-mh` | 带堆信息小型快照，介于 Mini 和 Full 之间 |
+
+### 3.2 实例方法
+
+**Bowl：**
+
+| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
+| --- | --- | --- | --- | --- |
+| `LaunchAsync(BowlContext, CancellationToken)` | `context` — 执行上下文（建议先调 `Normalize()`）；`ct` — 取消令牌 | `Task<BowlResult>` | 启动崩溃监控守护流程 | 三阶段：准备监控 → 运行监控 → 检测到 Dump 则进入故障处理管线 |
+
+**BowlContext：**
+
+| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
+| --- | --- | --- | --- | --- |
+| `Normalize()` | 无 | `BowlContext` | 应用默认值（`WorkModel` → `"Upgrade"`，`TimeoutMs` → `30000`，`DumpType` → `Full`） | 返回新实例，不修改原实例 |
+
+### 3.3 回调事件
+
+| 事件名称 | 回调参数 | 触发时机 | 使用说明 |
+| --- | --- | --- | --- |
+| `OnCrash` | `CrashInfo` — `DumpFilePath`, `CrashReportPath`, `Version`, `ExitCode`；`CancellationToken` | 检测到 Dump 文件后触发 | 适合上传诊断包、通知用户"新版本已回退"、记录业务审计。回调异常被 Bowl 记录到追踪日志，不会阻止 `LaunchAsync` 返回 |
+
+**GeneralTracer 日志控制：**
+
+| 方法 | 说明 |
+| --- | --- |
+| `GeneralTracer.SetTracingEnabled(false)` | 关闭 Bowl 日志输出 |
+| `GeneralTracer.SetTracingEnabled(true)` | 重新开启日志输出 |
+| `GeneralTracer.IsTracingEnabled()` | 查询当前日志开关状态 |
+| `GeneralTracer.Dispose()` | 释放文件监听器并清空 Trace listeners |
+
+---
+
+## 4. 扩展示例（高阶用法）
+
+### 4.1 组件可扩展能力总览
+
+Bowl 的主要扩展点是 `BowlContext.OnCrash` 回调。内部策略接口（`IBowlStrategy`、`ICrashReporter`、`ISystemInfoProvider`）为 internal，如需新增平台支持或自定义报告逻辑，可在 GeneralUpdate 仓库贡献代码。
+
+| 扩展点 | 类型 | 说明 |
+| --- | --- | --- |
+| `OnCrash` 回调 | `Func<CrashInfo, CancellationToken, Task>?` | `BowlContext` 中配置，崩溃时触发 |
+| `GeneralTracer` 日志 | 静态类 | 可通过 `SetTracingEnabled` 开关日志 |
+
+### 4.2 分场景示例
+
+#### 场景 1：升级模式监控 + 崩溃告警上传
+
+【场景说明】桌面应用升级到新版本后，Bowl 监控启动崩溃；发生崩溃时自动回退，并上传诊断包到内部日志平台。
+
+【示例代码】
 
 ```csharp
 using GeneralUpdate.Bowl;
@@ -69,28 +160,52 @@ var context = new BowlContext
     BackupDirectory = Path.Combine(installPath, version),
     WorkModel = "Upgrade",
     ExtendedField = version,
-    TimeoutMs = 30_000,
-    DumpType = DumpType.Full,
+    TimeoutMs = 60_000,     // 应用启动较慢，给 60 秒
+    DumpType = DumpType.Mini,
     AutoRestore = true,
-    OnCrash = (info, ct) =>
+    OnCrash = async (info, ct) =>
     {
-        Console.WriteLine($"Crash dump: {info.DumpFilePath}");
-        Console.WriteLine($"Crash report: {info.CrashReportPath}");
-        return Task.CompletedTask;
+        // 打包诊断文件
+        var zipPath = Path.Combine(
+            Path.GetDirectoryName(info.DumpFilePath)!,
+            $"crash_{info.Version}_{DateTimeOffset.Now:yyyyMMddHHmmss}.zip");
+
+        System.IO.Compression.ZipFile.CreateFromDirectory(
+            Path.GetDirectoryName(info.DumpFilePath)!, zipPath);
+
+        // 上传到日志平台
+        using var client = new HttpClient();
+        var content = new MultipartFormDataContent();
+        content.Add(new StreamContent(File.OpenRead(zipPath)), "file", Path.GetFileName(zipPath));
+        content.Add(new StringContent(info.Version), "version");
+        content.Add(new StringContent(info.ExitCode.ToString()), "exitCode");
+
+        await client.PostAsync("https://logs.example.com/api/crash", content, ct);
+
+        // 通知用户
+        Console.WriteLine($"Version {info.Version} crashed (exit code {info.ExitCode}).");
+        Console.WriteLine($"Diagnostics uploaded. Previous version restored.");
     }
 };
 
 BowlResult result = await new Bowl().LaunchAsync(context);
 
 if (result.DumpCaptured && result.Restored)
-{
-    Console.WriteLine("The upgraded version crashed and the backup was restored.");
-}
+    Console.WriteLine("Crash detected and backup restored.");
+else if (!result.DumpCaptured)
+    Console.WriteLine("Process started successfully.");
 ```
 
-### 独立监控模式
+【效果&注意事项】
+- `TimeoutMs` 需要大于应用正常启动时间
+- `DumpType.Mini` 生成更快，适合生产环境；疑难问题再切换到 `Full`
+- 回调异常不会阻断恢复流程
 
-`Normal` 模式只做崩溃捕获、报告输出和回调通知，不会自动恢复备份，也不会写入 `UpgradeFail` 失败版本标记。
+#### 场景 2：独立监控模式（非升级场景）
+
+【场景说明】对 Worker 进程做通用启动崩溃监控，只采集诊断信息，不自动回滚。
+
+【示例代码】
 
 ```csharp
 var context = new BowlContext
@@ -104,55 +219,174 @@ var context = new BowlContext
     WorkModel = "Normal",
     TimeoutMs = 15_000,
     DumpType = DumpType.Mini,
-    AutoRestore = false
+    AutoRestore = false,
+    OnCrash = (info, ct) =>
+    {
+        Console.WriteLine($"Worker crashed: {info.DumpFilePath}");
+        return Task.CompletedTask;
+    }
 };
 
 BowlResult result = await new Bowl().LaunchAsync(context);
+
+if (result.DumpCaptured)
+{
+    Console.WriteLine($"Dump captured at: {result.DumpFilePath}");
+    Console.WriteLine($"Report at: {result.CrashReportPath}");
+}
 ```
 
-## 崩溃检测与恢复流程
+【效果&注意事项】
+- `WorkModel = "Normal"` 不会恢复备份也不会标记 `UpgradeFail`
+- 适合通用进程监控、CI 测试守护等非升级场景
 
-`LaunchAsync` 的核心判断非常直接：平台策略先启动监控工具，监控工具输出到 `FailDirectory`；Bowl 再检查 `{FailDirectory}/{DumpFileName}` 是否存在。存在 Dump 就认为启动阶段发生了崩溃。
+---
 
-| 阶段 | 当前实现 |
-| --- | --- |
-| 准备监控 | 根据操作系统选择 `WindowsBowlStrategy`、`LinuxBowlStrategy` 或 `MacBowlStrategy` |
-| 捕获异常 | Windows 使用 ProcDump；Linux 尝试安装并调用 ProcDump；macOS 使用 `lldb` 基础能力 |
-| 判断崩溃 | 检查 `FailDirectory` 中是否生成指定 Dump 文件 |
-| 生成报告 | 写出 `{version}_fail.json`，包含监控参数和监控工具输出 |
-| 导出诊断 | Windows 调用 `Applications/Windows/export.bat` 导出驱动、系统信息和最近系统日志 |
-| 恢复备份 | 仅当 `WorkModel == "Upgrade"` 且 `AutoRestore == true` 时，把 `BackupDirectory` 覆盖复制回 `TargetPath` |
-| 标记失败版本 | 升级模式下写入 `UpgradeFail = ExtendedField`，Core 后续会跳过小于等于该失败版本的更新 |
-| 通知业务 | 如果配置了 `OnCrash`，传出 Dump 路径、报告路径、版本号和退出码 |
+## 5. 常规使用示例
 
-`TimeoutMs` 是监控子进程的等待上限。超时且没有 Dump 时，Bowl 不会执行恢复管线；此时更应该关注 `DumpCaptured` 是否为 `true`，而不是只看 `Success`。
+### 5.1 快速入门示例（最简 demo）
 
-## BowlContext 参数
+```csharp
+using GeneralUpdate.Bowl;
 
-| 参数 | 说明 | 建议 |
-| --- | --- | --- |
-| `ProcessNameOrId` | 要监控的进程名或 PID | Windows 可使用进程名；Linux 上更建议传 PID |
-| `DumpFileName` | Dump 文件名 | 推荐包含版本号，例如 `2.0.0_fail.dmp` |
-| `FailFileName` | 崩溃报告 JSON 文件名 | 推荐和 Dump 同版本，例如 `2.0.0_fail.json` |
-| `TargetPath` | 当前应用安装根目录 | 恢复备份时会覆盖复制到这里 |
-| `FailDirectory` | 故障文件输出目录 | 推荐 `Path.Combine(TargetPath, "fail", version)` |
-| `BackupDirectory` | 升级前备份目录 | `AutoRestore` 打开时必须确保目录存在且内容完整 |
-| `WorkModel` | `Upgrade` 或 `Normal` | 升级后回滚用 `Upgrade`；普通崩溃采集用 `Normal` |
-| `ExtendedField` | 扩展字段，当前主要存版本号 | 升级模式下会写入 `UpgradeFail` |
-| `TimeoutMs` | 监控子进程超时时间 | 默认归一化为 30000 ms，按应用启动耗时调大 |
-| `DumpType` | `Full`、`Mini`、`Heap` | 生产环境可先用 `Mini` 降低体积；疑难问题用 `Full` |
-| `AutoRestore` | 是否自动恢复备份 | 升级模式要显式设置为 `true` |
-| `OnCrash` | 单次崩溃回调 | 适合上传报告、通知用户、写入业务日志 |
+var context = new BowlContext
+{
+    ProcessNameOrId = "MyApp.exe",
+    DumpFileName = "fail.dmp",
+    FailFileName = "fail.json",
+    TargetPath = AppDomain.CurrentDomain.BaseDirectory,
+    FailDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fail"),
+    BackupDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backup"),
+}.Normalize();  // 应用默认值
 
-### DumpType 选择
+BowlResult result = await new Bowl().LaunchAsync(context);
+Console.WriteLine($"Success: {result.Success}, Dump captured: {result.DumpCaptured}");
+```
 
-| 类型 | Windows ProcDump 参数 | 特点 |
-| --- | --- | --- |
-| `Full` | `-ma` | 信息最完整，文件最大，适合难复现问题 |
-| `Mini` | `-mm` | 文件更小，生成更快，适合生产默认采集 |
-| `Heap` | `-mh` | 带堆信息的小型 Dump，介于 Mini 和 Full 之间 |
+### 5.2 基础参数组合示例
 
-## 输出文件
+```csharp
+var version = "2.0.0";
+var installPath = @"C:\Program Files\MyApp";
+
+var context = new BowlContext
+{
+    ProcessNameOrId = "MyApp.exe",
+    DumpFileName = $"{version}_fail.dmp",
+    FailFileName = $"{version}_fail.json",
+    TargetPath = installPath,
+    FailDirectory = Path.Combine(installPath, "fail", version),
+    BackupDirectory = Path.Combine(installPath, version),
+    WorkModel = "Upgrade",
+    ExtendedField = version,
+    TimeoutMs = 30_000,
+    DumpType = DumpType.Full,
+    AutoRestore = true,
+    OnCrash = (info, ct) =>
+    {
+        Console.WriteLine($"Crash: {info.DumpFilePath}");
+        return Task.CompletedTask;
+    }
+};
+
+BowlResult result = await new Bowl().LaunchAsync(context);
+
+if (result.DumpCaptured && result.Restored)
+    Console.WriteLine("The upgraded version crashed and the backup was restored.");
+```
+
+### 5.3 真实业务落地示例
+
+完整升级后 Bowl 守护流程，包含升级程序侧集成：
+
+```csharp
+using GeneralUpdate.Bowl;
+
+// --- 升级程序（Update.exe）侧 ---
+// 1. 主程序已停止，升级程序完成文件替换
+// 2. 备份旧版本到 BackupDirectory
+// 3. 启动 Bowl 监控新版本
+
+var version = "2.0.0";
+var installPath = @"C:\Program Files\MyApp";
+
+var bowlContext = new BowlContext
+{
+    ProcessNameOrId = "MyApp.exe",
+    DumpFileName = $"{version}_fail.dmp",
+    FailFileName = $"{version}_fail.json",
+    TargetPath = installPath,
+    FailDirectory = Path.Combine(installPath, "fail", version),
+    BackupDirectory = Path.Combine(installPath, "backups", version),
+    WorkModel = "Upgrade",
+    ExtendedField = version,
+    TimeoutMs = 45_000,     // 应用冷启动约 30s，留 15s buffer
+    DumpType = DumpType.Mini,
+    AutoRestore = true,
+    OnCrash = async (info, ct) =>
+    {
+        try
+        {
+            // 上传诊断信息
+            using var client = new HttpClient();
+            var crashData = new
+            {
+                version = info.Version,
+                exitCode = info.ExitCode,
+                dumpPath = info.DumpFilePath,
+                reportPath = info.CrashReportPath,
+                timestamp = DateTimeOffset.UtcNow
+            };
+            await client.PostAsJsonAsync(
+                "https://monitor.mycompany.com/api/crash-report",
+                crashData, ct);
+        }
+        catch (Exception ex)
+        {
+            // 上报失败不影响恢复流程
+            Console.WriteLine($"Failed to upload crash report: {ex.Message}");
+        }
+    }
+};
+
+var result = await new Bowl().LaunchAsync(bowlContext);
+
+if (result.Success)
+{
+    Console.WriteLine("New version started successfully.");
+}
+else if (result.DumpCaptured)
+{
+    Console.WriteLine($"New version crashed (exit code: {result.ExitCode}).");
+    Console.WriteLine($"Backup restored: {result.Restored}");
+    Console.WriteLine($"Dump: {result.DumpFilePath}");
+    Console.WriteLine($"Report: {result.CrashReportPath}");
+}
+else
+{
+    Console.WriteLine($"Process exited abnormally (exit code: {result.ExitCode}), but no dump was captured.");
+}
+```
+
+---
+
+## 6. 全局配置
+
+Bowl 不依赖全局配置文件。所有配置通过 `BowlContext` 传入。日志行为通过静态类 `GeneralTracer` 控制。
+
+### 日志开关
+
+```csharp
+// 性能敏感场景关闭日志
+GeneralTracer.SetTracingEnabled(false);
+
+var result = await new Bowl().LaunchAsync(context);
+
+// 排查问题时重新开启
+GeneralTracer.SetTracingEnabled(true);
+```
+
+### 输出文件结构
 
 一次升级失败后，推荐按版本存放所有故障文件：
 
@@ -160,141 +394,27 @@ BowlResult result = await new Bowl().LaunchAsync(context);
 MyApp/
   fail/
     2.0.0/
-      2.0.0_fail.dmp
-      2.0.0_fail.json
-      driverInfo.txt
-      systeminfo.txt
-      systemlog.evtx
+      2.0.0_fail.dmp         # Dump 内存快照
+      2.0.0_fail.json        # 崩溃报告 JSON
+      driverInfo.txt          # Windows 驱动列表
+      systeminfo.txt          # OS/硬件/内存信息
+      systemlog.evtx          # Windows 系统事件日志
   Logs/
-    generalupdate-trace 2026-01-01.log
+    generalupdate-trace 2026-01-01.log  # Bowl 自身追踪日志
 ```
 
-| 文件 | 来源 | 内容 |
-| --- | --- | --- |
-| `{version}_fail.dmp` | ProcDump 或 lldb | 崩溃现场内存快照 |
-| `{version}_fail.json` | `CrashReporter` | `BowlContext` 映射参数和监控工具输出行 |
-| `driverInfo.txt` | Windows `driverquery` | Windows 驱动列表 |
-| `systeminfo.txt` | Windows `systeminfo` | OS、硬件、内存等系统信息 |
-| `systemlog.evtx` | Windows `wevtutil` | 最近一天 Windows System 事件日志 |
-| `Logs/generalupdate-trace yyyy-MM-dd.log` | `GeneralTracer` | Bowl 自身运行追踪日志 |
-
-非 Windows 平台当前不会导出 `driverInfo.txt`、`systeminfo.txt`、`systemlog.evtx`，但仍会尽量生成 Dump 和失败 JSON。
-
-失败 JSON 的结构来自当前 `CrashReporter`：
-
-```json
-{
-  "Parameter": {
-    "TargetPath": "C:\\Program Files\\MyApp",
-    "FailDirectory": "C:\\Program Files\\MyApp\\fail\\2.0.0",
-    "BackupDirectory": "C:\\Program Files\\MyApp\\2.0.0",
-    "ProcessNameOrId": "MyApp.exe",
-    "DumpFileName": "2.0.0_fail.dmp",
-    "FailFileName": "2.0.0_fail.json",
-    "WorkModel": "Upgrade",
-    "ExtendedField": "2.0.0"
-  },
-  "ProcdumpOutPutLines": [
-    "ProcDump v11.0 - Sysinternals process dump utility",
-    "[10:00:03] Dump 1 initiated: C:\\Program Files\\MyApp\\fail\\2.0.0\\2.0.0_fail.dmp",
-    "[10:00:03] Dump count reached."
-  ]
-}
-```
-
-## 事件回调
-
-`OnCrash` 是单次崩溃事件回调，只在检测到 Dump 后触发。它拿到的是整理后的 `CrashInfo`：
-
-```csharp
-public readonly record struct CrashInfo
-{
-    public string DumpFilePath { get; init; }
-    public string CrashReportPath { get; init; }
-    public string Version { get; init; }
-    public int ExitCode { get; init; }
-}
-```
-
-常见用途：
-
-| 场景 | 做法 |
-| --- | --- |
-| 上传诊断包 | 在回调中打包 Dump、JSON 和 Windows 诊断文件，上传到内部日志平台 |
-| 提示用户 | 告知“新版本启动失败，已恢复上一版本”，并附带问题编号 |
-| 记录业务审计 | 把 `Version`、`ExitCode`、报告路径写入你的业务日志 |
-
-回调异常会被 Bowl 记录到追踪日志中，不会阻止 `LaunchAsync` 返回最终 `BowlResult`。取消操作请通过 `CancellationToken` 传递。
-
-## 日志开关
-
-Bowl 使用公开的 `GeneralTracer` 写运行追踪。默认会输出到控制台，并在运行目录下按日期写入：
-
-```text
-Logs/generalupdate-trace yyyy-MM-dd.log
-```
-
-如果你的场景对启动性能、磁盘写入或控制台输出非常敏感，可以关闭追踪：
-
-```csharp
-GeneralTracer.SetTracingEnabled(false);
-
-var result = await new Bowl().LaunchAsync(context);
-
-GeneralTracer.SetTracingEnabled(true);
-```
-
-关闭后，Bowl 自身的诊断追踪会减少，但崩溃 Dump 和失败 JSON 的生成逻辑不依赖该开关。排查升级失败时建议保持开启；稳定生产环境可按你的性能策略关闭。
-
-## 平台差异
+### 平台差异
 
 | 平台 | 监控工具 | 诊断导出 | 注意事项 |
 | --- | --- | --- | --- |
-| Windows | 内置 ProcDump：`procdump.exe`、`procdump64.exe`、`procdump64a.exe` | 支持 `driverInfo.txt`、`systeminfo.txt`、`systemlog.evtx` | 监控工具路径来自 `TargetPath/Applications/Windows`；需要足够权限生成 Dump |
-| Linux | 内置 deb/rpm 包 + `install.sh` 安装 ProcDump 后调用 `procdump` | 当前为 no-op | 支持 Ubuntu、Debian、RHEL、CentOS、Fedora、ClearOS 映射包；脚本可能需要 `sudo` |
-| macOS | `/usr/bin/lldb` | 当前为 no-op | 受 SIP、调试权限、签名策略影响；当前是基础实现 |
+| Windows | 内置 ProcDump（`procdump.exe`/`procdump64.exe`/`procdump64a.exe`） | 支持 `driverInfo.txt`、`systeminfo.txt`、`systemlog.evtx` | 需要足够权限生成 Dump |
+| Linux | 内置 deb/rpm 包 + `install.sh` 安装 ProcDump | 当前为 no-op | 支持 Ubuntu/Debian/RHEL/CentOS/Fedora/ClearOS |
+| macOS | `/usr/bin/lldb` | 当前为 no-op | 受 SIP、调试权限、签名策略影响，基础实现 |
 
-NuGet 包会把 `Applications/**/*` 作为内容输出到构建目录。自部署时请确认这些工具文件没有被裁剪，否则平台策略可能返回“监控工具不可用”或进程启动失败。
-
-## 恢复场景
-
-假设用户从 `1.0.0` 升级到 `2.0.0`，新版本启动后立即崩溃：
-
-1. 升级流程先把旧版本备份到 `BackupDirectory`，例如 `C:\Program Files\MyApp\2.0.0`。
-2. 新版本文件被复制到 `TargetPath`。
-3. 主程序启动，同时 Bowl 使用 `ProcessNameOrId = "MyApp.exe"` 监控启动期异常。
-4. ProcDump 捕获到未处理异常，写出 `fail\2.0.0\2.0.0_fail.dmp`。
-5. Bowl 写出 `2.0.0_fail.json`，Windows 下继续导出驱动、系统信息和最近系统日志。
-6. 因为 `WorkModel == "Upgrade"` 且 `AutoRestore == true`，Bowl 将 `BackupDirectory` 覆盖复制回 `TargetPath`。
-7. Bowl 写入 `UpgradeFail = "2.0.0"`；Core 下次检测到服务端仍返回 `2.0.0` 或更低版本时，会跳过这个已知失败版本，直到服务端提供更高版本。
-8. `OnCrash` 回调可以上传诊断包，或提示用户已经回退到可用版本。
-
-这个机制的目标是降低“升级成功但新版本打不开”的风险：用户回到可启动版本，开发者拿到 Dump 和上下文继续修复。
-
-## 旧 API 迁移
-
-旧示例中的 `GeneralUpdate.Bowl.Strategys.MonitorParameter` 已标记为过时，推荐迁移到 `BowlContext` 和异步入口：
-
-```csharp
-var oldParameter = new GeneralUpdate.Bowl.Strategys.MonitorParameter
-{
-    ProcessNameOrId = "MyApp.exe",
-    DumpFileName = "2.0.0_fail.dmp",
-    FailFileName = "2.0.0_fail.json",
-    TargetPath = installPath,
-    FailDirectory = Path.Combine(installPath, "fail", "2.0.0"),
-    BackupDirectory = Path.Combine(installPath, "2.0.0"),
-    WorkModel = "Upgrade",
-    ExtendedField = "2.0.0"
-};
-
-BowlContext context = Bowl.MapToContext(oldParameter);
-BowlResult result = await new Bowl().LaunchAsync(context);
-```
-
-如果是新代码，直接创建 `BowlContext`，不要再依赖旧 `MonitorParameter`。
+---
 
 ## 相关资源
 
-- **示例代码**：[GeneralUpdate-Samples / Bowl](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Bowl)
-- **主仓库**：[GeneralUpdate](https://github.com/GeneralLibrary/GeneralUpdate)
+- [Bowl 示例代码](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Bowl)
+- [GeneralUpdate 仓库](https://github.com/GeneralLibrary/GeneralUpdate)
+- [Dump 指南](../guide/Dump.md)

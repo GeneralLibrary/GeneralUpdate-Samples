@@ -4,13 +4,9 @@ sidebar_position: 6
 
 # GeneralUpdate.Differential
 
-`GeneralUpdate.Differential` 是 GeneralUpdate 的二进制差分组件，专注解决“一个旧文件 + 一个补丁文件 = 一个新文件”的问题。它提供可替换的文件级差分算法、补丁压缩抽象和 BSDIFF 兼容补丁读写能力；目录级对比、批量补丁生成、并行调度、删除文件处理和更新流程编排由 `GeneralUpdate.Core` 的 `DiffPipeline` 或 `GeneralUpdate.Tools` 承担。
+**命名空间:** `GeneralUpdate.Differential`、`GeneralUpdate.Differential.Differ`、`GeneralUpdate.Differential.Abstractions` | **主要入口:** `IBinaryDiffer`、`BsdiffDiffer`、`StreamingHdiffDiffer` | **NuGet 包:** `GeneralUpdate.Differential`
 
-**命名空间:** `GeneralUpdate.Differential`、`GeneralUpdate.Differential.Differ`、`GeneralUpdate.Differential.Abstractions`
-
-**主要入口:** `IBinaryDiffer`、`BsdiffDiffer`、`StreamingHdiffDiffer`
-
-**NuGet 包:** `GeneralUpdate.Differential`
+`GeneralUpdate.Differential` 是 GeneralUpdate 的二进制差分组件，专注解决”一个旧文件 + 一个补丁文件 = 一个新文件”的问题。它提供可替换的文件级差分算法、补丁压缩抽象和 BSDIFF 兼容补丁读写能力；目录级对比、批量补丁生成、并行调度、删除文件处理和更新流程编排由 `GeneralUpdate.Core` 的 `DiffPipeline` 或 `GeneralUpdate.Tools` 承担。
 
 ## 文档大纲与知识点导航 {#knowledge-map}
 
