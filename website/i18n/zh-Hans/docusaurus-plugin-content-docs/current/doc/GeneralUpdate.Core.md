@@ -771,7 +771,7 @@ await new GeneralUpdateBootstrap()
 | `Hooks<T>()` | `IUpdateHooks` | 更新生命周期前后置逻辑。 |
 | `UpdateReporter<T>()` | `IUpdateReporter` | 更新状态上报。 |
 | `SslPolicy<T>()` | `ISslValidationPolicy` | HTTPS 证书校验。 |
-| `UpdateAuth<T>()` | `IHttpAuthProvider` | HTTP 请求认证。 |
+| `HttpAuth<T>()` | `IHttpAuthProvider` | HTTP 请求认证。 |
 | `DownloadSource<T>()` | `IDownloadSource` | 版本清单和下载资源来源。 |
 | `DownloadPolicy<T>()` | `IDownloadPolicy` | 下载重试、超时、熔断等策略。 |
 | `DownloadExecutor<T>()` | `IDownloadExecutor` | 单文件下载实现。 |
@@ -929,11 +929,11 @@ public sealed class StaticBearerAuthProvider : IHttpAuthProvider
 
 await new GeneralUpdateBootstrap()
     .SetConfig(request)
-    .UpdateAuth<StaticBearerAuthProvider>()
+    .HttpAuth<StaticBearerAuthProvider>()
     .LaunchAsync();
 ```
 
-Core 内置的认证类型包括 `NoOpAuthProvider`、`BearerTokenAuthProvider`、`ApiKeyAuthProvider` 和 `HmacAuthProvider`。这些类型中部分构造函数需要参数，因此如果要通过 `UpdateAuth<T>()` 注册，通常需要写一个无参包装类。
+Core 内置的认证类型包括 `NoOpAuthProvider`、`BearerTokenAuthProvider`、`ApiKeyAuthProvider` 和 `HmacAuthProvider`。这些类型中部分构造函数需要参数，因此如果要通过 `HttpAuth<T>()` 注册，通常需要写一个无参包装类。
 
 ## HTTPS 证书策略：ISslValidationPolicy
 

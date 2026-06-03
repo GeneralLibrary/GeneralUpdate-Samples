@@ -770,7 +770,7 @@ All extension registration methods are provided by `AbstractBootstrap` and can b
 | `Hooks<T>()` | `IUpdateHooks` | Lifecycle callbacks. |
 | `UpdateReporter<T>()` | `IUpdateReporter` | Update status reporting. |
 | `SslPolicy<T>()` | `ISslValidationPolicy` | HTTPS certificate validation. |
-| `UpdateAuth<T>()` | `IHttpAuthProvider` | HTTP request authentication. |
+| `HttpAuth<T>()` | `IHttpAuthProvider` | HTTP request authentication. |
 | `DownloadSource<T>()` | `IDownloadSource` | Version manifest and asset source. |
 | `DownloadPolicy<T>()` | `IDownloadPolicy` | Retry, timeout, circuit breaker. |
 | `DownloadExecutor<T>()` | `IDownloadExecutor` | Single-file download implementation. |
@@ -926,11 +926,11 @@ public sealed class StaticBearerAuthProvider : IHttpAuthProvider
 
 await new GeneralUpdateBootstrap()
     .SetConfig(request)
-    .UpdateAuth<StaticBearerAuthProvider>()
+    .HttpAuth<StaticBearerAuthProvider>()
     .LaunchAsync();
 ```
 
-Core includes `NoOpAuthProvider`, `BearerTokenAuthProvider`, `ApiKeyAuthProvider`, and `HmacAuthProvider`. Some require constructor parameters, so create a parameterless wrapper when registering through `UpdateAuth<T>()`.
+Core includes `NoOpAuthProvider`, `BearerTokenAuthProvider`, `ApiKeyAuthProvider`, and `HmacAuthProvider`. Some require constructor parameters, so create a parameterless wrapper when registering through `HttpAuth<T>()`.
 
 ## HTTPS certificate policy: ISslValidationPolicy
 
