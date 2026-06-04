@@ -138,7 +138,7 @@ sidebar_position: 5
 | `Cancel()` | None | `void` | UI "Cancel Update" button | Triggers internal `CancellationTokenSource` |
 | `SetConfig(UpdateRequest)` | `configInfo` | `GeneralUpdateBootstrap` | Explicit update configuration | Calls `Validate()` on key fields |
 | `SetConfig(string)` | `filePath` — JSON config file path | `GeneralUpdateBootstrap` | Read config from file | Supports relative/absolute paths; UTF-8 JSON |
-| `SetSource(...)` | `updateUrl` (version check API URL)<br>`appSecretKey` (app secret key)<br>`reportUrl?` (optional report URL)<br>`scheme?` (optional auth scheme, e.g., `"Bearer"`)<br>`token?` (optional auth token)<br>`authScheme?` (optional auth scheme enum, default `Hmac`)<br>`basicUsername?` (optional Basic auth username)<br>`basicPassword?` (optional Basic auth password)<br>`installPath?` (optional install path) | `GeneralUpdateBootstrap` | Lightweight entry with manifest | Identity info filled by manifest; supports HMAC / Bearer / Basic auth methods |
+| `SetSource(...)` | `updateUrl`, `appSecretKey`, `reportUrl?`, `scheme?`, `token?`, `authScheme?`, `basicUsername?`, `basicPassword?`, `installPath?` | `GeneralUpdateBootstrap` | Lightweight entry with manifest | Identity info filled by manifest; supports HMAC / Bearer / Basic auth methods |
 | `SetOption(Option<T>, T)` | `option` — key, `value` — value | `GeneralUpdateBootstrap` | Set runtime options | Pass `null` to reset nullable options |
 | `UseDiffPipeline(Action<DiffPipelineBuilder>)` | `configure` — delegate | `GeneralUpdateBootstrap` | Replace or tune diff pipeline | Default used if not called |
 | `AddListenerUpdateInfo(...)` | `EventHandler<UpdateInfoEventArgs>` | `GeneralUpdateBootstrap` | Receive server version info | Also fires when no update available |
