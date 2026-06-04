@@ -7,6 +7,10 @@ title: 入门实战手册
 
 这篇手册面向第一次接触 GeneralUpdate 的开发者。目标不是一次讲完所有 API，而是让你从零开始，写完 Client → 写完 Upgrade → 用 Tools 生成配置 → 启动 Server → 一条命令跑通完整的"发现更新 → 下载 → 应用 → 回到新版本"闭环。
 
+:::info 你将学到什么
+完成这篇手册后，你会拥有一个**可运行的端到端自动更新系统**：一个能检查更新的 Client、一个能应用更新的 Upgrade、一份自动生成的 manifest、以及一个本地测试 Server。
+:::
+
 <iframe
   src="//player.bilibili.com/player.html?bvid=BV12P9dBiEEh&page=1"
   width="100%"
@@ -67,6 +71,10 @@ title: 入门实战手册
 ---
 
 ## Phase 1：环境准备
+
+:::caution 开始之前
+所有后续步骤都依赖这两个工具。请先用验证命令确认它们安装正确，否则 Phase 4 的 `dotnet publish` 和 Phase 5 的 Server 启动会失败。
+:::
 
 ### 安装清单
 
@@ -174,6 +182,10 @@ await new GeneralUpdateBootstrap()
 
 Client 不直接应用更新——下载完成后写 IPC 加密契约 → 启动 Upgrade → 自身退出。
 
+:::tip 关键设计
+Client **只负责发现和下载**，文件替换工作完全交给独立的 Upgrade 进程。这是因为运行中的进程无法覆盖自身的可执行文件——通过 IPC 加密契约把控制权交给 Upgrade，是实现"自己更新自己"的核心架构。
+:::
+
 ---
 
 ## Phase 3：集成 Upgrade 代码
@@ -255,6 +267,10 @@ publish/
 ```
 
 > **注意**：`MyApp.Upgrade.exe` 不在根目录，而是在 `update/` 子目录下。框架根据 manifest 的 `updatePath` 字段（默认 `"update/"`）找到并启动它。
+
+:::warning 目录结构错误会导致升级失败
+Upgrade 进程(.exe) **必须**放在 manifest 指定的 `updatePath` 子目录下。如果 Upgrade 不在该位置，Client 将无法找到并启动升级进程，整个更新链路中断。常见错误：把 Upgrade 放在根目录或不同名称的子目录中。
+:::
 
 ### `generalupdate.manifest.json` 示例
 
@@ -350,7 +366,8 @@ Client (新版本):
   MyApp v2.0.0.0 ✓
 ```
 
-### 排查清单
+:::tip 排查清单
+Use this table to diagnose common issues quickly. Most failures trace back to one of these five checks.
 
 | 现象 | 检查 |
 | --- | --- |
@@ -359,6 +376,7 @@ Client (新版本):
 | 下载完成但未启动 Upgrade | `MyApp.Upgrade.exe` 是否在 `update/` 子目录下，manifest 的 `updatePath` 是否正确 |
 | Upgrade 报错退出 | 检查目录写入权限、杀毒软件是否拦截 |
 | 端口被占用 | 修改 Server 启动参数 `--Urls http://0.0.0.0:5001`，同步修改 Client 的 `UpdateUrl` |
+:::
 
 ---
 

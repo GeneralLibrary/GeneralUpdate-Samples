@@ -30,6 +30,10 @@ sidebar_position: 6
 - 不同文件类型和变化模式需要不同的差分策略（细粒度匹配 vs 快速块匹配）
 - 压缩算法的选择影响客户端解压速度和补丁体积的平衡
 
+:::note Differential 是底层库，通常不直接使用
+大多数场景下你不需要直接调用 `IBinaryDiffer`。目录级差分、批量补丁生成、并行调度和更新流程编排由 `GeneralUpdate.Core` 的 `DiffPipeline` 或 `GeneralUpdate.Tools` 承担。Differential 只解决一个原子问题：**一个旧文件 + 一个补丁文件 = 一个新文件**。
+:::
+
 **业务使用场景：**
 - 大型桌面应用（多 DLL、资源文件）的增量更新
 - 固件/驱动包的二进制差分分发

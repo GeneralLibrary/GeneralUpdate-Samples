@@ -7,6 +7,10 @@ title: Beginner cookbook
 
 This cookbook is for first-time GeneralUpdate users. The goal is not to explain every API at once, but to take you from zero to a complete loop: write Client → write Upgrade → generate config with Tools → start Server → one command to verify the full "discover → download → apply → return to new version" flow.
 
+:::info What You'll Learn
+After completing this cookbook, you'll have a **working end-to-end auto-update system**: a Client that checks for updates, an Upgrade process that applies them, an auto-generated manifest, and a local test Server.
+:::
+
 <iframe
   src="//player.bilibili.com/player.html?bvid=BV12P9dBiEEh&page=1"
   width="100%"
@@ -258,6 +262,10 @@ publish/
 
 > **Note**: `MyApp.Upgrade.exe` lives in the `update/` subdirectory — not at the root. The framework locates and launches it based on the manifest's `updatePath` field (default `"update/"`).
 
+:::warning Wrong Directory Structure Breaks the Update
+The Upgrade process (.exe) **must** be placed in the subdirectory specified by manifest's `updatePath`. If Upgrade is not at that location, the Client cannot find and launch the upgrade process, breaking the entire update chain. Common mistake: putting Upgrade in the root directory or a differently-named subdirectory.
+:::
+
 ### `generalupdate.manifest.json` example
 
 ```json
@@ -361,6 +369,10 @@ Client (new version):
 | Download finishes but Upgrade doesn't start | Is `MyApp.Upgrade.exe` in the `update/` subdirectory? Is manifest's `updatePath` correct? |
 | Upgrade crashes | Check directory write permissions, antivirus interference |
 | Port already in use | Change Server args to `--Urls http://0.0.0.0:5001` and update Client's `UpdateUrl` |
+
+:::tip Troubleshooting Checklist
+Use this table to diagnose common issues quickly. Most failures trace back to one of these five checks.
+:::
 
 ---
 
