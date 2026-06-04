@@ -82,18 +82,13 @@ const config = {
           },
           {
             type: 'dropdown',
-            label: '商务',
+            label: '定价',
             position: 'left',
             items: [
               {
                 type: 'doc',
                 docId: 'doc/GeneralSpacestation',
                 label: 'GeneralSpacestation',
-              },
-              {
-                type: 'doc',
-                docId: 'doc/outsourcing',
-                label: '软件外包服务',
               },
             ],
           },
