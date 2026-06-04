@@ -44,9 +44,9 @@ sidebar_position: 5
 | 项目 | 说明 |
 | --- | --- |
 | **版本** | `10.5.0-beta.2` |
-| **目标框架** | `netstandard2.0`（兼容 .NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+） |
-| **依赖包** | `GeneralUpdate.Differential`（差分算法）、`System.Text.Json`、`Microsoft.Extensions.Logging.Abstractions` |
-| **兼容性** | Windows（主支持）/ Linux / macOS；支持 x86 / x64 / ARM64 |
+| **目标框架** | `netstandard2.0`; `net8.0`; `net10.0`（兼容 .NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+；`net8.0`+ 支持 AOT/Trim） |
+| **依赖包** | `GeneralUpdate.Differential`（差分算法）、`System.Text.Json`、`Microsoft.AspNetCore.SignalR.Client` |
+| **兼容性** | Windows / Linux / macOS；支持 x86 / x64 / ARM64 |
 
 ---
 
@@ -76,6 +76,10 @@ sidebar_position: 5
 | SignalR 实时推送 | 服务端主动推送版本更新通知，客户端订阅接收，支持点对点和广播推送 | 拓展 | 可选 | `UpgradeHubService`，命名空间 `GeneralUpdate.Core.Hubs` |
 | 推送重连机制 | 断线自动重连（随机退避策略），连接生命周期管理 | 拓展 | 可选 | `RandomRetryPolicy` |
 | 推送事件订阅 | 接收消息、在线状态、重连通知、关闭通知四种事件 | 拓展 | 可选 | 通过 `AddListener*` 方法注册 |
+| 多协议认证 | 支持 HMAC-SHA256、Bearer Token、API Key、HTTP Basic 四种认证方案 | 基础 | 可选 | 通过 `AuthScheme` 枚举或 `HttpAuth<T>()` 自定义 |
+| 跨平台策略 | 内置 Windows / Linux / macOS 三种 OS 级更新策略，自动选择 | 基础 | 自动 | 根据运行时平台自动选择对应策略 |
+| 文件树比对 | 新旧版本目录结构级差异对比，生成增量文件清单 | 基础 | 可选 | `FileTree` / `FileTreeDiffer` / `FileTreeComparer` |
+| AOT/Trim 兼容 | `net8.0`+ 目标框架支持 AOT 发布和裁剪，含源生成 JSON 序列化上下文 | 基础 | 可选 | `JsonContext` 命名空间下 9 个序列化上下文 |
 
 ---
 
@@ -99,8 +103,11 @@ sidebar_position: 5
 | `ProductId` | `string` | — | 可选 | — | 产品标识，多产品时用于区分 |
 | `UpdatePath` | `string` | `InstallPath` | 可选 | 有效目录路径 | 升级程序所在目录 |
 | `Bowl` | `string` | `null` | 可选 | 有效文件名 | 更新前需关闭的辅助进程名 |
-| `Scheme` | `string` | `null` | 可选 | `"Bearer"` 等 | 认证方案 |
+| `Scheme` | `string` | `null` | 可选 | `"Bearer"` 等 | 认证方案（已废弃，推荐使用 `AuthScheme`） |
 | `Token` | `string` | `null` | 可选 | — | 认证令牌 |
+| `AuthScheme` | `AuthScheme?` | `null` | 可选 | `Hmac`, `Bearer`, `ApiKey`, `Basic` | 认证方案枚举，设置后自动选择对应 Provider |
+| `BasicUsername` | `string` | `null` | 可选 | — | HTTP Basic 认证用户名（`AuthScheme = Basic` 时必填） |
+| `BasicPassword` | `string` | `null` | 可选 | — | HTTP Basic 认证密码（`AuthScheme = Basic` 时必填） |
 | `Files` | `List<string>` | `null` | 可选 | — | 更新时跳过的指定文件列表 |
 | `Formats` | `List<string>` | `null` | 可选 | — | 更新时跳过的扩展名列表 |
 | `Directories` | `List<string>` | `null` | 可选 | — | 更新时跳过的目录列表 |
@@ -394,9 +401,55 @@ await new GeneralUpdateBootstrap()
 - 自定义 `IDownloadSource` 会完全替换默认的 HTTP 版本检查逻辑
 - 需要同时注册 `DownloadOrchestrator<T>()` 时，orchestrator 会接管完整下载流程
 
-#### 场景 4：自定义 HTTP 认证
+#### 场景 4：多协议 HTTP 认证
 
-【场景说明】为 Core 发出的 HTTP 请求追加 JWT Bearer Token 认证头。
+【场景说明】Core 内置四种认证方案，通过 `AuthScheme` 枚举一键切换，也可通过 `IHttpAuthProvider` 完全自定义。
+
+**方式一：使用内置 `AuthScheme` 枚举（推荐）**
+
+```csharp
+using GeneralUpdate.Core.Configuration;
+
+// HMAC-SHA256 签名认证（默认）
+var request = new UpdateRequest
+{
+    UpdateUrl = "https://update.example.com/api/upgrade/verification",
+    AppSecretKey = "your-app-secret",
+    AuthScheme = AuthScheme.Hmac
+};
+
+// Bearer Token 认证
+var bearerRequest = new UpdateRequest
+{
+    UpdateUrl = "https://update.example.com/api/upgrade/verification",
+    AppSecretKey = "your-app-secret",
+    AuthScheme = AuthScheme.Bearer,
+    Token = "your-jwt-token"
+};
+
+// API Key 认证
+var apiKeyRequest = new UpdateRequest
+{
+    UpdateUrl = "https://update.example.com/api/upgrade/verification",
+    AppSecretKey = "your-app-secret",
+    AuthScheme = AuthScheme.ApiKey,
+    Token = "your-api-key"
+};
+
+// HTTP Basic 认证
+var basicRequest = new UpdateRequest
+{
+    UpdateUrl = "https://update.example.com/api/upgrade/verification",
+    AppSecretKey = "your-app-secret",
+    AuthScheme = AuthScheme.Basic,
+    BasicUsername = "admin",
+    BasicPassword = "password123"
+};
+```
+
+**方式二：自定义 `IHttpAuthProvider`（高级）**
+
+【场景说明】为 Core 发出的 HTTP 请求追加自定义认证逻辑（如从配置中心动态获取 Token）。
 
 【示例代码】
 
@@ -429,8 +482,10 @@ await new GeneralUpdateBootstrap()
 ```
 
 【效果&注意事项】
-- 认证提供器在每次 HTTP 请求前被调用
-- 需要在无参构造函数中自行读取配置
+- 内置 Provider：`HmacAuthProvider`（默认）、`BearerTokenAuthProvider`、`ApiKeyAuthProvider`、`BasicAuthProvider`
+- `HttpAuthProviderFactory` 根据 `AuthScheme` 自动选择对应 Provider
+- 自定义 Provider 需要在无参构造函数中自行读取配置
+- HMAC 签名算法：`HMAC-SHA256(body|timestamp)`，请求头 `X-Update-Timestamp` + `X-Update-Signature`
 
 #### 场景 5：静默更新 + 进程退出触发升级
 
@@ -574,6 +629,43 @@ builder.Services.AddSingleton<IUpgradeHubService>(sp =>
 【效果&注意事项】
 - DI 容器管理生命周期，避免手动 Dispose
 - 可将配置从 `appsettings.json` 注入
+
+#### 场景 8：跨平台自适应策略
+
+【场景说明】Core 根据运行时平台自动选择 `WindowsStrategy` / `LinuxStrategy` / `MacStrategy`，无需手动指定。也可通过 `PlatformType` 显式控制或自定义平台策略。
+
+【示例代码】
+
+```csharp
+using GeneralUpdate.Core;
+using GeneralUpdate.Core.Configuration;
+using GeneralUpdate.Core.Strategy;
+
+// 方式一：自动检测（推荐）
+// Core 会根据 RuntimeInformation 自动选择对应平台策略
+await new GeneralUpdateBootstrap()
+    .SetSource(
+        updateUrl: "https://update.example.com/api/upgrade/verification",
+        appSecretKey: "your-app-secret")
+    .SetOption(Option.AppType, AppType.Client)
+    .LaunchAsync();
+// Windows → WindowsStrategy
+// Linux   → LinuxStrategy（无 Bowl 支持）
+// macOS   → MacStrategy
+
+// 方式二：显式指定平台策略（高级）
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .Strategy<WindowsStrategy>()
+    .SetOption(Option.AppType, AppType.Client)
+    .LaunchAsync();
+```
+
+【效果&注意事项】
+- 三种平台策略均继承 `AbstractStrategy`，共享 Hash → Compress → Patch 管道
+- `WindowsStrategy` 额外支持 Bowl 辅助进程管理
+- `LinuxStrategy` 建议配合 `UnixPermissionHooks` 使用以自动赋予执行权限
+- 平台策略可被自定义 `IStrategy` 完全替换
 
 ---
 
@@ -872,6 +964,40 @@ GeneralTracer.SetTracingEnabled(true);
 
 // 释放日志资源
 GeneralTracer.Dispose();
+```
+
+### AOT / Trim 兼容性
+
+`net8.0` 和 `net10.0` 目标框架支持 AOT 发布和裁剪。Core 在 `JsonContext` 命名空间下提供了 9 个源生成 JSON 序列化上下文，覆盖所有配置和模型类型的序列化需求，避免反射导致的裁剪问题：
+
+| 上下文类 | 覆盖类型 |
+| --- | --- |
+| `BaseResponseJsonContext` | `BaseResponseDTO<T>`、`VersionRespDTO` |
+| `VersionEntryJsonContext` | `VersionEntry`、`VersionIdentity` |
+| `UpdateRequestJsonContext` | `UpdateRequest`、`UpdateConfiguration` |
+| `ProcessContractJsonContext` | `ProcessContract` |
+| `ManifestInfoJsonContext` | `ManifestInfo` |
+| `OssVersionRecordJsonContext` | `OssVersionRecord` |
+| `DownloadAssetJsonContext` | `DownloadAsset` |
+| `BlackPolicyJsonContext` | `BlackPolicy` |
+| `PushPayloadJsonContext` | `PushPayload` |
+
+### 进程环境变量（IPC 辅助）
+
+`Environments` 静态类通过 AES 加密临时文件在 Client 与 Upgrade 进程之间传递键值对环境变量，用于升级失败追踪等场景：
+
+| 环境变量 Key | 说明 |
+| --- | --- |
+| `UpgradeFail` | 记录上次升级失败的版本号，避免重复尝试失败版本 |
+
+```csharp
+using GeneralUpdate.Core.Configuration;
+
+// 设置环境变量（Client 端写入）
+Environments.Set("UpgradeFail", "2.0.0");
+
+// 读取环境变量（Upgrade 端读取）
+var failedVersion = Environments.Get("UpgradeFail");
 ```
 
 ---
