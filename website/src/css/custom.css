@@ -97,3 +97,63 @@
 .footer {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
+
+/* ── Rounded pricing tabs ── */
+.pricing-tabs {
+  --pt-radius: 12px;
+}
+
+.pricing-tabs .tabs {
+  gap: 6px;
+}
+
+.pricing-tabs .tabs__item {
+  border-radius: var(--pt-radius);
+  padding: 8px 24px;
+  font-weight: 500;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background: var(--ifm-color-emphasis-0);
+  transition: all 0.2s ease;
+  margin-right: 4px;
+}
+
+.pricing-tabs .tabs__item:hover {
+  background: var(--ifm-color-emphasis-200);
+}
+
+.pricing-tabs .tabs__item--active {
+  background: var(--ifm-color-primary);
+  color: #fff;
+  border-color: var(--ifm-color-primary);
+}
+
+.pricing-tabs .tabs__item--active:hover {
+  background: var(--ifm-color-primary-dark);
+}
+
+.pricing-tabs [role="tabpanel"] {
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: var(--pt-radius);
+  padding: 28px;
+  margin-top: 16px;
+  background: var(--ifm-color-emphasis-0);
+}
+
+[data-theme="dark"] .pricing-tabs .tabs__item {
+  border-color: var(--ifm-color-emphasis-200);
+  background: rgba(93, 173, 226, 0.08);
+}
+
+[data-theme="dark"] .pricing-tabs .tabs__item:hover {
+  background: rgba(93, 173, 226, 0.15);
+}
+
+[data-theme="dark"] .pricing-tabs .tabs__item--active {
+  background: var(--ifm-color-primary);
+  border-color: var(--ifm-color-primary);
+}
+
+[data-theme="dark"] .pricing-tabs [role="tabpanel"] {
+  border-color: var(--ifm-color-emphasis-200);
+  background: rgba(93, 173, 226, 0.04);
+}
