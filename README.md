@@ -7,7 +7,7 @@
 [![GitHub](https://img.shields.io/badge/GitHub-GeneralUpdate--Samples-blue?logo=github)](https://github.com/GeneralLibrary/GeneralUpdate-Samples)
 [![Gitee](https://img.shields.io/badge/Gitee-GeneralUpdate--Samples-red?logo=gitee)](https://gitee.com/GeneralLibrary/GeneralUpdate-Samples)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
-[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 
 [English](README.md) | [中文文档](README_zh.md)
 
@@ -21,7 +21,8 @@
 - [Key Features](#-key-features)
 - [Repository Structure](#-repository-structure)
 - [Quick Start](#-quick-start)
-- [Sample Projects](#-sample-projects)
+- [Interactive Sample Browser](#-interactive-sample-browser)
+- [Sample Catalog](#-sample-catalog)
 - [UI Framework Samples](#-ui-framework-samples)
 - [Related Repositories](#-related-repositories)
 - [Documentation](#-documentation)
@@ -34,9 +35,9 @@
 
 ## 🌟 Overview
 
-**GeneralUpdate-Samples** is the official sample repository for the [GeneralUpdate](https://github.com/GeneralLibrary/GeneralUpdate) project, which is an open-source cross-platform application automatic update component based on .NET Standard 2.0. This repository provides comprehensive code examples, demonstrations, and quick start guides to help developers understand and integrate automatic update functionality into their applications.
+**GeneralUpdate-Samples** is the official sample repository for the [GeneralUpdate](https://github.com/GeneralLibrary/GeneralUpdate) project, an Apache 2.0 licensed, cross-platform application automatic update component built on .NET. This repository provides a unified **interactive sample browser (Hub)** that lets you explore and test every major feature through a clean console menu — no manual project setup required.
 
-**GeneralUpdate** supports various update mechanisms including:
+**GeneralUpdate** supports a wide range of update mechanisms:
 - ✅ Resume Download
 - ✅ Version-by-Version Update
 - ✅ Binary Differential Update
@@ -46,23 +47,25 @@
 - ✅ OSS (Object Storage Service) Updates
 - ✅ Rollback and Backup
 - ✅ AOT (Ahead-of-Time) Compilation Support
+- ✅ Driver Update (via Drivelution)
 
 ---
 
 ## 🎯 Key Features
 
-This repository provides working examples for all major features of GeneralUpdate:
+This repository provides self-contained, runnable samples for all major features of GeneralUpdate:
 
-| Feature | Description | Sample Location |
-|---------|-------------|----------------|
-| **Standard Update** | Traditional client-server update mechanism | `src/Client`, `src/Server`, `src/Upgrade` |
-| **OSS Update** | Simplified update using file server and version.json | `src/OSS` |
-| **Differential Update** | Binary patch generation and application | `src/Diff` |
-| **Process Monitoring** | Crash detection and diagnostic information export | `src/Bowl` |
-| **Push Updates** | Real-time update notifications using SignalR | `src/Push` |
-| **Compression** | Compression capability testing and debugging | `src/Compress` |
-| **Driver Update** | Driver package update capabilities | `src/Drivelution` |
-| **Extension** | Custom extension development examples | `src/Extension` |
+| Feature | Sample | Description |
+|---------|--------|-------------|
+| **Full Update** | `CompleteUpdateSample` | Version discovery → download → apply. The classic client-server upgrade flow |
+| **Silent Update** | `SilentUpdateSample` | Background polling with pre-exit preparation for zero-user-interaction upgrades |
+| **OSS Update** | `OssSample` | Simplified update using a file server and `versions.json` — no server-side app needed |
+| **Binary Differential** | `DifferentialSample` | Generate and apply binary patches between versions to minimize download size |
+| **Push Notification** | `PushSample` | Real-time update notifications powered by SignalR |
+| **Process Guardian** | `BowlSample` | Crash detection, dump file export, and automatic recovery |
+| **Plugin System** | `ExtensionSample` | Custom plugin installation, management, and compatibility checking |
+| **Driver Update** | `ImDiskQuickInstallSample` | Driver package installation and update using ImDisk |
+| **Compression** | `CompressSample` | Format-agnostic compression, decompression, and integrity verification |
 
 ---
 
@@ -70,30 +73,47 @@ This repository provides working examples for all major features of GeneralUpdat
 
 ```
 GeneralUpdate-Samples/
-├── src/                          # Source code and samples
-│   ├── Client/                   # Main client application sample
-│   ├── Server/                   # Server application (Minimal API)
-│   ├── Upgrade/                  # Upgrade assistant sample
-│   ├── OSS/                      # OSS update samples
-│   │   ├── OSSClientSample/      # OSS client sample
-│   │   └── OSSUpgradeSample/     # OSS upgrade sample
-│   ├── Bowl/                     # Process crash monitoring sample
-│   ├── Diff/                     # Differential patch generation sample
-│   ├── Compress/                 # Compression capability sample
-│   ├── Push/                     # Update push notification sample
-│   ├── Drivelution/              # Driver update sample
-│   ├── Extension/                # Extension development sample
-│   ├── start.cmd                 # Standard update demo launcher
-│   └── oss_start.cmd             # OSS update demo launcher
-├── UI/                           # UI framework integration samples
-│   ├── AntdUI/                   # AntdUI framework sample
-│   ├── LayUI/                    # LayUI framework sample
-│   ├── SemiUrsa/                 # Semi Ursa (Avalonia) sample
-│   └── WPFDevelopers/            # WPF framework sample
-├── website/                      # Official website source code (Docusaurus)
-├── imgs/                         # Documentation images
-├── LICENSE                       # Apache 2.0 License
-└── README.md                     # This file
+├── src/                              # Source code and samples
+│   ├── Hub/                          # Interactive sample browser (main entry point)
+│   │   ├── Program.cs                # Menu loop, server lifecycle, sample discovery
+│   │   ├── AppConfig.cs              # Configuration model (appsettings.json)
+│   │   └── Samples/                  # Individual sample implementations
+│   │       ├── ISample.cs            # Sample interface (auto-discovered by Hub)
+│   │       ├── CompleteUpdateSample.cs
+│   │       ├── SilentUpdateSample.cs
+│   │       ├── OssSample.cs
+│   │       ├── DifferentialSample.cs
+│   │       ├── PushSample.cs
+│   │       ├── BowlSample.cs
+│   │       ├── ExtensionSample.cs
+│   │       ├── ImDiskQuickInstallSample.cs
+│   │       └── CompressSample.cs
+│   ├── Server/                       # Minimal API server for update delivery
+│   │   ├── Program.cs                # Verification, report & file download endpoints
+│   │   ├── DTOs/                     # Request/response data transfer objects
+│   │   └── wwwroot/packages/         # Update package storage
+│   ├── content/                      # Intermediate version content (v1.0.0.1, v1.0.0.2)
+│   ├── content_client/               # Client app base content (v1.0.0.0, v2.0.0.0)
+│   ├── content_upgrade/              # Upgrade app base content (v1.0.0.0, v2.0.0.0)
+│   ├── ImDiskDriver/                 # ImDisk driver binaries (for driver update demo)
+│   ├── gen_packages.ps1              # Script to generate test update packages
+│   ├── Run.cmd                       # Windows launcher (double-click to start)
+│   ├── Run.ps1                       # PowerShell launcher with -BuildLibs support
+│   └── GeneralUpdate-Samples.slnx    # Solution file (new .slnx format)
+├── UI/                               # UI framework integration samples
+│   ├── AntdUI/                       # AntdUI framework sample (WinForms)
+│   ├── LayUI/                        # LayUI framework sample (WPF)
+│   ├── SemiUrsa/                     # Semi Ursa sample (Avalonia, cross-platform)
+│   └── WPFDevelopers/                # WPF with custom developer controls
+├── website/                          # Official website source (Docusaurus)
+├── .github/workflows/                # CI/CD pipelines
+│   ├── dotnet.yml                    # .NET build workflow
+│   └── az-swa-deploy.yml            # Azure Static Web App deployment (docs site)
+├── imgs/                             # Documentation images
+├── global.json                       # .NET SDK version pinning
+├── Directory.Build.props             # Shared MSBuild properties
+├── LICENSE                           # Apache 2.0 License
+└── README.md                         # This file
 ```
 
 ---
@@ -102,10 +122,10 @@ GeneralUpdate-Samples/
 
 ### Prerequisites
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later
-- Windows OS (for .cmd scripts) or cross-platform support with .NET
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later
+- Windows, Linux, or macOS (Windows recommended for driver and UI samples)
 
-### Standard Update Demo
+### One-Click Launch
 
 1. **Clone the repository**
    ```bash
@@ -113,162 +133,129 @@ GeneralUpdate-Samples/
    cd GeneralUpdate-Samples/src
    ```
 
-2. **Run the standard update demo**
+2. **Run the interactive sample browser**
+
+   **On Windows (double-click or terminal):**
    ```cmd
-   start.cmd
+   Run.cmd
    ```
 
-   This script will:
-   - Build the Client, Server, and Upgrade projects
-   - Copy compiled files to the `run` directory
-   - Start the Server application
-   - Start the Client application
-   - Automatically trigger the update process
+   **On any platform (PowerShell):**
+   ```powershell
+   .\Run.ps1
+   ```
 
-3. **Verify the update**
-   - The Client will detect available updates from the Server
-   - Download and apply the update package
-   - Restart automatically after update completion
-   - Check for the new file `Congratulations on the update.txt` in the run directory
+   For contributors who need to rebuild component DLLs from source:
+   ```powershell
+   .\Run.ps1 -BuildLibs
+   ```
 
-### OSS Update Demo
+3. **What happens next:**
+   - The Hub builds and starts the Server automatically
+   - An interactive menu appears with numbered samples
+   - Select a sample by number to run it
+   - The Hub manages server lifecycle: starts before each server-dependent sample, stops afterward
+   - Type `0` or `q` to exit
 
-For a simplified update mechanism without server-side code:
+### Generating Test Packages
 
-```cmd
+Before running update-dependent samples for the first time, generate test packages:
+
+```powershell
 cd src
-oss_start.cmd
+.\gen_packages.ps1
 ```
 
-This demonstrates OSS-based updates using only a `version.json` configuration file on a file server.
+This creates update packages in `src/Server/wwwroot/packages/` with a `versions.json` manifest.
 
 ---
 
-## 📦 Sample Projects
+## 🖥️ Interactive Sample Browser
 
-### Client Sample (`src/Client`)
+The **Hub** (`src/Hub/`) is the central entry point. Instead of launching separate projects manually, you interact with a single console menu:
 
-Demonstrates the main application that requires updating. Key features:
-- Version detection and verification
-- Update package download with progress tracking
-- Event-based notification system
-- Automatic restart after update
+```
+  ╔══════════════════════════════════════╗
+  ║    GeneralUpdate 示例浏览器          ║
+  ╚══════════════════════════════════════╝
 
-**Key Code:**
+  ═══════════════════════════════════
+    1. 完整更新 — 版本发现→下载→应用
+    2. 静默更新 — 后台轮询·退出前准备
+    3. OSS 模式 — 对象存储更新
+    4. 二进制差分 — 生成·应用·校验
+    5. SignalR 推送 — 实时消息接收
+    6. 进程守护 — 崩溃监控·Dump导出
+    7. 插件系统 — 安装·管理·兼容性
+    8. Driver Update
+    9. 压缩工具 — 压缩·解压·校验
+  ───────────────────────────────────
+    0. 退出 (Exit)
+  ═══════════════════════════════════
+```
+
+### Architecture
+
+- **Samples implement `ISample`** and are auto-discovered via reflection — no wiring needed
+- **Server lifecycle is automatic**: `RequiresServer = true` samples get an isolated Server process started/stopped on demand
+- **Clean paths** are reset before each run, ensuring reproducible demos
+- **Configuration** is centralized in `src/Hub/appsettings.json`
+
+### Key Code (CompleteUpdateSample)
+
 ```csharp
-var configinfo = new Configinfo
+var request = new UpdateRequest
 {
-    UpdateUrl = "http://127.0.0.1:5000/Upgrade/Verification",
-    MainAppName = "ClientSample.exe",
-    ClientVersion = "1.0.0.0",
-    ProductId = "2d974e2a-31e6-4887-9bb1-b4689e98c77a"
+    UpdateUrl = $"{config.ServerUrl}/Upgrade/Verification",
+    ReportUrl = $"{config.ServerUrl}/Upgrade/Report",
+    AppSecretKey = config.AppSecretKey,
+    InstallPath = mockAppDir,
+    ClientVersion = config.ClientVersion,
+    MainAppName = config.MainAppName,
+    ProductId = config.ProductId
 };
 
-await new GeneralClientBootstrap()
-    .AddListenerMultiDownloadStatistics(OnMultiDownloadStatistics)
-    .AddListenerMultiDownloadCompleted(OnMultiDownloadCompleted)
-    .AddListenerException(OnException)
-    .SetConfig(configinfo)
-    .LaunchAsync();
+var bootstrap = new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .SetOption(Option.AppType, AppType.Client)
+    .AddListenerUpdateInfo((_, e) => { /* handle version discovery */ })
+    .AddListenerMultiDownloadStatistics((_, e) => { /* handle progress */ })
+    .AddListenerMultiDownloadCompleted((_, e) => { /* handle completion */ })
+    .AddListenerException((_, e) => { /* handle errors */ });
+
+await bootstrap.LaunchAsync();
 ```
 
-### Server Sample (`src/Server`)
+---
 
-Minimal API server providing update information and package distribution:
-- Version verification endpoint
-- Update package download endpoint
-- Update status reporting
+## 📦 Sample Catalog
 
-**Key Code:**
-```csharp
-app.MapPost("/Upgrade/Verification", (VerifyDTO request) =>
-{
-    var result = new List<VerificationResultDTO>
-    {
-        new VerificationResultDTO
-        {
-            Version = "1.0.0.1",
-            Url = "http://localhost:5000/packages/packet.zip",
-            Hash = "...",
-            Size = packet.Length
-        }
-    };
-    return HttpResponseDTO<IEnumerable<VerificationResultDTO>>.Success(result);
-});
-```
-
-### Upgrade Sample (`src/Upgrade`)
-
-Independent upgrade process that updates the main application:
-- Downloads update packages
-- Applies updates while main app is closed
-- Restarts main application after update
-- Provides rollback capability on failure
-
-### OSS Update Sample (`src/OSS`)
-
-Simplified update mechanism:
-- No server-side code required
-- Uses `version.json` configuration on file server
-- Direct file server integration (Alibaba Cloud OSS, AWS S3, etc.)
-- Supports AOT compilation
-
-**version.json Example:**
-```json
-[
-  {
-    "PacketName": "packet_20250102230201638_1.0.0.1",
-    "Hash": "ad1a85a9169ca0083ab54ba390e085c56b9059efc3ca8aa1ec9ed857683cc4b1",
-    "Version": "1.0.0.1",
-    "Url": "http://localhost:5000/packages/packet_20250102230201638_1.0.0.1.zip"
-  }
-]
-```
-
-### Bowl Sample (`src/Bowl`)
-
-Process crash monitoring and diagnostic information export:
-- Monitors main application health
-- Captures crash dump files
-- Exports system information
-- Provides automatic rollback on crash
-
-**Exports on Crash:**
-- 📒 Dump file (.dmp)
-- 📒 Version information (.json)
-- 📒 Driver information (driverInfo.txt)
-- 📒 System information (systeminfo.txt)
-- 📒 Event logs (systemlog.evtx)
-
-### Diff Sample (`src/Diff`)
-
-Binary differential update implementation:
-- Generates differential patches between versions
-- Identifies changed, new, and deleted files
-- Supports blacklist for excluded files
-- Reduces update package size significantly
-
-### Push Sample (`src/Push`)
-
-Real-time update notification using SignalR:
-- Push latest version information to clients
-- Immediate update notifications
-- Supports forced update triggers
+| # | Sample | Requires Server | What It Demonstrates |
+|---|--------|:---:|----------------------|
+| 1 | **Full Update** | ✅ | Complete update pipeline: version check → download → apply. Simulates a v1.0.0.0 app upgrading to v2.0.0.0 with file additions, modifications, and deletions |
+| 2 | **Silent Update** | ✅ | Background polling with configurable intervals. Polls for updates without user interaction, prepares on app exit |
+| 3 | **OSS Update** | ✅ | Object storage update mode using `versions.json` on a file server. Supports AOT compilation scenarios |
+| 4 | **Binary Differential** | ❌ | Patch generation between two version folders. Identifies changed, new, and deleted files. Validates patch application with SHA256 |
+| 5 | **SignalR Push** | ❌ | Real-time update push via a self-hosted SignalR Hub. Demonstrates client-server messaging for instant update notifications |
+| 6 | **Process Guardian** | ❌ | Bowl integration: crash monitoring, automatic dump file export, system information collection, and driver enumeration |
+| 7 | **Plugin System** | ❌ | Extension plugin installation lifecycle: download → extract → validate → install. Demonstrates compatibility checking and plugin management |
+| 8 | **Driver Update** | ❌ | ImDisk virtual disk driver installation. Demonstrates GeneralUpdate.Drivelution for driver package deployment |
+| 9 | **Compression** | ❌ | Format-agnostic compression and decompression. Tests data integrity with random content verification across all supported compression formats |
 
 ---
 
 ## 🎨 UI Framework Samples
 
-The `UI/` directory contains integration examples for various UI frameworks:
+The `UI/` directory contains integration examples for popular UI frameworks:
 
-| Framework | Path | Description |
-|-----------|------|-------------|
-| **AntdUI** | `UI/AntdUI` | Modern UI components for Windows Forms |
-| **LayUI** | `UI/LayUI` | WPF UI framework integration |
-| **SemiUrsa** | `UI/SemiUrsa` | Avalonia UI framework (cross-platform) |
-| **WPFDevelopers** | `UI/WPFDevelopers` | WPF with custom controls |
+| Framework | Path | Type | Platform |
+|-----------|------|------|----------|
+| **AntdUI** | `UI/AntdUI/Upgrade/` | WinForms with modern Ant Design components | Windows |
+| **LayUI** | `UI/LayUI/Upgrade/` | WPF with LayUI styling | Windows |
+| **SemiUrsa** | `UI/SemiUrsa/` | Avalonia with Semi design system | Cross-platform |
+| **WPFDevelopers** | `UI/WPFDevelopers/Upgrade/` | WPF with custom developer controls | Windows |
 
-Each UI sample demonstrates how to integrate GeneralUpdate with specific UI frameworks and design patterns.
+Each UI sample demonstrates how to integrate GeneralUpdate's upgrade workflow with specific UI frameworks and design patterns.
 
 ---
 
@@ -296,8 +283,6 @@ The GeneralUpdate ecosystem consists of multiple repositories:
 
 The `website/` directory contains the full documentation source built with [Docusaurus](https://docusaurus.io/):
 
-**Building the Documentation Website:**
-
 ```bash
 cd website
 
@@ -323,13 +308,12 @@ npm run build
 ## 💻 Requirements
 
 ### Runtime Requirements
-- **.NET 8.0 Runtime** or later
+- **.NET 10.0 Runtime** or later
 - **Operating Systems**: Windows, Linux, macOS, Android (with MAUI)
 - **Supported Platforms**: x64, ARM64, LoongArch
 
 ### Supported Frameworks
-- .NET Core 2.0+
-- .NET 5, 6, 7, 8+
+- .NET 8.0+
 - .NET Framework 4.6.1+
 
 ### Supported UI Frameworks
@@ -373,10 +357,12 @@ Contributions are welcome! Here's how you can help:
 5. **Open a Pull Request**
 
 ### Guidelines
+- Add new samples by implementing `ISample` (see `src/Hub/Samples/ISample.cs`)
+- Give your sample a unique `Index` number and descriptive `Name`
+- Set `RequiresServer` appropriately
+- Specify `CleanPaths` to ensure reproducible runs
 - Follow existing code style and patterns
-- Add samples for new features
 - Update documentation as needed
-- Test your changes thoroughly
 
 ---
 
@@ -434,4 +420,3 @@ Special thanks to all [contributors](https://github.com/GeneralLibrary/GeneralUp
 **Updates limitless, upgrades boundless.**
 
 </div>
-

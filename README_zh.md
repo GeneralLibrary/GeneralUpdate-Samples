@@ -7,7 +7,7 @@
 [![GitHub](https://img.shields.io/badge/GitHub-GeneralUpdate--Samples-blue?logo=github)](https://github.com/GeneralLibrary/GeneralUpdate-Samples)
 [![Gitee](https://img.shields.io/badge/Gitee-GeneralUpdate--Samples-red?logo=gitee)](https://gitee.com/GeneralLibrary/GeneralUpdate-Samples)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
-[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 
 [English](README.md) | [中文文档](README_zh.md)
 
@@ -21,8 +21,9 @@
 - [核心功能](#-核心功能)
 - [仓库结构](#-仓库结构)
 - [快速开始](#-快速开始)
-- [示例项目](#-示例项目)
-- [UI框架示例](#-ui框架示例)
+- [交互式示例浏览器](#-交互式示例浏览器)
+- [示例目录](#-示例目录)
+- [UI 框架示例](#-ui-框架示例)
 - [相关仓库](#-相关仓库)
 - [文档](#-文档)
 - [环境要求](#-环境要求)
@@ -34,9 +35,9 @@
 
 ## 🌟 项目概述
 
-**GeneralUpdate-Samples** 是 [GeneralUpdate](https://github.com/GeneralLibrary/GeneralUpdate) 项目的官方示例仓库。GeneralUpdate 是一款基于 .NET Standard 2.0 Apache 协议开源的跨平台应用程序自动升级组件。本仓库提供了全面的代码示例、演示和快速入门指南，帮助开发者理解并集成自动更新功能到他们的应用程序中。
+**GeneralUpdate-Samples** 是 [GeneralUpdate](https://github.com/GeneralLibrary/GeneralUpdate) 项目的官方示例仓库。GeneralUpdate 是一款基于 .NET Standard 2.0 Apache 协议开源的跨平台应用程序自动升级组件。本仓库提供了一个统一的**交互式示例浏览器（Hub）**，通过简洁的控制台菜单即可浏览和测试每个主要功能——无需手动配置多个项目。
 
-**GeneralUpdate** 支持多种更新机制，包括：
+**GeneralUpdate** 支持多种更新机制：
 - ✅ 断点续传
 - ✅ 逐版本更新
 - ✅ 二进制差分更新
@@ -46,23 +47,25 @@
 - ✅ OSS（对象存储服务）更新
 - ✅ 回滚与备份
 - ✅ AOT（提前编译）支持
+- ✅ 驱动更新（通过 Drivelution）
 
 ---
 
 ## 🎯 核心功能
 
-本仓库为 GeneralUpdate 的所有主要功能提供了可运行的示例：
+本仓库为 GeneralUpdate 的所有主要功能提供了可独立运行的示例：
 
-| 功能 | 描述 | 示例位置 |
-|------|------|---------|
-| **标准更新** | 传统的客户端-服务器更新机制 | `src/Client`、`src/Server`、`src/Upgrade` |
-| **OSS更新** | 使用文件服务器和 version.json 的简化更新 | `src/OSS` |
-| **差分更新** | 二进制补丁生成和应用 | `src/Diff` |
-| **进程监控** | 崩溃检测和诊断信息导出 | `src/Bowl` |
-| **推送更新** | 使用 SignalR 的实时更新通知 | `src/Push` |
-| **压缩功能** | 压缩能力测试和调试 | `src/Compress` |
-| **驱动更新** | 驱动包更新功能 | `src/Drivelution` |
-| **扩展功能** | 自定义扩展开发示例 | `src/Extension` |
+| 功能 | 示例 | 描述 |
+|------|------|------|
+| **完整更新** | `CompleteUpdateSample` | 版本发现 → 下载 → 应用，经典的客户端-服务器升级流程 |
+| **静默更新** | `SilentUpdateSample` | 后台轮询检查更新，支持退出前准备，实现零用户交互升级 |
+| **OSS 更新** | `OssSample` | 使用文件服务器和 `versions.json` 的简化更新 —— 无需服务端应用程序 |
+| **二进制差分** | `DifferentialSample` | 生成和应用版本间的二进制补丁，大幅减少下载量 |
+| **推送通知** | `PushSample` | 基于 SignalR 的实时更新消息推送 |
+| **进程守护** | `BowlSample` | 崩溃检测、Dump 文件导出和自动恢复 |
+| **插件系统** | `ExtensionSample` | 自定义插件的安装、管理和兼容性检查 |
+| **驱动更新** | `ImDiskQuickInstallSample` | 使用 ImDisk 进行驱动包的安装和更新 |
+| **压缩工具** | `CompressSample` | 格式无关的压缩、解压和完整性校验 |
 
 ---
 
@@ -70,30 +73,47 @@
 
 ```
 GeneralUpdate-Samples/
-├── src/                          # 源代码和示例
-│   ├── Client/                   # 主客户端应用程序示例
-│   ├── Server/                   # 服务器应用程序（Minimal API）
-│   ├── Upgrade/                  # 升级助手示例
-│   ├── OSS/                      # OSS 更新示例
-│   │   ├── OSSClientSample/      # OSS 客户端示例
-│   │   └── OSSUpgradeSample/     # OSS 升级示例
-│   ├── Bowl/                     # 进程崩溃监控示例
-│   ├── Diff/                     # 差分补丁生成示例
-│   ├── Compress/                 # 压缩功能示例
-│   ├── Push/                     # 更新推送通知示例
-│   ├── Drivelution/              # 驱动更新示例
-│   ├── Extension/                # 扩展开发示例
-│   ├── start.cmd                 # 标准更新演示启动器
-│   └── oss_start.cmd             # OSS 更新演示启动器
-├── UI/                           # UI 框架集成示例
-│   ├── AntdUI/                   # AntdUI 框架示例
-│   ├── LayUI/                    # LayUI 框架示例
-│   ├── SemiUrsa/                 # Semi Ursa (Avalonia) 示例
-│   └── WPFDevelopers/            # WPF 框架示例
-├── website/                      # 官方网站源代码 (Docusaurus)
-├── imgs/                         # 文档图片
-├── LICENSE                       # Apache 2.0 许可证
-└── README.md                     # 英文说明文档
+├── src/                              # 源代码和示例
+│   ├── Hub/                          # 交互式示例浏览器（主入口）
+│   │   ├── Program.cs                # 菜单循环、Server 生命周期、示例发现
+│   │   ├── AppConfig.cs              # 配置模型（appsettings.json）
+│   │   └── Samples/                  # 各示例实现
+│   │       ├── ISample.cs            # 示例接口（Hub 通过反射自动发现）
+│   │       ├── CompleteUpdateSample.cs
+│   │       ├── SilentUpdateSample.cs
+│   │       ├── OssSample.cs
+│   │       ├── DifferentialSample.cs
+│   │       ├── PushSample.cs
+│   │       ├── BowlSample.cs
+│   │       ├── ExtensionSample.cs
+│   │       ├── ImDiskQuickInstallSample.cs
+│   │       └── CompressSample.cs
+│   ├── Server/                       # Minimal API 更新服务器
+│   │   ├── Program.cs                # 版本验证、状态上报和文件下载端点
+│   │   ├── DTOs/                     # 请求/响应数据传输对象
+│   │   └── wwwroot/packages/         # 更新包存储
+│   ├── content/                      # 中间版本内容（v1.0.0.1, v1.0.0.2）
+│   ├── content_client/               # 客户端基础内容（v1.0.0.0, v2.0.0.0）
+│   ├── content_upgrade/              # 升级程序基础内容（v1.0.0.0, v2.0.0.0）
+│   ├── ImDiskDriver/                 # ImDisk 驱动文件（用于驱动更新演示）
+│   ├── gen_packages.ps1              # 生成测试更新包的脚本
+│   ├── Run.cmd                       # Windows 启动器（双击即可运行）
+│   ├── Run.ps1                       # PowerShell 启动器（支持 -BuildLibs）
+│   └── GeneralUpdate-Samples.slnx    # 解决方案文件（新 .slnx 格式）
+├── UI/                               # UI 框架集成示例
+│   ├── AntdUI/                       # AntdUI 框架示例（WinForms）
+│   ├── LayUI/                        # LayUI 框架示例（WPF）
+│   ├── SemiUrsa/                     # Semi Ursa 示例（Avalonia，跨平台）
+│   └── WPFDevelopers/                # WPF 开发者自定义控件示例
+├── website/                          # 官方网站源码（Docusaurus）
+├── .github/workflows/                # CI/CD 工作流
+│   ├── dotnet.yml                    # .NET 构建工作流
+│   └── az-swa-deploy.yml            # Azure Static Web App 部署（文档站点）
+├── imgs/                             # 文档图片
+├── global.json                       # .NET SDK 版本锁定
+├── Directory.Build.props             # 共享 MSBuild 属性
+├── LICENSE                           # Apache 2.0 许可证
+└── README.md                         # 英文说明文档
 ```
 
 ---
@@ -102,10 +122,10 @@ GeneralUpdate-Samples/
 
 ### 环境准备
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) 或更高版本
-- Windows 操作系统（用于 .cmd 脚本）或使用 .NET 的跨平台支持
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) 或更高版本
+- Windows、Linux 或 macOS（驱动和 UI 示例建议使用 Windows）
 
-### 标准更新演示
+### 一键启动
 
 1. **克隆仓库**
    ```bash
@@ -113,162 +133,129 @@ GeneralUpdate-Samples/
    cd GeneralUpdate-Samples/src
    ```
 
-2. **运行标准更新演示**
+2. **运行交互式示例浏览器**
+
+   **Windows（双击或在终端中运行）：**
    ```cmd
-   start.cmd
+   Run.cmd
    ```
 
-   此脚本将会：
-   - 构建 Client、Server 和 Upgrade 项目
-   - 将编译后的文件复制到 `run` 目录
-   - 启动 Server 应用程序
-   - 启动 Client 应用程序
-   - 自动触发更新过程
+   **任何平台（PowerShell）：**
+   ```powershell
+   .\Run.ps1
+   ```
 
-3. **验证更新**
-   - Client 将从 Server 检测可用更新
-   - 下载并应用更新包
-   - 更新完成后自动重启
-   - 检查 run 目录中的新文件 `Congratulations on the update.txt`
+   如需从源码重新编译组件 DLL：
+   ```powershell
+   .\Run.ps1 -BuildLibs
+   ```
 
-### OSS 更新演示
+3. **启动后：**
+   - Hub 会自动构建并启动 Server
+   - 显示带编号的交互式菜单
+   - 输入数字选择要运行的示例
+   - Hub 自动管理 Server 生命周期：依赖 Server 的示例运行前自动启动，结束后自动关闭
+   - 输入 `0` 或 `q` 退出
 
-体验无需服务器端代码的简化更新机制：
+### 生成测试更新包
 
-```cmd
+首次运行需要 Server 的示例前，请先生成测试包：
+
+```powershell
 cd src
-oss_start.cmd
+.\gen_packages.ps1
 ```
 
-这演示了基于 OSS 的更新，仅使用文件服务器上的 `version.json` 配置文件。
+这将在 `src/Server/wwwroot/packages/` 中创建更新包和 `versions.json` 清单文件。
 
 ---
 
-## 📦 示例项目
+## 🖥️ 交互式示例浏览器
 
-### 客户端示例 (`src/Client`)
+**Hub**（`src/Hub/`）是统一入口。无需手动启动多个项目，只需在一个控制台菜单中操作：
 
-演示需要更新的主应用程序。主要功能：
-- 版本检测和验证
-- 带进度跟踪的更新包下载
-- 基于事件的通知系统
-- 更新后自动重启
+```
+  ╔══════════════════════════════════════╗
+  ║    GeneralUpdate 示例浏览器          ║
+  ╚══════════════════════════════════════╝
 
-**关键代码：**
+  ═══════════════════════════════════
+    1. 完整更新 — 版本发现→下载→应用
+    2. 静默更新 — 后台轮询·退出前准备
+    3. OSS 模式 — 对象存储更新
+    4. 二进制差分 — 生成·应用·校验
+    5. SignalR 推送 — 实时消息接收
+    6. 进程守护 — 崩溃监控·Dump导出
+    7. 插件系统 — 安装·管理·兼容性
+    8. Driver Update
+    9. 压缩工具 — 压缩·解压·校验
+  ───────────────────────────────────
+    0. 退出 (Exit)
+  ═══════════════════════════════════
+```
+
+### 架构设计
+
+- **示例实现 `ISample` 接口**，Hub 通过反射自动发现 —— 无需手动注册
+- **Server 生命周期自动化**：`RequiresServer = true` 的示例会按需获得独立的 Server 进程
+- **运行前自动清理**：每个示例运行前重置 `CleanPaths` 中指定的路径，确保演示可重现
+- **配置集中管理**：所有配置统一在 `src/Hub/appsettings.json` 中
+
+### 关键代码（完整更新示例）
+
 ```csharp
-var configinfo = new Configinfo
+var request = new UpdateRequest
 {
-    UpdateUrl = "http://127.0.0.1:5000/Upgrade/Verification",
-    MainAppName = "ClientSample.exe",
-    ClientVersion = "1.0.0.0",
-    ProductId = "2d974e2a-31e6-4887-9bb1-b4689e98c77a"
+    UpdateUrl = $"{config.ServerUrl}/Upgrade/Verification",
+    ReportUrl = $"{config.ServerUrl}/Upgrade/Report",
+    AppSecretKey = config.AppSecretKey,
+    InstallPath = mockAppDir,
+    ClientVersion = config.ClientVersion,
+    MainAppName = config.MainAppName,
+    ProductId = config.ProductId
 };
 
-await new GeneralClientBootstrap()
-    .AddListenerMultiDownloadStatistics(OnMultiDownloadStatistics)
-    .AddListenerMultiDownloadCompleted(OnMultiDownloadCompleted)
-    .AddListenerException(OnException)
-    .SetConfig(configinfo)
-    .LaunchAsync();
+var bootstrap = new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .SetOption(Option.AppType, AppType.Client)
+    .AddListenerUpdateInfo((_, e) => { /* 处理版本发现 */ })
+    .AddListenerMultiDownloadStatistics((_, e) => { /* 处理下载进度 */ })
+    .AddListenerMultiDownloadCompleted((_, e) => { /* 处理下载完成 */ })
+    .AddListenerException((_, e) => { /* 处理异常 */ });
+
+await bootstrap.LaunchAsync();
 ```
-
-### 服务器示例 (`src/Server`)
-
-提供更新信息和包分发的 Minimal API 服务器：
-- 版本验证端点
-- 更新包下载端点
-- 更新状态报告
-
-**关键代码：**
-```csharp
-app.MapPost("/Upgrade/Verification", (VerifyDTO request) =>
-{
-    var result = new List<VerificationResultDTO>
-    {
-        new VerificationResultDTO
-        {
-            Version = "1.0.0.1",
-            Url = "http://localhost:5000/packages/packet.zip",
-            Hash = "...",
-            Size = packet.Length
-        }
-    };
-    return HttpResponseDTO<IEnumerable<VerificationResultDTO>>.Success(result);
-});
-```
-
-### 升级示例 (`src/Upgrade`)
-
-独立的升级进程，用于更新主应用程序：
-- 下载更新包
-- 在主应用关闭时应用更新
-- 更新后重启主应用程序
-- 失败时提供回滚能力
-
-### OSS 更新示例 (`src/OSS`)
-
-简化的更新机制：
-- 无需服务器端代码
-- 使用文件服务器上的 `version.json` 配置
-- 直接集成文件服务器（阿里云 OSS、AWS S3 等）
-- 支持 AOT 编译
-
-**version.json 示例：**
-```json
-[
-  {
-    "PacketName": "packet_20250102230201638_1.0.0.1",
-    "Hash": "ad1a85a9169ca0083ab54ba390e085c56b9059efc3ca8aa1ec9ed857683cc4b1",
-    "Version": "1.0.0.1",
-    "Url": "http://localhost:5000/packages/packet_20250102230201638_1.0.0.1.zip"
-  }
-]
-```
-
-### Bowl 示例 (`src/Bowl`)
-
-进程崩溃监控和诊断信息导出：
-- 监控主应用程序健康状态
-- 捕获崩溃转储文件
-- 导出系统信息
-- 崩溃时提供自动回滚
-
-**崩溃时导出的文件：**
-- 📒 转储文件 (.dmp)
-- 📒 版本信息 (.json)
-- 📒 驱动信息 (driverInfo.txt)
-- 📒 系统信息 (systeminfo.txt)
-- 📒 事件日志 (systemlog.evtx)
-
-### 差分示例 (`src/Diff`)
-
-二进制差分更新实现：
-- 生成版本间的差分补丁
-- 识别修改、新增和删除的文件
-- 支持排除文件的黑名单
-- 显著减少更新包大小
-
-### 推送示例 (`src/Push`)
-
-使用 SignalR 的实时更新通知：
-- 向客户端推送最新版本信息
-- 即时更新通知
-- 支持强制更新触发
 
 ---
 
-## 🎨 UI框架示例
+## 📦 示例目录
 
-`UI/` 目录包含各种 UI 框架的集成示例：
+| 编号 | 示例 | 需要 Server | 说明 |
+|------|------|:---:|------|
+| 1 | **完整更新** | ✅ | 完整更新管线：版本检查 → 下载 → 应用。模拟 v1.0.0.0 应用升级到 v2.0.0.0，包含文件增删改 |
+| 2 | **静默更新** | ✅ | 后台轮询检查更新，支持自定义间隔。无需用户交互，退出时自动准备更新 |
+| 3 | **OSS 更新** | ✅ | 对象存储更新模式，使用文件服务器上的 `versions.json`。支持 AOT 编译场景 |
+| 4 | **二进制差分** | ❌ | 两个版本目录间的补丁生成。识别变更、新增和删除的文件。使用 SHA256 验证补丁应用 |
+| 5 | **SignalR 推送** | ❌ | 通过自托管 SignalR Hub 实现实时更新推送。演示客户端-服务器消息通信 |
+| 6 | **进程守护** | ❌ | Bowl 集成：崩溃监控、自动 Dump 文件导出、系统信息收集和驱动枚举 |
+| 7 | **插件系统** | ❌ | 扩展插件安装周期：下载 → 解压 → 验证 → 安装。演示兼容性检查和插件管理 |
+| 8 | **驱动更新** | ❌ | ImDisk 虚拟磁盘驱动安装。演示 GeneralUpdate.Drivelution 驱动包部署 |
+| 9 | **压缩工具** | ❌ | 格式无关的压缩和解压。使用随机内容验证所有支持压缩格式的数据完整性 |
 
-| 框架 | 路径 | 描述 |
-|------|------|------|
-| **AntdUI** | `UI/AntdUI` | Windows Forms 的现代 UI 组件 |
-| **LayUI** | `UI/LayUI` | WPF UI 框架集成 |
-| **SemiUrsa** | `UI/SemiUrsa` | Avalonia UI 框架（跨平台） |
-| **WPFDevelopers** | `UI/WPFDevelopers` | 带自定义控件的 WPF |
+---
 
-每个 UI 示例演示了如何将 GeneralUpdate 与特定的 UI 框架和设计模式集成。
+## 🎨 UI 框架示例
+
+`UI/` 目录包含主流 UI 框架的集成示例：
+
+| 框架 | 路径 | 类型 | 平台 |
+|------|------|------|------|
+| **AntdUI** | `UI/AntdUI/Upgrade/` | WinForms + Ant Design 组件 | Windows |
+| **LayUI** | `UI/LayUI/Upgrade/` | WPF + LayUI 样式 | Windows |
+| **SemiUrsa** | `UI/SemiUrsa/` | Avalonia + Semi 设计系统 | 跨平台 |
+| **WPFDevelopers** | `UI/WPFDevelopers/Upgrade/` | WPF + 自定义开发者控件 | Windows |
+
+每个 UI 示例演示了如何将 GeneralUpdate 的升级工作流与特定的 UI 框架和设计模式集成。
 
 ---
 
@@ -296,8 +283,6 @@ GeneralUpdate 生态系统由多个仓库组成：
 
 `website/` 目录包含使用 [Docusaurus](https://docusaurus.io/) 构建的完整文档源代码：
 
-**构建文档网站：**
-
 ```bash
 cd website
 
@@ -323,13 +308,12 @@ npm run build
 ## 💻 环境要求
 
 ### 运行时要求
-- **.NET 8.0 运行时**或更高版本
+- **.NET 10.0 运行时** 或更高版本
 - **操作系统**：Windows、Linux、macOS、Android（使用 MAUI）
 - **支持的平台**：x64、ARM64、LoongArch
 
 ### 支持的框架
-- .NET Core 2.0+
-- .NET 5、6、7、8+
+- .NET 8.0+
 - .NET Framework 4.6.1+
 
 ### 支持的 UI 框架
@@ -355,7 +339,7 @@ npm run build
 
 ## 🤝 贡献指南
 
-欢迎贡献！以下是您可以提供帮助的方式：
+欢迎贡献！以下是参与方式：
 
 1. **Fork 仓库**
 2. **创建功能分支**
@@ -372,11 +356,13 @@ npm run build
    ```
 5. **开启 Pull Request**
 
-### 指南
+### 贡献指南
+- 通过实现 `ISample` 接口添加新示例（参见 `src/Hub/Samples/ISample.cs`）
+- 为示例分配唯一的 `Index` 编号和描述性的 `Name`
+- 正确设置 `RequiresServer` 属性
+- 指定 `CleanPaths` 以确保每次运行可重现
 - 遵循现有的代码风格和模式
-- 为新功能添加示例
 - 根据需要更新文档
-- 彻底测试您的更改
 
 ---
 
