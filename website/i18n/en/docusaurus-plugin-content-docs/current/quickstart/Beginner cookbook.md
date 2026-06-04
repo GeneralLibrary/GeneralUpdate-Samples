@@ -30,7 +30,7 @@ This cookbook is for first-time GeneralUpdate users. The goal is not to explain 
   │          │           │ Service) │           │  Process) │
   └────┬─────┘           └────┬─────┘           └────┬─────┘
        │                      │                      │
-       │  POST /Verification  │                      │
+       │  POST /Upgrade/Verification               │                      │
        │  {version, platform} │                      │
        │ ────────────────────→│                      │
        │                      │                      │
@@ -356,7 +356,7 @@ Client (new version):
 
 | Symptom | Check |
 | --- | --- |
-| Client can't reach Server | `curl http://localhost:5000/Upgrade/Verification` to confirm Server is running |
+| Client can't reach Server | `curl -X POST http://localhost:5000/Upgrade/Verification` to confirm Server is running |
 | "Already up to date" response | Make sure `versions.json` has a version higher than `ClientVersion` |
 | Download finishes but Upgrade doesn't start | Is `MyApp.Upgrade.exe` in the `update/` subdirectory? Is manifest's `updatePath` correct? |
 | Upgrade crashes | Check directory write permissions, antivirus interference |

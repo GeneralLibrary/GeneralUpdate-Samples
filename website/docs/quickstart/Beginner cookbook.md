@@ -29,7 +29,7 @@ title: 入门实战手册
   │ (主程序)  │←─JSON───  │ (更新服务)│           │ (升级进程) │
   └────┬─────┘           └────┬─────┘           └────┬─────┘
        │                      │                      │
-       │  POST /Verification  │                      │
+       │  POST /Upgrade/Verification               │                      │
        │  {version, platform} │                      │
        │ ────────────────────→│                      │
        │                      │                      │
@@ -354,7 +354,7 @@ Client (新版本):
 
 | 现象 | 检查 |
 | --- | --- |
-| Client 连不上 Server | `curl http://localhost:5000/Upgrade/Verification` 确认 Server 在跑 |
+| Client 连不上 Server | `curl -X POST http://localhost:5000/Upgrade/Verification` 确认 Server 在跑 |
 | 返回"Already up to date" | `versions.json` 中是否有比 `ClientVersion` 更高的版本 |
 | 下载完成但未启动 Upgrade | `MyApp.Upgrade.exe` 是否在 `update/` 子目录下，manifest 的 `updatePath` 是否正确 |
 | Upgrade 报错退出 | 检查目录写入权限、杀毒软件是否拦截 |
