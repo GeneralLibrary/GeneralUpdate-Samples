@@ -602,6 +602,31 @@
    TOC  (right sidebar)
    ════════════════════════════════════════════════════════════════ */
 
+/* ── Push TOC further right, give main content more room ── */
+@media (min-width: 997px) {
+  /* Widen content column from 75% → 80% */
+  [class*="docMainContainer"] [class*="docItemCol"] {
+    max-width: 80% !important;
+  }
+
+  /* Narrow TOC column from 25% → 20% */
+  [class*="docMainContainer"] .col--3 {
+    --ifm-col-width: calc(20%);
+  }
+
+  /* Prevent wide content (tables, code) from bleeding into TOC */
+  [class*="docItemCol"] .markdown {
+    overflow-x: auto;
+  }
+
+  /* Visual separation between content and TOC */
+  .table-of-contents {
+    padding-left: 1rem;
+    margin-left: 0.25rem;
+    border-left: 1px solid var(--ifm-color-emphasis-200);
+  }
+}
+
 .table-of-contents__link {
   font-size: 0.85rem;
   transition: color 0.15s;
