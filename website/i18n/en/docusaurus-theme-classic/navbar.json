@@ -11,9 +11,9 @@
     "message": "Doc",
     "description": "Navbar item with label Doc"
   },
-  "item.label.商务": {
-    "message": "Business",
-    "description": "Navbar item with label 商务"
+  "item.label.定价": {
+    "message": "Pricing",
+    "description": "Navbar item with label 定价"
   },
   "item.label.GitHub": {
     "message": "GitHub",
@@ -22,9 +22,5 @@
   "item.label.GeneralSpacestation": {
     "message": "GeneralSpacestation",
     "description": "Navbar item with label GeneralSpacestation"
-  },
-  "item.label.软件外包服务": {
-    "message": "Software Outsourcing",
-    "description": "Navbar item with label 软件外包服务"
   }
 }
