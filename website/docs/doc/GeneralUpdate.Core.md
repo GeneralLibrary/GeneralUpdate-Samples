@@ -137,86 +137,86 @@ sidebar_position: 5
 
 **GeneralUpdateBootstrap：**
 
-| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
-| --- | --- | --- | --- | --- |
-| `LaunchAsync()` | 无（读取已配置的 Option 和 Config） | `Task<GeneralUpdateBootstrap>` | 所有 Core 使用场景的最终入口 | 会根据 `Option.AppType` 自动选择执行策略 |
-| `Cancel()` | 无 | `void` | UI 中提供"取消更新"按钮 | 触发内部 `CancellationTokenSource` |
-| `SetConfig(UpdateRequest)` | `configInfo` — 更新配置对象 | `GeneralUpdateBootstrap` | 主程序内显式配置更新参数 | 会调用 `Validate()` 检查关键字段 |
-| `SetConfig(string)` | `filePath` — JSON 配置文件路径 | `GeneralUpdateBootstrap` | 从文件读取更新配置 | 支持相对路径和绝对路径；UTF-8 JSON 格式 |
-| `SetSource(...)` | `updateUrl`, `appSecretKey`, `reportUrl?`, `scheme?`, `token?`, `authScheme?`, `basicUsername?`, `basicPassword?`, `installPath?` | `GeneralUpdateBootstrap` | 轻配置入口，配合 manifest 使用 | 只提供服务端入口和密钥，身份信息由 manifest 补齐；支持 HMAC / Bearer / Basic 多种认证方式 |
-| `SetOption(Option<T>, T)` | `option` — 选项键, `value` — 选项值 | `GeneralUpdateBootstrap` | 设置运行时选项 | 传入 `null` 给可空选项会移除当前设置 |
-| `UseDiffPipeline(Action<DiffPipelineBuilder>)` | `configure` — 差分管道配置委托 | `GeneralUpdateBootstrap` | 替换或调整差分补丁管道 | 未调用时使用默认配置 |
-| `AddListenerUpdateInfo(...)` | `EventHandler<UpdateInfoEventArgs>` | `GeneralUpdateBootstrap` | 接收服务端版本信息 | 无更新时也会触发（`Info.Code = 404`） |
-| `AddListenerUpdatePrecheck(...)` | `Func<UpdateInfoEventArgs, bool>` | `GeneralUpdateBootstrap` | 下载前预检查 | 返回 `true` 表示跳过非强制更新 |
-| `AddListenerProgress(...)` | `EventHandler<ProgressEventArgs>` | `GeneralUpdateBootstrap` | 更新进度条、状态文本 | 同时包含下载进度和差分进度 |
-| `AddListenerMultiDownloadCompleted(...)` | `EventHandler<MultiDownloadCompletedEventArgs>` | `GeneralUpdateBootstrap` | 标记单个资源下载完成 | 不要当做"全部下载完成" |
-| `AddListenerMultiAllDownloadCompleted(...)` | `EventHandler<MultiAllDownloadCompletedEventArgs>` | `GeneralUpdateBootstrap` | 全部下载完成后的后续处理 | 包含失败汇总 `FailedVersions` |
-| `AddListenerMultiDownloadError(...)` | `EventHandler<MultiDownloadErrorEventArgs>` | `GeneralUpdateBootstrap` | 记录单个资源下载失败 | 整体成功仍以 `MultiAllDownloadCompleted` 为准 |
-| `AddListenerMultiDownloadStatistics(...)` | `EventHandler<MultiDownloadStatisticsEventArgs>` | `GeneralUpdateBootstrap` | 展示下载速度和剩余时间 | 新代码优先使用 `AddListenerProgress` |
-| `AddListenerException(...)` | `EventHandler<ExceptionEventArgs>` | `GeneralUpdateBootstrap` | 上报异常、展示错误信息 | 仅通知，不自动重试 |
-| `AddEventListener<TListener>()` | 泛型参数 — 监听器类型 | `GeneralUpdateBootstrap` | 批量注册事件监听器 | `T` 必须实现 `IUpdateEventListener`，推荐继承 `UpdateEventListenerBase` |
-| `Hooks<T>()` | 泛型参数 — Hook 类型 | `GeneralUpdateBootstrap` | 注册生命周期钩子 | `T` 必须实现 `IUpdateHooks` 且有无参构造函数 |
-| `UpdateReporter<T>()` | 泛型参数 — Reporter 类型 | `GeneralUpdateBootstrap` | 注册状态上报器 | `T` 必须实现 `IUpdateReporter` |
-| `SslPolicy<T>()` | 泛型参数 — SSL 策略类型 | `GeneralUpdateBootstrap` | 自定义 HTTPS 证书校验 | 生产环境不建议无条件返回 `true` |
-| `HttpAuth<T>()` | 泛型参数 — 认证提供器类型 | `GeneralUpdateBootstrap` | 自定义 HTTP 请求认证 | `T` 必须实现 `IHttpAuthProvider` |
-| `DownloadSource<T>()` | 泛型参数 — 下载来源类型 | `GeneralUpdateBootstrap` | 自定义版本清单来源 | `T` 必须实现 `IDownloadSource` |
-| `DownloadPolicy<T>()` | 泛型参数 — 下载策略类型 | `GeneralUpdateBootstrap` | 自定义下载重试/超时策略 | `T` 必须实现 `IDownloadPolicy` |
-| `DownloadExecutor<T>()` | 泛型参数 — 下载执行器类型 | `GeneralUpdateBootstrap` | 自定义单文件下载实现 | `T` 必须实现 `IDownloadExecutor` |
-| `DownloadPipeline<T>()` | 泛型参数 — 下载管道类型 | `GeneralUpdateBootstrap` | 自定义下载后处理 | `T` 必须实现 `IDownloadPipeline` |
-| `DownloadOrchestrator<T>()` | 泛型参数 — 下载编排器类型 | `GeneralUpdateBootstrap` | 完全替换批量下载逻辑 | 只有需要完整替换下载行为时才建议实现 |
-| `Strategy<T>()` | 泛型参数 — 策略类型 | `GeneralUpdateBootstrap` | 自定义平台级更新策略 | `T` 必须实现 `IStrategy` |
+| 方法名 | 入参明细 | 使用场景 | 注意事项 |
+| --- | --- | --- | --- |
+| `LaunchAsync()` | 无（读取已配置的 Option 和 Config） | 所有 Core 使用场景的最终入口 | 会根据 `Option.AppType` 自动选择执行策略 |
+| `Cancel()` | 无 | UI 中提供"取消更新"按钮 | 触发内部 `CancellationTokenSource` |
+| `SetConfig(UpdateRequest)` | `configInfo` — 更新配置对象 | 主程序内显式配置更新参数 | 会调用 `Validate()` 检查关键字段 |
+| `SetConfig(string)` | `filePath` — JSON 配置文件路径 | 从文件读取更新配置 | 支持相对路径和绝对路径；UTF-8 JSON 格式 |
+| `SetSource(...)` | `updateUrl`, `appSecretKey`, `reportUrl?`, `scheme?`, `token?`, `authScheme?`, `basicUsername?`, `basicPassword?`, `installPath?` | 轻配置入口，配合 manifest 使用 | 只提供服务端入口和密钥，身份信息由 manifest 补齐；支持 HMAC / Bearer / Basic 多种认证方式 |
+| `SetOption(Option<T>, T)` | `option` — 选项键, `value` — 选项值 | 设置运行时选项 | 传入 `null` 给可空选项会移除当前设置 |
+| `UseDiffPipeline(Action<DiffPipelineBuilder>)` | `configure` — 差分管道配置委托 | 替换或调整差分补丁管道 | 未调用时使用默认配置 |
+| `AddListenerUpdateInfo(...)` | `EventHandler<UpdateInfoEventArgs>` | 接收服务端版本信息 | 无更新时也会触发（`Info.Code = 404`） |
+| `AddListenerUpdatePrecheck(...)` | `Func<UpdateInfoEventArgs, bool>` | 下载前预检查 | 返回 `true` 表示跳过非强制更新 |
+| `AddListenerProgress(...)` | `EventHandler<ProgressEventArgs>` | 更新进度条、状态文本 | 同时包含下载进度和差分进度 |
+| `AddListenerMultiDownloadCompleted(...)` | `EventHandler<MultiDownloadCompletedEventArgs>` | 标记单个资源下载完成 | 不要当做"全部下载完成" |
+| `AddListenerMultiAllDownloadCompleted(...)` | `EventHandler<MultiAllDownloadCompletedEventArgs>` | 全部下载完成后的后续处理 | 包含失败汇总 `FailedVersions` |
+| `AddListenerMultiDownloadError(...)` | `EventHandler<MultiDownloadErrorEventArgs>` | 记录单个资源下载失败 | 整体成功仍以 `MultiAllDownloadCompleted` 为准 |
+| `AddListenerMultiDownloadStatistics(...)` | `EventHandler<MultiDownloadStatisticsEventArgs>` | 展示下载速度和剩余时间 | 新代码优先使用 `AddListenerProgress` |
+| `AddListenerException(...)` | `EventHandler<ExceptionEventArgs>` | 上报异常、展示错误信息 | 仅通知，不自动重试 |
+| `AddEventListener<TListener>()` | 泛型参数 — 监听器类型 | 批量注册事件监听器 | `T` 必须实现 `IUpdateEventListener`，推荐继承 `UpdateEventListenerBase` |
+| `Hooks<T>()` | 泛型参数 — Hook 类型 | 注册生命周期钩子 | `T` 必须实现 `IUpdateHooks` 且有无参构造函数 |
+| `UpdateReporter<T>()` | 泛型参数 — Reporter 类型 | 注册状态上报器 | `T` 必须实现 `IUpdateReporter` |
+| `SslPolicy<T>()` | 泛型参数 — SSL 策略类型 | 自定义 HTTPS 证书校验 | 生产环境不建议无条件返回 `true` |
+| `HttpAuth<T>()` | 泛型参数 — 认证提供器类型 | 自定义 HTTP 请求认证 | `T` 必须实现 `IHttpAuthProvider` |
+| `DownloadSource<T>()` | 泛型参数 — 下载来源类型 | 自定义版本清单来源 | `T` 必须实现 `IDownloadSource` |
+| `DownloadPolicy<T>()` | 泛型参数 — 下载策略类型 | 自定义下载重试/超时策略 | `T` 必须实现 `IDownloadPolicy` |
+| `DownloadExecutor<T>()` | 泛型参数 — 下载执行器类型 | 自定义单文件下载实现 | `T` 必须实现 `IDownloadExecutor` |
+| `DownloadPipeline<T>()` | 泛型参数 — 下载管道类型 | 自定义下载后处理 | `T` 必须实现 `IDownloadPipeline` |
+| `DownloadOrchestrator<T>()` | 泛型参数 — 下载编排器类型 | 完全替换批量下载逻辑 | 只有需要完整替换下载行为时才建议实现 |
+| `Strategy<T>()` | 泛型参数 — 策略类型 | 自定义平台级更新策略 | `T` 必须实现 `IStrategy` |
 
 **DiffPipelineBuilder：**
 
-| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
-| --- | --- | --- | --- | --- |
-| `UseDiffer(IBinaryDiffer)` | `differ` — 差分算法实例 | `DiffPipelineBuilder` | 替换文件级差分算法 | 可选 `BsdiffDiffer` / `StreamingHdiffDiffer` / 自定义 |
-| `UseCleanMatcher(ICleanMatcher)` | `matcher` — Clean 匹配器 | `DiffPipelineBuilder` | 自定义 Clean 阶段的文件匹配逻辑 | 默认 `DefaultCleanMatcher` |
-| `UseDirtyMatcher(IDirtyMatcher)` | `matcher` — Dirty 匹配器 | `DiffPipelineBuilder` | 自定义 Dirty 阶段的补丁匹配逻辑 | 默认 `DefaultDirtyMatcher` |
-| `WithParallelism(int)` | `degree` — 并行度 | `DiffPipelineBuilder` | 设置差分文件并行处理数 | 默认 2；建议 1-8 |
-| `WithStopOnFirstError(bool)` | `stop` — 是否首次错误即停止 | `DiffPipelineBuilder` | 错误策略控制 | 默认 `false` |
-| `WithProgress(IProgress<DiffProgress>)` | `progress` — 进度报告器 | `DiffPipelineBuilder` | 接入差分进度回调 | 可配合 `Progress<T>` 使用 |
-| `Build()` | 无 | `DiffPipeline` | 构建差分管道实例 | 一般在 `UseDiffPipeline` 回调内部调用 |
+| 方法名 | 入参明细 | 使用场景 | 注意事项 |
+| --- | --- | --- | --- |
+| `UseDiffer(IBinaryDiffer)` | `differ` — 差分算法实例 | 替换文件级差分算法 | 可选 `BsdiffDiffer` / `StreamingHdiffDiffer` / 自定义 |
+| `UseCleanMatcher(ICleanMatcher)` | `matcher` — Clean 匹配器 | 自定义 Clean 阶段的文件匹配逻辑 | 默认 `DefaultCleanMatcher` |
+| `UseDirtyMatcher(IDirtyMatcher)` | `matcher` — Dirty 匹配器 | 自定义 Dirty 阶段的补丁匹配逻辑 | 默认 `DefaultDirtyMatcher` |
+| `WithParallelism(int)` | `degree` — 并行度 | 设置差分文件并行处理数 | 默认 2；建议 1-8 |
+| `WithStopOnFirstError(bool)` | `stop` — 是否首次错误即停止 | 错误策略控制 | 默认 `false` |
+| `WithProgress(IProgress<DiffProgress>)` | `progress` — 进度报告器 | 接入差分进度回调 | 可配合 `Progress<T>` 使用 |
+| `Build()` | 无 | 构建差分管道实例 | 一般在 `UseDiffPipeline` 回调内部调用 |
 
 **UpdateRequestBuilder：**
 
-| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
-| --- | --- | --- | --- | --- |
-| `Create()` | 无 | `UpdateRequestBuilder` | 从 `update_config.json` 读取配置 | 文件不存在会抛出 `FileNotFoundException` |
-| `SetUpdateUrl(string)` | `url` | `UpdateRequestBuilder` | 设置更新地址 | 必须为绝对 URL |
-| `SetUpgradeAppName(string)` | `name` | `UpdateRequestBuilder` | 设置升级程序文件名 | — |
-| `SetMainAppName(string)` | `name` | `UpdateRequestBuilder` | 设置主程序文件名 | — |
-| `SetClientVersion(string)` | `version` | `UpdateRequestBuilder` | 设置客户端版本 | SemVer 格式 |
-| `SetAppSecretKey(string)` | `key` | `UpdateRequestBuilder` | 设置应用密钥 | — |
-| `SetInstallPath(string)` | `path` | `UpdateRequestBuilder` | 设置安装目录 | — |
-| `SetProductId(string)` | `id` | `UpdateRequestBuilder` | 设置产品标识 | — |
-| `SetReportUrl(string)` | `url` | `UpdateRequestBuilder` | 设置上报地址 | — |
-| `SetUpdateLogUrl(string)` | `url` | `UpdateRequestBuilder` | 设置更新日志地址 | — |
-| `SetUpgradeClientVersion(string)` | `version` | `UpdateRequestBuilder` | 设置升级程序版本 | — |
-| `SetBowl(string)` | `bowl` | `UpdateRequestBuilder` | 设置 Bowl 进程名 | — |
-| `SetDriverDirectory(string)` | `path` | `UpdateRequestBuilder` | 设置驱动目录 | — |
-| `SetScheme(string)` | `scheme` | `UpdateRequestBuilder` | 设置认证方案 | — |
-| `SetToken(string)` | `token` | `UpdateRequestBuilder` | 设置认证令牌 | — |
-| `SetAuthScheme(AuthScheme)` | `authScheme` — 认证方案枚举 | `UpdateRequestBuilder` | 设置认证方案（Hmac / Bearer / ApiKey / Basic） | 默认 `Hmac` |
-| `SetBasicUsername(string)` | `username` | `UpdateRequestBuilder` | 设置 Basic 认证用户名 | 需配合 `SetAuthScheme(AuthScheme.Basic)` |
-| `SetBasicPassword(string)` | `password` | `UpdateRequestBuilder` | 设置 Basic 认证密码 | 需配合 `SetAuthScheme(AuthScheme.Basic)` |
-| `SetFiles(List<string>)` | `files` | `UpdateRequestBuilder` | 设置跳过文件列表 | — |
-| `SetFormats(List<string>)` | `formats` | `UpdateRequestBuilder` | 设置跳过扩展名列表 | — |
-| `SetDirectories(List<string>)` | `dirs` | `UpdateRequestBuilder` | 设置跳过目录列表 | — |
-| `Build()` | 无 | `UpdateRequest` | 构建并校验配置对象 | 会执行 `Validate()` |
+| 方法名 | 入参明细 | 使用场景 | 注意事项 |
+| --- | --- | --- | --- |
+| `Create()` | 无 | 从 `update_config.json` 读取配置 | 文件不存在会抛出 `FileNotFoundException` |
+| `SetUpdateUrl(string)` | `url` | 设置更新地址 | 必须为绝对 URL |
+| `SetUpgradeAppName(string)` | `name` | 设置升级程序文件名 | — |
+| `SetMainAppName(string)` | `name` | 设置主程序文件名 | — |
+| `SetClientVersion(string)` | `version` | 设置客户端版本 | SemVer 格式 |
+| `SetAppSecretKey(string)` | `key` | 设置应用密钥 | — |
+| `SetInstallPath(string)` | `path` | 设置安装目录 | — |
+| `SetProductId(string)` | `id` | 设置产品标识 | — |
+| `SetReportUrl(string)` | `url` | 设置上报地址 | — |
+| `SetUpdateLogUrl(string)` | `url` | 设置更新日志地址 | — |
+| `SetUpgradeClientVersion(string)` | `version` | 设置升级程序版本 | — |
+| `SetBowl(string)` | `bowl` | 设置 Bowl 进程名 | — |
+| `SetDriverDirectory(string)` | `path` | 设置驱动目录 | — |
+| `SetScheme(string)` | `scheme` | 设置认证方案 | — |
+| `SetToken(string)` | `token` | 设置认证令牌 | — |
+| `SetAuthScheme(AuthScheme)` | `authScheme` — 认证方案枚举 | 设置认证方案（Hmac / Bearer / ApiKey / Basic） | 默认 `Hmac` |
+| `SetBasicUsername(string)` | `username` | 设置 Basic 认证用户名 | 需配合 `SetAuthScheme(AuthScheme.Basic)` |
+| `SetBasicPassword(string)` | `password` | 设置 Basic 认证密码 | 需配合 `SetAuthScheme(AuthScheme.Basic)` |
+| `SetFiles(List<string>)` | `files` | 设置跳过文件列表 | — |
+| `SetFormats(List<string>)` | `formats` | 设置跳过扩展名列表 | — |
+| `SetDirectories(List<string>)` | `dirs` | 设置跳过目录列表 | — |
+| `Build()` | 无 | 构建并校验配置对象 | 会执行 `Validate()` |
 
 **UpgradeHubService：**
 
-| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
-| --- | --- | --- | --- | --- |
-| `UpgradeHubService(string, string?, string?)` | `url` — SignalR Hub 地址；`token` — 可选 ID4 认证令牌；`appkey` — 可选客户端唯一标识 | —（构造函数） | 创建推送服务实例 | `appkey` 用于服务端定向推送，推荐使用固定 GUID |
-| `StartAsync()` | 无 | `Task` | 建立 SignalR 长连接，开始接收推送 | 可重复调用（先 `StopAsync` 后重新 `StartAsync`） |
-| `StopAsync()` | 无 | `Task` | 优雅停止连接，保留重连能力 | 适合应用进入后台时调用 |
-| `DisposeAsync()` | 无 | `Task` | 彻底释放 Hub 及所有资源 | 释放后不可再复用 |
-| `AddListenerReceive(Action<string>)` | `receiveMessageCallback` — 接收消息回调 | `void` | 订阅服务端推送的版本更新消息 | 消息内容为服务端推送的 JSON 字符串 |
-| `AddListenerOnline(Action<string>)` | `onlineMessageCallback` — 状态回调 | `void` | 订阅在线/离线状态变化通知 | — |
-| `AddListenerReconnected(Func<string?, Task>?)` | `reconnectedCallback` — 重连回调 | `void` | 订阅断线重连成功通知 | 参数为新的 connectionId（可能为 null） |
-| `AddListenerClosed(Func<Exception?, Task>)` | `closeCallback` — 关闭回调 | `void` | 订阅连接关闭通知 | 正常关闭时异常参数为 null |
+| 方法名 | 入参明细 | 使用场景 | 注意事项 |
+| --- | --- | --- | --- |
+| `UpgradeHubService(string, string?, string?)` | `url` — SignalR Hub 地址；`token` — 可选 ID4 认证令牌；`appkey` — 可选客户端唯一标识 | 创建推送服务实例 | `appkey` 用于服务端定向推送，推荐使用固定 GUID |
+| `StartAsync()` | 无 | 建立 SignalR 长连接，开始接收推送 | 可重复调用（先 `StopAsync` 后重新 `StartAsync`） |
+| `StopAsync()` | 无 | 优雅停止连接，保留重连能力 | 适合应用进入后台时调用 |
+| `DisposeAsync()` | 无 | 彻底释放 Hub 及所有资源 | 释放后不可再复用 |
+| `AddListenerReceive(Action<string>)` | `receiveMessageCallback` — 接收消息回调 | 订阅服务端推送的版本更新消息 | 消息内容为服务端推送的 JSON 字符串 |
+| `AddListenerOnline(Action<string>)` | `onlineMessageCallback` — 状态回调 | 订阅在线/离线状态变化通知 | — |
+| `AddListenerReconnected(Func<string?, Task>?)` | `reconnectedCallback` — 重连回调 | 订阅断线重连成功通知 | 参数为新的 connectionId（可能为 null） |
+| `AddListenerClosed(Func<Exception?, Task>)` | `closeCallback` — 关闭回调 | 订阅连接关闭通知 | 正常关闭时异常参数为 null |
 
 ### 3.3 回调事件
 

@@ -93,6 +93,11 @@ const config = {
             ],
           },
           {
+            to: '/contact',
+            label: '联系方式',
+            position: 'right',
+          },
+          {
             href: 'https://github.com/GeneralLibrary',
             label: 'GitHub',
             position: 'right',

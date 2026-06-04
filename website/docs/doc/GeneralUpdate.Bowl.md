@@ -98,15 +98,15 @@ sidebar_position: 3
 
 **Bowl：**
 
-| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
-| --- | --- | --- | --- | --- |
-| `LaunchAsync(BowlContext, CancellationToken)` | `context` — 执行上下文（建议先调 `Normalize()`）；`ct` — 取消令牌 | `Task<BowlResult>` | 启动崩溃监控守护流程 | 三阶段：准备监控 → 运行监控 → 检测到 Dump 则进入故障处理管线 |
+| 方法名 | 入参明细 | 使用场景 | 注意事项 |
+| --- | --- | --- | --- |
+| `LaunchAsync(BowlContext, CancellationToken)` | `context` — 执行上下文（建议先调 `Normalize()`）；`ct` — 取消令牌 | 启动崩溃监控守护流程 | 三阶段：准备监控 → 运行监控 → 检测到 Dump 则进入故障处理管线 |
 
 **BowlContext：**
 
-| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
-| --- | --- | --- | --- | --- |
-| `Normalize()` | 无 | `BowlContext` | 应用默认值（`WorkModel` → `"Upgrade"`，`TimeoutMs` → `30000`，`DumpType` → `Full`） | 返回新实例，不修改原实例 |
+| 方法名 | 入参明细 | 使用场景 | 注意事项 |
+| --- | --- | --- | --- |
+| `Normalize()` | 无 | 应用默认值（`WorkModel` → `"Upgrade"`，`TimeoutMs` → `30000`，`DumpType` → `Full`） | 返回新实例，不修改原实例 |
 
 ### 3.3 回调事件
 

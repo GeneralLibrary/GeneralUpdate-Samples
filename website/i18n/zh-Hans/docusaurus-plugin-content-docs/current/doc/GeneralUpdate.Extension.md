@@ -131,34 +131,34 @@ sidebar_position: 7
 
 **IExtensionHost：**
 
-| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
-| --- | --- | --- | --- | --- |
-| `QueryExtensionsAsync(ExtensionQueryDTO)` | `query` — 查询条件 | `Task<HttpResponseDTO<PagedResultDTO<ExtensionDTO>>>` | 搜索/浏览可用扩展 | 响应数据在 `Body.Items` 中 |
-| `DownloadExtensionAsync(string, string)` | `extensionId` — 扩展 ID；`savePath` — 保存路径 | `Task<bool>` | 单独下载扩展包 | 支持 HTTP Range 断点续传 |
-| `UpdateExtensionAsync(string)` | `extensionId` — 扩展 ID | `Task<bool>` | 一键更新单个扩展（推荐入口） | 串起查询→兼容性→依赖→下载→校验→安装全流程 |
-| `InstallExtensionAsync(string, bool)` | `extensionPath` — ZIP 包路径；`rollbackOnFailure` — 是否失败回滚 | `Task<bool>` | 手动安装本地扩展包 | 仅接受 `.zip` 格式 |
-| `UpdateExtensionsAsync(IEnumerable<string>, CancellationToken)` | `extensionIds` — 扩展 ID 列表；`ct` — 取消令牌 | `Task<Dictionary<string, bool>>` | 批量更新 | 按传入顺序逐个处理 |
-| `UninstallExtensionAsync(string, CancellationToken)` | `extensionId` — 扩展 ID；`ct` — 取消令牌 | `Task<bool>` | 卸载扩展 | 移除 catalog 记录并删除扩展目录 |
-| `ActivateExtensionAsync(string, CancellationToken)` | `extensionId`；`ct` | `Task` | 激活扩展 | 调用生命周期钩子 |
-| `DeactivateExtensionAsync(string, CancellationToken)` | `extensionId`；`ct` | `Task` | 停用扩展 | 调用生命周期钩子 |
-| `IsExtensionCompatible(ExtensionMetadata)` | `extension` — 扩展元数据 | `bool` | 检查扩展兼容性 | 基于 `HostVersion` 与 `MinHostVersion`/`MaxHostVersion` 比较 |
-| `SetAutoUpdate(string, bool)` | `extensionId` — 扩展 ID；`autoUpdate` — 是否自动更新 | `void` | 设置单扩展自动更新开关 | 仅内存状态，不自动后台轮询 |
-| `SetGlobalAutoUpdate(bool)` | `enabled` — 是否启用 | `void` | 设置全局自动更新默认值 | 仅内存状态 |
+| 方法名 | 入参明细 | 使用场景 | 注意事项 |
+| --- | --- | --- | --- |
+| `QueryExtensionsAsync(ExtensionQueryDTO)` | `query` — 查询条件 | 搜索/浏览可用扩展 | 响应数据在 `Body.Items` 中 |
+| `DownloadExtensionAsync(string, string)` | `extensionId` — 扩展 ID；`savePath` — 保存路径 | 单独下载扩展包 | 支持 HTTP Range 断点续传 |
+| `UpdateExtensionAsync(string)` | `extensionId` — 扩展 ID | 一键更新单个扩展（推荐入口） | 串起查询→兼容性→依赖→下载→校验→安装全流程 |
+| `InstallExtensionAsync(string, bool)` | `extensionPath` — ZIP 包路径；`rollbackOnFailure` — 是否失败回滚 | 手动安装本地扩展包 | 仅接受 `.zip` 格式 |
+| `UpdateExtensionsAsync(IEnumerable<string>, CancellationToken)` | `extensionIds` — 扩展 ID 列表；`ct` — 取消令牌 | 批量更新 | 按传入顺序逐个处理 |
+| `UninstallExtensionAsync(string, CancellationToken)` | `extensionId` — 扩展 ID；`ct` — 取消令牌 | 卸载扩展 | 移除 catalog 记录并删除扩展目录 |
+| `ActivateExtensionAsync(string, CancellationToken)` | `extensionId`；`ct` | 激活扩展 | 调用生命周期钩子 |
+| `DeactivateExtensionAsync(string, CancellationToken)` | `extensionId`；`ct` | 停用扩展 | 调用生命周期钩子 |
+| `IsExtensionCompatible(ExtensionMetadata)` | `extension` — 扩展元数据 | 检查扩展兼容性 | 基于 `HostVersion` 与 `MinHostVersion`/`MaxHostVersion` 比较 |
+| `SetAutoUpdate(string, bool)` | `extensionId` — 扩展 ID；`autoUpdate` — 是否自动更新 | 设置单扩展自动更新开关 | 仅内存状态，不自动后台轮询 |
+| `SetGlobalAutoUpdate(bool)` | `enabled` — 是否启用 | 设置全局自动更新默认值 | 仅内存状态 |
 
 **GeneralExtensionHost 附加方法：**
 
-| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
-| --- | --- | --- | --- | --- |
-| `IsAutoUpdateEnabled(string)` | `extensionId` — 扩展 ID | `bool` | 查询指定扩展的自动更新开关 | 单扩展设置优先于全局设置 |
+| 方法名 | 入参明细 | 使用场景 | 注意事项 |
+| --- | --- | --- | --- |
+| `IsAutoUpdateEnabled(string)` | `extensionId` — 扩展 ID | 查询指定扩展的自动更新开关 | 单扩展设置优先于全局设置 |
 
 **ExtensionHostBuilder：**
 
-| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
-| --- | --- | --- | --- | --- |
-| `ConfigureOptions(Action<ExtensionHostOptions>)` | `configure` — 配置委托 | `ExtensionHostBuilder` | 通过 Lambda 配置选项 | — |
-| `WithOptions(ExtensionHostOptions)` | `options` — 选项对象 | `ExtensionHostBuilder` | 直接设置选项 | — |
-| `ConfigureServices(Action<IServiceCollection>)` | `configure` — DI 注册委托 | `ExtensionHostBuilder` | 替换或添加服务 | 在 `Build()` 前调用 |
-| `Build()` | 无 | `IExtensionHost` | 构建宿主实例 | 自动注册未覆盖的默认服务 |
+| 方法名 | 入参明细 | 使用场景 | 注意事项 |
+| --- | --- | --- | --- |
+| `ConfigureOptions(Action<ExtensionHostOptions>)` | `configure` — 配置委托 | 通过 Lambda 配置选项 | — |
+| `WithOptions(ExtensionHostOptions)` | `options` — 选项对象 | 直接设置选项 | — |
+| `ConfigureServices(Action<IServiceCollection>)` | `configure` — DI 注册委托 | 替换或添加服务 | 在 `Build()` 前调用 |
+| `Build()` | 无 | 构建宿主实例 | 自动注册未覆盖的默认服务 |
 
 ### 3.3 回调事件
 

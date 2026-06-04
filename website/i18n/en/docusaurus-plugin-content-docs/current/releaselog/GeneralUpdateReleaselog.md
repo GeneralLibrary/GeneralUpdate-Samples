@@ -9,13 +9,13 @@ tags: [log]
 
 ### 📍2026-05-20 — v10.5.0-beta.2
 
-- **GeneralUpdate.Core**: 统一 `GeneralUpdateBootstrap` 入口，合并原 ClientCore 和 Core 能力；新增 `SetSource()` 轻配置入口与 `generalupdate.manifest.json` 极简接入；重构下载子系统为可替换的 5 层模型（Source/Policy/Executor/Pipeline/Orchestrator）；扩展点体系增至 10 个可替换接口
-- **GeneralUpdate.Bowl**: `BowlContext` 配置 API 稳定；优化 Windows/Linux/macOS ProcDump 集成
-- **GeneralUpdate.Differential**: 稳定 `IBinaryDiffer` 抽象；BSDIFF 4.0 + Streaming HDiff 双算法；BZip2 / Deflate 压缩
-- **GeneralUpdate.Drivelution**: 稳定跨平台驱动更新流水线；Windows pnputil / Linux insmod-dpkg-rpm / macOS kextload-installer
-- **GeneralUpdate.Extension**: 稳定 `IExtensionHost` 抽象；Zip Slip 安全解压；拓扑排序依赖解析
-- **文档**: 重构全部 5 个组件文档为统一模板；新增入门实战手册；新增软件外包服务页面
-- **Samples**: Hub 示例浏览器 9 个场景覆盖完整更新/OSS/静默/推送/差分/压缩/扩展/Bowl/驱动
+- **GeneralUpdate.Core**: Unified `GeneralUpdateBootstrap` entry point, merging original ClientCore and Core capabilities; added `SetSource()` lightweight config entry and `generalupdate.manifest.json` minimal setup; refactored download subsystem into replaceable 5-layer model (Source/Policy/Executor/Pipeline/Orchestrator); extension points increased to 10 replaceable interfaces
+- **GeneralUpdate.Bowl**: `BowlContext` configuration API stabilized; optimized Windows/Linux/macOS ProcDump integration
+- **GeneralUpdate.Differential**: Stabilized `IBinaryDiffer` abstraction; BSDIFF 4.0 + Streaming HDiff dual algorithm; BZip2 / Deflate compression
+- **GeneralUpdate.Drivelution**: Stabilized cross-platform driver update pipeline; Windows pnputil / Linux insmod-dpkg-rpm / macOS kextload-installer
+- **GeneralUpdate.Extension**: Stabilized `IExtensionHost` abstraction; Zip Slip safe extraction; topological sort dependency resolution
+- **Docs**: Refactored all 5 component docs with unified template; added Beginner cookbook; added software outsourcing service page
+- **Samples**: Hub sample browser with 9 scenarios covering full update/OSS/silent/push/differential/compression/extension/Bowl/driver
 
 ### 📍2026-04-10
 

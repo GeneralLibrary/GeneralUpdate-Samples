@@ -6,7 +6,8 @@ import Heading from '@theme/Heading';
 import styles from './index.module.css';
 
 function CosmicHero() {
-  const {siteConfig} = useDocusaurusContext();
+  const {siteConfig, i18n} = useDocusaurusContext();
+  const isEn = i18n.currentLocale === 'en';
   return (
     <section className={styles.cosmicHero}>
       <div className={styles.cosmicBackground}>
@@ -21,12 +22,14 @@ function CosmicHero() {
         <Heading as="h1" className={styles.cosmicTitle}>
           {siteConfig.title}
         </Heading>
-        <p className={styles.cosmicSubtitle} aria-label="跨平台自动更新框架 极简 高效 开源">
-          🚀 跨平台自动更新框架 · 极简 · 高效 · 开源
+        <p className={styles.cosmicSubtitle} aria-label={isEn ? 'Cross-platform auto-update framework · Minimal · Efficient · Open Source' : '跨平台自动更新框架 极简 高效 开源'}>
+          {isEn
+            ? '🚀 Cross-platform Auto-Update Framework · Minimal · Efficient · Open Source'
+            : '🚀 跨平台自动更新框架 · 极简 · 高效 · 开源'}
         </p>
         <div className={styles.actionButtons}>
-          <Link className={styles.primaryBtn} to="/docs/doc/GeneralSpacestation">
-            <span className={styles.btnIcon}>▶</span> 开始探索
+          <Link className={styles.primaryBtn} to="/docs/quickstart/Beginner cookbook">
+            <span className={styles.btnIcon}>▶</span> {isEn ? 'Get Started' : '开始探索'}
           </Link>
           <a className={styles.secondaryBtn} href="https://github.com/GeneralLibrary" target="_blank" rel="noopener noreferrer">
             <span className={styles.btnIcon}>★</span> GitHub
@@ -49,12 +52,14 @@ function FeatureCard({ icon, title, description, link }) {
 }
 
 function Features() {
+  const {i18n} = useDocusaurusContext();
+  const isEn = i18n.currentLocale === 'en';
   return (
     <section className={styles.featuresSection}>
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <Heading as="h2" className={styles.sectionTitle}>
-            核心组件
+            {isEn ? 'Core Components' : '核心组件'}
           </Heading>
           <div className={styles.titleUnderline}></div>
         </div>
@@ -62,20 +67,20 @@ function Features() {
           <FeatureCard
             icon="🚀"
             title="GeneralUpdate"
-            description="轻量级跨平台自动更新客户端"
+            description={isEn ? 'Lightweight cross-platform auto-update client' : '轻量级跨平台自动更新客户端'}
             link="/docs/doc/GeneralSpacestation"
           />
           <FeatureCard
             icon="🛠️"
             title="Update Tools"
-            description="自动化补丁包生成与发布工具"
+            description={isEn ? 'Automated patch generation and publishing tools' : '自动化补丁包生成与发布工具'}
             link="/docs/doc/GeneralSpacestation"
           />
           <FeatureCard
             icon="💡"
             title="Quick Start"
-            description="快速上手示例与最佳实践"
-            link="/docs/doc/GeneralSpacestation"
+            description={isEn ? 'Quick start examples and best practices' : '快速上手示例与最佳实践'}
+            link="/docs/quickstart/Beginner cookbook"
           />
         </div>
       </div>
@@ -84,6 +89,8 @@ function Features() {
 }
 
 function TechStack() {
+  const {i18n} = useDocusaurusContext();
+  const isEn = i18n.currentLocale === 'en';
   const techs = [
     { name: '.NET', color: '#512bd4' },
     { name: 'WPF', color: '#0078d4' },
@@ -96,7 +103,7 @@ function TechStack() {
     <section className={styles.techSection}>
       <div className={styles.container}>
         <Heading as="h3" className={styles.techTitle}>
-          支持平台
+          {isEn ? 'Supported Platforms' : '支持平台'}
         </Heading>
         <div className={styles.techGrid}>
           {techs.map((tech, idx) => (
@@ -112,11 +119,12 @@ function TechStack() {
 }
 
 export default function Home() {
-  const {siteConfig} = useDocusaurusContext();
+  const {siteConfig, i18n} = useDocusaurusContext();
+  const isEn = i18n.currentLocale === 'en';
   return (
     <Layout
-      title={`${siteConfig.title} - 跨平台自动更新框架`}
-      description="GeneralUpdate - 轻量级、跨平台、易用的 .NET 自动更新框架">
+      title={isEn ? `${siteConfig.title} - Cross-platform Auto-Update Framework` : `${siteConfig.title} - 跨平台自动更新框架`}
+      description={isEn ? 'GeneralUpdate - A lightweight, cross-platform, easy-to-use .NET auto-update framework' : 'GeneralUpdate - 轻量级、跨平台、易用的 .NET 自动更新框架'}>
       <CosmicHero />
       <Features />
       <TechStack />
