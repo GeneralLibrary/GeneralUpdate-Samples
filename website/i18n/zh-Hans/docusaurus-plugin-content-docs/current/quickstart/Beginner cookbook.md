@@ -3,17 +3,17 @@ sidebar_position: 3
 title: 入门实战手册
 ---
 
-import ReactPlayer from 'react-player'
-
 # GeneralUpdate 入门实战手册
 
 这篇手册面向第一次接触 GeneralUpdate 的开发者。目标不是一次讲完所有 API，而是让你从零开始，写完 Client → 写完 Upgrade → 用 Tools 生成配置 → 启动 Server → 一条命令跑通完整的"发现更新 → 下载 → 应用 → 回到新版本"闭环。
 
-<ReactPlayer
-  url='https://www.bilibili.com/video/BV12P9dBiEEh'
-  controls
-  width='100%'
-  style={{ borderRadius: '8px' }}
+<iframe
+  src="//player.bilibili.com/player.html?bvid=BV12P9dBiEEh&page=1"
+  width="100%"
+  height="480"
+  style={{ borderRadius: '8px', border: 'none' }}
+  allowFullScreen
+  scrolling="no"
 />
 
 ## 更新流程总览

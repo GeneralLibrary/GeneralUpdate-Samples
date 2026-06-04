@@ -3,17 +3,17 @@ sidebar_position: 3
 title: Beginner cookbook
 ---
 
-import ReactPlayer from 'react-player'
-
 # GeneralUpdate beginner cookbook
 
 This cookbook is for first-time GeneralUpdate users. The goal is not to explain every API at once, but to take you from zero to a complete loop: write Client → write Upgrade → generate config with Tools → start Server → one command to verify the full "discover → download → apply → return to new version" flow.
 
-<ReactPlayer
-  url='https://www.bilibili.com/video/BV12P9dBiEEh'
-  controls
-  width='100%'
-  style={{ borderRadius: '8px' }}
+<iframe
+  src="//player.bilibili.com/player.html?bvid=BV12P9dBiEEh&page=1"
+  width="100%"
+  height="480"
+  style={{ borderRadius: '8px', border: 'none' }}
+  allowFullScreen
+  scrolling="no"
 />
 
 ## Update flow overview
