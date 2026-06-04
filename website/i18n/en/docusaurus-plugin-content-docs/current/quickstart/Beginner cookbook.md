@@ -3,257 +3,380 @@ sidebar_position: 3
 title: Beginner cookbook
 ---
 
+import ReactPlayer from 'react-player'
+
 # GeneralUpdate beginner cookbook
 
-This cookbook is for first-time GeneralUpdate users. The goal is not to explain every API at once, but to help you complete one full loop: discover an update, download a package, start the upgrade, apply the patch, and return to the new version. After that, each component's responsibility becomes much easier to understand.
+This cookbook is for first-time GeneralUpdate users. The goal is not to explain every API at once, but to take you from zero to a complete loop: write Client → write Upgrade → generate config with Tools → start Server → one command to verify the full "discover → download → apply → return to new version" flow.
 
-## Roles used in the flow
+<ReactPlayer
+  url='https://www.bilibili.com/video/BV12P9dBiEEh'
+  controls
+  width='100%'
+  style={{ borderRadius: '8px' }}
+/>
 
-| Role | Sample location | Responsibility | Deep dive |
-| --- | --- | --- | --- |
-| Hub | `src\Hub` | Interactive sample browser; run update scenarios via menu | [GeneralUpdate.Core](../doc/GeneralUpdate.Core) |
-| Server | `src\Server` | Returns version metadata, accepts reports, and serves package downloads | [GeneralUpdate.Core](../doc/GeneralUpdate.Core) |
-| Packet | `src\Server\wwwroot\packages` | Downloadable `.zip` packages and `versions.json` metadata | [GeneralUpdate.Tools](./GeneralUpdate.PacketTool) |
-| Tools | GeneralUpdate.Tools repository | Generates patch packages, hashes, OSS manifests, and simulation reports | [GeneralUpdate.Tools](./GeneralUpdate.PacketTool) |
-| Bowl | Integrated in Hub Samples | Monitors process failures and exports failure data | [GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl) |
-| Differential | Hub Samples + Core default integration | Generates old/new binary differences and applies them during updates | [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential) |
+## Update flow overview
 
-## Step 1: Prepare the repository and runtime
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                  GeneralUpdate Complete Update Flow                  │
+└──────────────────────────────────────────────────────────────────────┘
 
-Clone the Samples repository and confirm that `dotnet` works:
-
-```powershell
-git clone https://github.com/GeneralLibrary/GeneralUpdate-Samples.git
-cd GeneralUpdate-Samples
-dotnet --info
+  ① Version Check         ② Download             ③ Apply
+  ┌──────────┐           ┌──────────┐           ┌──────────┐
+  │  Client  │──POST──→  │  Server  │           │ Upgrade  │
+  │ (Main App)│←─JSON───  │(Update   │           │ (Upgrade │
+  │          │           │ Service) │           │  Process) │
+  └────┬─────┘           └────┬─────┘           └────┬─────┘
+       │                      │                      │
+       │  POST /Verification  │                      │
+       │  {version, platform} │                      │
+       │ ────────────────────→│                      │
+       │                      │                      │
+       │  [{version, url,     │                      │
+       │    hash, size}]      │                      │
+       │ ←────────────────────│                      │
+       │                      │                      │
+       │  GET /File/Download  │                      │
+       │ ────────────────────→│                      │
+       │                      │                      │
+       │  .zip packages       │                      │
+       │ ←────────────────────│                      │
+       │                      │                      │
+       │  [Write IPC contract]│                      │
+       │  [Launch Upgrade.exe]│                      │
+       │ ────────────────────────────────────────────→│
+       │                      │                      │
+       │                      │    [Read IPC data]   │
+       │                      │    [Verify Hash]     │
+       │                      │    [Extract → Apply] │
+       │                      │    [Launch new Client]│
+       │                      │                      │
+       │ ←────────────────────────────────────────────│
+       │  [New version running ✓]                    │
+       │                      │                      │
 ```
 
-The Hub targets `net10.0`, so you need the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0).
+| Role | Location in project | Responsibility |
+| --- | --- | --- |
+| Client | `MyApp.exe` (your main app) | Check updates → download packages → launch Upgrade |
+| Upgrade | `MyApp.Upgrade.exe` (standalone upgrade process) | Verify hash → extract & overwrite → launch new Client |
+| Server | `GeneralUpdate-Samples/src/Server` | Return version info, accept reports, serve package downloads |
+| Tools | GeneralUpdate.Tools | Generate `generalupdate.manifest.json`, wire Client and Upgrade together |
 
-**Expected result**: `dotnet --info` prints the .NET 10 SDK, and the `src` directory contains `Hub`, `Server`, `ImDiskDriver`, `content_client`, `content_upgrade`, `gen_packages.ps1`, `Run.cmd`, `Run.ps1`, etc.
+---
 
-## Step 2: Run the built-in update sample
+## Phase 1: Environment setup
 
-### 2.1 First run — build local component DLLs
+### Prerequisites
 
-The `src\Hub\libs\` directory contains pre-built DLLs. If you modified the GeneralUpdate component source code, rebuild and copy the DLLs:
+| Item | Requirement | Verify |
+| --- | --- | --- |
+| .NET SDK | 8.0+ (10.0 recommended) | `dotnet --version` |
+| Git | Any version | `git --version` |
 
-```powershell
-cd src
-.\Run.ps1 -BuildLibs
+### Create projects
+
+Open a terminal and create two console projects:
+
+```bash
+dotnet new console -n MyApp
+dotnet new console -n MyApp.Upgrade
+
+cd MyApp
+dotnet add package GeneralUpdate.Core
+
+cd ../MyApp.Upgrade
+dotnet add package GeneralUpdate.Core
 ```
 
-`-BuildLibs` auto-detects the sibling `..\GeneralUpdate\src\c#` source tree, builds `GeneralUpdate.Differential`, `GeneralUpdate.Core`, `GeneralUpdate.Bowl`, `GeneralUpdate.Extension`, and `GeneralUpdate.Drivelution` in order, and copies the DLLs into `src\Hub\libs\`.
+**Expected result**: Both projects have `GeneralUpdate.Core` in their NuGet references.
 
-To try the samples quickly without building from source (using the pre-built DLLs), just run:
+---
 
-```powershell
-cd src
-.\Run.cmd
-```
+## Phase 2: Integrate Client code
 
-Or with PowerShell:
-
-```powershell
-cd src
-.\Run.ps1
-```
-
-### 2.2 Sample menu
-
-After startup you will see the interactive menu:
-
-```text
-  ╔══════════════════════════════════════╗
-  ║    GeneralUpdate Sample Browser      ║
-  ╚══════════════════════════════════════╝
-
-  Config: http://localhost:5000
-
-  ═══════════════════════════════════
-    1. Complete Update — discover → download → apply
-    2. OSS Update
-    3. Silent Update
-    4. Push Update
-    5. Differential Algorithm
-    6. Compression Demo
-    7. Extension Management
-    8. Bowl Process Guardian
-    9. ImDisk Quick Install
-  ───────────────────────────────────
-    0. Exit
-  ═══════════════════════════════════
-```
-
-### 2.3 Run the first sample
-
-Enter `1` and press Enter to select "Complete Update". Hub will automatically:
-
-1. **Start Server** (if not already running) — prints `[Server] Starting... ✓`
-2. Create simulated v1.0.0.0 app files in the `mock_app` directory
-3. Request updates from `http://localhost:5000/Upgrade/Verification` via `GeneralUpdateBootstrap`
-4. Download the new version package and apply the update
-5. Print the updated file list
-
-**Expected result**:
-
-- Server console shows `GeneralUpdate Sample Upgrade Server` listening on `http://localhost:5000/`
-- Hub console shows version discovery, download progress, and update completion
-- Files in `mock_app` are updated from v1.0.0.0 to v2.0.0.0
-
-## Step 3: Understand what Server returns
-
-Hub uses `appsettings.json` for shared configuration, and each Sample passes these values to `GeneralUpdateBootstrap`. See [src\Hub\appsettings.json](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Hub/appsettings.json):
-
-```json
-{
-  "ServerUrl": "http://localhost:5000",
-  "AppSecretKey": "dfeb5833-975e-4afb-88f1-6278ee9aeff6",
-  "ProductId": "2d974e2a-31e6-4887-9bb1-b4689e98c77a",
-  "ClientVersion": "1.0.0.0",
-  "UpgradeClientVersion": "1.0.0.0",
-  "MainAppName": "Hub.exe",
-  "UpgradeAppName": "Hub.exe"
-}
-```
-
-The "Complete Update" sample in [CompleteUpdateSample.cs](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Hub/Samples/CompleteUpdateSample.cs) uses `UpdateRequest` to configure the update:
+> **Paste the following into `MyApp/Program.cs`. Client is responsible for: checking for updates → downloading packages → launching Upgrade.**
 
 ```csharp
+using GeneralUpdate.Core;
+using GeneralUpdate.Core.Configuration;
+using GeneralUpdate.Core.Event;
+
+// ================================================================
+// Client — main app entry point, handles update detection & download
+// ================================================================
+
+// Only the 3 secrets need to be in code. Identity fields (MainAppName,
+// ClientVersion, UpdateAppName, etc.) are auto-discovered by the framework
+// from generalupdate.manifest.json — no manual code required.
 var request = new UpdateRequest
 {
-    UpdateUrl = $"{config.ServerUrl}/Upgrade/Verification",
-    ReportUrl = $"{config.ServerUrl}/Upgrade/Report",
-    AppSecretKey = config.AppSecretKey,
-    InstallPath = mockAppDir,
-    ClientVersion = config.ClientVersion,
-    MainAppName = config.MainAppName,
-    UpdateAppName = config.UpgradeAppName,
-    ProductId = config.ProductId
+    UpdateUrl    = "http://localhost:5000/Upgrade/Verification",
+    ReportUrl    = "http://localhost:5000/Upgrade/Report",
+    AppSecretKey = "dfeb5833-975e-4afb-88f1-6278ee9aeff6",
 };
-```
 
-Server's `POST /Upgrade/Verification` reads client version, AppType, Platform, ProductId, and UpgradeMode, then filters higher versions from `versions.json`. Each returned item contains `RecordId`, `Name`, `Hash`, `Url`, `Version`, `AppType`, `Platform`, `Format`, `Size`, and other fields.
-
-**Expected result**: when Client is at `1.0.0.0` and `versions.json` contains `2.0.0.0`, Client receives available updates.
-
-## Step 4: Understand the GeneralUpdateBootstrap flow
-
-Each Sample is built around a `GeneralUpdateBootstrap` instance. Here's the "Complete Update" example:
-
-```csharp
-var bootstrap = new GeneralUpdateBootstrap()
+await new GeneralUpdateBootstrap()
     .SetConfig(request)
     .SetOption(Option.AppType, AppType.Client)
-    .AddListenerUpdateInfo((_, e) => { /* handle version info */ })
-    .AddListenerMultiDownloadStatistics((_, e) => { /* handle download progress */ })
-    .AddListenerException((_, e) => { /* handle exceptions */ });
-
-await bootstrap.LaunchAsync();
+    .AddListenerUpdateInfo((_, e) =>
+    {
+        Console.WriteLine($"Found {e.Info?.Body?.Count ?? 0} available update(s)");
+        if (e.Info?.Body != null)
+        {
+            foreach (var v in e.Info.Body)
+                Console.WriteLine($"  v{v.Version} — {v.Name} ({v.Size} bytes)");
+        }
+    })
+    .AddListenerMultiDownloadStatistics((_, e) =>
+    {
+        Console.WriteLine($"\rDownload: {e.ProgressPercentage:F0}% {e.Speed}");
+    })
+    .AddListenerMultiDownloadCompleted((_, e) =>
+    {
+        Console.WriteLine();
+        Console.WriteLine($"Download {(e.IsCompleted ? "✓ done" : "✗ failed")}");
+    })
+    .AddListenerException((_, e) =>
+    {
+        Console.WriteLine($"Error: {e.Exception.Message}");
+    })
+    .LaunchAsync();
 ```
 
-`GeneralUpdate.Core` now unifies the former `GeneralUpdate.ClientCore` and `GeneralUpdate.Common`. A single NuGet reference gives you all capabilities:
+### Why only 3 parameters?
 
-- **Client update management** (former ClientCore): version checks, package downloads, integrity validation, launching the upgrade process
-- **Upgrade execution engine** (former Core): standalone upgrade process, file replacement, differential patch application, driver installation
-- **Common infrastructure** (former Common): lifecycle tracing, download engine, serialization, and other low-level utilities
+`ClientStrategy` internally calls `AppMetadataDiscoverer.Discover()` during execution, which reads identity fields from `generalupdate.manifest.json` (generated by Tools in Phase 4) and fills in the `UpdateRequest` automatically:
 
-**Expected result**: after `LaunchAsync()` completes, the target directory files are updated to the new version.
+| Field | Who handles it | Notes |
+| --- | --- | --- |
+| `UpdateUrl` | **You (code)** | Server verification endpoint |
+| `ReportUrl` | **You (code)** | Server report endpoint |
+| `AppSecretKey` | **You (code)** | Application secret |
+| `MainAppName` | **Framework auto-discover** | Read from manifest |
+| `ClientVersion` | **Framework auto-discover** | Read from manifest |
+| `UpdateAppName` | **Framework auto-discover** | Read from manifest |
+| `ProductId` | **Framework auto-discover** | Read from manifest |
+| `UpdatePath` | **Framework auto-discover** | Read from manifest |
+| `InstallPath` | **Default** | `AppDomain.CurrentDomain.BaseDirectory` |
 
-## Step 5: Generate your own patch package with Tools
+If you prefer an even shorter form, use `SetSource()`:
 
-When you have two release directories, use the Patch page in GeneralUpdate.Tools:
-
-| Tools field | What to select |
-| --- | --- |
-| Old Directory | The version users currently have, such as `publish\v1.0.0` |
-| New Directory | The version you want to release, such as `publish\v2.0.0` |
-| Package Name | Include versions, such as `client_1.0.0_to_2.0.0` |
-| Version | Target version, such as `2.0.0` |
-| Output Directory | Directory where the patch ZIP should be saved |
-
-The Samples repo also provides `gen_packages.ps1` to quickly generate test packages:
-
-```powershell
-cd src
-.\gen_packages.ps1
+```csharp
+await new GeneralUpdateBootstrap()
+    .SetSource("http://localhost:5000/Upgrade/Verification",
+               "dfeb5833-975e-4afb-88f1-6278ee9aeff6",
+               "http://localhost:5000/Upgrade/Report")
+    .SetOption(Option.AppType, AppType.Client)
+    // ... listeners
+    .LaunchAsync();
 ```
 
-This script uses content from `src\content_client\v1.0.0.0\` and `src\content_client\v2.0.0.0\` to generate test patch packages and outputs them to `src\Server\wwwroot\packages\`.
+Client does NOT apply updates directly — after download: writes IPC contract → launches Upgrade → exits itself.
 
-Tools calls the Core differential pipeline: changed files become `.patch` files, new files are copied directly, deleted files are recorded in `generalupdate.delete.json`, and the result is compressed into a ZIP.
+---
 
-**Expected result**: update ZIP files appear in the output directory, and Server's `versions.json` is updated.
+## Phase 3: Integrate Upgrade code
 
-## Step 6: Publish the package to Server
+> **Paste the following into `MyApp.Upgrade/Program.cs`. Upgrade is simpler than Client — no `SetConfig()` needed, all parameters are passed via encrypted IPC from Client.**
 
-Samples Server reads packages from:
+```csharp
+using GeneralUpdate.Core;
+using GeneralUpdate.Core.Configuration;
+using GeneralUpdate.Core.Event;
 
-```text
-src\Server\wwwroot\packages\
+// ================================================================
+// Upgrade — standalone upgrade process (MyApp.Upgrade.exe)
+// No SetConfig() needed — params come via encrypted IPC from Client
+// ================================================================
+
+await new GeneralUpdateBootstrap()
+    .SetOption(Option.AppType, AppType.Upgrade)
+    .AddListenerMultiDownloadStatistics((_, e) =>
+    {
+        Console.WriteLine($"\rApplying: {e.ProgressPercentage:F0}%");
+    })
+    .AddListenerMultiDownloadCompleted((_, e) =>
+    {
+        Console.WriteLine();
+        Console.WriteLine($"Patch {(e.IsCompleted ? "✓ done" : "✗ failed")}");
+    })
+    .AddListenerException((_, e) =>
+    {
+        Console.WriteLine($"Error: {e.Exception.Message}");
+    })
+    .LaunchAsync();
 ```
 
-Put the patch ZIP there and make sure `versions.json` includes the corresponding record. A version record needs enough data for Server to match and serve it:
+### Client vs Upgrade
+
+| | Client | Upgrade |
+| --- | --- | --- |
+| `AppType` | `AppType.Client` | `AppType.Upgrade` |
+| `SetConfig()` | ✅ Required — sets server URL, version, etc. | ❌ Not needed — received via IPC from Client |
+| Responsibility | Check version → download → launch Upgrade | Verify hash → extract & overwrite → launch new Client |
+| Started by | User | Client process |
+
+---
+
+## Phase 4: Generate project structure with Tools
+
+> **With Client and Upgrade code written, use Tools' Config tab to `dotnet publish` both projects and generate `generalupdate.manifest.json`.**
+
+### Steps
+
+Open **GeneralUpdate.Tools** → switch to the **Config** tab:
+
+1. **Client .csproj Path**: Click Browse and select `MyApp.csproj`
+2. **Upgrade .csproj Path**: Click Browse and select `MyApp.Upgrade.csproj`
+3. Click **Analyze**: Tools parses both .csproj files and auto-fills:
+   - `MainAppName`: from Client project's AssemblyName (e.g. `MyApp.exe`)
+   - `UpdateAppName`: from Upgrade project's AssemblyName (e.g. `MyApp.Upgrade.exe`)
+   - `ClientVersion` / `UpgradeClientVersion`: defaults to `1.0.0`, adjust as needed
+4. Review the auto-filled fields; confirm `UpdatePath` is `update/` (the default)
+5. Click **Generate Sample**: Tools executes:
+   - `dotnet publish` Client → output root
+   - `dotnet publish` Upgrade → `update/` subdirectory
+   - Writes `generalupdate.manifest.json` to output root
+
+### Published directory structure
+
+Tools can also `dotnet publish` both projects and assemble the output for you (via the Config tab's Sample Publisher). The final structure:
+
+```
+publish/
+├── MyApp.exe                   # Client publish output (Phase 2)
+├── MyApp.dll
+├── GeneralUpdate.Core.dll
+├── generalupdate.manifest.json # Generated by Tools, placed at root, auto-discovered
+└── update/                     # Upgrade publish output (Phase 3), subdirectory name from manifest's updatePath
+    ├── MyApp.Upgrade.exe
+    └── MyApp.Upgrade.dll
+```
+
+> **Note**: `MyApp.Upgrade.exe` lives in the `update/` subdirectory — not at the root. The framework locates and launches it based on the manifest's `updatePath` field (default `"update/"`).
+
+### `generalupdate.manifest.json` example
 
 ```json
 {
-  "PacketName": "client_1.0.0_to_2.0.0",
-  "Hash": "sha256-of-the-patch-zip",
-  "Version": "2.0.0.0",
-  "Url": "http://localhost:5000/File/Download/sha256-of-the-patch-zip",
-  "AppType": 1,
-  "Platform": 1,
-  "ProductId": "2d974e2a-31e6-4887-9bb1-b4689e98c77a",
-  "Format": ".zip",
-  "IsCrossVersion": true,
-  "FromVersion": "1.0.0.0",
-  "ToVersion": "2.0.0.0"
+  "mainAppName": "MyApp.exe",
+  "clientVersion": "1.0.0.0",
+  "updateAppName": "MyApp.Upgrade.exe",
+  "upgradeClientVersion": "1.0.0.0",
+  "appType": "Client",
+  "productId": "2d974e2a-31e6-4887-9bb1-b4689e98c77a",
+  "updatePath": "update/"
 }
 ```
 
-You can calculate the hash with the OSS page in Tools or in CI. The Server download endpoint is `GET /File/Download/{hash}` and supports HTTP Range requests for resume.
+> **Note: manifest stores identity/structure only — never secrets.** `UpdateUrl`, `ReportUrl`, and `AppSecretKey` are always set in code, via Phase 2's `request.XXX = "..."` assignments.
 
-**Expected result**: after restarting Hub and running a sample, the Server startup banner lists the loaded versions; the sample can discover your new version record.
+---
 
-## Step 7: Explore the other built-in samples
+## Phase 5: Start the Server
 
-Hub provides 9 built-in samples covering GeneralUpdate's main use cases:
+> **Client / Upgrade / manifest are all ready — start the Server for end-to-end verification.**
 
-| # | Sample | Description |
+```bash
+git clone https://github.com/GeneralLibrary/GeneralUpdate-Samples.git
+cd GeneralUpdate-Samples/src/Server
+dotnet run
+```
+
+Expected output:
+
+```
+╔══════════════════════════════════════════════════╗
+║     GeneralUpdate Sample Upgrade Server          ║
+╠══════════════════════════════════════════════════╣
+║  Verification: http://localhost:5000/Upgrade/Verification
+║  Report:       http://localhost:5000/Upgrade/Report
+║  Download:     http://localhost:5000/File/Download/{hash}
+║  Packages:     N version(s) loaded
+╚══════════════════════════════════════════════════╝
+```
+
+### Server endpoints
+
+| Endpoint | Method | Purpose |
 | --- | --- | --- |
-| 1 | Complete Update | Standard update loop: discover → download → apply |
-| 2 | OSS Update | Object Storage-based update mode |
-| 3 | Silent Update | Background download, no user disruption |
-| 4 | Push Update | SignalR-based real-time push update |
-| 5 | Differential Algorithm | Binary diff Clean/Dirty demo |
-| 6 | Compression Demo | Compression middleware demo |
-| 7 | Extension Management | Plugin/extension query, download, install |
-| 8 | Bowl Process Guardian | Process crash monitoring and Dump collection |
-| 9 | ImDisk Quick Install | Driver-level quick install demo |
+| `/Upgrade/Verification` | POST | Client reports current version → Server returns available updates |
+| `/Upgrade/Report` | POST | Client reports update result (success / failure) |
+| `/File/Download/{hash}` | GET | Download package (supports HTTP Range for resume) |
 
-Try running each sample and observe the results in the `mock_app` directory.
+The Server reads package metadata from `wwwroot/packages/versions.json` and serves them.
 
-**Expected result**: each sample prints the key steps and results for its scenario.
+**Quick check**:
+
+```bash
+curl -X POST http://localhost:5000/Upgrade/Verification \
+  -H "Content-Type: application/json" \
+  -d '{"Version":"1.0.0.0"}'
+```
+
+Should return a JSON response with available update versions.
+
+---
+
+## Phase 6: End-to-end verification
+
+```
+# Terminal 1 — ensure Server is running
+cd GeneralUpdate-Samples/src/Server && dotnet run
+
+# Terminal 2 — run Client
+cd MyApp && dotnet run
+```
+
+### Expected complete output
+
+```
+Client:
+  [UpdateInfo] Found 1 available update(s)
+    v2.0.0.0 — client_1.0.0_to_2.0.0 (xxxxx bytes)
+  Download: 45% 1.2MB/s
+  Download: 100%
+  Download ✓ done
+  → Launching MyApp.Upgrade.exe...
+
+Upgrade:
+  Applying: 50%
+  Applying: 100%
+  Patch ✓ done
+  → Launching MyApp.exe (new version)...
+
+Client (new version):
+  MyApp v2.0.0.0 ✓
+```
+
+### Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| Client can't reach Server | `curl http://localhost:5000/Upgrade/Verification` to confirm Server is running |
+| "Already up to date" response | Make sure `versions.json` has a version higher than `ClientVersion` |
+| Download finishes but Upgrade doesn't start | Is `MyApp.Upgrade.exe` in the `update/` subdirectory? Is manifest's `updatePath` correct? |
+| Upgrade crashes | Check directory write permissions, antivirus interference |
+| Port already in use | Change Server args to `--Urls http://0.0.0.0:5001` and update Client's `UpdateUrl` |
+
+---
 
 ## Next steps
 
 After this flow works, read these pages in order:
 
-1. [GeneralUpdate.Core](../doc/GeneralUpdate.Core): update strategies, event notifications, silent updates, and manifest-based minimal configuration.
-2. [GeneralUpdate.Tools](./GeneralUpdate.PacketTool): patch packages, Hash, OSS Config, and Simulation.
-3. [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential): differential algorithms, parallel processing, and Clean/Dirty.
-4. [GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl): crash monitoring, backup, and failure recovery.
-5. [GeneralUpdate.Tools](./GeneralUpdate.PacketTool): patch packages, Hash, OSS Config, and Simulation.
+1. [GeneralUpdate.Core](../doc/GeneralUpdate.Core): update strategies, event notifications, silent updates, and manifest-based minimal configuration
+2. [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential): differential algorithms, parallel processing, and Clean/Dirty
+3. [GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl): crash monitoring, backup, and failure recovery
+4. [GeneralUpdate.Tools](./GeneralUpdate.PacketTool): complete guides for patches, hashes, OSS config, and simulation
 
-## Sample UI
+## Sample repositories
 
-Sample application interface preview:
-
-![](imgs\sampleclient.png)
-
-![](imgs\sampleupgrade.png)
-
-| Repository |
-| --- |
-| [ClientSample.sln](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Client/ClientSample.sln) |
-| [UpgradeSample.sln](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Upgrade/UpgradeSample.sln) |
+| Repository | URL |
+| --- | --- |
+| Samples (Server + Hub) | [GeneralUpdate-Samples](https://github.com/GeneralLibrary/GeneralUpdate-Samples) |
+| Tools (GUI config tool) | [GeneralUpdate.Tools](https://github.com/Juster/GeneralUpdate.Tools) |
+| Core (NuGet package source) | [GeneralUpdate](https://github.com/GeneralLibrary/GeneralUpdate) |
