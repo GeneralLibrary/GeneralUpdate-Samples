@@ -6,7 +6,11 @@ sidebar_position: 11
 
 ## 这是什么
 
-GeneralUpdate.Tools 是一个基于 Avalonia 12 开发的跨平台桌面工具（Windows / Linux / macOS），用于在软件发布流程中生成和管理补丁包、扩展包、版本清单以及执行本地更新仿真。它不替代你的 CI/CD 系统，而是把“打包、校验、验证”这些重复劳动收敛到一个可视化工具中。
+GeneralUpdate.Tools 是一个基于 Avalonia 12 开发的跨平台桌面工具（Windows / Linux / macOS），用于在软件发布流程中生成和管理补丁包、扩展包、版本清单以及执行本地更新仿真。它不替代你的 CI/CD 系统，而是把”打包、校验、验证”这些重复劳动收敛到一个可视化工具中。
+
+:::info Tools 与 CI/CD 的关系
+Tools 是**桌面 GUI 工具**，适合开发者在本地交互式地生成补丁、验证更新。如果你需要在 CI/CD 流水线中自动化补丁生成，可以直接调用 `GeneralUpdate.Core.Pipeline.DiffPipeline.CleanAsync()` —— GUI 和脚本走的是同一条代码路径。
+:::
 
 仓库地址：[https://github.com/GeneralLibrary/GeneralUpdate.Tools](https://github.com/GeneralLibrary/GeneralUpdate.Tools)
 
@@ -67,6 +71,11 @@ dotnet run --project GeneralUpdate.Tools.csproj
 6. 删除临时目录，ZIP 保留在 Output Directory。
 
 > **关于加密文件**：加壳工具（Themida、VMProtect 等）、代码混淆或加密的二进制文件，因文件哈希在新旧版本间完全不同，差分算法对其无效。此类文件检测到后将直接以全量形式打包，而不会生成 `.patch` 差分。建议在发布前对原始文件进行去壳/解密处理，以获得最优的补丁体积。
+
+
+:::warning 加密/加壳文件无法差分
+如果你的应用使用了加壳工具（Themida、VMProtect）、代码混淆器或加密二进制文件，**整个文件在新旧版本间会完全不同**，差分算法完全失效，补丁包体积等同于全量文件。如需差分更新，请确保原始发布文件未被加壳或加密。
+:::
 
 底层调用的是 `GeneralUpdate.Core.Pipeline.DiffPipeline.CleanAsync(oldDir, newDir, patchDir)`，和你的 CI 脚本走的是同一条代码路径。
 

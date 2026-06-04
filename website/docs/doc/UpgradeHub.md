@@ -8,6 +8,10 @@ sidebar_position: 7
 
 **UpgradeHubService** 是基于 SignalR 的实时版本推送服务，集成在 `GeneralUpdate.Core` 中。服务端通过 `UpgradeHub` 向已连接的客户端主动推送版本更新通知，客户端通过 `UpgradeHubService` 订阅并接收消息，支持点对点（一对一）和广播（一对多）两种推送模式。
 
+:::tip UpgradeHub 与 Core 的关系
+`UpgradeHubService` 是 `GeneralUpdate.Core` 的**可选功能**，不依赖它也能完成常规更新。它的价值在于：服务端有紧急版本时可以**主动推送**通知给在线客户端，客户端无需等待下一次轮询就能立即触发更新——特别适合紧急 bug 修复和灰度发布场景。
+:::
+
 **命名空间：** `GeneralUpdate.Core.Hubs`  
 **程序集：** `GeneralUpdate.Core.dll`
 

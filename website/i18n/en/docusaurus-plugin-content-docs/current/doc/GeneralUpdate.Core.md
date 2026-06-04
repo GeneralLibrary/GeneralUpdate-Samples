@@ -38,6 +38,10 @@ sidebar_position: 5
 - Client apps distributing update packages via CDN / OSS
 - Large clients needing differential updates to reduce bandwidth
 
+:::info Core's Role in the Ecosystem
+GeneralUpdate.Core is the **core engine** of the ecosystem. It doesn't generate patches (that's Tools/Differential's job) and doesn't recover from crashes (that's Bowl's job) — it **orchestrates the entire update flow**: from version checking, downloading, and verification, to launching the Upgrade process for file replacement.
+:::
+
 ### 1.2 Environment & Dependencies
 
 | Item | Description |

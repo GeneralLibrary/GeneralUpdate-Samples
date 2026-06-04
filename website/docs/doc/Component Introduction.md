@@ -14,6 +14,9 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 | -------------------- | ------------------- | --------------------- |
 | ![](imgs\github.png) | ![](imgs\gitee.png) | ![](imgs\gitcode.jpg) |
 
+:::note 一句话理解
+把 Client（你的主程序）、Upgrade（升级进程）、Server（更新服务）和 Tools（打包工具）拆开，通过 manifest + IPC 加密契约串联成一个**全自动的更新闭环**。
+:::
 
 
 ## 2. What does GeneralUpdate offer?
@@ -108,6 +111,10 @@ Before starting to use GeneralUpdate, we need to understand some basic concepts 
 | Server              | Server Application                                           | Manages version update information, patch packages, and version verification. (In the Samples, only a simple example is provided and does not fulfill these functions; developers need to implement this themselves or purchase the GeneralSpacestation service). |
 | GeneralUpdate.Tools | Update Patch Creation Tool                                   | A packaging tool provided by this open-source project for generating update patch packages (.zip file format). |
 
+:::tip 更新闭环
+典型的更新流程是：**Client → Server（版本检查）→ 下载补丁包 → 写 IPC 加密契约 → 启动 Upgrade → Upgrade 校验 Hash → 解压覆盖 → 启动新版本 Client**。
+:::
+
 ##### Quick Start
 
 - Quick Start: https://www.justerzhu.cn/docs/quickstart/quikstart
@@ -122,6 +129,4 @@ GeneralUpdate follows [Semantic Versioning](https://semver.org/) core principles
 - Semantic Versioning: https://semver.org/
 - NuGet Versioning Guidelines: https://docs.microsoft.com/en-us/nuget/concepts/package-versioning 
 - Assembly Versioning Guidelines: https://docs.microsoft.com/en-us/dotnet/standard/assembly/versioning
-
-
 

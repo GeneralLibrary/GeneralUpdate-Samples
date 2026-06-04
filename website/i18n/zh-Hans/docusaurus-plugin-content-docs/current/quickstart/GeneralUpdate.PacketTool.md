@@ -6,7 +6,11 @@ sidebar_position: 11
 
 ## 这是什么
 
-GeneralUpdate.Tools 是一个基于 Avalonia 12 开发的跨平台桌面工具（Windows / Linux / macOS），用于在软件发布流程中生成和管理补丁包、扩展包、版本清单以及执行本地更新仿真。它不替代你的 CI/CD 系统，而是把“打包、校验、验证”这些重复劳动收敛到一个可视化工具中。
+GeneralUpdate.Tools 是一个基于 Avalonia 12 开发的跨平台桌面工具（Windows / Linux / macOS），用于在软件发布流程中生成和管理补丁包、扩展包、版本清单以及执行本地更新仿真。它不替代你的 CI/CD 系统，而是把”打包、校验、验证”这些重复劳动收敛到一个可视化工具中。
+
+:::info Tools 与 CI/CD 的关系
+Tools 是**桌面 GUI 工具**，适合开发者在本地交互式地生成补丁、验证更新。如果你需要在 CI/CD 流水线中自动化补丁生成，可以直接调用 `GeneralUpdate.Core.Pipeline.DiffPipeline.CleanAsync()` —— GUI 和脚本走的是同一条代码路径。
+:::
 
 仓库地址：[https://github.com/GeneralLibrary/GeneralUpdate.Tools](https://github.com/GeneralLibrary/GeneralUpdate.Tools)
 
