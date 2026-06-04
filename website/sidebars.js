@@ -37,7 +37,6 @@ const sidebars = {
         'doc/GeneralUpdate.Differential',
         'doc/GeneralUpdate.Drivelution',
         'doc/GeneralUpdate.Extension',
-        'doc/Android auto-update',
       ],
     },
 
