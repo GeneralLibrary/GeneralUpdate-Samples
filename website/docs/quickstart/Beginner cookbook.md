@@ -391,7 +391,6 @@ Client (新版本):
 > **提示**：如果在更新时遇到"权限不足"或 UAC 弹窗，请检查应用是否安装在不推荐的目录中。将应用迁移到用户目录通常可以解决此问题。
 
 ## 示例仓库
-
 | 仓库 | 地址 |
 | --- | --- |
 | Samples（Server + Hub） | [GeneralUpdate-Samples](https://github.com/GeneralLibrary/GeneralUpdate-Samples) |

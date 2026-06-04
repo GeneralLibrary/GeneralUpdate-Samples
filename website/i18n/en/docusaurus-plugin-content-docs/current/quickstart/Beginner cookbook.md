@@ -393,7 +393,6 @@ The update process requires read/write access to the application directory. To a
 > **Tip**: If you encounter "Access Denied" or UAC prompts during updates, check whether the application is installed in a non-recommended directory. Moving the application to a user directory usually resolves the issue.
 
 ## Sample repositories
-
 | Repository | URL |
 | --- | --- |
 | Samples (Server + Hub) | [GeneralUpdate-Samples](https://github.com/GeneralLibrary/GeneralUpdate-Samples) |
