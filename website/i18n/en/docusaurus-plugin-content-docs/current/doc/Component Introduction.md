@@ -31,7 +31,7 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 | Forced Update              | Yes            | Forces an update directly after opening the client.          |
 | Multi-Branch Update        | Yes            | Supports updating different content based on different branches of a product. |
 | Latest Version Push        | Yes            | Implemented based on Signal R to push the latest version.    |
-| Multi-Language             | To be verified | Can also be written as a console program to act as an update "script" for applications in other languages. |
+| Multi-Language             | Yes            | Cross-platform, language-agnostic; can serve as an update "script" for apps written in any language. GeneralUpdate.Tools UI supports Chinese/English toggle. |
 | Skip Update                | Yes            | Supports injecting a pop-up to let users decide whether to update this release; forced updates from the server side will override this. |
 | Mutual Upgrade             | Yes            | The main program can update the upgrade program, and vice versa. |
 | Blacklist                  | Yes            | Skips files and file extensions listed in the blacklist during the update process. |
@@ -40,6 +40,10 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 | Driver Update              | Supported      | Cross-platform driver auto-update implemented based on the GeneralUpdate.Drivelution component, supporting Windows and Linux platforms. Provides complete functions including driver validation, backup, rollback, signature verification, and permission management. |
 | Extension Management       | Supported      | VS Code-like extension system implemented based on the GeneralUpdate.Extension component, managing extension plugins such as Lua/Python. Supports extension directory management, remote query, download queue, version compatibility check, multi-platform support, dependency resolution, rollback mechanism, event notification, and other functions. |
 | Custom Method List         | Yes            | Injects a collection of custom methods that execute before the update starts. If any exception occurs while executing the custom method list, it will be notified through exception subscription. (Recommended to check the current software environment before updating) |
+| Multi-Protocol Auth        | Yes            | Supports HMAC-SHA256, Bearer Token, API Key, and HTTP Basic authentication schemes with custom extension. |
+| Silent Update              | Yes            | Background version polling, silent download, and upgrade triggered on process exit — fully transparent to the user. |
+| Concurrent Download        | Yes            | Multi-package concurrent downloads with resume support, SHA256 verification, and configurable concurrency. |
+| File Tree Diff             | Yes            | Directory-level structural comparison between old and new versions, producing an incremental file manifest. |
 | AOT                        | Yes            | Supports AOT compilation and publishing.                     |
 
 ## 3. What does GeneralUpdate support?
@@ -122,37 +126,3 @@ GeneralUpdate follows [Semantic Versioning](https://semver.org/) core principles
 
 
 
-## 6. Communication and Collaboration
-
-In the free communication channels, questions from developers are answered periodically. All community donations will be used for the development and construction of open-source projects. Code contributors will be rewarded with donation funds.
-
-- Free Q&A: https://github.com/GeneralLibrary/GeneralUpdate/issues
-- Free Technical Exchange: .NET Technical Exchange Group 341349660
-- Free Discussion on Open Source Project Usage: GeneralUpdate Discussion Group 748744489
-- E-Mail: zhuzhen723723@outlook.com
-- Due to the large number of individual communications, the author's time and energy are limited; one-on-one answers require paid consultation. Questions in discussion groups or issues are visible to everyone to avoid repetitive answers.
-- The open-source project needs to establish a corporate wall on the official website. If any companies are using this project in their projects and wish to be featured for free promotion, please contact the author.
-
-##### Business Cooperation
-
-For customized secondary development, technical consultation, and open-source project sponsorship, see the contact information for corporate inquiries, quotations, business cooperation, and corporate wall (please specify your purpose when adding, idle chats are refused, WeChat is recommended).
-
-![](imgs\contact.png)
-
-##### Sponsorship
-
-Dear Sponsors,
-
-This project is an automatic update component primarily designed and maintained by the author. The goal of this project is to provide a platform for developers and tech enthusiasts worldwide to share, learn, and innovate. We are committed to advancing technology and the power of shared knowledge.
-
-However, we need your support. Your sponsorship will enable us to further improve the quality of the project, add more features, and provide a better user experience. In return, we will display your company's logo on the project's website to express our gratitude.
-
-This is a great opportunity not only to promote technological progress but also to enhance your brand awareness and community influence. We believe your sponsorship will have a profound impact on this open-source project. Additionally, all sponsorship funds will be used to purchase GeneralUpdate merchandise to reward community partners who contribute code to the project. If you have made significant contributions, please contact me via the email below to get in touch.
-
-The scale of the project has exceeded the capacity of individual maintenance, and design and maintenance are not easy. We look forward to your active participation, so let's join hands to create the future!
-
-Thank you!
-
-Author: Juster Zhu
-
-![Sponsorship](imgs/payment.jpg)

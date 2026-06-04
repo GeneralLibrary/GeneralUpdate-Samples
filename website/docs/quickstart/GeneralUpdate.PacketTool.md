@@ -59,11 +59,14 @@ dotnet run --project GeneralUpdate.Tools.csproj
 
 ### 工具内部做了什么
 
-1. 校验 old/new 目录存在、version 格式合法。
-2. 创建临时目录 `gupatch_yyyyMMddHHmmss`。
-3. 递归比较 old/new：**修改文件** → 生成 `.patch` 二进制差分；**新增文件** → 直接复制；**删除文件** → 记录 hash 到 `generalupdate.delete.json`。
-4. 将临时目录压缩为 `{PackageName}.zip`。
-5. 删除临时目录，ZIP 保留在 Output Directory。
+1. **加密文件检测**：扫描 old/new 目录中的二进制文件，检测是否存在加壳（如 Themida、VMProtect）或加密签名。被检测到的文件将标记警告——此类文件无法生成有效差分补丁，将以全量文件形式打包。
+2. 校验 old/new 目录存在、version 格式合法。
+3. 创建临时目录 `gupatch_yyyyMMddHHmmss`。
+4. 递归比较 old/new：**修改文件** → 生成 `.patch` 二进制差分；**新增文件** → 直接复制；**删除文件** → 记录 hash 到 `generalupdate.delete.json`。
+5. 将临时目录压缩为 `{PackageName}.zip`。
+6. 删除临时目录，ZIP 保留在 Output Directory。
+
+> **关于加密文件**：加壳工具（Themida、VMProtect 等）、代码混淆或加密的二进制文件，因文件哈希在新旧版本间完全不同，差分算法对其无效。此类文件检测到后将直接以全量形式打包，而不会生成 `.patch` 差分。建议在发布前对原始文件进行去壳/解密处理，以获得最优的补丁体积。
 
 底层调用的是 `GeneralUpdate.Core.Pipeline.DiffPipeline.CleanAsync(oldDir, newDir, patchDir)`，和你的 CI 脚本走的是同一条代码路径。
 

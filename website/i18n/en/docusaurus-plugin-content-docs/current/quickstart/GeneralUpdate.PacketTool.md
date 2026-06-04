@@ -59,11 +59,14 @@ You shipped a new version, but you don't want users to download the entire insta
 
 ### What the tool does internally
 
-1. Validates that old/new directories exist and version format is correct.
-2. Creates a temp directory `gupatch_yyyyMMddHHmmss`.
-3. Recursively compares old vs new: **changed files** → generate `.patch` binary diff; **new files** → copy directly; **deleted files** → record hash to `generalupdate.delete.json`.
-4. Compresses the temp directory into `{PackageName}.zip`.
-5. Deletes the temp directory; ZIP remains in Output Directory.
+1. **Encrypted file detection**: Scans old/new directories for packed executables (e.g. Themida, VMProtect) or encryption signatures. Detected files are flagged with a warning — they cannot produce valid differential patches and will be bundled as full files.
+2. Validates that old/new directories exist and version format is correct.
+3. Creates a temp directory `gupatch_yyyyMMddHHmmss`.
+4. Recursively compares old vs new: **changed files** → generate `.patch` binary diff; **new files** → copy directly; **deleted files** → record hash to `generalupdate.delete.json`.
+5. Compresses the temp directory into `{PackageName}.zip`.
+6. Deletes the temp directory; ZIP remains in Output Directory.
+
+> **About encrypted files**: Packed executables (Themida, VMProtect, etc.), obfuscated code, or encrypted binaries will have completely different hashes between versions, making differential algorithms ineffective. Such files are detected and bundled as full files rather than `.patch` diffs. For optimal patch sizes, unpack/decrypt your binaries before publishing.
 
 Under the hood it calls `GeneralUpdate.Core.Pipeline.DiffPipeline.CleanAsync(oldDir, newDir, patchDir)` — the same code path your CI scripts use.
 

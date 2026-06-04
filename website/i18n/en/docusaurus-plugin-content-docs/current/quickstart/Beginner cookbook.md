@@ -392,6 +392,10 @@ The update process requires read/write access to the application directory. To a
 
 > **Tip**: If you encounter "Access Denied" or UAC prompts during updates, check whether the application is installed in a non-recommended directory. Moving the application to a user directory usually resolves the issue.
 
+### Encrypted Files and Packed Executables
+
+> **Note**: Packed executables (e.g. Themida, VMProtect), obfuscated code, or encrypted binaries **cannot benefit from binary differential updates**. Packing/encryption causes the entire file to differ between versions, making diff algorithms ineffective — the patch will be the same size as a full file replacement. For differential updates, ensure your published binaries are neither packed nor encrypted.
+
 ## Sample repositories
 | Repository | URL |
 | --- | --- |
