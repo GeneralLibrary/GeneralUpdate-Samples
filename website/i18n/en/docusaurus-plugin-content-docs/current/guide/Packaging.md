@@ -110,7 +110,7 @@ await new GeneralUpdateBootstrap()
 - [NSIS Download](https://nsis.sourceforge.io/Download)
 - Place main app and upgrade assistant in the same directory
 - Default install to `%LOCALAPPDATA%` to avoid C drive permission issues
-- For C drive installs, see [Permission Guide](./Permission.md)
+- For C drive installs, see [Permission Guide](./Permission)
 
 ```bash
 dotnet publish src/MyApp/MyApp.csproj -c Release -r win-x64 --self-contained
@@ -216,6 +216,6 @@ Before deploying, verify:
 ## Related Resources
 
 - **[GeneralUpdate.Tools](../quickstart/GeneralUpdate.PacketTool)** — Patch and config generation tool
-- **[Permission Guide](./Permission.md)** — Windows UAC permission handling
-- **[Beginner Cookbook](../quickstart/Beginner%20cookbook.md)** — Complete update walkthrough
-- **[GeneralUpdate.Core](../doc/GeneralUpdate.Core.md)** — Core update engine architecture
+- **[Permission Guide](./Permission)** — Windows UAC permission handling
+- **[Beginner Cookbook](../quickstart/Beginner%20cookbook)** — Complete update walkthrough
+- **[GeneralUpdate.Core](../doc/GeneralUpdate.Core)** — Core update engine architecture

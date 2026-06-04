@@ -1010,5 +1010,5 @@ var failedVersion = Environments.Get("UpgradeFail");
 - [GeneralUpdate 仓库](https://github.com/GeneralLibrary/GeneralUpdate)
 - [Samples 示例代码](https://github.com/GeneralLibrary/GeneralUpdate-Samples)
 - [GeneralUpdate.Tools](https://github.com/GeneralLibrary/GeneralUpdate.Tools)
-- [入门实战手册](../quickstart/Beginner%20cookbook.md)
-- [组件文档](./GeneralUpdate.Core.md)
+- [入门实战手册](../quickstart/Beginner%20cookbook)
+- [组件文档](./GeneralUpdate.Core)

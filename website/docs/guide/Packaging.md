@@ -120,7 +120,7 @@ await new GeneralUpdateBootstrap()
 **避免 C 盘权限问题：**
 
 - 建议默认安装到 `%LOCALAPPDATA%` 而非 `C:\Program Files\`
-- 如必须安装在 C 盘，参考 [权限指南](./Permission.md) 配置注册表降权
+- 如必须安装在 C 盘，参考 [权限指南](./Permission) 配置注册表降权
 
 **Windows 发布命令：**
 
@@ -280,6 +280,6 @@ jobs:
 ## 相关资源
 
 - **[GeneralUpdate.Tools](../quickstart/GeneralUpdate.PacketTool)** — 补丁包和配置生成工具
-- **[权限指南](./Permission.md)** — Windows UAC 权限处理
-- **[入门实战手册](../quickstart/Beginner%20cookbook.md)** — 从零跑通更新闭环
-- **[GeneralUpdate.Core](../doc/GeneralUpdate.Core.md)** — 核心更新引擎架构
+- **[权限指南](./Permission)** — Windows UAC 权限处理
+- **[入门实战手册](../quickstart/Beginner%20cookbook)** — 从零跑通更新闭环
+- **[GeneralUpdate.Core](../doc/GeneralUpdate.Core)** — 核心更新引擎架构

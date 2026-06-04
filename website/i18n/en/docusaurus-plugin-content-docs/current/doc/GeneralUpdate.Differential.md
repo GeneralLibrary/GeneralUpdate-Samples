@@ -287,5 +287,5 @@ await new GeneralUpdateBootstrap()
 
 - [GeneralUpdate Repository](https://github.com/GeneralLibrary/GeneralUpdate)
 - [Differential Sample](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Hub/Samples/DifferentialSample.cs)
-- [Core DiffPipeline Docs](GeneralUpdate.Core.md)
-- [Packaging Guide](../guide/Packaging.md)
+- [Core DiffPipeline Docs](GeneralUpdate.Core)
+- [Packaging Guide](../guide/Packaging)

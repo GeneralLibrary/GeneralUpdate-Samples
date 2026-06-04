@@ -362,4 +362,4 @@ MyApp/
 
 - [Bowl Sample Code](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Bowl)
 - [GeneralUpdate Repository](https://github.com/GeneralLibrary/GeneralUpdate)
-- [Dump Guide](../guide/Dump.md)
+- [Dump Guide](../guide/Dump)

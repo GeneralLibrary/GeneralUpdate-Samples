@@ -363,5 +363,5 @@ await new GeneralUpdateBootstrap()
 
 - [GeneralUpdate 仓库](https://github.com/GeneralLibrary/GeneralUpdate)
 - [Samples 差分示例](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Hub/Samples/DifferentialSample.cs)
-- [Core DiffPipeline 文档](GeneralUpdate.Core.md)
-- [Tools 打包指南](../guide/Packaging.md)
+- [Core DiffPipeline 文档](GeneralUpdate.Core)
+- [Tools 打包指南](../guide/Packaging)

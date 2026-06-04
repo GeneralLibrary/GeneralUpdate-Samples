@@ -667,5 +667,5 @@ GeneralTracer.Dispose();
 - [GeneralUpdate Repository](https://github.com/GeneralLibrary/GeneralUpdate)
 - [Samples Code](https://github.com/GeneralLibrary/GeneralUpdate-Samples)
 - [GeneralUpdate.Tools](https://github.com/GeneralLibrary/GeneralUpdate.Tools)
-- [Beginner Cookbook](../quickstart/Beginner%20cookbook.md)
-- [Component docs](./GeneralUpdate.Core.md)
+- [Beginner Cookbook](../quickstart/Beginner%20cookbook)
+- [Component docs](./GeneralUpdate.Core)

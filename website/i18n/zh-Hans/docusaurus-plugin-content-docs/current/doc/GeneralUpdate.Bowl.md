@@ -417,4 +417,4 @@ MyApp/
 
 - [Bowl 示例代码](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Bowl)
 - [GeneralUpdate 仓库](https://github.com/GeneralLibrary/GeneralUpdate)
-- [Dump 指南](../guide/Dump.md)
+- [Dump 指南](../guide/Dump)

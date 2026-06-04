@@ -144,7 +144,7 @@ dotnet run --project GeneralUpdate.Tools.csproj
 
 - Extension Host 调用 `ExtensionManager.QueryRemoteExtensionsAsync(...)` 获取扩展列表
 - 安装时下载 ZIP，读取 `manifest.json` 进行兼容性检查和依赖解析
-- 详见 [GeneralUpdate.Extension](../doc/GeneralUpdate.Extension.md)
+- 详见 [GeneralUpdate.Extension](../doc/GeneralUpdate.Extension)
 
 ---
 
@@ -189,7 +189,7 @@ dotnet run --project GeneralUpdate.Tools.csproj
 
 - 将 `oss_config.json` 上传到 OSS bucket 或静态文件服务器
 - OSS 客户端读取此文件发现可用版本，下载后校验 Hash
-- 详见 [GeneralUpdate.Core](../doc/GeneralUpdate.Core.md) OSS 更新策略
+- 详见 [GeneralUpdate.Core](../doc/GeneralUpdate.Core) OSS 更新策略
 
 ---
 
@@ -349,7 +349,7 @@ Generate Sample 额外输出：
 
 ## 关联文档
 
-- [GeneralUpdate.Core](../doc/GeneralUpdate.Core.md)：Client/Upgrade 更新主流程
-- [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential.md)：差分算法 Clean/Dirty 模式
-- [GeneralUpdate.Extension](../doc/GeneralUpdate.Extension.md)：扩展包安装与版本管理
-- [入门实战手册](./Beginner%20cookbook.md)：从零跑通完整更新闭环
+- [GeneralUpdate.Core](../doc/GeneralUpdate.Core)：Client/Upgrade 更新主流程
+- [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential)：差分算法 Clean/Dirty 模式
+- [GeneralUpdate.Extension](../doc/GeneralUpdate.Extension)：扩展包安装与版本管理
+- [入门实战手册](./Beginner%20cookbook)：从零跑通完整更新闭环
