@@ -143,7 +143,7 @@ sidebar_position: 5
 | `Cancel()` | 无 | `void` | UI 中提供"取消更新"按钮 | 触发内部 `CancellationTokenSource` |
 | `SetConfig(UpdateRequest)` | `configInfo` — 更新配置对象 | `GeneralUpdateBootstrap` | 主程序内显式配置更新参数 | 会调用 `Validate()` 检查关键字段 |
 | `SetConfig(string)` | `filePath` — JSON 配置文件路径 | `GeneralUpdateBootstrap` | 从文件读取更新配置 | 支持相对路径和绝对路径；UTF-8 JSON 格式 |
-| `SetSource(...)` | `updateUrl`, `appSecretKey`, `reportUrl?`, `scheme?`, `token?` | `GeneralUpdateBootstrap` | 轻配置入口，配合 manifest 使用 | 只提供服务端入口和密钥，身份信息由 manifest 补齐 |
+| `SetSource(...)` | `updateUrl`（更新检查 API 地址）<br>`appSecretKey`（应用密钥）<br>`reportUrl?`（可选上报地址）<br>`scheme?`（可选认证方案，如 `"Bearer"`）<br>`token?`（可选认证令牌）<br>`authScheme?`（可选认证方案枚举，默认 `Hmac`）<br>`basicUsername?`（可选 Basic 认证用户名）<br>`basicPassword?`（可选 Basic 认证密码）<br>`installPath?`（可选安装路径） | `GeneralUpdateBootstrap` | 轻配置入口，配合 manifest 使用 | 只提供服务端入口和密钥，身份信息由 manifest 补齐；支持 HMAC / Bearer / Basic 多种认证方式 |
 | `SetOption(Option<T>, T)` | `option` — 选项键, `value` — 选项值 | `GeneralUpdateBootstrap` | 设置运行时选项 | 传入 `null` 给可空选项会移除当前设置 |
 | `UseDiffPipeline(Action<DiffPipelineBuilder>)` | `configure` — 差分管道配置委托 | `GeneralUpdateBootstrap` | 替换或调整差分补丁管道 | 未调用时使用默认配置 |
 | `AddListenerUpdateInfo(...)` | `EventHandler<UpdateInfoEventArgs>` | `GeneralUpdateBootstrap` | 接收服务端版本信息 | 无更新时也会触发（`Info.Code = 404`） |
@@ -197,6 +197,9 @@ sidebar_position: 5
 | `SetDriverDirectory(string)` | `path` | `UpdateRequestBuilder` | 设置驱动目录 | — |
 | `SetScheme(string)` | `scheme` | `UpdateRequestBuilder` | 设置认证方案 | — |
 | `SetToken(string)` | `token` | `UpdateRequestBuilder` | 设置认证令牌 | — |
+| `SetAuthScheme(AuthScheme)` | `authScheme` — 认证方案枚举 | `UpdateRequestBuilder` | 设置认证方案（Hmac / Bearer / ApiKey / Basic） | 默认 `Hmac` |
+| `SetBasicUsername(string)` | `username` | `UpdateRequestBuilder` | 设置 Basic 认证用户名 | 需配合 `SetAuthScheme(AuthScheme.Basic)` |
+| `SetBasicPassword(string)` | `password` | `UpdateRequestBuilder` | 设置 Basic 认证密码 | 需配合 `SetAuthScheme(AuthScheme.Basic)` |
 | `SetFiles(List<string>)` | `files` | `UpdateRequestBuilder` | 设置跳过文件列表 | — |
 | `SetFormats(List<string>)` | `formats` | `UpdateRequestBuilder` | 设置跳过扩展名列表 | — |
 | `SetDirectories(List<string>)` | `dirs` | `UpdateRequestBuilder` | 设置跳过目录列表 | — |

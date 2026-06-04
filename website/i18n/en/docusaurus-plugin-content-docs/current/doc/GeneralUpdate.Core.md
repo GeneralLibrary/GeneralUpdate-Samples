@@ -98,8 +98,11 @@ sidebar_position: 5
 | `ProductId` | `string` | — | Optional | — | Product identifier for multi-product servers |
 | `UpdatePath` | `string` | `InstallPath` | Optional | Valid directory path | Upgrade process location |
 | `Bowl` | `string` | `null` | Optional | Valid filename | Auxiliary process name to close before update |
-| `Scheme` | `string` | `null` | Optional | `"Bearer"` etc. | Auth scheme |
+| `Scheme` | `string` | `null` | Optional | `"Bearer"` etc. | Auth scheme (used with `Token`) |
 | `Token` | `string` | `null` | Optional | — | Auth token |
+| `AuthScheme` | `AuthScheme` | `Hmac` | Optional | `Hmac`, `Bearer`, `Basic` | Auth scheme enum; `Hmac` for GeneralSpacestation server-side signed auth |
+| `BasicUsername` | `string` | `null` | Optional | — | HTTP Basic auth username (requires `AuthScheme = Basic`) |
+| `BasicPassword` | `string` | `null` | Optional | — | HTTP Basic auth password (requires `AuthScheme = Basic`) |
 | `Files` | `List<string>` | `null` | Optional | — | Files to skip during update |
 | `Formats` | `List<string>` | `null` | Optional | — | Extensions to skip during update |
 | `Directories` | `List<string>` | `null` | Optional | — | Directories to skip during update |
@@ -135,7 +138,7 @@ sidebar_position: 5
 | `Cancel()` | None | `void` | UI "Cancel Update" button | Triggers internal `CancellationTokenSource` |
 | `SetConfig(UpdateRequest)` | `configInfo` | `GeneralUpdateBootstrap` | Explicit update configuration | Calls `Validate()` on key fields |
 | `SetConfig(string)` | `filePath` — JSON config file path | `GeneralUpdateBootstrap` | Read config from file | Supports relative/absolute paths; UTF-8 JSON |
-| `SetSource(...)` | `updateUrl`, `appSecretKey`, `reportUrl?`, `scheme?`, `token?` | `GeneralUpdateBootstrap` | Lightweight entry with manifest | Identity info filled by manifest |
+| `SetSource(...)` | `updateUrl` (version check API URL)<br>`appSecretKey` (app secret key)<br>`reportUrl?` (optional report URL)<br>`scheme?` (optional auth scheme, e.g., `"Bearer"`)<br>`token?` (optional auth token)<br>`authScheme?` (optional auth scheme enum, default `Hmac`)<br>`basicUsername?` (optional Basic auth username)<br>`basicPassword?` (optional Basic auth password)<br>`installPath?` (optional install path) | `GeneralUpdateBootstrap` | Lightweight entry with manifest | Identity info filled by manifest; supports HMAC / Bearer / Basic auth methods |
 | `SetOption(Option<T>, T)` | `option` — key, `value` — value | `GeneralUpdateBootstrap` | Set runtime options | Pass `null` to reset nullable options |
 | `UseDiffPipeline(Action<DiffPipelineBuilder>)` | `configure` — delegate | `GeneralUpdateBootstrap` | Replace or tune diff pipeline | Default used if not called |
 | `AddListenerUpdateInfo(...)` | `EventHandler<UpdateInfoEventArgs>` | `GeneralUpdateBootstrap` | Receive server version info | Also fires when no update available |
