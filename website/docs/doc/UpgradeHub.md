@@ -363,4 +363,4 @@ await new GeneralClientBootstrap()
 
 - **示例代码：** [查看 GitHub 示例](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Push/Program.cs)
 - **主仓库：** [GeneralUpdate 项目](https://github.com/GeneralLibrary/GeneralUpdate)
-- **相关组件：** [GeneralUpdate.Core](./GeneralUpdate.Core.md) | [GeneralUpdate.Core](./GeneralUpdate.Core.md)
+- **相关组件：** [GeneralUpdate.Core](./GeneralUpdate.Core) | [GeneralUpdate.Core](./GeneralUpdate.Core)

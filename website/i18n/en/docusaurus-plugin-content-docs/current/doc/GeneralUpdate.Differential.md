@@ -21,7 +21,7 @@ Directory-level comparison, batch patch generation, parallel scheduling, deleted
 | File-Level Diff Generation | `CleanAsync(oldFile, newFile, patchFile)` — compare old & new files to generate `.patch` |
 | File-Level Diff Application | `DirtyAsync(oldFile, newFile, patchFile)` — old file + patch → new file |
 | Pluggable Diff Algorithms | `BsdiffDiffer` (BSDIFF 4.0, suffix sort) and `StreamingHdiffDiffer` (block hash indexing) |
-| Pluggable Compression | BZip2 (0x00), Deflate (0x01), .NET 6+ Brotli (0x02) reserved in source |
+| Pluggable Compression | BZip2 (0x00), Deflate (0x01), .NET 6+ Brotli (0x02) available via conditional compilation |
 | BSDIFF Compatible Format | 33-byte extended header (32-byte BSDIFF40 + 1-byte compression format), 32-byte legacy compatible |
 | Thread Safety | Built-in differ and compression providers support concurrent calls |
 
@@ -87,7 +87,7 @@ Differential is a low-level library with no configuration classes. All parameter
 | --- | --- | --- | --- |
 | `BZip2CompressionProvider` | `0x00` | Fully available | Legacy BSDIFF compatible, higher decompression cost |
 | `DeflateCompressionProvider` | `0x01` | Fully available | Faster decompression, better for client batch apply |
-| `BrotliCompressionProvider` | `0x02` | .NET 6+ only (source reserved) | Not recommended for production |
+| `BrotliCompressionProvider` | `0x02` | .NET 6+ only (full implementation in source behind `#if NET6_0_OR_GREATER` conditional compilation) | Not included in current `netstandard2.0` package; not recommended for production |
 
 ### 3.2 Instance Methods
 
@@ -287,5 +287,5 @@ await new GeneralUpdateBootstrap()
 
 - [GeneralUpdate Repository](https://github.com/GeneralLibrary/GeneralUpdate)
 - [Differential Sample](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Hub/Samples/DifferentialSample.cs)
-- [Core DiffPipeline Docs](GeneralUpdate.Core.md)
-- [Packaging Guide](../guide/Packaging.md)
+- [Core DiffPipeline Docs](GeneralUpdate.Core)
+- [Packaging Guide](../guide/Packaging)

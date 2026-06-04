@@ -676,4 +676,4 @@ report-extension_1.0.0.zip
 
 - [扩展管理示例](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Hub/Samples/ExtensionSample.cs)
 - [GeneralUpdate 仓库](https://github.com/GeneralLibrary/GeneralUpdate)
-- [打包指南](../guide/Packaging.md)
+- [打包指南](../guide/Packaging)

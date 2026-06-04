@@ -518,4 +518,4 @@ Per-extension setting > Global setting > Default (false)
 
 - [Extension Management Sample](https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/src/Hub/Samples/ExtensionSample.cs)
 - [GeneralUpdate Repository](https://github.com/GeneralLibrary/GeneralUpdate)
-- [Packaging Guide](../guide/Packaging.md)
+- [Packaging Guide](../guide/Packaging)

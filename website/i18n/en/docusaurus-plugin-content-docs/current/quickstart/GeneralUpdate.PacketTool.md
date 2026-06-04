@@ -138,7 +138,7 @@ Example `manifest.json`:
 
 - Extension Host calls `ExtensionManager.QueryRemoteExtensionsAsync(...)` to list available extensions
 - On install, downloads the ZIP, reads `manifest.json` for compatibility checks and dependency resolution
-- See [GeneralUpdate.Extension](../doc/GeneralUpdate.Extension.md) for details
+- See [GeneralUpdate.Extension](../doc/GeneralUpdate.Extension) for details
 
 ---
 
@@ -183,7 +183,7 @@ If you use OSS mode updates (static file server), you need to maintain a `versio
 
 - Upload `oss_config.json` to your OSS bucket or static file server
 - OSS client reads this file to discover versions and validates Hash after download
-- See [GeneralUpdate.Core](../doc/GeneralUpdate.Core.md) OSS update strategy
+- See [GeneralUpdate.Core](../doc/GeneralUpdate.Core) OSS update strategy
 
 ---
 
@@ -338,7 +338,7 @@ This sequence chains the six modules into a complete release pipeline:
 
 ## Related docs
 
-- [GeneralUpdate.Core](../doc/GeneralUpdate.Core.md): Client/Upgrade main update flow
-- [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential.md): Differential algorithm Clean/Dirty modes
-- [GeneralUpdate.Extension](../doc/GeneralUpdate.Extension.md): Extension install and version management
-- [Beginner cookbook](./Beginner%20cookbook.md): Complete end-to-end update walkthrough
+- [GeneralUpdate.Core](../doc/GeneralUpdate.Core): Client/Upgrade main update flow
+- [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential): Differential algorithm Clean/Dirty modes
+- [GeneralUpdate.Extension](../doc/GeneralUpdate.Extension): Extension install and version management
+- [Beginner cookbook](./Beginner%20cookbook): Complete end-to-end update walkthrough

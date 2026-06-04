@@ -332,7 +332,7 @@ await new GeneralClientBootstrap()
 
 ## 相关资源
 
-- **[GeneralUpdate.Core](../doc/GeneralUpdate.Core.md)** — 核心更新引擎
-- **[入门实战手册](../quickstart/Beginner%20cookbook.md)** — 从零跑通更新闭环
-- **[GeneralUpdate.Tools](../quickstart/GeneralUpdate.PacketTool.md)** — 打包工具
-- **[GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl.md)** — 崩溃监控与回滚
+- **[GeneralUpdate.Core](../doc/GeneralUpdate.Core)** — 核心更新引擎
+- **[入门实战手册](../quickstart/Beginner%20cookbook)** — 从零跑通更新闭环
+- **[GeneralUpdate.Tools](../quickstart/GeneralUpdate.PacketTool)** — 打包工具
+- **[GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl)** — 崩溃监控与回滚
