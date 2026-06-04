@@ -15,6 +15,10 @@
     "message": "定价",
     "description": "Navbar item with label 定价"
   },
+  "item.label.联系方式": {
+    "message": "联系方式",
+    "description": "Navbar item with label 联系方式"
+  },
   "item.label.GitHub": {
     "message": "GitHub",
     "description": "Navbar item with label GitHub"

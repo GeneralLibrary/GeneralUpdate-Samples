@@ -124,26 +124,26 @@ sidebar_position: 8
 
 **GeneralDrivelution（静态类）：**
 
-| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
-| --- | --- | --- | --- | --- |
-| `Create(DrivelutionOptions?)` | `options` — 全局选项 | `IGeneralDrivelution` | 创建当前平台的驱动更新器 | 自动检测平台 |
-| `Create(IServiceProvider)` | `serviceProvider` — DI 容器 | `IGeneralDrivelution` | 从 DI 容器解析 | 未注册时回退到自动平台创建 |
-| `QuickUpdateAsync(DriverInfo, UpdateStrategy?, IProgress<UpdateProgress>?, CancellationToken)` | `driverInfo` — 驱动信息；`strategy` — 可选策略（null 时使用默认）；`progress` — 进度报告；`ct` — 取消令牌 | `Task<UpdateResult>` | 快速单驱动更新 | 使用安全默认策略 |
-| `ValidateAsync(DriverInfo, CancellationToken)` | `driverInfo` — 驱动信息；`ct` — 取消令牌 | `Task<bool>` | 单独验证驱动文件 | — |
-| `GetPlatformInfo()` | 无 | `PlatformInfo` | 查询当前平台信息 | 返回 OS/架构/版本/是否支持 |
-| `GetDriversFromDirectoryAsync(string, string?, CancellationToken)` | `directoryPath` — 目录路径；`searchPattern` — 搜索模式；`ct` — 取消令牌 | `Task<List<DriverInfo>>` | 扫描目录解析驱动信息 | 默认搜索模式与平台相关 |
-| `BatchUpdateAsync(IEnumerable<DriverInfo>, UpdateStrategy, BatchMode, IProgress<UpdateProgress>?, CancellationToken)` | `drivers` — 驱动列表；`strategy` — 更新策略；`mode` — 顺序/并行；`progress` — 进度；`ct` — 取消令牌 | `Task<BatchUpdateResult>` | 批量更新多个驱动 | 并行模式下底层系统工具可能竞争资源 |
+| 方法名 | 入参明细 | 使用场景 | 注意事项 |
+| --- | ---| --- | --- |
+| `Create(DrivelutionOptions?)` | `options` — 全局选项 | 创建当前平台的驱动更新器 | 自动检测平台 |
+| `Create(IServiceProvider)` | `serviceProvider` — DI 容器 | 从 DI 容器解析 | 未注册时回退到自动平台创建 |
+| `QuickUpdateAsync(DriverInfo, UpdateStrategy?, IProgress<UpdateProgress>?, CancellationToken)` | `driverInfo` — 驱动信息；`strategy` — 可选策略（null 时使用默认）；`progress` — 进度报告；`ct` — 取消令牌 | 快速单驱动更新 | 使用安全默认策略 |
+| `ValidateAsync(DriverInfo, CancellationToken)` | `driverInfo` — 驱动信息；`ct` — 取消令牌 | 单独验证驱动文件 | — |
+| `GetPlatformInfo()` | 无 | 查询当前平台信息 | 返回 OS/架构/版本/是否支持 |
+| `GetDriversFromDirectoryAsync(string, string?, CancellationToken)` | `directoryPath` — 目录路径；`searchPattern` — 搜索模式；`ct` — 取消令牌 | 扫描目录解析驱动信息 | 默认搜索模式与平台相关 |
+| `BatchUpdateAsync(IEnumerable<DriverInfo>, UpdateStrategy, BatchMode, IProgress<UpdateProgress>?, CancellationToken)` | `drivers` — 驱动列表；`strategy` — 更新策略；`mode` — 顺序/并行；`progress` — 进度；`ct` — 取消令牌 | 批量更新多个驱动 | 并行模式下底层系统工具可能竞争资源 |
 
 **IGeneralDrivelution：**
 
-| 方法名 | 入参明细 | 返回值 | 使用场景 | 注意事项 |
-| --- | --- | --- | --- | --- |
-| `UpdateAsync(...)` | 同 `QuickUpdateAsync` | `Task<UpdateResult>` | 执行完整更新流水线 | — |
-| `ValidateAsync(...)` | 同 `GeneralDrivelution.ValidateAsync` | `Task<bool>` | 单独验证 | — |
-| `BackupAsync(DriverInfo, string, CancellationToken)` | `driverInfo`, `backupPath`, `ct` | `Task<bool>` | 单独备份驱动文件 | — |
-| `RollbackAsync(string, CancellationToken)` | `backupPath` — 备份路径；`ct` — 取消令牌 | `Task<bool>` | 从备份恢复驱动 | 不同平台恢复逻辑不同 |
-| `GetDriversFromDirectoryAsync(...)` | 同 `GeneralDrivelution` | `Task<List<DriverInfo>>` | 扫描目录 | — |
-| `BatchUpdateAsync(...)` | 同 `GeneralDrivelution` | `Task<BatchUpdateResult>` | 批量更新 | — |
+| 方法名 | 入参明细 | 使用场景 | 注意事项 |
+| --- | ---| --- | --- |
+| `UpdateAsync(...)` | 同 `QuickUpdateAsync` | 执行完整更新流水线 | — |
+| `ValidateAsync(...)` | 同 `GeneralDrivelution.ValidateAsync` | 单独验证 | — |
+| `BackupAsync(DriverInfo, string, CancellationToken)` | `driverInfo`, `backupPath`, `ct` | 单独备份驱动文件 | — |
+| `RollbackAsync(string, CancellationToken)` | `backupPath` — 备份路径；`ct` — 取消令牌 | 从备份恢复驱动 | 不同平台恢复逻辑不同 |
+| `GetDriversFromDirectoryAsync(...)` | 同 `GeneralDrivelution` | 扫描目录 | — |
+| `BatchUpdateAsync(...)` | 同 `GeneralDrivelution` | 批量更新 | — |
 
 ### 3.3 回调事件
 

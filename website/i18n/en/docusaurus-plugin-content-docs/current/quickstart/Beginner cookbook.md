@@ -373,6 +373,25 @@ After this flow works, read these pages in order:
 3. [GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl): crash monitoring, backup, and failure recovery
 4. [GeneralUpdate.Tools](./GeneralUpdate.PacketTool): complete guides for patches, hashes, OSS config, and simulation
 
+## Installation directory notes
+
+The update process requires read/write access to the application directory. To avoid Windows UAC (User Account Control) prompts, install your application in one of the following non-system-protected directories:
+
+| Recommended directory | Example path |
+| --- | --- |
+| User AppData (recommended) | `C:\Users\<username>\AppData\Local\<YourApp>\` |
+| User home directory | `C:\Users\<username>\<YourApp>\` |
+| Custom non-system drive | `D:\<YourApp>\` |
+
+**Not recommended:**
+
+- `C:\Program Files\` — requires administrator privileges to write
+- `C:\Program Files (x86)\` — requires administrator privileges to write
+- `C:\Windows\` — system directory, write-protected
+- System drive root (e.g. `C:\`) — may trigger permission restrictions
+
+> **Tip**: If you encounter "Access Denied" or UAC prompts during updates, check whether the application is installed in a non-recommended directory. Moving the application to a user directory usually resolves the issue.
+
 ## Sample repositories
 
 | Repository | URL |

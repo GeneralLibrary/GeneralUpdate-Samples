@@ -371,6 +371,25 @@ Client (新版本):
 3. [GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl)：崩溃监控、备份和失败恢复
 4. [GeneralUpdate.Tools](./GeneralUpdate.PacketTool)：补丁包、Hash、OSS Config、Simulation 的完整操作指南
 
+## 安装目录注意事项
+
+更新过程中，应用程序需要对安装目录进行读写操作。为避免触发 Windows UAC（用户账户控制）弹窗，请将应用安装在以下非系统保护的目录：
+
+| 推荐目录 | 路径示例 |
+| --- | --- |
+| 用户 AppData（推荐） | `C:\Users\<用户名>\AppData\Local\<你的应用名>\` |
+| 用户主目录 | `C:\Users\<用户名>\<你的应用名>\` |
+| 非系统盘自定义目录 | `D:\<你的应用名>\` |
+
+**不推荐的目录：**
+
+- `C:\Program Files\` — 需要管理员权限才能写入
+- `C:\Program Files (x86)\` — 需要管理员权限才能写入
+- `C:\Windows\` — 系统目录，禁止写入
+- 系统盘根目录（如 `C:\`） — 可能触发权限限制
+
+> **提示**：如果在更新时遇到"权限不足"或 UAC 弹窗，请检查应用是否安装在不推荐的目录中。将应用迁移到用户目录通常可以解决此问题。
+
 ## 示例仓库
 
 | 仓库 | 地址 |
