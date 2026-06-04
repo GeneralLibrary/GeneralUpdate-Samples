@@ -12,7 +12,7 @@ After completing this cookbook, you'll have a **working end-to-end auto-update s
 :::
 
 <iframe
-  src="//player.bilibili.com/player.html?bvid=BV12P9dBiEEh&page=1"
+  src="//player.bilibili.com/player.html?bvid=BV1EgEP6oExY&page=1"
   width="100%"
   height="480"
   style={{ borderRadius: '8px', border: 'none' }}
