@@ -26,5 +26,21 @@
   "item.label.GeneralSpacestation": {
     "message": "GeneralSpacestation",
     "description": "Navbar item with label GeneralSpacestation"
+  },
+  "item.label.软件外包服务": {
+    "message": "软件外包服务",
+    "description": "Navbar item with label 软件外包服务"
+  },
+  "item.label.企业墙": {
+    "message": "企业墙",
+    "description": "Navbar item with label 企业墙"
+  },
+  "item.label.开源生态伙伴": {
+    "message": "开源生态伙伴",
+    "description": "Navbar item with label 开源生态伙伴"
+  },
+  "item.label.付费咨询": {
+    "message": "付费咨询",
+    "description": "Navbar item with label 付费咨询"
   }
 }

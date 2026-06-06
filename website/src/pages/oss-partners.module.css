@@ -1,0 +1,124 @@
+/* ════════════════════════════════════════════════════════════════
+   OSS PARTNERS — Card Grid Layout
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Page layout ── */
+.page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+}
+
+.pageTitle {
+  font-size: 2.5rem;
+  font-weight: 900;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: var(--ifm-color-primary-darkest);
+}
+
+.pageSubtitle {
+  text-align: center;
+  color: var(--ifm-color-secondary-darkest);
+  margin-bottom: 3rem;
+  font-size: 1.1rem;
+}
+
+/* ── Card grid ── */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+/* ── Individual card ── */
+.card {
+  background: var(--ifm-card-background-color, #fff);
+  border: 3px solid var(--ifm-color-emphasis-300);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.12);
+  border-color: var(--ifm-color-primary);
+}
+
+/* ── Card header: project name top-left + repo link ── */
+.cardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.cardName {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--ifm-color-primary-darkest);
+  font-family: 'Courier New', monospace;
+}
+
+.cardLink {
+  font-size: 0.85rem;
+  color: var(--ifm-color-primary);
+  word-break: break-all;
+  display: inline-block;
+}
+
+.cardLink:hover {
+  text-decoration: underline;
+}
+
+/* ── Description ── */
+.cardDesc {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ifm-color-emphasis-700);
+  margin: 0;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   DARK MODE
+   ════════════════════════════════════════════════════════════════ */
+[data-theme='dark'] .card {
+  background: var(--ifm-background-surface-color);
+  border-color: rgba(93, 173, 226, 0.25);
+  box-shadow: 6px 6px 0 rgba(93, 173, 226, 0.1);
+}
+
+[data-theme='dark'] .card:hover {
+  box-shadow: 10px 10px 0 rgba(93, 173, 226, 0.2);
+  border-color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .cardName {
+  color: var(--ifm-color-primary-lightest);
+}
+
+[data-theme='dark'] .cardDesc {
+  color: var(--ifm-color-secondary-darkest);
+}
+
+[data-theme='dark'] .pageTitle {
+  color: var(--ifm-color-primary-lightest);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════════════════════════ */
+@media screen and (max-width: 768px) {
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+  .pageTitle {
+    font-size: 2rem;
+  }
+}
