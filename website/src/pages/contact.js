@@ -2,6 +2,7 @@ import React from 'react';
 import Layout from '@theme/Layout';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Heading from '@theme/Heading';
+import contactImg from '@site/docs/doc/imgs/contact.png';
 
 export default function Contact() {
   const {i18n} = useDocusaurusContext();
@@ -23,6 +24,23 @@ export default function Contact() {
         </p>
 
         <div style={{display: 'flex', flexDirection: 'column', gap: '2rem'}}>
+
+          {/* ── 联系方式 ── */}
+          <div style={{
+            border: '1px solid var(--ifm-color-emphasis-300)',
+            borderRadius: '8px',
+            padding: '1.5rem',
+          }}>
+            <Heading as="h3">{isEn ? 'Contact' : '联系方式'}</Heading>
+            <p style={{color: 'var(--ifm-color-secondary-darkest)', marginBottom: '1rem'}}>
+              {isEn
+                ? 'Scan the QR code below to contact us.'
+                : '扫描下方二维码联系我们。'}
+            </p>
+            <div style={{textAlign: 'center'}}>
+              <img src={contactImg} alt={isEn ? 'Contact QR Code' : '联系方式二维码'} style={{maxWidth: '100%', borderRadius: '8px'}} />
+            </div>
+          </div>
 
           {/* ── QQ 群 ── */}
           <div style={{
@@ -52,57 +70,6 @@ export default function Contact() {
             </p>
           </div>
 
-          {/* ── GitHub Issues ── */}
-          <div style={{
-            border: '1px solid var(--ifm-color-emphasis-300)',
-            borderRadius: '8px',
-            padding: '1.5rem',
-          }}>
-            <Heading as="h3">GitHub Issues</Heading>
-            <p style={{margin: 0}}>
-              <a href="https://github.com/GeneralLibrary/GeneralUpdate/issues" target="_blank" rel="noopener">
-                github.com/GeneralLibrary/GeneralUpdate/issues
-              </a>
-            </p>
-            <p style={{color: 'var(--ifm-color-secondary-darkest)', marginTop: '0.5rem'}}>
-              {isEn
-                ? 'Submit bug reports, feature requests, or ask questions on GitHub. Issues are publicly visible and help everyone.'
-                : '提交 Bug 报告、功能建议或问题答疑。Issue 公开可见，帮助所有人。'}
-            </p>
-          </div>
-
-          {/* ── Email ── */}
-          <div style={{
-            border: '1px solid var(--ifm-color-emphasis-300)',
-            borderRadius: '8px',
-            padding: '1.5rem',
-          }}>
-            <Heading as="h3">{isEn ? 'Email' : '邮箱'}</Heading>
-            <p style={{margin: 0}}>
-              <a href="mailto:zhuzhen723723@outlook.com">zhuzhen723723@outlook.com</a>
-            </p>
-            <p style={{color: 'var(--ifm-color-secondary-darkest)', marginTop: '0.5rem'}}>
-              {isEn
-                ? 'For business inquiries, private questions, or one-on-one paid consultations.'
-                : '商务合作、私密问题或一对一付费咨询。'}
-            </p>
-          </div>
-
-          {/* ── 付费咨询 ── */}
-          <div style={{
-            border: '1px solid var(--ifm-color-emphasis-300)',
-            borderRadius: '8px',
-            padding: '1.5rem',
-            background: 'var(--ifm-color-warning-contrast-background)',
-          }}>
-            <Heading as="h3">{isEn ? 'Paid Consultation' : '付费咨询'}</Heading>
-            <p style={{margin: 0, color: 'var(--ifm-color-secondary-darkest)'}}>
-              {isEn
-                ? 'Due to the large number of individual communications, the author\'s time and energy are limited. One-on-one technical support and customized secondary development require paid consultation. Please state your purpose when adding (WeChat recommended, idle chats are refused).'
-                : '由于单独沟通人数过多作者时间精力有限，一对一技术支持和定制化二次开发需付费咨询。加好友请注明来意（推荐微信，拒绝闲聊）。'}
-            </p>
-          </div>
-
           {/* ── 企业墙 ── */}
           <div style={{
             border: '1px solid var(--ifm-color-emphasis-300)',
@@ -114,25 +81,6 @@ export default function Contact() {
               {isEn
                 ? 'The open-source project is building a corporate wall on the official website. If your company is using GeneralUpdate in production and would like free promotion, please contact the author.'
                 : '本开源项目在官网上建立企业墙，如果有企业在项目中有使用本项目并且想上墙进行免费宣传可以联系作者。'}
-            </p>
-          </div>
-
-          {/* ── 赞助 ── */}
-          <div style={{
-            border: '1px solid var(--ifm-color-emphasis-300)',
-            borderRadius: '8px',
-            padding: '1.5rem',
-          }}>
-            <Heading as="h3">{isEn ? 'Sponsorship' : '赞助一下'}</Heading>
-            <p style={{color: 'var(--ifm-color-secondary-darkest)'}}>
-              {isEn
-                ? 'All community donations will be used for the development of open-source projects and to reward code contributors. Sponsors\' company logos will be displayed on the project website. Your sponsorship will help us improve quality, add features, and provide a better user experience.'
-                : '所有的社区捐赠将用于开源项目的发展建设和奖励代码贡献者。赞助者的公司标志将展示在项目网站上。您的赞助将帮助我们提高项目质量、增加更多功能、提供更好的用户体验。'}
-            </p>
-            <p style={{color: 'var(--ifm-color-secondary-darkest)', fontSize: '0.9rem', fontStyle: 'italic'}}>
-              {isEn
-                ? 'Code contributors: please contact the email above to claim your rewards.'
-                : '代码贡献者请联系上方邮箱领取奖励。'}
             </p>
           </div>
 

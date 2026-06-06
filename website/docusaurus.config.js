@@ -90,11 +90,29 @@ const config = {
                 docId: 'doc/GeneralSpacestation',
                 label: 'GeneralSpacestation',
               },
+              {
+                to: '/outsourcing',
+                label: '软件外包服务',
+              },
+              {
+                to: '/paid-consulting',
+                label: '付费咨询',
+              },
             ],
           },
           {
             to: '/contact',
             label: '联系方式',
+            position: 'right',
+          },
+          {
+            to: '/corporate-wall',
+            label: '企业墙',
+            position: 'right',
+          },
+          {
+            to: '/oss-partners',
+            label: '开源生态伙伴',
             position: 'right',
           },
           {
