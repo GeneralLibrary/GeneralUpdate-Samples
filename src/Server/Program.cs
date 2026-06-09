@@ -91,14 +91,14 @@ var handleVerification = (VerifyDTO request) =>
             Format = v.Format ?? ".zip", Size = v.Size, IsFreeze = v.IsFreeze,
             UpgradeMode = requestUpgradeMode,
             IsCrossVersion = v.IsCrossVersion ?? false,
-            FromVersion = v.FromVersion, ToVersion = v.ToVersion
+            FromVersion = v.FromVersion
         });
     }
 
     var modeLabel = requestUpgradeMode == 2 ? "CrossVersion" : "VersionChain";
     Console.WriteLine($"[Verification] Returning {results.Count} packages (Mode: {modeLabel})");
     foreach (var r in results)
-        Console.WriteLine($"    {r.Version} — {r.Name} ({(r.IsCrossVersion == true ? $"Cross {r.FromVersion}→{r.ToVersion}" : "Full")})");
+        Console.WriteLine($"    {r.Version} — {r.Name} ({(r.IsCrossVersion == true ? $"Cross {r.FromVersion} → {r.Version}" : "Full")})");
 
     return Results.Ok(HttpResponseDTO<IEnumerable<VerificationResultDTO>>.Success(results,
         $"Found {results.Count} update(s)."));
@@ -169,7 +169,7 @@ Console.WriteLine("╚═══════════════════�
 if (versionStore.Count > 0)
 {
     foreach (var v in versionStore.OrderBy(v => new Version(v.Version!)))
-        Console.WriteLine($"  {v.Version,-12} AppType={v.AppType} {(v.IsCrossVersion == true ? $"Cross {v.FromVersion}→{v.ToVersion}" : "Full")}  {v.PacketName}");
+        Console.WriteLine($"  {v.Version,-12} AppType={v.AppType} {(v.IsCrossVersion == true ? $"Cross {v.FromVersion} → {v.Version}" : "Full")}  {v.PacketName}");
 }
 else
 {
@@ -240,5 +240,4 @@ record VersionEntry
     public bool? IsFreeze { get; set; }
     public bool? IsCrossVersion { get; set; }
     public string? FromVersion { get; set; }
-    public string? ToVersion { get; set; }
 }
