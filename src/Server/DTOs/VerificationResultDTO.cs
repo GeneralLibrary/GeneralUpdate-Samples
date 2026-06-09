@@ -86,9 +86,4 @@ public record VerificationResultDTO
     /// 跨版本升级的源版本号
     /// </summary>
     public string? FromVersion { get; set; }
-
-    /// <summary>
-    /// 跨版本升级的目标版本号
-    /// </summary>
-    public string? ToVersion { get; set; }
 }

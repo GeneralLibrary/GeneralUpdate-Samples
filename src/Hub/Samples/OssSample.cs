@@ -70,7 +70,7 @@ public class OssSample : ISample
                     foreach (var v in e.Info.Body)
                     {
                         var type = v.IsCrossVersion == true
-                            ? $"[差分 {v.FromVersion}→{v.ToVersion}]"
+                            ? $"[差分 {v.FromVersion} → {v.Version}]"
                             : "[完整包]";
                         Console.WriteLine($"    v{v.Version}  {type}");
                         Console.WriteLine($"      Name: {v.Name}");
