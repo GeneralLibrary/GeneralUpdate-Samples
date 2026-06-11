@@ -73,11 +73,6 @@ public record VerificationResultDTO
     public bool? IsFreeze { get; set; }
 
     /// <summary>
-    /// 升级模式: 1=VersionChain, 2=CrossVersion
-    /// </summary>
-    public int? UpgradeMode { get; set; }
-
-    /// <summary>
     /// 是否为跨版本升级包
     /// </summary>
     public bool? IsCrossVersion { get; set; }
