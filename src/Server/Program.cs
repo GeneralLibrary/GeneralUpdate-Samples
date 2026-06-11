@@ -41,13 +41,11 @@ app.Use(async (ctx, next) =>
 // ──  Verification handler (shared across URL variants)  ──────────
 var handleVerification = (VerifyDTO request) =>
 {
-    Console.WriteLine($"[Verification] AppKey={request.AppKey}, Version={request.Version}, AppType={request.AppType}, Platform={request.Platform}, ProductId={request.ProductId}, UpgradeMode={request.UpgradeMode}");
+    Console.WriteLine($"[Verification] AppKey={request.AppKey}, Version={request.Version}, AppType={request.AppType}, Platform={request.Platform}, ProductId={request.ProductId}");
 
     if (!Version.TryParse(request.Version ?? "0.0.0.0", out var currentVersion))
         return Results.Ok(HttpResponseDTO<IEnumerable<VerificationResultDTO>>.Success(
             Array.Empty<VerificationResultDTO>(), "Invalid version format."));
-
-    var requestUpgradeMode = request.UpgradeMode ?? 1;
 
     var available = versionStore
         .Where(v =>
@@ -59,13 +57,6 @@ var handleVerification = (VerifyDTO request) =>
             if (!string.IsNullOrEmpty(request.ProductId) && !string.IsNullOrEmpty(v.ProductId) &&
                 !string.Equals(v.ProductId, request.ProductId, StringComparison.OrdinalIgnoreCase))
                 return false;
-            if (requestUpgradeMode == 1 && v.IsCrossVersion == true) return false;
-            if (requestUpgradeMode == 2)
-            {
-                if (v.IsCrossVersion != true) return false;
-                if (!string.Equals(v.FromVersion, request.Version, StringComparison.OrdinalIgnoreCase))
-                    return false;
-            }
             return true;
         })
         .OrderByDescending(v => new Version(v.Version!))
@@ -89,14 +80,12 @@ var handleVerification = (VerifyDTO request) =>
             Version = v.Version, AppType = v.AppType, Platform = v.Platform,
             ProductId = v.ProductId, IsForcibly = v.IsForcibly,
             Format = v.Format ?? ".zip", Size = v.Size, IsFreeze = v.IsFreeze,
-            UpgradeMode = requestUpgradeMode,
             IsCrossVersion = v.IsCrossVersion ?? false,
             FromVersion = v.FromVersion
         });
     }
 
-    var modeLabel = requestUpgradeMode == 2 ? "CrossVersion" : "VersionChain";
-    Console.WriteLine($"[Verification] Returning {results.Count} packages (Mode: {modeLabel})");
+    Console.WriteLine($"[Verification] Returning {results.Count} packages");
     foreach (var r in results)
         Console.WriteLine($"    {r.Version} — {r.Name} ({(r.IsCrossVersion == true ? $"Cross {r.FromVersion} → {r.Version}" : "Full")})");
 

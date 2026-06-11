@@ -27,8 +27,4 @@ public class VerifyDTO
     /// </summary>
     public string? ProductId { get; set; }
 
-    /// <summary>
-    /// 升级模式: 1=VersionChain(逐版本链式升级), 2=CrossVersion(跨版本升级)
-    /// </summary>
-    public int? UpgradeMode { get; set; }
 }
