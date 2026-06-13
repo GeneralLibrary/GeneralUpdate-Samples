@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="src/MauiUpdate.Android/MauiUpdate.Android.csproj" />
-  <Project Path="server/Server.csproj" />
-</Solution>
