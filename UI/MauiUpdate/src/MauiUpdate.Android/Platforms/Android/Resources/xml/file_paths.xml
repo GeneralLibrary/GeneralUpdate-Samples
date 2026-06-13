@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Restrict FileProvider to the update subdirectory for security -->
+    <cache-path name="update_cache" path="GeneralUpdate/" />
+    <files-path name="update_files" path="GeneralUpdate/" />
+    <external-cache-path name="update_external_cache" path="GeneralUpdate/" />
+</paths>
