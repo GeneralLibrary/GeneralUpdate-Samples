@@ -10,7 +10,7 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly HttpClient _httpClient;
     private readonly MauiUpdateHandler _handler;
-    private string _serverUrl = "http://192.168.50.204:5000";
+    private string _serverUrl = "http://localhost:5000";
 
     [ObservableProperty]
     private string _statusText = "Ready — tap Check for Updates.";
@@ -86,7 +86,7 @@ public partial class MainViewModel : ObservableObject
 
         try
         {
-            _serverUrl = Preferences.Get("ServerUrl", "http://192.168.50.204:5000");
+            _serverUrl = Preferences.Get("ServerUrl", "http://localhost:5000");
 
             using var response = await _httpClient.PostAsync(
                 $"{_serverUrl}/Upgrade/Verification",
@@ -116,7 +116,8 @@ public partial class MainViewModel : ObservableObject
             }
 
             var latest = packages[0];
-            latest.DownloadUrl = $"{_serverUrl}/packages/{latest.PacketName}.apk";
+            var ext = FormatExtension(latest.Format);
+            latest.DownloadUrl = $"{_serverUrl}/packages/{latest.PacketName}{ext}";
 
             var checkResult = await _handler.CheckForUpdateAsync(latest, CurrentVersion);
 
@@ -188,7 +189,7 @@ public partial class MainViewModel : ObservableObject
                 IsForcibly = _pendingUpdate.IsForcibly,
                 Format = _pendingUpdate.Format,
                 Size = _pendingUpdate.Size,
-                DownloadUrl = $"{_serverUrl}/packages/{_pendingUpdate.PacketName}.apk"
+                DownloadUrl = $"{_serverUrl}/packages/{_pendingUpdate.PacketName}{FormatExtension(_pendingUpdate.Format)}"
             };
 
             // The library (AndroidApkInstaller) automatically checks
@@ -251,6 +252,9 @@ public partial class MainViewModel : ObservableObject
         el.TryGetProperty(n, out var p) && p.ValueKind == JsonValueKind.Number ? p.GetInt32() : 0;
     private static long GetLong(JsonElement el, string n) =>
         el.TryGetProperty(n, out var p) && p.ValueKind == JsonValueKind.Number ? p.GetInt64() : 0;
+
+    private static string FormatExtension(string? format) =>
+        string.IsNullOrWhiteSpace(format) ? ".apk" : format;
 
     private static string FormatSize(long bytes) => bytes switch
     {

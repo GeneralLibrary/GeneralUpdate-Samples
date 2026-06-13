@@ -16,10 +16,9 @@ app.UseCors();
 var packagesDir = Path.Combine(app.Environment.ContentRootPath, "packages");
 Directory.CreateDirectory(packagesDir);
 
-// GET /packages/{filename} - Serve APK files
-app.MapGet("/packages/{filename}", async (string filename, HttpContext context) =>
+// GET /packages/{filename} - Serve APK files with range support
+app.MapGet("/packages/{filename}", (string filename) =>
 {
-    // Sanitize filename to prevent path traversal
     var sanitized = Path.GetFileName(filename);
     var filePath = Path.Combine(packagesDir, sanitized);
     if (!File.Exists(filePath))
@@ -27,10 +26,11 @@ app.MapGet("/packages/{filename}", async (string filename, HttpContext context) 
         return Results.NotFound(new { error = "Package not found.", filename = sanitized });
     }
 
-    var fileInfo = new FileInfo(filePath);
-    context.Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{sanitized}\"");
-    context.Response.Headers.Append("Accept-Ranges", "bytes");
-    return Results.File(filePath, "application/vnd.android.package-archive", sanitized);
+    return Results.File(
+        filePath,
+        contentType: "application/vnd.android.package-archive",
+        fileDownloadName: sanitized,
+        enableRangeProcessing: true);
 });
 
 // POST /Upgrade/Verification - Version check API (matches GeneralUpdate server format)

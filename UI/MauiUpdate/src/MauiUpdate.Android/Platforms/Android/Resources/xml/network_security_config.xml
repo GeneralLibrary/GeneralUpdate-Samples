@@ -4,11 +4,9 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">10.0.2.2</domain>
         <domain includeSubdomains="true">localhost</domain>
-        <domain includeSubdomains="true">192.168.50.204</domain>
     </domain-config>
-    <!-- Also trust user-installed CAs for debugging -->
+    <!-- Use standard system certificate validation only -->
     <trust-anchors>
-        <certificates src="user" />
         <certificates src="system" />
     </trust-anchors>
 </network-security-config>
