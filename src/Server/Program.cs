@@ -118,13 +118,17 @@ app.MapGet("/File/Download/{hash}", (string hash, HttpContext http) =>
     var entry = versionStore.FirstOrDefault(v =>
         string.Equals(v.Hash, hash, StringComparison.OrdinalIgnoreCase));
 
-    var fileName = entry != null ? $"{entry.PacketName}.zip" : $"{hash}.zip";
+    var ext = entry?.Format ?? ".zip";
+    var fileName = entry != null ? $"{entry.PacketName}{ext}" : $"{hash}{ext}";
     var filePath = Path.Combine(contentRoot, "packages", fileName);
 
     if (!File.Exists(filePath))
     {
         // Try finding by hash as filename
-        var candidates = Directory.GetFiles(Path.Combine(contentRoot, "packages"), "*.zip");
+        var candidates = Directory.GetFiles(Path.Combine(contentRoot, "packages"), $"{hash}.*")
+            .Concat(Directory.GetFiles(Path.Combine(contentRoot, "packages"), "*.zip"))
+            .Concat(Directory.GetFiles(Path.Combine(contentRoot, "packages"), "*.apk"))
+            .Distinct();
         var matched = candidates.FirstOrDefault(f =>
         {
             using var sha = SHA256.Create();
@@ -194,14 +198,15 @@ static List<VersionEntry> LoadVersionStore(IWebHostEnvironment env)
     var packagesDir = Path.Combine(env.ContentRootPath, "wwwroot", "packages");
     foreach (var e in entries)
     {
-        var zipPath = Path.Combine(packagesDir, $"{e.PacketName}.zip");
-        if (File.Exists(zipPath))
+        var ext = e.Format ?? ".zip";
+        var filePath = Path.Combine(packagesDir, $"{e.PacketName}{ext}");
+        if (File.Exists(filePath))
         {
-            e.Size ??= new FileInfo(zipPath).Length;
+            e.Size ??= new FileInfo(filePath).Length;
             if (string.IsNullOrEmpty(e.Hash))
             {
                 using var sha256 = SHA256.Create();
-                using var stream = File.OpenRead(zipPath);
+                using var stream = File.OpenRead(filePath);
                 e.Hash = Convert.ToHexStringLower(sha256.ComputeHash(stream));
             }
         }

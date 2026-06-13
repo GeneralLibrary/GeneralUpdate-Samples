@@ -1,0 +1,129 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:AndroidUpdate.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="600"
+             x:Class="AndroidUpdate.Views.MainView"
+             x:DataType="vm:MainViewViewModel">
+
+  <!-- Single root container for the UserControl (ContentControl) -->
+  <Panel>
+    <!-- Main content -->
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+    <!-- Header -->
+    <Border Grid.Row="0" Background="{DynamicResource SystemAccentColor}"
+            CornerRadius="8" Padding="16" Margin="0,0,0,16">
+      <StackPanel>
+        <TextBlock Text="Android App Update Demo" FontSize="20"
+                   FontWeight="Bold" HorizontalAlignment="Center"/>
+        <TextBlock Text="{Binding CurrentVersion, StringFormat='Current version: v{0}'}"
+                   FontSize="14" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Content area -->
+    <StackPanel Grid.Row="1" Spacing="12" VerticalAlignment="Center">
+      <!-- Status -->
+      <Border Background="{DynamicResource ThemeControlHighlightMidBrush}"
+              CornerRadius="8" Padding="12">
+        <TextBlock Text="{Binding StatusText}" FontSize="14"
+                   TextWrapping="Wrap" HorizontalAlignment="Center"/>
+      </Border>
+
+      <!-- Update available info -->
+      <Border IsVisible="{Binding HasUpdate}"
+              Background="#1B5E20" CornerRadius="8" Padding="12">
+        <StackPanel Spacing="4">
+          <TextBlock Text="{Binding NewVersion, StringFormat='New version: v{0}'}"
+                     FontSize="16" FontWeight="Bold" Foreground="White"/>
+          <TextBlock Text="{Binding UpdateDescription}" FontSize="12"
+                     TextWrapping="Wrap" Foreground="White"/>
+        </StackPanel>
+      </Border>
+
+      <!-- No update message -->
+      <Border IsVisible="{Binding ShowNoUpdateMessage}"
+              Background="{DynamicResource ThemeControlMidBrush}"
+              CornerRadius="8" Padding="12">
+        <TextBlock Text="No updates available. You are on the latest version!"
+                   FontSize="14" HorizontalAlignment="Center" TextWrapping="Wrap"/>
+      </Border>
+
+      <!-- Progress bar -->
+      <ProgressBar IsVisible="{Binding IsDownloading}"
+                   Value="{Binding DownloadProgress}"
+                   Minimum="0" Maximum="100"
+                   Height="20" CornerRadius="4"/>
+
+      <TextBlock IsVisible="{Binding IsDownloading}"
+                 Text="{Binding ProgressText}"
+                 FontSize="12" HorizontalAlignment="Center"/>
+    </StackPanel>
+
+    <!-- Buttons -->
+    <StackPanel Grid.Row="2" Spacing="8" Margin="0,16,0,0">
+      <Button Command="{Binding CheckUpdateCommand}"
+              HorizontalAlignment="Stretch"
+              Height="44" CornerRadius="8"
+              FontSize="16"
+              Content="Check for Updates"/>
+
+      <Button Command="{Binding DownloadUpdateCommand}"
+              IsVisible="{Binding HasUpdate}"
+              HorizontalAlignment="Stretch"
+              Height="44" CornerRadius="8"
+              FontSize="16"
+              Content="Download &amp; Install"
+              Background="{DynamicResource SystemAccentColor}"/>
+    </StackPanel>
+  </Grid>
+
+  <!-- Dialog overlay -->
+  <Panel IsVisible="{Binding IsDialogVisible}" ZIndex="100">
+    <!-- Semi-transparent backdrop -->
+    <Rectangle Fill="#80000000"/>
+
+    <!-- Dialog card -->
+    <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+            Background="White"
+            CornerRadius="12" Padding="24"
+            MinWidth="300" MaxWidth="360">
+      <StackPanel Spacing="16">
+        <!-- Title -->
+        <TextBlock Text="{Binding DialogTitle}"
+                   FontSize="18" FontWeight="Bold"
+                   Foreground="Black"
+                   HorizontalAlignment="Center"
+                   TextWrapping="Wrap"/>
+
+        <!-- Message -->
+        <ScrollViewer MaxHeight="300">
+          <TextBlock Text="{Binding DialogMessage}"
+                     FontSize="13"
+                     Foreground="Black"
+                     TextWrapping="Wrap"
+                     LineHeight="20"/>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,8,0,0">
+          <Button Command="{Binding DialogCancelCommand}"
+                  Grid.Column="0"
+                  Content="Cancel"
+                  HorizontalAlignment="Stretch"
+                  Height="40" CornerRadius="8"
+                  Background="{DynamicResource ThemeControlMidBrush}"/>
+
+          <Button Command="{Binding DialogConfirmCommand}"
+                  Grid.Column="1"
+                  Content="Confirm"
+                  HorizontalAlignment="Stretch"
+                  Height="40" CornerRadius="8"
+                  Background="{DynamicResource SystemAccentColor}"/>
+        </Grid>
+      </StackPanel>
+    </Border>
+    </Panel>
+  </Panel>
+</UserControl>
