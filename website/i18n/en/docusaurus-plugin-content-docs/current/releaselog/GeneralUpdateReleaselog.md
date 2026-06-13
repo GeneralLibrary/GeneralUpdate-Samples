@@ -7,6 +7,18 @@ tags: [log]
 
 # 📒Release log
 
+### 📍2026-06-14
+
+- **GeneralUpdate.Core**: Fixed critical/high security issues found in code audit — BSDIFF overflow, Zip path traversal, ProcessExit deadlock, hardcoded IPC key, etc.; fixed download pipeline failure not aborting Upgrade launch; backup feature disabled by default; removed UpgradeMode pass-through field; added CVP-first upgrade strategy with automatic chain fallback
+- **GeneralUpdate.Differential**: BSDIFF overflow length validation fix
+- **GeneralUpdate.Bowl**: Fixed Trace Listener lifecycle issue
+- **GeneralUpdate.Drivelution**: Fixed strategy lifecycle issue
+- **GeneralUpdate.Extension**: Fixed HubConnection lifecycle and RetryPolicy issues
+- **GeneralUpdate.Avalonia.Android**: **First public release** `v0.0.1-beta.9` — Avalonia Android APK auto-update component with version comparison, resumable download, SHA256 verification, and Package Installer orchestration; supports HMAC/Bearer/ApiKey/Basic multi-protocol auth
+- **GeneralUpdate.Maui.Android**: **First public release** `v0.0.1-beta.3` — MAUI Android APK auto-update component with `ValidateAsync` + `ExecuteUpdateAsync` two-phase API, DI container integration, HTTP Range resume download, and SHA256 verification
+- **GeneralUpdate.Tools**: Added Mobile packaging module with APK/AAB file parsing (auto-extract AndroidManifest metadata), `dotnet publish` project build, SHA256 computation, server upload, and version record export
+- **Docs**: Added complete GeneralUpdate.Avalonia.Android and GeneralUpdate.Maui.Android component reference docs (EN/CN); added Avalonia/Maui Android quickstart tutorials; Tools doc updated with Mobile module and dual release pipeline
+
 ### 📍2026-05-20 — v10.5.0-beta.2
 
 - **GeneralUpdate.Core**: Unified `GeneralUpdateBootstrap` entry point, merging original ClientCore and Core capabilities; added `SetSource()` lightweight config entry and `generalupdate.manifest.json` minimal setup; refactored download subsystem into replaceable 5-layer model (Source/Policy/Executor/Pipeline/Orchestrator); extension points increased to 10 replaceable interfaces

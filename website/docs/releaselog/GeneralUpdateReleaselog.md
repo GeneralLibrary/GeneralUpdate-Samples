@@ -7,6 +7,18 @@ tags: [log]
 
 # 📒Release log
 
+### 📍2026-06-14
+
+- **GeneralUpdate.Core**: 修复代码审计发现的 BSDIFF 溢出、Zip 路径遍历、ProcessExit 死锁、IPC 密钥硬编码等严重/高危安全问题；修复下载管道失败后继续启动 Upgrade 的错误行为；备份功能默认关闭（不再默认备份）；移除 UpgradeMode 透传字段；新增跨版本优先更新（CVP-first）策略，自动降级为链式更新
+- **GeneralUpdate.Differential**: BSDIFF 溢出长度校验修复
+- **GeneralUpdate.Bowl**: 修复 Trace Listener 生命周期问题
+- **GeneralUpdate.Drivelution**: 修复策略生命周期问题
+- **GeneralUpdate.Extension**: 修复 HubConnection 生命周期和 RetryPolicy 问题
+- **GeneralUpdate.Avalonia.Android**: **首个公开发布** `v0.0.1-beta.9` — Avalonia Android APK 自动更新组件，提供版本对比、断点续传下载、SHA256 校验和 Package Installer 触发编排；支持 HMAC/Bearer/ApiKey/Basic 多协议认证
+- **GeneralUpdate.Maui.Android**: **首个公开发布** `v0.0.1-beta.3` — MAUI Android APK 自动更新组件，提供 `ValidateAsync` + `ExecuteUpdateAsync` 双阶段 API、DI 容器集成、HTTP Range 断点续传和 SHA256 校验
+- **GeneralUpdate.Tools**: 新增 Mobile 打包模块，支持 APK/AAB 文件解析（自动提取 AndroidManifest 元数据）、`dotnet publish` 项目构建、SHA256 计算、服务端上传和版本记录导出
+- **文档**: 新增 GeneralUpdate.Avalonia.Android 和 GeneralUpdate.Maui.Android 完整组件参考文档（中英文）；新增 Avalonia/Maui Android 快速入门教程；Tools 文档补充 Mobile 模块和双发布流水线说明
+
 ### 📍2026-05-20 — v10.5.0-beta.2
 
 - **GeneralUpdate.Core**: 统一 `GeneralUpdateBootstrap` 入口，合并原 ClientCore 和 Core 能力；新增 `SetSource()` 轻配置入口与 `generalupdate.manifest.json` 极简接入；重构下载子系统为可替换的 5 层模型（Source/Policy/Executor/Pipeline/Orchestrator）；扩展点体系增至 10 个可替换接口

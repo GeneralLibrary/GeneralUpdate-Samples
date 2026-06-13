@@ -26,9 +26,9 @@ dotnet run --project GeneralUpdate.Tools.csproj
 
 Go to [GeneralUpdate.Tools Releases](https://github.com/GeneralLibrary/GeneralUpdate.Tools/releases) and download the executable for your platform.
 
-> The Simulation module internally runs `dotnet publish` to build test apps, so you need the .NET SDK for that feature. Patch / Extension / OSS / Config modules work without the SDK.
+> The Simulation module internally runs `dotnet publish` to build test apps, so you need the .NET SDK for that feature. Patch / Extension / OSS / Config / Mobile modules work without the SDK. However, Mobile's Project Mode (Build & Locate) does require the .NET SDK.
 
-## Six modules at a glance
+## Seven modules at a glance
 
 | Module | What you provide | What the tool produces | Downstream consumer |
 |--------|-----------------|----------------------|---------------------|
@@ -38,6 +38,7 @@ Go to [GeneralUpdate.Tools Releases](https://github.com/GeneralLibrary/GeneralUp
 | **Config** | Client/Upgrade `.csproj` files | `generalupdate.manifest.json` + `sample_output/` publish directory | Client/Upgrade bootstrap |
 | **Simulation** | Old version directory + patch ZIP | Local update server + `simulation_report.md` | Pre-release QA gate |
 | **Hash** | Local file (ZIP) | SHA256 lowercase hex string | Integrity check, server-side version records |
+| **Mobile** | APK/AAB file or MAUI/Avalonia Android `.csproj` | `mobile_version_{timestamp}.json` version record | Mobile update server, GeneralUpdate.Avalonia/Maui components |
 
 ---
 
@@ -305,9 +306,103 @@ In the **OSS Config** module, click **ComputeHash**, select a local ZIP file, an
 
 ---
 
+## Mobile: Mobile packaging
+
+### What problem it solves
+
+If you use `GeneralUpdate.Avalonia.Android` or `GeneralUpdate.Maui.Android` to provide auto-update for your Android apps, each release requires extracting APK/AAB metadata (package name, version, SHA256 hash, file size) and uploading it to the server for version management. The Mobile module consolidates "parse → package → upload → generate version record" into a single interface.
+
+Supports two modes:
+
+- **File mode**: Select an APK or AAB file directly; the tool automatically parses AndroidManifest.xml to extract metadata.
+- **Project mode**: Select a `.csproj`, automatically runs `dotnet publish`, then locates and parses the build artifact.
+
+### Inputs
+
+#### File mode
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| APK/AAB file | ✅ | Select a `.apk` or `.aab` file; format is auto-detected |
+| Output Directory | ❌ | Version record JSON output directory; defaults to desktop |
+| ProductId | ✅ | Product identifier GUID for server-side product differentiation |
+| Platform | ✅ | Target platform (default Android = 4) |
+| Product Name | ❌ | Product name, written into the version record |
+| Release Notes | ❌ | Release notes |
+| Is Forcibly | ❌ | Force update flag |
+
+#### Project mode
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `.csproj` file | ✅ | Select a MAUI or Avalonia Android `.csproj`; tool parses `ApplicationId`, `ApplicationDisplayVersion`, `ApplicationVersion` |
+| Output Directory | ❌ | Same as above |
+
+### Workflow
+
+1. **Select mode**: Toggle File Mode / Project Mode switch.
+   - **File mode**: Click **Select File** to choose `.apk` or `.aab`.
+   - **Project mode**: Click **Select Project** to choose a `.csproj`, then click **Build & Locate** to run `dotnet publish` and locate the artifact.
+2. **Analyze**: Click Analyze — the tool automatically:
+   - Detects file format (APK / Android App Bundle)
+   - Extracts `PackageName`, `VersionName`, `VersionCode` from AndroidManifest.xml
+   - Computes SHA256 hash and file size
+3. **Configure upload**: Review or edit the auto-extracted metadata, fill in ProductId, Product Name, etc.
+4. **Upload**: Click Upload to send to the server, automatically generating a version record JSON file.
+
+### What the tool does internally
+
+1. **Format detection**: Identifies package format via file extension (`.apk` / `.aab`) and ZIP internal structure (AndroidManifest.xml location).
+2. **Metadata parsing**: Uses `AxmlParser` to read binary `AndroidManifest.xml` from the ZIP, extracting `package`, `versionName`, `versionCode`.
+3. **SHA256 computation**: Computes SHA256 hash of the full file.
+4. **File size**: Reads file length and formats it for human-readable display (KB/MB/GB).
+5. **Project build** (Project mode only): Runs `dotnet publish -c Release -o {publishDir}`, then auto-locates the output APK/AAB.
+6. **Upload**: Sends file and form fields (Name, Version, Hash, Format, Size, Platform, ProductId, IsForcibly) via HTTP multipart/form-data.
+7. **Version record export**: Generates `mobile_version_{timestamp}.json` with full version metadata after successful upload.
+
+### Output
+
+```
+{OutputDirectory}/mobile_version_20260614120000.json
+```
+
+```json
+{
+  "name": "MyApp",
+  "version": "2.0.0",
+  "hash": "a1b2c3d4e5f6...",
+  "url": "https://server.example.com/packages/app-v2.0.0.apk",
+  "packageName": "com.example.myapp",
+  "fileSize": 50000000,
+  "format": "apk",
+  "platform": 4,
+  "productId": "2d974e2a-31e6-4887-9bb1-b4689e98c77a",
+  "isForcibly": false,
+  "releaseDate": "2026-06-14T12:00:00.0000000Z"
+}
+```
+
+### How downstream consumes it
+
+- Import or upload the generated version record JSON to your update server (e.g. GeneralSpacestation).
+- When the client (`GeneralUpdate.Avalonia.Android` or `GeneralUpdate.Maui.Android`) queries the server for version info, the returned data structure maps to the version record's fields.
+- The client uses the `hash` field for SHA256 integrity verification after downloading the APK.
+
+### Supported AndroidManifest fields
+
+| Manifest attribute | Field | Description |
+|-------------------|-------|-------------|
+| `package` | `PackageName` | App package name (unique identifier) |
+| `android:versionName` | `VersionName` | Display version (e.g. `2.0.0`) |
+| `android:versionCode` | `VersionCode` | Internal version code (integer) |
+
+---
+
 ## Recommended release workflow
 
-This sequence chains the six modules into a complete release pipeline:
+### Desktop update
+
+This sequence chains the Patch, OSS, Config, and Simulation modules together for desktop app releases:
 
 ```
 ┌─────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
@@ -322,6 +417,22 @@ This sequence chains the six modules into a complete release pipeline:
 4. **Config**: select Client/Upgrade `.csproj` files, generate `generalupdate.manifest.json`.
 5. **Simulation**: select the old version directory and patch ZIP, confirm PASS.
 6. **Ship**: upload patch ZIP and OSS manifest to production.
+
+### Mobile update
+
+Use the Mobile module for Android app releases:
+
+```
+┌────────────┐    ┌──────────┐    ┌──────────┐
+│ Build APK/ │ -> │ Mobile   │ -> │ Ship to  │
+│ AAB        │    │ parse &  │    │ update   │
+│ artifact   │    │ upload   │    │ server   │
+└────────────┘    └──────────┘    └──────────┘
+```
+
+1. **Build artifact**: Build `.apk` / `.aab` in CI or locally.
+2. **Mobile**: Select file or project, auto-parse metadata, compute SHA256, upload to server, export version record.
+3. **Ship**: Confirm upload success; clients check for updates via `GeneralUpdate.Avalonia.Android` or `GeneralUpdate.Maui.Android`.
 
 ---
 
@@ -344,4 +455,6 @@ This sequence chains the six modules into a complete release pipeline:
 - [GeneralUpdate.Core](../doc/GeneralUpdate.Core): Client/Upgrade main update flow
 - [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential): Differential algorithm Clean/Dirty modes
 - [GeneralUpdate.Extension](../doc/GeneralUpdate.Extension): Extension install and version management
+- [GeneralUpdate.Avalonia.Android](../doc/GeneralUpdate.Avalonia.Android): Avalonia Android APK update component
+- [GeneralUpdate.Maui.Android](../doc/GeneralUpdate.Maui.Android): MAUI Android APK update component
 - [Beginner cookbook](./Beginner%20cookbook): Complete end-to-end update walkthrough

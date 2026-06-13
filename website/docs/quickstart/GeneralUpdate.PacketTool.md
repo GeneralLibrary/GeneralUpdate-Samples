@@ -32,7 +32,7 @@ dotnet run --project GeneralUpdate.Tools.csproj
 
 > Simulation 模块内部会调用 `dotnet publish` 构建测试应用，因此使用仿真功能时必须安装 .NET SDK，仅运行 Patch / Extension / OSS / Config 模块则不需要。
 
-## 六个模块速览
+## 七个模块速览
 
 | 模块 | 你提供 | 工具产出 | 下游消费者 |
 |------|--------|----------|------------|
@@ -42,6 +42,7 @@ dotnet run --project GeneralUpdate.Tools.csproj
 | **Config** | Client/Upgrade 的 `.csproj` | `generalupdate.manifest.json` + `sample_output/` 发布目录 | Client/Upgrade 启动引导 |
 | **Simulation** | 旧版本目录 + 补丁 ZIP | 本地更新服务 + `simulation_report.md` | 发布前质量把关 |
 | **Hash** | 本地文件（ZIP） | SHA256 小写十六进制字符串 | 完整性校验、服务端版本记录 |
+| **Mobile** | APK/AAB 文件或 MAUI/Avalonia Android 的 `.csproj` | `mobile_version_{timestamp}.json` 版本记录 | 移动端更新服务端、GeneralUpdate.Avalonia/Maui 组件 |
 
 ---
 
@@ -325,9 +326,103 @@ Generate Sample 额外输出：
 
 ---
 
+## Mobile：移动端打包
+
+### 解决什么问题
+
+如果你使用 `GeneralUpdate.Avalonia.Android` 或 `GeneralUpdate.Maui.Android` 组件为 Android 应用提供自动更新能力，每次发布新版本时都需要获取 APK/AAB 文件的元数据（包名、版本号、SHA256 哈希、文件大小），并将其上传到服务端进行版本管理。Mobile 模块把"解析 → 打包 → 上传 → 生成版本记录"这四步收敛到一个界面中。
+
+支持两种工作模式：
+
+- **文件模式**：直接选择 APK 或 AAB 文件，自动解析 AndroidManifest.xml 提取元数据
+- **项目模式**：选择 `.csproj` 项目文件，自动执行 `dotnet publish` 构建，然后定位产物并解析
+
+### 输入
+
+#### 文件模式
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| APK/AAB 文件 | ✅ | 选择 `.apk` 或 `.aab` 文件，工具自动识别格式类型 |
+| Output Directory | ❌ | 版本记录 JSON 输出目录，为空时输出到桌面 |
+| ProductId | ✅ | 产品标识 GUID，用于区分服务端产品线 |
+| Platform | ✅ | 目标平台（默认 Android = 4） |
+| Product Name | ❌ | 产品名称，写入版本记录 |
+| Release Notes | ❌ | 发布说明 |
+| Is Forcibly | ❌ | 是否强制更新 |
+
+#### 项目模式
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| `.csproj` 文件 | ✅ | 选择 MAUI 或 Avalonia Android 项目的 `.csproj`，工具自动解析 `ApplicationId`、`ApplicationDisplayVersion`、`ApplicationVersion` |
+| Output Directory | ❌ | 同上 |
+
+### 操作流程
+
+1. **选择模式**：切换 File Mode / Project Mode 开关。
+   - **文件模式**：点击 **Select File** 选择 `.apk` 或 `.aab` 文件。
+   - **项目模式**：点击 **Select Project** 选择 `.csproj` 文件，然后点击 **Build & Locate** 自动执行 `dotnet publish` 并定位产物。
+2. **Analyze**：点击 Analyze 按钮，工具自动：
+   - 识别文件格式（APK / Android App Bundle）
+   - 从 AndroidManifest.xml 中提取 `PackageName`、`VersionName`、`VersionCode`
+   - 计算 SHA256 哈希和文件大小
+3. **填写上传配置**：确认或编辑自动提取的元数据，填写 ProductId、Product Name 等发布信息。
+4. **Upload**：点击 Upload 上传到服务端，并自动生成版本记录 JSON 文件。
+
+### 工具内部做了什么
+
+1. **格式检测**：通过文件扩展名（`.apk` / `.aab`）和 ZIP 内部结构（`AndroidManifest.xml` 位置）自动识别包格式。
+2. **元数据解析**：使用 `AxmlParser` 从 ZIP 中读取二进制的 `AndroidManifest.xml`，提取 `package`、`versionName`、`versionCode`。
+3. **SHA256 计算**：对完整文件计算 SHA256 哈希值。
+4. **文件大小**：读取文件长度并格式化为人类可读的显示（KB/MB/GB）。
+5. **项目构建**（仅项目模式）：调用 `dotnet publish -c Release -o {publishDir}`，自动定位输出的 APK/AAB 文件。
+6. **上传**：通过 HTTP multipart/form-data 将文件和表单字段（Name、Version、Hash、Format、Size、Platform、ProductId、IsForcibly）上传到服务端。
+7. **版本记录导出**：上传成功后生成 `mobile_version_{timestamp}.json`，包含完整的版本元数据。
+
+### 输出
+
+```
+{OutputDirectory}/mobile_version_20260614120000.json
+```
+
+```json
+{
+  "name": "MyApp",
+  "version": "2.0.0",
+  "hash": "a1b2c3d4e5f6...",
+  "url": "https://server.example.com/packages/app-v2.0.0.apk",
+  "packageName": "com.example.myapp",
+  "fileSize": 50000000,
+  "format": "apk",
+  "platform": 4,
+  "productId": "2d974e2a-31e6-4887-9bb1-b4689e98c77a",
+  "isForcibly": false,
+  "releaseDate": "2026-06-14T12:00:00.0000000Z"
+}
+```
+
+### 下游如何使用
+
+- 将生成的版本记录 JSON 导入或上传到你的更新服务端（如 GeneralSpacestation）
+- 客户端（`GeneralUpdate.Avalonia.Android` 或 `GeneralUpdate.Maui.Android`）从服务端查询版本信息时，返回的数据结构与版本记录的内容对应
+- 客户端下载 APK 后使用 `hash` 字段做 SHA256 完整性校验
+
+### 支持的 AndroidManifest 字段提取
+
+| 清单属性 | 字段名 | 说明 |
+|---------|--------|------|
+| `package` | `PackageName` | 应用包名（唯一标识） |
+| `android:versionName` | `VersionName` | 展示版本号（如 `2.0.0`） |
+| `android:versionCode` | `VersionCode` | 内部版本代码（整数） |
+
+---
+
 ## 推荐发布工作流
 
-这个顺序把六个模块串联成一个完整的发布流水线：
+### 桌面端更新
+
+这个顺序把 Patch、OSS、Config、Simulation 四个模块串联成一个完整的桌面应用发布流水线：
 
 ```
 ┌─────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
@@ -342,6 +437,21 @@ Generate Sample 额外输出：
 4. **Config**：选择 Client/Upgrade 的 `.csproj`，生成 `generalupdate.manifest.json`。
 5. **Simulation**：选择旧版本目录和补丁 ZIP，确认 PASS。
 6. **发布上线**：上传补丁 ZIP、OSS 清单到生产环境。
+
+### 移动端更新
+
+使用 Mobile 模块串联移动端 Android 应用发布：
+
+```
+┌────────────┐    ┌──────────┐    ┌──────────┐
+│ 构建 APK/  │ -> │ Mobile   │ -> │ 发布上线  │
+│ AAB 产物   │    │ 解析+上传 │    │ 更新服务  │
+└────────────┘    └──────────┘    └──────────┘
+```
+
+1. **构建产物**：在 CI 或本地构建出 `.apk` / `.aab` 文件。
+2. **Mobile**：选择文件或项目，自动解析元数据、计算 SHA256、上传服务端、导出版本记录。
+3. **发布上线**：确认上传成功，客户端通过 `GeneralUpdate.Avalonia.Android` 或 `GeneralUpdate.Maui.Android` 检查更新。
 
 ---
 
@@ -364,4 +474,6 @@ Generate Sample 额外输出：
 - [GeneralUpdate.Core](../doc/GeneralUpdate.Core)：Client/Upgrade 更新主流程
 - [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential)：差分算法 Clean/Dirty 模式
 - [GeneralUpdate.Extension](../doc/GeneralUpdate.Extension)：扩展包安装与版本管理
+- [GeneralUpdate.Avalonia.Android](../doc/GeneralUpdate.Avalonia.Android)：Avalonia Android APK 更新组件
+- [GeneralUpdate.Maui.Android](../doc/GeneralUpdate.Maui.Android)：MAUI Android APK 更新组件
 - [入门实战手册](./Beginner%20cookbook)：从零跑通完整更新闭环

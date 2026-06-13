@@ -3,6 +3,6 @@
   "position": 2,
   "link": {
     "type": "generated-index",
-    "description": "GeneralUpdate component reference — covering the five non-firmware components: Core, Bowl, Differential, Drivelution, and Extension."
+    "description": "GeneralUpdate component reference — covering the seven non-firmware components: Core, Bowl, Differential, Drivelution, Extension, Avalonia.Android, and Maui.Android."
   }
 }
