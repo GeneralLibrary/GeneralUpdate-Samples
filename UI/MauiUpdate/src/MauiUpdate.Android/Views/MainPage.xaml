@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MauiUpdate.ViewModels"
+             x:Class="MauiUpdate.Views.MainPage"
+             x:DataType="vm:MainViewModel"
+             Title="MauiUpdate Sample"
+             BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#1A1A1A}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <!-- Header -->
+            <Border BackgroundColor="{AppThemeBinding Light=#6200EE, Dark=#BB86FC}"
+                    StrokeThickness="0"
+                    Padding="16"
+                    StrokeShape="RoundRectangle 8">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="GeneralUpdate MAUI Demo"
+                           FontSize="22"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+                    <Label Text="Android Auto-Updater"
+                           FontSize="14"
+                           TextColor="#E0E0E0" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Current Version Info -->
+            <Border BackgroundColor="{AppThemeBinding Light=White, Dark=#2D2D2D}"
+                    StrokeShape="RoundRectangle 8"
+                    Stroke="{AppThemeBinding Light=#E0E0E0, Dark=#404040}"
+                    Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Current Version"
+                           FontSize="12"
+                           TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                    <Label Text="{Binding CurrentVersion}"
+                           FontSize="28"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#212121, Dark=#FFFFFF}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Status Bar -->
+            <Border BackgroundColor="{AppThemeBinding Light=#FFF8E1, Dark=#3E3520}"
+                    StrokeShape="RoundRectangle 8"
+                    Stroke="{AppThemeBinding Light=#FFE082, Dark=#5D4E2A}"
+                    Padding="12">
+                <Label Text="{Binding StatusText}"
+                       FontSize="14"
+                       TextColor="{AppThemeBinding Light=#795548, Dark=#FFD54F}" />
+            </Border>
+
+            <!-- Update Available Card -->
+            <Border BackgroundColor="{AppThemeBinding Light=#E8F5E9, Dark=#1B3D1B}"
+                    StrokeShape="RoundRectangle 8"
+                    Stroke="{AppThemeBinding Light=#A5D6A7, Dark=#2E7D32}"
+                    Padding="16"
+                    IsVisible="{Binding HasUpdate}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Update Available!"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#2E7D32, Dark=#81C784}" />
+                    <Label Text="{Binding UpdateVersion}"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#4E342E, Dark=#C8E6C9}" />
+                    <Label Text="{Binding UpdateDescription}"
+                           FontSize="12"
+                           TextColor="{AppThemeBinding Light=#5D4037, Dark=#A5D6A7}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- No Update Message -->
+            <Border BackgroundColor="{AppThemeBinding Light=#ECEFF1, Dark=#37474F}"
+                    StrokeShape="RoundRectangle 8"
+                    Stroke="{AppThemeBinding Light=#B0BEC5, Dark=#546E7A}"
+                    Padding="16"
+                    IsVisible="{Binding ShowNoUpdateMessage}">
+                <Label Text="&#x2713; You have the latest version."
+                       FontSize="14"
+                       TextColor="{AppThemeBinding Light=#37474F, Dark=#B0BEC5}" />
+            </Border>
+
+            <!-- Progress Section -->
+            <VerticalStackLayout Spacing="8"
+                                 IsVisible="{Binding IsDownloading}">
+                <ProgressBar Progress="{Binding ProgressValue}"
+                             ProgressColor="{AppThemeBinding Light=#6200EE, Dark=#BB86FC}"
+                             HeightRequest="8" />
+                <Label Text="{Binding ProgressText}"
+                       FontSize="14"
+                       HorizontalOptions="Center"
+                       TextColor="{AppThemeBinding Light=#6200EE, Dark=#BB86FC}" />
+            </VerticalStackLayout>
+
+            <!-- Buttons -->
+            <VerticalStackLayout Spacing="12">
+                <Button Text="&#x2460; Check for Updates"
+                        Command="{Binding CheckForUpdatesCommand}"
+                        BackgroundColor="{AppThemeBinding Light=#6200EE, Dark=#BB86FC}"
+                        TextColor="White"
+                        FontAttributes="Bold"
+                        HeightRequest="48"
+                        CornerRadius="8" />
+
+                <Button Text="&#x2461; Download &amp; Install"
+                        Command="{Binding DownloadAndInstallCommand}"
+                        IsVisible="{Binding HasUpdate}"
+                        BackgroundColor="{AppThemeBinding Light=#FF5722, Dark=#FF8A65}"
+                        TextColor="White"
+                        FontAttributes="Bold"
+                        HeightRequest="48"
+                        CornerRadius="8" />
+            </VerticalStackLayout>
+
+            <!-- Footer -->
+            <Label Text="Powered by GeneralUpdate.Maui.Android"
+                   FontSize="11"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light=#999999, Dark=#666666}"
+                   Margin="0,20,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
