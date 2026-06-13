@@ -12,7 +12,7 @@ namespace AndroidUpdate.ViewModels;
 public partial class MainViewViewModel : ViewModelBase
 {
     private readonly HttpClient _httpClient;
-    private readonly Func<PackageInfo, string, IAndroidUpdateHandler> _handlerFactory;
+    private readonly Func<UpdatePackageDto, string, IAndroidUpdateHandler> _handlerFactory;
 
     private IAndroidUpdateHandler? _currentHandler;
     private CancellationTokenSource? _cts;
@@ -70,13 +70,21 @@ public partial class MainViewViewModel : ViewModelBase
 
     private TaskCompletionSource<bool>? _dialogTcs;
 
-    private PackageInfo? _pendingUpdate;
+    private UpdatePackageDto? _pendingUpdate;
 
-    public MainViewViewModel(HttpClient httpClient, Func<PackageInfo, string, IAndroidUpdateHandler> handlerFactory)
+    public MainViewViewModel(HttpClient httpClient, Func<UpdatePackageDto, string, IAndroidUpdateHandler> handlerFactory)
     {
         _httpClient = httpClient;
         _handlerFactory = handlerFactory;
     }
+
+    /// <summary>
+    /// Configurable server URL for the sample. Defaults to localhost:5000;
+    /// override via environment variable ANDROID_UPDATE_SERVER_URL.
+    /// </summary>
+    private static string ServerBaseUrl =>
+        Environment.GetEnvironmentVariable("ANDROID_UPDATE_SERVER_URL")
+        ?? "http://localhost:5000";
 
     // ── Dialog helpers ─────────────────────────────────────────────
 
@@ -99,7 +107,7 @@ public partial class MainViewViewModel : ViewModelBase
         DialogTitle = title;
         DialogMessage = message;
         IsDialogVisible = true;
-        _dialogTcs = new TaskCompletionSource<bool>();
+        _dialogTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         return _dialogTcs.Task;
     }
 
@@ -204,6 +212,7 @@ public partial class MainViewViewModel : ViewModelBase
             if (success)
             {
                 CurrentVersion = _pendingUpdate.Version;
+                _pendingUpdate = null; // clear so retry won't use stale data
                 StatusText = $"Updated to v{CurrentVersion}!";
                 DownloadProgress = 100;
                 ProgressText = "Done";
@@ -220,12 +229,16 @@ public partial class MainViewViewModel : ViewModelBase
             _cts = null;
             _currentHandler?.Dispose();
             _currentHandler = null;
+
+            // Restore the Download button if an update is still available for retry
+            if (_pendingUpdate != null)
+                HasUpdate = true;
         }
     }
 
     // ── Server interaction ─────────────────────────────────────────
 
-    private async Task<PackageInfo?> CheckServerAsync(CancellationToken ct)
+    private async Task<UpdatePackageDto?> CheckServerAsync(CancellationToken ct)
     {
         var request = new
         {
@@ -248,7 +261,7 @@ public partial class MainViewViewModel : ViewModelBase
         if (body.GetArrayLength() == 0) return null;
 
         var entry = body[0];
-        return new PackageInfo(
+        return new UpdatePackageDto(
             Version: entry.GetProperty("version").GetString()!,
             DownloadUrl: entry.GetProperty("url").GetString()!,
             Sha256: entry.GetProperty("hash").GetString()!,
@@ -257,6 +270,4 @@ public partial class MainViewViewModel : ViewModelBase
             IsForced: entry.TryGetProperty("isForcibly", out var f) && f.GetBoolean()
         );
     }
-
-    private static string ServerBaseUrl => "http://192.168.50.204:5000";
 }

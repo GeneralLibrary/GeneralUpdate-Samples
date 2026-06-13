@@ -6,7 +6,7 @@
   <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="36" />
   <application android:label="AndroidUpdate"
                android:theme="@style/MyTheme.NoActionBar"
-               android:usesCleartextTraffic="true">
+               android:networkSecurityConfig="@xml/network_security_config">
     <!-- FileProvider for APK installation -->
     <provider android:name="androidx.core.content.FileProvider"
               android:authorities="com.generalupdate.androidupdate.fileprovider"

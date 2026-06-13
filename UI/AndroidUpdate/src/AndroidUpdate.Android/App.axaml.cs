@@ -13,7 +13,7 @@ public partial class App : Avalonia.Application
     /// Static factory for creating platform-specific update handlers.
     /// Set by the Android project (or other platform projects) during startup.
     /// </summary>
-    public static Func<PackageInfo, string, IAndroidUpdateHandler>? HandlerFactory { get; set; }
+    public static Func<UpdatePackageDto, string, IAndroidUpdateHandler>? HandlerFactory { get; set; }
 
     /// <summary>
     /// The device's currently installed app version.

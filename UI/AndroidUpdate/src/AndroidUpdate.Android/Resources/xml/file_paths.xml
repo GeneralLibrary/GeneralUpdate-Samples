@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <!-- Allow sharing APK files from cache and temp directories -->
-    <cache-path name="cache" path="update/" />
-    <cache-path name="cache_root" path="/" />
-    <files-path name="files" path="update/" />
-    <external-cache-path name="external_cache" path="update/" />
+    <cache-path name="cache_update" path="update/" />
+    <files-path name="files_update" path="update/" />
+    <external-cache-path name="external_cache_update" path="update/" />
 </paths>

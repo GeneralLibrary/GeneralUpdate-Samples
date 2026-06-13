@@ -13,13 +13,13 @@ namespace AndroidUpdate.Android.Services;
 public sealed class AndroidUpdateHandler : IAndroidUpdateHandler
 {
     private readonly IAndroidBootstrap _bootstrap;
-    private readonly PackageInfo _packageInfo;
+    private readonly UpdatePackageDto _packageInfo;
     private bool _disposed;
 
     public event EventHandler<double>? ProgressChanged;
     public event EventHandler<string>? StatusChanged;
 
-    public AndroidUpdateHandler(PackageInfo packageInfo, string currentVersion)
+    public AndroidUpdateHandler(UpdatePackageDto packageInfo, string currentVersion)
     {
         _packageInfo = packageInfo ?? throw new ArgumentNullException(nameof(packageInfo));
         _ = currentVersion ?? throw new ArgumentNullException(nameof(currentVersion));
