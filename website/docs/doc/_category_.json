@@ -3,6 +3,6 @@
   "position": 2,
   "link": {
     "type": "generated-index",
-    "description": "GeneralUpdate 组件参考文档 — 涵盖 Core、Bowl、Differential、Drivelution 与 Extension 五大非固件组件。"
+    "description": "GeneralUpdate 组件参考文档 — 涵盖 Core、Bowl、Differential、Drivelution、Extension、Avalonia.Android 与 Maui.Android 七大非固件组件。"
   }
 }

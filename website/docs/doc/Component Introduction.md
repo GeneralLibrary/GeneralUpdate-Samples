@@ -91,7 +91,8 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 | Name                  | Description                | Address                                                      |
 | --------------------- | -------------------------- | ------------------------------------------------------------ |
 | GeneralUpdate         | Automatic Updates          | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate) |
-| GeneralUpdate.Maui    | Maui Updates (Android)     | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate.Maui)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate.Maui)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate-Maui) |
+| GeneralUpdate.Maui    | MAUI Android Auto-Updates  | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate.Maui)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate.Maui)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate-Maui) |
+| GeneralUpdate.Avalonia | Avalonia Android Auto-Updates | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate.Avalonia) |
 | GeneralUpdate.Tools   | Update Patch Creation Tool | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate.Tools)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate.Tools)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate-Tools) |
 | GeneralUpdate-Samples | Usage Examples             | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate-Samples)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate-Samples)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate-Samples) |
 
