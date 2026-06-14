@@ -30,7 +30,7 @@ dotnet run --project GeneralUpdate.Tools.csproj
 
 前往 [GeneralUpdate.Tools Releases](https://github.com/GeneralLibrary/GeneralUpdate.Tools/releases) 下载对应平台的可执行文件，直接运行即可。
 
-> Simulation 模块内部会调用 `dotnet publish` 构建测试应用，因此使用仿真功能时必须安装 .NET SDK，仅运行 Patch / Extension / OSS / Config 模块则不需要。
+> Simulation 模块内部会调用 `dotnet publish` 构建测试应用，因此使用仿真功能时必须安装 .NET SDK。Mobile 模块的项目模式（Build & Locate）也会调用 `dotnet publish`，同样需要 .NET SDK。仅运行 Patch / Extension / OSS / Config 模块以及 Mobile 的文件模式则不需要。
 
 ## 七个模块速览
 
@@ -373,12 +373,48 @@ Generate Sample 额外输出：
 ### 工具内部做了什么
 
 1. **格式检测**：通过文件扩展名（`.apk` / `.aab`）和 ZIP 内部结构（`AndroidManifest.xml` 位置）自动识别包格式。
-2. **元数据解析**：使用 `AxmlParser` 从 ZIP 中读取二进制的 `AndroidManifest.xml`，提取 `package`、`versionName`、`versionCode`。
-3. **SHA256 计算**：对完整文件计算 SHA256 哈希值。
-4. **文件大小**：读取文件长度并格式化为人类可读的显示（KB/MB/GB）。
-5. **项目构建**（仅项目模式）：调用 `dotnet publish -c Release -o {publishDir}`，自动定位输出的 APK/AAB 文件。
-6. **上传**：通过 HTTP multipart/form-data 将文件和表单字段（Name、Version、Hash、Format、Size、Platform、ProductId、IsForcibly）上传到服务端。
-7. **版本记录导出**：上传成功后生成 `mobile_version_{timestamp}.json`，包含完整的版本元数据。
+   - APK 检测：打开 ZIP 文件，检查根目录是否存在 `AndroidManifest.xml`。
+   - AAB 检测：打开 ZIP 文件，检查是否存在 `base/manifest/AndroidManifest.xml`。
+   - 格式未知时（不是 .apk 也不是 .aab）会直接返回 Unknown。
+
+2. **元数据解析**：使用 `AxmlParser` 解析二进制的 AXML（Android Binary XML）格式，从 ZIP 中读取 `AndroidManifest.xml`。解析流程如下：
+   - **字符串池提取**：读取 AXML 文件的 Chunk 头，找到类型为 `0x0001` 的 StringPool Chunk，从中解析出所有 UTF-16LE 编码的字符串数组。
+   - **属性值提取**：遍历 XML 的 Start Element Chunk（类型 `0x0102`），解析属性块（每个属性 20 字节），通过属性名在字符串池中的索引匹配 `package` 和 `versionName`，再通过 `rawValueIndex` 从字符串池中取出属性值。
+   - **versionCode 提取**：versionCode 存储为整型属性（类型 `0x10` = INT_DEC 或 `0x11` = INT_HEX），直接从属性的 `typedValueData` 字段（偏移 +16，4 字节）读取有符号整数。
+   - AXML 结构与参考：https://justanapplication.wordpress.com/category/android/android-binary-xml/
+
+3. **SHA256 计算**：对完整文件计算 SHA256 哈希值，输出小写十六进制字符串。
+
+4. **文件大小**：读取文件长度并格式化为人类可读的显示（B / KB / MB / GB）。
+
+5. **项目构建**（仅项目模式）：选择 `.csproj` 后会触发：
+   - `MobileCsprojParser.Parse()` 解析 `.csproj` 的 XML，提取 `TargetFramework`（支持单 TFM 和多 TFM，多 TFM 时自动选取包含 `-android` 的目标框架）、`ApplicationId`（映射为 PackageName）、`ApplicationDisplayVersion`（映射为 VersionName）、`ApplicationVersion`（映射为 VersionCode）、`UseMaui`（用于识别 MAUI 项目）、`AndroidPackageFormat`、`AssemblyName`。
+   - 调用 `dotnet publish "{csprojPath}" -c Release -o "{publishDir}"`。
+   - 构建完成后在 `bin/Release/{tfm}/publish/` 目录搜索 `.apk` 或 `.aab` 文件，自动定位构建产物。
+   - 项目类型显示：MAUI（`<UseMaui>true</UseMaui>`）或 Avalonia（没有 UseMaui）。
+
+6. **上传**：通过 HTTP multipart/form-data 将文件上传到服务端。上传表单字段和对应的数据源如下：
+
+   | 字段 | 值来源 | 示例 |
+   |------|--------|------|
+   | `Name` | ProductName（用户填写） | `MyApp` |
+   | `Version` | VersionName（自动解析） | `2.0.0` |
+   | `Hash` | SHA256（自动计算） | `a1b2c3d4...` |
+   | `Format` | 包格式（自动识别） | `.apk` / `.aab` |
+   | `Size` | 文件大小（自动计算） | `50000000` |
+   | `AppType` | 固定值 `"1"` | `1` |
+   | `Platform` | Platform（默认 4=Android） | `4` |
+   | `ProductId` | ProductId（用户填写 GUID） | `2d974e2a-...` |
+   | `IsForcibly` | 强制更新开关 | `true` / `false` |
+
+   上传服务支持以下配置：
+   - **Server URL**：服务端地址
+   - **Upload Endpoint**：API 路径，默认 `/Packet/Create`
+   - **Timeout**：超时时间（秒）
+   - **Retry Count**：失败重试次数（指数退避）
+   - **Auth**：认证配置，支持 Basic / Bearer Token / API Key 三种模式（凭据通过 DPAPI 加密存储）
+
+7. **版本记录导出**：上传成功后自动生成 `mobile_version_{timestamp}.json`，包含完整的版本元数据。也可以在不上传的情况下单独点击 **Export Record Only** 导出记录，此时 URL 字段为 `"manual"`。
 
 ### 输出
 
@@ -466,6 +502,11 @@ Generate Sample 额外输出：
 | Simulation 端口冲突 | 修改 `ServerPort` 或释放本地 5000 端口 |
 | 客户端下载后 Hash 校验失败 | 对**最终上传到 CDN/OSS 的文件**重新计算 Hash，检查是否被中间代理重压缩 |
 | Upgrade 进程没有启动 | 检查 `generalupdate.manifest.json` 中 `updateAppName` 和 `updatePath` 是否与发布目录结构一致 |
+| Mobile 分析时提示 "Metadata extraction warning" | AXML 解析未找到预期属性，常见的两种原因：APK 使用资源 ID 引用而非直接文本存储属性值；或 APK 被加固/混淆后 AndroidManifest.xml 结构被修改。可以手动填写 PackageName、VersionName、VersionCode |
+| Mobile 项目模式 Build & Locate 失败 | 确认已安装 .NET SDK 且版本支持目标框架（TFM），检查 `.csproj` 包含 `-android` 目标框架，输出目录 `bin/Release/{tfm}/publish/` 没有被写入保护 |
+| Mobile 项目模式 "Build output not found" | `dotnet publish` 成功执行但未在预期目录找到 `.apk`/`.aab`。检查 `.csproj` 中 `AndroidPackageFormat` 设置是否正确（默认 `aab;apk` 优先产生 APK），以及 TFM 是否自动解析正确 |
+| Mobile 上传失败 | 检查服务端地址和 Endpoint 配置是否正确，确认服务端认证方式（Basic / Bearer / API Key）与工具配置一致，查看工具日志中的 HTTP 状态码和错误消息 |
+| Mobile 上传后客户端更新失败 | 确认服务端返回的版本记录 JSON 中 `Platform` 字段为 `4`（Android），`Format` 字段与客户端期望的 APK/AAB 格式一致 |
 
 ---
 
