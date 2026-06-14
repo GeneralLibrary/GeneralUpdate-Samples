@@ -1,9 +1,9 @@
 ---
 sidebar_position: 4
-title: Avalonia Android Update Quickstart
+title: Avalonia Android Cookbook
 ---
 
-# GeneralUpdate.Avalonia.Android Quickstart
+# GeneralUpdate.Avalonia.Android Cookbook
 
 This guide is for developers who need to integrate Android APK auto-update into their Avalonia applications. The goal is to complete the "check update → download APK → verify SHA256 → launch installer" workflow with minimal code.
 
