@@ -1,9 +1,9 @@
 ---
 sidebar_position: 4
-title: Avalonia Android 更新入门
+title: Avalonia Android 实战手册
 ---
 
-# GeneralUpdate.Avalonia.Android 快速入门
+# GeneralUpdate.Avalonia.Android 实战手册
 
 这篇手册面向需要在 Avalonia 应用中集成 Android APK 自动更新的开发者。目标是用最少的代码跑通"检查更新 → 下载 APK → 校验 SHA256 → 启动安装器"的完整流程。
 

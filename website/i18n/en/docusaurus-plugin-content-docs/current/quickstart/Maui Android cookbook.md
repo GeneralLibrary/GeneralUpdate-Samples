@@ -1,9 +1,9 @@
 ---
 sidebar_position: 5
-title: MAUI Android Update Quickstart
+title: MAUI Android Cookbook
 ---
 
-# GeneralUpdate.Maui.Android Quickstart
+# GeneralUpdate.Maui.Android Cookbook
 
 This guide is for developers who need to integrate Android APK auto-update into their .NET MAUI applications. The goal is to complete the "check update → download APK → verify SHA256 → launch installer" workflow with minimal code.
 

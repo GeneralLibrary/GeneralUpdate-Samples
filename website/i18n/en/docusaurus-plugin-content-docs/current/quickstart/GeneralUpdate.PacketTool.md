@@ -26,7 +26,7 @@ dotnet run --project GeneralUpdate.Tools.csproj
 
 Go to [GeneralUpdate.Tools Releases](https://github.com/GeneralLibrary/GeneralUpdate.Tools/releases) and download the executable for your platform.
 
-> The Simulation module internally runs `dotnet publish` to build test apps, so you need the .NET SDK for that feature. Patch / Extension / OSS / Config / Mobile modules work without the SDK. However, Mobile's Project Mode (Build & Locate) does require the .NET SDK.
+> The Simulation module internally runs `dotnet publish` to build test apps, so you need the .NET SDK for that feature. The Mobile module's Project Mode (Build & Locate) also runs `dotnet publish`, which requires the .NET SDK too. Patch / Extension / OSS / Config modules and Mobile's File Mode work without the SDK.
 
 ## Seven modules at a glance
 
@@ -353,12 +353,48 @@ Supports two modes:
 ### What the tool does internally
 
 1. **Format detection**: Identifies package format via file extension (`.apk` / `.aab`) and ZIP internal structure (AndroidManifest.xml location).
-2. **Metadata parsing**: Uses `AxmlParser` to read binary `AndroidManifest.xml` from the ZIP, extracting `package`, `versionName`, `versionCode`.
-3. **SHA256 computation**: Computes SHA256 hash of the full file.
-4. **File size**: Reads file length and formats it for human-readable display (KB/MB/GB).
-5. **Project build** (Project mode only): Runs `dotnet publish -c Release -o {publishDir}`, then auto-locates the output APK/AAB.
-6. **Upload**: Sends file and form fields (Name, Version, Hash, Format, Size, Platform, ProductId, IsForcibly) via HTTP multipart/form-data.
-7. **Version record export**: Generates `mobile_version_{timestamp}.json` with full version metadata after successful upload.
+   - APK detection: Opens the ZIP file and checks for `AndroidManifest.xml` at the root.
+   - AAB detection: Opens the ZIP file and checks for `base/manifest/AndroidManifest.xml`.
+   - If the format is neither `.apk` nor `.aab`, the detector returns Unknown.
+
+2. **Metadata parsing**: Uses `AxmlParser` to parse the binary AXML (Android Binary XML) format from the ZIP's `AndroidManifest.xml`. The parsing process works as follows:
+   - **String pool extraction**: Reads AXML chunk headers, locates the StringPool chunk (type `0x0001`), and extracts all UTF-16LE encoded strings.
+   - **Attribute value extraction**: Walks through Start Element chunks (type `0x0102`), parses the attribute block (20 bytes per attribute), matches attribute names by their string pool index to find `package` and `versionName`, then resolves values via `rawValueIndex` from the string pool.
+   - **versionCode extraction**: versionCode is stored as a typed integer attribute (type `0x10` = INT_DEC or `0x11` = INT_HEX), read directly from the `typedValueData` field (offset +16, 4 bytes) as a signed integer.
+   - AXML chunk structure reference: https://justanapplication.wordpress.com/category/android/android-binary-xml/
+
+3. **SHA256 computation**: Computes SHA256 hash of the full file, output as a lowercase hex string.
+
+4. **File size**: Reads file length and formats it for human-readable display (B / KB / MB / GB).
+
+5. **Project build** (Project mode only): Selecting a `.csproj` triggers:
+   - `MobileCsprojParser.Parse()` reads the `.csproj` XML to extract `TargetFramework` (supports single and multi-TFM; auto-selects the one containing `-android`), `ApplicationId` (mapped to PackageName), `ApplicationDisplayVersion` (mapped to VersionName), `ApplicationVersion` (mapped to VersionCode), `UseMaui` (identifies MAUI projects), `AndroidPackageFormat`, and `AssemblyName`.
+   - Runs `dotnet publish "{csprojPath}" -c Release -o "{publishDir}"`.
+   - After build, searches `bin/Release/{tfm}/publish/` for `.apk` or `.aab` files, auto-locating the build artifact.
+   - Project type display: MAUI (`<UseMaui>true</UseMaui>`) or Avalonia (no UseMaui).
+
+6. **Upload**: Sends the file and form fields via HTTP multipart/form-data. The form fields and their data sources are:
+
+   | Field | Source | Example |
+   |-------|--------|---------|
+   | `Name` | ProductName (user input) | `MyApp` |
+   | `Version` | VersionName (auto-parsed) | `2.0.0` |
+   | `Hash` | SHA256 (auto-computed) | `a1b2c3d4...` |
+   | `Format` | Package format (auto-detected) | `.apk` / `.aab` |
+   | `Size` | File size (auto-computed) | `50000000` |
+   | `AppType` | Fixed value `"1"` | `1` |
+   | `Platform` | Platform field (default 4=Android) | `4` |
+   | `ProductId` | ProductId (user-entered GUID) | `2d974e2a-...` |
+   | `IsForcibly` | Force update toggle | `true` / `false` |
+
+   The upload service supports the following configuration:
+   - **Server URL**: Server base address
+   - **Upload Endpoint**: API path, defaults to `/Packet/Create`
+   - **Timeout**: Timeout in seconds
+   - **Retry Count**: Retry attempts on failure (exponential backoff)
+   - **Auth**: Authentication configuration, supports Basic / Bearer Token / API Key modes (credentials stored encrypted via DPAPI)
+
+7. **Version record export**: After a successful upload, generates `mobile_version_{timestamp}.json` with full version metadata. You can also use **Export Record Only** to generate the record without uploading — the URL field will be `"manual"`.
 
 ### Output
 
@@ -447,6 +483,11 @@ Use the Mobile module for Android app releases:
 | Simulation port conflict | Change `ServerPort` or free up local port 5000 |
 | Hash mismatch after client download | Re-compute hash on the file that was actually uploaded to CDN/OSS; check for proxy re-compression |
 | Upgrade process doesn't start | Verify `updateAppName` and `updatePath` in `generalupdate.manifest.json` match the publish directory structure |
+| Mobile analysis shows "Metadata extraction warning" | AXML parser could not find the expected attributes. Common causes: the APK uses resource ID references instead of direct string values; or the APK has been packed/obfuscated and the AndroidManifest.xml structure was modified. You can fill in PackageName, VersionName, and VersionCode manually |
+| Mobile Project Mode Build & Locate fails | Verify that the .NET SDK is installed and supports the target framework. Ensure the `.csproj` contains an `-android` target framework. Make sure the output directory `bin/Release/{tfm}/publish/` is not write-protected |
+| Mobile Project Mode "Build output not found" | `dotnet publish` succeeded but no `.apk`/`.aab` was found in the expected directory. Check the `AndroidPackageFormat` setting in `.csproj` (default `aab;apk` produces APK first), and verify that the TFM was resolved correctly |
+| Mobile upload fails | Check that the server URL and endpoint path are configured correctly. Verify the server authentication method (Basic / Bearer / API Key) matches the tool configuration. Review the tool logs for the HTTP status code and error message |
+| Mobile client update fails after upload | Confirm that the version record JSON returned by the server has `Platform` set to `4` (Android), and the `Format` field matches the APK/AAB format the client expects |
 
 ---
 
