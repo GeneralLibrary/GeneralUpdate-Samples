@@ -7,6 +7,15 @@ title: Avalonia Android 实战手册
 
 这篇手册面向需要在 Avalonia 应用中集成 Android APK 自动更新的开发者。目标是用最少的代码跑通"检查更新 → 下载 APK → 校验 SHA256 → 启动安装器"的完整流程。
 
+<iframe
+  src="//player.bilibili.com/player.html?bvid=BV1HtJF6XET3&page=1"
+  width="100%"
+  height="480"
+  style={{ borderRadius: '8px', border: 'none' }}
+  allowFullScreen
+  scrolling="no"
+/>
+
 :::info 前置知识
 这篇手册假设你已经有一个 Avalonia 项目并配置好了 Android 目标框架。如果你还没有 Avalonia Android 项目，请先参考 [Avalonia 官方文档](https://docs.avaloniaui.net/) 创建。
 :::

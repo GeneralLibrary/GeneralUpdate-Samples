@@ -7,6 +7,15 @@ title: Avalonia Android Cookbook
 
 This guide is for developers who need to integrate Android APK auto-update into their Avalonia applications. The goal is to complete the "check update → download APK → verify SHA256 → launch installer" workflow with minimal code.
 
+<iframe
+  src="//player.bilibili.com/player.html?bvid=BV1HtJF6XET3&page=1"
+  width="100%"
+  height="480"
+  style={{ borderRadius: '8px', border: 'none' }}
+  allowFullScreen
+  scrolling="no"
+/>
+
 :::info Prerequisites
 This guide assumes you already have an Avalonia project configured for Android target framework. If not, please refer to the [Avalonia documentation](https://docs.avaloniaui.net/) first.
 :::
