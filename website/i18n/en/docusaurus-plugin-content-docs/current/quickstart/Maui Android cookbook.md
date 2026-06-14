@@ -7,6 +7,15 @@ title: MAUI Android Cookbook
 
 This guide is for developers who need to integrate Android APK auto-update into their .NET MAUI applications. The goal is to complete the "check update → download APK → verify SHA256 → launch installer" workflow with minimal code.
 
+<iframe
+  src="//player.bilibili.com/player.html?bvid=BV1ntJF6XEvG&page=1"
+  width="100%"
+  height="480"
+  style={{ borderRadius: '8px', border: 'none' }}
+  allowFullScreen
+  scrolling="no"
+/>
+
 :::info Prerequisites
 This guide assumes you already have a .NET MAUI project configured for Android target framework. If not, please refer to the [.NET MAUI documentation](https://learn.microsoft.com/dotnet/maui/) first.
 :::

@@ -312,6 +312,15 @@ In the **OSS Config** module, click **ComputeHash**, select a local ZIP file, an
 
 If you use `GeneralUpdate.Avalonia.Android` or `GeneralUpdate.Maui.Android` to provide auto-update for your Android apps, each release requires extracting APK/AAB metadata (package name, version, SHA256 hash, file size) and uploading it to the server for version management. The Mobile module consolidates "parse → package → upload → generate version record" into a single interface.
 
+<iframe
+  src="//player.bilibili.com/player.html?bvid=BV1ctJF6XEJs&page=1"
+  width="100%"
+  height="480"
+  style={{ borderRadius: '8px', border: 'none' }}
+  allowFullScreen
+  scrolling="no"
+/>
+
 Supports two modes:
 
 - **File mode**: Select an APK or AAB file directly; the tool automatically parses AndroidManifest.xml to extract metadata.
