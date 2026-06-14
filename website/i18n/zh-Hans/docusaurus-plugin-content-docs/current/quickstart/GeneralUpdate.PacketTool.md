@@ -327,6 +327,15 @@ Generate Sample 额外输出：
 
 如果你使用 `GeneralUpdate.Avalonia.Android` 或 `GeneralUpdate.Maui.Android` 组件为 Android 应用提供自动更新能力，每次发布新版本时都需要获取 APK/AAB 文件的元数据（包名、版本号、SHA256 哈希、文件大小），并将其上传到服务端进行版本管理。Mobile 模块把"解析 → 打包 → 上传 → 生成版本记录"这四步收敛到一个界面中。
 
+<iframe
+  src="//player.bilibili.com/player.html?bvid=BV1ctJF6XEJs&page=1"
+  width="100%"
+  height="480"
+  style={{ borderRadius: '8px', border: 'none' }}
+  allowFullScreen
+  scrolling="no"
+/>
+
 支持两种工作模式：
 
 - **文件模式**：直接选择 APK 或 AAB 文件，自动解析 AndroidManifest.xml 提取元数据
