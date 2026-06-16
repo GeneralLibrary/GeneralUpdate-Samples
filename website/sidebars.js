@@ -54,6 +54,16 @@ const sidebars = {
       ],
     },
   ],
+
+  // ── Agent Skills Sidebar (独立侧边栏) ────────────────────────────
+  agentSkillsSidebar: [
+    'agent-skills/overview',
+    'agent-skills/generalupdate-init',
+    'agent-skills/generalupdate-ui',
+    'agent-skills/generalupdate-strategy',
+    'agent-skills/generalupdate-advanced',
+    'agent-skills/generalupdate-troubleshoot',
+  ],
 };
 
 export default sidebars;
