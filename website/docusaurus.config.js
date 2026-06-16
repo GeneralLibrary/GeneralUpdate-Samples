@@ -81,6 +81,12 @@ const config = {
             label: 'Doc',
           },
           {
+            type: 'docSidebar',
+            sidebarId: 'agentSkillsSidebar',
+            position: 'left',
+            label: 'Agent Skills',
+          },
+          {
             type: 'dropdown',
             label: '定价',
             position: 'left',
