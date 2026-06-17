@@ -255,7 +255,7 @@ cp -r <samples-path>/src/Hub/Samples/tmpgeneralupdate-skill-codegen/.claude/skil
 Updated for GeneralUpdate v10.5.0-beta.4 API:
 - Configinfo → UpdateRequest (namespace: `GeneralUpdate.Core.Configuration`)
 - Event args moved to `GeneralUpdate.Core.Download` and `GeneralUpdate.Core.Event`
-- Added SetSource(), SetOption(), Hooks<T>(), Strategy<T>() API coverage
+- Added SetSource(), SetOption(), `Hooks<T>()`, `Strategy<T>()` API coverage
 - Updated all strategy examples to use the new API
 - Updated CustomHooks.cs and CustomStrategy.cs to show v10.5 capabilities
 - Fixed IsComplated → IsCompleted
