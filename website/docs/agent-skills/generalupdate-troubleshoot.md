@@ -24,7 +24,7 @@ title: 🩺 generalupdate-troubleshoot — 故障排查
 
 ### 可选信息
 - 事件监听中是否有异常（ExceptionEventArgs）: ______
-- 是否有日志（Logs/generalupdate-trace *.log）: ______
+- 是否有日志（Logs/generalupdate-trace-*.log）: ______
 - 问题是否可复现: ______（是/否，频率）
 - 首次出现时间点: ______
 ```
@@ -60,12 +60,12 @@ title: 🩺 generalupdate-troubleshoot — 故障排查
 
 ```bash
 # 自然语言搜索已知问题
-python3 skills/generalupdate-troubleshoot/scripts/search.py "升级后应用启动不了" --domain issue
-python3 skills/generalupdate-troubleshoot/scripts/search.py "方法找不到 MethodNotFound" --domain issue
-python3 skills/generalupdate-troubleshoot/scripts/search.py "中文乱码 garbled" --domain issue
+python3 .claude/skills/generalupdate-troubleshoot/scripts/search.py "升级后应用启动不了" --domain issue
+python3 .claude/skills/generalupdate-troubleshoot/scripts/search.py "方法找不到 MethodNotFound" --domain issue
+python3 .claude/skills/generalupdate-troubleshoot/scripts/search.py "中文乱码 garbled" --domain issue
 
 # 搜索策略相关问题
-python3 skills/generalupdate-troubleshoot/scripts/search.py "OSS 权限问题" --domain strategy
+python3 .claude/skills/generalupdate-troubleshoot/scripts/search.py "OSS 权限问题" --domain strategy
 ```
 
 ## 症状分级
@@ -187,7 +187,7 @@ reference.md 中的问题按严重度分级：
 
 | # | 反模式 | 后果 | 正确做法 |
 |---|--------|------|---------|
-| 1 | **只看错误信息不看事件** | 错过 ExceptionEventArgs 中的详细信息 | 订阅所有 6 个事件 |
+| 1 | **只看错误信息不看事件** | 错过 ExceptionEventArgs 中的详细信息 | 订阅所有 7 个事件 |
 | 2 | **日志文件路径不对就认为无日志** | 漏掉关键诊断信息 | 在 InstallPath/Logs 下查找 |
 | 3 | **只检查 Client 不检查 Upgrade 进程** | 问题在 Upgrade 端但诊断方向全错 | 两端都要检查 |
 | 4 | **升级问题直接改代码** | 可能是服务端配置问题而非客户端 Bug | 优先检查服务端返回的版本信息 |

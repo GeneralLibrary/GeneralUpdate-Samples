@@ -24,7 +24,7 @@ Comprehensive diagnostic system covering 50+ known issues, all traceable to GitH
 
 ### Optional Information
 - Any ExceptionEventArgs in event listeners: ______
-- Any logs (Logs/generalupdate-trace *.log): ______
+- Any logs (Logs/generalupdate-trace-*.log): ______
 - Issue reproducible: ______ (Yes/No, frequency)
 - First occurrence: ______
 ```
@@ -60,12 +60,12 @@ Prefer using the BM25 search engine for precise matching of known issues:
 
 ```bash
 # Natural language search for known issues
-python3 skills/generalupdate-troubleshoot/scripts/search.py "update succeeded but app crashes" --domain issue
-python3 skills/generalupdate-troubleshoot/scripts/search.py "method not found" --domain issue
-python3 skills/generalupdate-troubleshoot/scripts/search.py "garbled Chinese text" --domain issue
+python3 .claude/skills/generalupdate-troubleshoot/scripts/search.py "update succeeded but app crashes" --domain issue
+python3 .claude/skills/generalupdate-troubleshoot/scripts/search.py "method not found" --domain issue
+python3 .claude/skills/generalupdate-troubleshoot/scripts/search.py "garbled Chinese text" --domain issue
 
 # Search for strategy-related issues
-python3 skills/generalupdate-troubleshoot/scripts/search.py "OSS permission error" --domain strategy
+python3 .claude/skills/generalupdate-troubleshoot/scripts/search.py "OSS permission error" --domain strategy
 ```
 
 ## Symptom Severity Levels
@@ -181,7 +181,7 @@ When the issue can't be directly matched, follow these 6 steps:
 
 | # | Anti-Pattern | Consequence | Correct Approach |
 |---|-------------|-------------|------------------|
-| 1 | **Only looking at error messages, not events** | Missing detailed info in ExceptionEventArgs | Subscribe to all 6 events |
+| 1 | **Only looking at error messages, not events** | Missing detailed info in ExceptionEventArgs | Subscribe to all 7 events |
 | 2 | **Assuming no logs because wrong path** | Missing critical diagnostic info | Check InstallPath/Logs directory |
 | 3 | **Only checking Client, not Upgrade process** | Issue is in Upgrade but diagnosis goes wrong | Check both processes |
 | 4 | **Modifying code for update issues immediately** | Issue might be server config, not client bug | Check server version info first |

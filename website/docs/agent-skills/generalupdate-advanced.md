@@ -241,7 +241,7 @@ new GeneralUpdateBootstrap()
 ### 自定义匹配器
 
 ```csharp
-using GeneralUpdate.Differential.Matchers;
+using GeneralUpdate.Core.Differential;
 
 // 自定义清理匹配器
 var cleanMatcher = new DefaultCleanMatcher();  // 或实现 ICleanMatcher

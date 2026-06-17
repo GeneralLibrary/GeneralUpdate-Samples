@@ -236,7 +236,7 @@ new GeneralUpdateBootstrap()
 ### Custom Matchers
 
 ```csharp
-using GeneralUpdate.Differential.Matchers;
+using GeneralUpdate.Core.Differential;
 
 var cleanMatcher = new DefaultCleanMatcher();  // or implement ICleanMatcher
 var dirtyMatcher = new DefaultDirtyMatcher();  // or implement IDirtyMatcher
