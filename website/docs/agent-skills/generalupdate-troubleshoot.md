@@ -8,6 +8,29 @@ title: 🩺 generalupdate-troubleshoot — 故障排查
 
 综合性诊断系统 — 覆盖 50+ 已知问题，均可追溯到 GitHub/Gitee Issue 或代码审计发现。
 
+---
+
+## 📋 用户症状提取
+
+```
+### 必填信息
+- 症状描述: ______
+- 错误信息/堆栈: ______
+- GeneralUpdate 版本: ______
+- 平台: ______（Windows / Linux / macOS）
+- .NET 版本: ______
+- 更新策略: ______（标准 / OSS / 静默 / 差分 / 跨版本 / 推送）
+- 最近是否改过配置: ______（是/否，改了啥）
+
+### 可选信息
+- 事件监听中是否有异常（ExceptionEventArgs）: ______
+- 是否有日志（Logs/generalupdate-trace *.log）: ______
+- 问题是否可复现: ______（是/否，频率）
+- 首次出现时间点: ______
+```
+
+---
+
 ## 工作流程
 
 ```
@@ -18,9 +41,10 @@ title: 🩺 generalupdate-troubleshoot — 故障排查
    ├── 平台（Windows/Linux/macOS）？
    └── 更新策略（标准/OSS/静默）？
 
-2. 症状匹配 → 查找 reference.md
-   ├── 找到匹配的 Q/C/H/M/L → 给出根因 + 修复 + 代码
-   └── 未找到匹配 → 执行通用诊断流程（6步骤）
+2. 症状匹配
+   ├── 优先：python3 scripts/search.py "<症状>" --domain issue
+   │   └── 匹配到 → 给出根因 + 修复 + 代码
+   └── 未匹配 → 降级到 reference.md 全文搜索
 
 3. 提供修复
    ├── 具体的代码修改、配置调整、版本升级建议
@@ -28,6 +52,20 @@ title: 🩺 generalupdate-troubleshoot — 故障排查
 
 4. 验证
    └── 确认修复后问题解决
+```
+
+## 症状搜索（推荐）
+
+优先使用 BM25 搜索引擎精确匹配已知问题，而不是在 reference.md 中手动查找：
+
+```bash
+# 自然语言搜索已知问题
+python3 skills/generalupdate-troubleshoot/scripts/search.py "升级后应用启动不了" --domain issue
+python3 skills/generalupdate-troubleshoot/scripts/search.py "方法找不到 MethodNotFound" --domain issue
+python3 skills/generalupdate-troubleshoot/scripts/search.py "中文乱码 garbled" --domain issue
+
+# 搜索策略相关问题
+python3 skills/generalupdate-troubleshoot/scripts/search.py "OSS 权限问题" --domain strategy
 ```
 
 ## 症状分级
@@ -40,6 +78,36 @@ reference.md 中的问题按严重度分级：
 | H | 🟠 **高** | 场景阻断、功能失效、需要升级 | 11 |
 | M | 🟡 **中** | 功能异常、需要配置调整 | 20 |
 | L | 🔵 **低** | 代码气味、边缘情况、已知行为 | 12 |
+
+**完整清单请查阅 `reference.md`**
+
+---
+
+## ✅ 通用诊断前检查清单
+
+### 运行环境检查
+- [ ] 目标机器安装了正确的 .NET 运行时（版本与发布框架匹配）
+- [ ] 目标机器上有写入权限（InstallPath 目录可写）
+- [ ] 防火墙未阻断 UpdateUrl 的通信端口
+- [ ] 磁盘空间充足（至少 2× 更新包大小）
+- [ ] Linux/macOS：UpgradeApp 有 `chmod +x` 执行权限
+
+### 版本检查
+- [ ] Client 和 Upgrade 项目 NuGet 版本**完全一致**
+- [ ] 服务端返回的版本号是 4 段式（如 1.0.0.0）
+- [ ] manifest.json 中 `mainAppName` 与实际进程名匹配
+- [ ] `AppType` 设置正确（Client = 1, Upgrade = 2）
+
+### 配置检查
+- [ ] `UpdateRequest` 的 6 个必填字段都已设置
+- [ ] `UpdateUrl` 可通过 HTTP GET 访问并返回合法 JSON
+- [ ] `AppSecretKey` 与服务端配置一致（长度 ≥ 16 字符）
+- [ ] UpgradeApp.exe 存在于发布目录的 `update/` 子目录中
+
+### 日志检查
+- [ ] 查看 `Logs/generalupdate-trace-*.log`（如有）
+- [ ] 检查事件监听中的 `ExceptionEventArgs`
+- [ ] 检查 `MultiDownloadErrorEventArgs` 中的异常
 
 ---
 
@@ -85,7 +153,7 @@ reference.md 中的问题按严重度分级：
 |------|------|-----------|
 | **分发包过大** | 未使用差分 | 差分已内嵌在 Core，启用 `PatchEnabled` 即可 |
 | **首次更新慢** | CDN 冷启动 | 预热 CDN |
-| **更新后配置丢失** | 黑名单未包含配置目录 | 确认 `SkipDirectorys` 包含配置文件夹 |
+| **更新后配置丢失** | 黑名单未包含配置目录 | 确认 `Directories` 包含配置文件夹 |
 
 ---
 
@@ -97,7 +165,7 @@ reference.md 中的问题按严重度分级：
 2. **manifest.json 验证** — 文件是否存在？字段值是否正确？
 3. **UpgradeApp 存在性** — UpgradeApp.exe 是否在预期目录？
 4. **网络可访问性** — UpdateUrl 能否用 curl 访问？
-5. **日志分析** — 查看 `%TEMP%/GeneralUpdate/logs/` 下的日志文件
+5. **日志分析** — 查看 `Logs/generalupdate-trace-*.log` 下的日志文件
 6. **最小重现** — 从 Minimal 集成开始，逐步增加复杂度
 
 ## 日志文件位置
@@ -115,9 +183,22 @@ reference.md 中的问题按严重度分级：
 
 ---
 
+## ⚠️ 诊断阶段的反模式
+
+| # | 反模式 | 后果 | 正确做法 |
+|---|--------|------|---------|
+| 1 | **只看错误信息不看事件** | 错过 ExceptionEventArgs 中的详细信息 | 订阅所有 6 个事件 |
+| 2 | **日志文件路径不对就认为无日志** | 漏掉关键诊断信息 | 在 InstallPath/Logs 下查找 |
+| 3 | **只检查 Client 不检查 Upgrade 进程** | 问题在 Upgrade 端但诊断方向全错 | 两端都要检查 |
+| 4 | **升级问题直接改代码** | 可能是服务端配置问题而非客户端 Bug | 优先检查服务端返回的版本信息 |
+| 5 | **忽略 NuGet 版本一致性** | 方向错，"Method not found" 根因是版本不一致 | 第一个就要检查版本 |
+| 6 | **只在 Debug 环境测试** | Release 环境可能缺少运行时文件 | 在发布/生产环境复现 |
+
+---
+
 ## 相关技能
 
-- [🚀 generalupdate-init — Bootstrap 配置](./generalupdate-init.md)
-- [🎨 generalupdate-ui — 更新界面诊断](./generalupdate-ui.md)
-- [⚙️ generalupdate-strategy — 策略相关故障](./generalupdate-strategy.md)
-- [🔧 generalupdate-advanced — 高级功能故障](./generalupdate-advanced.md)
+- `/generalupdate-init` — Bootstrap 配置
+- `/generalupdate-ui` — 更新界面诊断
+- `/generalupdate-strategy` — 策略相关故障
+- `/generalupdate-advanced` — 高级功能故障

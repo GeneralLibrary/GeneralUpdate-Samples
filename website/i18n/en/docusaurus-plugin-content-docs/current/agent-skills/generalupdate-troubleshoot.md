@@ -8,6 +8,29 @@ title: 🩺 generalupdate-troubleshoot — Troubleshooting
 
 Comprehensive diagnostic system covering 50+ known issues, all traceable to GitHub/Gitee Issues or code audit findings.
 
+---
+
+## 📋 User Symptom Collection
+
+```
+### Required Information
+- Symptom description: ______
+- Error message/stack trace: ______
+- GeneralUpdate version: ______
+- Platform: ______ (Windows / Linux / macOS)
+- .NET version: ______
+- Update strategy: ______ (Standard / OSS / Silent / Differential / CVP / Push)
+- Recent config changes: ______ (Yes/No, what changed)
+
+### Optional Information
+- Any ExceptionEventArgs in event listeners: ______
+- Any logs (Logs/generalupdate-trace *.log): ______
+- Issue reproducible: ______ (Yes/No, frequency)
+- First occurrence: ______
+```
+
+---
+
 ## Workflow
 
 ```
@@ -18,9 +41,10 @@ Comprehensive diagnostic system covering 50+ known issues, all traceable to GitH
    ├── Platform (Windows/Linux/macOS)?
    └── Update strategy (Standard/OSS/Silent)?
 
-2. Symptom Matching → Lookup known issues
-   ├── Match found → Provide root cause + fix + code
-   └── No match → Execute 6-step universal diagnostic
+2. Symptom Matching
+   ├── Priority: python3 scripts/search.py "<symptom>" --domain issue
+   │   └── Matched → Provide root cause + fix + code
+   └── No match → Fall back to reference.md full text search
 
 3. Provide Fix
    ├── Specific code changes, config adjustments, version upgrade suggestions
@@ -28,6 +52,20 @@ Comprehensive diagnostic system covering 50+ known issues, all traceable to GitH
 
 4. Verify
    └── Confirm the fix resolves the issue
+```
+
+## Symptom Search (Recommended)
+
+Prefer using the BM25 search engine for precise matching of known issues:
+
+```bash
+# Natural language search for known issues
+python3 skills/generalupdate-troubleshoot/scripts/search.py "update succeeded but app crashes" --domain issue
+python3 skills/generalupdate-troubleshoot/scripts/search.py "method not found" --domain issue
+python3 skills/generalupdate-troubleshoot/scripts/search.py "garbled Chinese text" --domain issue
+
+# Search for strategy-related issues
+python3 skills/generalupdate-troubleshoot/scripts/search.py "OSS permission error" --domain strategy
 ```
 
 ## Symptom Severity Levels
@@ -38,6 +76,36 @@ Comprehensive diagnostic system covering 50+ known issues, all traceable to GitH
 | H | 🟠 **High** | Scenario blocking, feature failure, upgrade needed | 11 |
 | M | 🟡 **Medium** | Functionality degraded, configuration adjustment needed | 20 |
 | L | 🔵 **Low** | Code smell, edge cases, known behavior | 12 |
+
+**Full list available in `reference.md`**
+
+---
+
+## ✅ Universal Pre-Diagnosis Checklist
+
+### Runtime Environment Check
+- [ ] Target machine has correct .NET runtime installed (matches publish framework)
+- [ ] Target machine has write permissions (InstallPath directory writable)
+- [ ] Firewall not blocking UpdateUrl communication port
+- [ ] Sufficient disk space (at least 2× update package size)
+- [ ] Linux/macOS: UpgradeApp has `chmod +x` executable permissions
+
+### Version Check
+- [ ] Client and Upgrade projects use the **exact same** NuGet version
+- [ ] Server returns version numbers in 4-part format (e.g. 1.0.0.0)
+- [ ] manifest.json `mainAppName` matches actual process name
+- [ ] `AppType` set correctly (Client = 1, Upgrade = 2)
+
+### Configuration Check
+- [ ] All 6 required `UpdateRequest` fields are set
+- [ ] `UpdateUrl` accessible via HTTP GET returning valid JSON
+- [ ] `AppSecretKey` matches server config (length ≥ 16 characters)
+- [ ] UpgradeApp.exe exists in `update/` subdirectory of publish directory
+
+### Log Check
+- [ ] Check `Logs/generalupdate-trace-*.log` (if available)
+- [ ] Check `ExceptionEventArgs` in event listeners
+- [ ] Check `MultiDownloadErrorEventArgs` for exceptions
 
 ---
 
@@ -79,7 +147,7 @@ Comprehensive diagnostic system covering 50+ known issues, all traceable to GitH
 |-------|-------|----------|
 | **Package too large** | Differential not enabled | Differential is embedded in Core, enable `PatchEnabled` |
 | **First update slow** | CDN cold start | Warm up CDN |
-| **Config lost after update** | Blacklist doesn't include config dir | Ensure `SkipDirectorys` includes config folder |
+| **Config lost after update** | Blacklist doesn't include config dir | Ensure `Directories` includes config folder |
 
 ---
 
@@ -91,7 +159,7 @@ When the issue can't be directly matched, follow these 6 steps:
 2. **manifest.json verification** — Does the file exist? Are fields correct?
 3. **UpgradeApp existence** — Is UpgradeApp.exe in the expected directory?
 4. **Network accessibility** — Can you curl the UpdateUrl?
-5. **Log analysis** — Check logs in `%TEMP%/GeneralUpdate/logs/`
+5. **Log analysis** — Check logs in `Logs/generalupdate-trace-*.log`
 6. **Minimal reproduction** — Start with Minimal integration, gradually add complexity
 
 ## Log File Locations
@@ -109,9 +177,22 @@ When the issue can't be directly matched, follow these 6 steps:
 
 ---
 
+## ⚠️ Anti-Pattern Checklist
+
+| # | Anti-Pattern | Consequence | Correct Approach |
+|---|-------------|-------------|------------------|
+| 1 | **Only looking at error messages, not events** | Missing detailed info in ExceptionEventArgs | Subscribe to all 6 events |
+| 2 | **Assuming no logs because wrong path** | Missing critical diagnostic info | Check InstallPath/Logs directory |
+| 3 | **Only checking Client, not Upgrade process** | Issue is in Upgrade but diagnosis goes wrong | Check both processes |
+| 4 | **Modifying code for update issues immediately** | Issue might be server config, not client bug | Check server version info first |
+| 5 | **Ignoring NuGet version consistency** | "Method not found" root cause is version mismatch | Check versions first |
+| 6 | **Testing only in Debug environment** | Release may lack runtime files | Reproduce in release/production environment |
+
+---
+
 ## Related Skills
 
-- [🚀 generalupdate-init — Bootstrap configuration](./generalupdate-init.md)
-- [🎨 generalupdate-ui — Update UI diagnostics](./generalupdate-ui.md)
-- [⚙️ generalupdate-strategy — Strategy-related issues](./generalupdate-strategy.md)
-- [🔧 generalupdate-advanced — Advanced feature issues](./generalupdate-advanced.md)
+- `/generalupdate-init` — Bootstrap configuration
+- `/generalupdate-ui` — Update UI diagnostics
+- `/generalupdate-strategy` — Strategy-related issues
+- `/generalupdate-advanced` — Advanced feature issues
