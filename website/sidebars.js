@@ -63,6 +63,8 @@ const sidebars = {
     'agent-skills/generalupdate-strategy',
     'agent-skills/generalupdate-advanced',
     'agent-skills/generalupdate-troubleshoot',
+    'agent-skills/generalupdate-migration',
+    'agent-skills/generalupdate-security-audit',
   ],
 };
 
