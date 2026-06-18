@@ -25,6 +25,9 @@ bld/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
+# Ignore temporary skill codegen embedded repo
+tmpgeneralupdate-skill-codegen/
+
 #NUNIT
 *.VisualState.xml
 TestResult.xml
