@@ -69,6 +69,24 @@ export default function OssPartners() {
       description: '开源协同办公平台，提供团队协作、文档管理、项目管理等企业级协同功能。',
       descriptionEn: 'An open-source collaborative office platform providing enterprise-grade collaboration features including team workspace, document management, and project management.',
     },
+    {
+      name: 'Gradio.Net',
+      url: 'https://github.com/feiyun0112/Gradio.Net',
+      description: 'Gradio 的 .NET 移植版，无需前端代码即可为机器学习模型、API 或任意函数快速构建演示或 Web 应用。',
+      descriptionEn: 'A .NET port of Gradio, allowing you to quickly build demos or web applications for ML models, APIs, or any functions without frontend code.',
+    },
+    {
+      name: '3C-demo',
+      url: 'https://github.com/LessIsMoreInSZ/3C-demo',
+      description: '抵制无良培训班，开源 3C 电商 Demo 项目，助力初学者学习真实项目开发。',
+      descriptionEn: 'Open-source 3C e-commerce demo project, helping beginners learn real-world project development.',
+    },
+    {
+      name: 'HagiCode',
+      url: 'https://hagicode.com/',
+      description: '全球不唯一，但是超级好用的 Agentic Coding 软件，集 AI 编程、游戏化工作空间于一体的全栈开发平台。',
+      descriptionEn: 'Not the only one in the world, but a super useful Agentic Coding software — an all-in-one AI-powered development workspace with gamification.',
+    },
   ];
 
   const title = isEn ? 'Open Source Partners' : '开源生态伙伴';
