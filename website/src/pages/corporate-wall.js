@@ -26,8 +26,8 @@ export default function CorporateWall() {
   const companies = [
     {
       name: '天津云度科技',
-      description: '专注于云计算与数字化转型，在多条产品线中集成 GeneralUpdate 实现客户端自动更新。',
-      descriptionEn: 'Focused on cloud computing and digital transformation, integrating GeneralUpdate across multiple product lines for automatic client updates.',
+      description: '专注于智慧城市应用技术与产品服务，在大数据、AI 技术服务、平台运营及系统集成等领域为政府及企业提供一站式信息化解决方案。',
+      descriptionEn: 'Focused on smart city application technology and products, providing one-stop digital solutions for governments and enterprises in big data, AI services, platform operations, and system integration.',
     },
     {
       name: '上海铱泓科技',
@@ -43,6 +43,16 @@ export default function CorporateWall() {
       name: '沈阳**汽车科技有限公司',
       description: '在车载智能终端软件更新中采用 GeneralUpdate 解决方案。',
       descriptionEn: 'Adopting GeneralUpdate solutions for software updates in automotive intelligent terminals.',
+    },
+    {
+      name: '杭州猿通信息科技有限责任公司',
+      description: '专注于 AI 原生应用与数据处理技术研发，旗下核心产品"决策链（DecisionLinnc）"定位为下一代智能体操作系统，致力于为金融、医疗、科研等领域提供智能化解决方案。',
+      descriptionEn: 'Specializing in AI-native application and data processing technologies, with the core product "DecisionLinnc" positioned as the next-generation agent operating system, providing intelligent solutions for finance, healthcare, and scientific research.',
+    },
+    {
+      name: '上海**导航技术股份有限公司',
+      description: '将 GeneralUpdate 应用于高精度卫星导航定位系统的客户端软件升级与远程运维管理。',
+      descriptionEn: 'Applying GeneralUpdate for client software update and remote operations management in high-precision satellite navigation and positioning systems.',
     },
   ];
 
