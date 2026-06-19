@@ -16,56 +16,168 @@ title: 🚀 Agent Skills 总览
 
 ---
 
-## 安装 Skills
+## 📖 什么是 Agent Skill？
+
+Agent Skill（智能体技能）是一种**可复用指令模板**，让 AI 编程助手获得特定领域的专业知识和工作流程。
+
+**用一句话概括**：Skill = 领域专家知识 + 标准化工作流，注入到 AI 助手中，让它能像资深开发者一样处理该领域的问题。
+
+### Skill 解决了什么问题？
+
+在没有 Skill 的情况下，让 AI 助手帮你做 GeneralUpdate 集成，你需要：
+
+1. 详细解释 GeneralUpdate 的双进程架构、API、策略……AI 才能理解上下文
+2. 每次对话都要重复这些背景知识
+3. AI 生成的代码可能遗漏边界情况、安全注意事项
+
+有了 Skill 之后：
+
+1. 一条命令（如 `/generalupdate-init`）就能触发完整的工作流
+2. AI 自动加载领域知识（架构、API、已知问题、最佳实践）
+3. 输出标准化、经实战验证的代码
+
+### 本套件包含 7 个 Skill
+
+| Skill | 作用一句话 |
+|-------|-----------|
+| `generalupdate-init` | 从零搭建双项目脚手架 + Bootstrap 配置 |
+| `generalupdate-ui` | 自动识别 UI 框架，生成全状态更新窗口 |
+| `generalupdate-strategy` | 按场景选择最优更新策略（OSS/静默/差分等） |
+| `generalupdate-advanced` | Bowl 崩溃守护、IPC、Pipeline、自定义 Hook |
+| `generalupdate-troubleshoot` | 诊断 50+ 已知问题，匹配修复方案 |
+| `generalupdate-migration` | v9.x → v10 / dev-branch → stable 迁移 |
+| `generalupdate-security-audit` | 14 项安全检查 + 修复建议 |
+
+---
+
+## 📦 安装 Skills
 
 ### 获取 Skill 文件
 
-所有 Skill 文件位于 `GeneralUpdate-Samples` 仓库的 `tmpgeneralupdate-skill-codegen` 目录下：
+所有 Skill 文件托管在独立仓库：
 
 ```
-samples-repo/
-└── src/Hub/Samples/
-    └── tmpgeneralupdate-skill-codegen/
-        ├── SKILL.md                          ← 套件入口（必装）
-        └── .claude/skills/
-            ├── generalupdate-init/           ← 🚀 集成指南
-            ├── generalupdate-ui/             ← 🎨 界面生成
-            ├── generalupdate-strategy/       ← ⚙️ 策略指南
-            ├── generalupdate-advanced/       ← 🔧 高级定制
-            ├── generalupdate-troubleshoot/   ← 🩺 故障排查
-            ├── generalupdate-migration/      ← 🔄 迁移指南
-            └── generalupdate-security-audit/ ← 🔒 安全审计
+https://github.com/GeneralLibrary/generalupdate-skill-codegen
 ```
 
-### 安装到 Claude Code
+仓库包含：
 
-**方式一（推荐）**：将整个技能套件克隆到你项目的 `.claude` 目录：
+```
+generalupdate-skill-codegen/
+├── SKILL.md                          ← 套件入口
+└── .claude/skills/
+    ├── generalupdate-init/           ← 🚀 集成指南
+    ├── generalupdate-ui/             ← 🎨 界面生成
+    ├── generalupdate-strategy/       ← ⚙️ 策略指南
+    ├── generalupdate-advanced/       ← 🔧 高级定制
+    ├── generalupdate-troubleshoot/   ← 🩺 故障排查
+    ├── generalupdate-migration/      ← 🔄 迁移指南
+    └── generalupdate-security-audit/ ← 🔒 安全审计
+```
+
+### 方式一：直接克隆到项目
 
 ```bash
 # 在你的项目根目录下执行
-mkdir -p .claude/skills
-cp -r <samples-path>/src/Hub/Samples/tmpgeneralupdate-skill-codegen/.claude/skills/* .claude/skills/
-cp <samples-path>/src/Hub/Samples/tmpgeneralupdate-skill-codegen/SKILL.md .claude/
+git clone https://github.com/GeneralLibrary/generalupdate-skill-codegen.git
+cp -r generalupdate-skill-codegen/.claude/skills .claude/
+cp generalupdate-skill-codegen/SKILL.md .claude/
+rm -rf generalupdate-skill-codegen
 ```
 
-**方式二**：如果已有 `.claude` 目录，只复制 skills 子目录：
+### 方式二：作为 git submodule 管理（推荐团队协作）
 
 ```bash
 # 在你的项目根目录下执行
-cp -r <samples-path>/src/Hub/Samples/tmpgeneralupdate-skill-codegen/.claude/skills .claude/
+git submodule add https://github.com/GeneralLibrary/generalupdate-skill-codegen.git .claude/generalupdate-skill-codegen
+ln -s .claude/generalupdate-skill-codegen/.claude/skills .claude/skills 2>/dev/null || \
+  cp -r .claude/generalupdate-skill-codegen/.claude/skills .claude/
 ```
 
-### 验证安装
+> submodule 方式的好处：通过 `git submodule update --remote` 即可获取 Skill 的最新更新。
 
-启动 Claude Code，输入 `/generalupdate-init`，如果看到集成指南输出，说明安装成功。你也可以直接描述需求让 Skills 自动激活，例如：
+### 方式三：仅复制需要的 Skill
 
-> *"给我的 WPF 应用添加自动更新"*
+```bash
+# 只复制你需要的 skill
+git clone https://github.com/GeneralLibrary/generalupdate-skill-codegen.git /tmp/gussc
+cp -r /tmp/gussc/.claude/skills/generalupdate-init .claude/skills/
+rm -rf /tmp/gussc
+```
+
+---
+
+## 🤖 集成到各种 AI 编程助手
+
+本套件支持以下 AI 编程助手。根据你使用的工具选择对应的集成方式：
+
+### Claude Code（桌面版 / CLI）
+
+**桌面版**：
+1. 在项目根目录放置 `.claude/skills/` 目录（参考上面的安装步骤）
+2. 重启 Claude Code 桌面版
+3. 输入 `/generalupdate-init` 即可使用
+
+**CLI 版**：
+1. 在项目根目录放置 `.claude/skills/` 目录
+2. 重新启动 Claude Code CLI
+3. 输入 `/generalupdate-init` 测试
+
+> 验证方式：输入 `/generalupdate-init`，看到集成指南输出即为成功。
+
+### GitHub Copilot（VS Code）
+
+安装到 `.github/copilot-instructions.md`（或项目 instructions）：
+
+1. 将 `generalupdate-skill-codegen/SKILL.md` 的内容整理为 instructions
+2. 放置在项目根目录的 `.github/copilot-instructions.md`
+3. 或在 GitHub 仓库设置中添加为 Copilot 知识库
+
+> 注意：GitHub Copilot 使用 instructions 机制而非 slash 命令，因此需要将 Skill 内容转换为 instructions 格式。
+
+### Cursor
+
+Cursor 支持 `.cursorrules` 文件，类似 Claude Code 的 skills：
+
+1. 在项目根目录创建或编辑 `.cursorrules`
+2. 将需要的 Skill 内容（如 `generalupdate-init/SKILL.md`）的核心指令追加到 `.cursorrules`
+3. 或使用 Cursor 的 Docs 功能，将 skill-codegen 仓库添加为参考文档
+
+### Windsurf
+
+1. 在项目根目录创建 `.windsurfrules` 文件
+2. 将需要的 Skill 知识嵌入该文件
+3. 引用方式：在对话中直接描述需求，AI 会基于规则文件中的知识回答
+
+### Cline / Continue.dev（VS Code 插件）
+
+1. 在 `.clinerules` 或 `.cursorrules` / `.continuerc` 中引用 Skill 知识
+2. 或直接将 Skill 内容添加到项目的 AI 规则文件中
+
+### DeepSeek / 通义灵码 等国内 AI 助手
+
+- 在项目根目录建议放置一个 `AI_INSTRUCTIONS.md` 或 `CODEGEN.md`
+- 将关键 Skill 指令以自然语言描述写入该文件
+- 在对话开始时引用该文件作为上下文
+
+---
+
+## ✅ 验证安装
+
+无论在哪个 AI 助手中使用，验证方式都是：
+
+```
+尝试让 AI 帮你 "给我的 .NET 应用添加自动更新"
+
+如果 AI 输出了 GeneralUpdate 双项目结构 + Bootstrap 配置代码 → 安装成功
+如果 AI 只给出了通用建议 → 需要补充 Skill 上下文
+```
 
 ---
 
 ## 先决条件
 
-1. **Claude Code**: 需要安装并配置 [Claude Code CLI](https://claude.com/claude-code)
+1. **AI 编程助手**: 需要一个支持自定义指令/规则的 AI 编程工具
 2. **.NET SDK**: 目标项目需基于 .NET 8+（推荐 .NET 10）
 3. **GeneralUpdate 服务端**: 对于标准策略，需要部署 [GeneralSpacestation](https://github.com/JusterZhu/GeneralSpacestation) 或兼容的后端服务
 4. **双进程架构**: 需要理解 Client + Upgrade 双进程的核心理念
@@ -104,7 +216,7 @@ cp -r <samples-path>/src/Hub/Samples/tmpgeneralupdate-skill-codegen/.claude/skil
 
 ## 快速开始
 
-在 Claude Code 中，只需描述你的需求，对应的 Skill 会自动激活：
+在 AI 编程助手中，只需描述你的需求，对应的 Skill 会自动激活：
 
 ```
 "给我的 WPF 应用添加自动更新"
@@ -238,6 +350,7 @@ cp -r <samples-path>/src/Hub/Samples/tmpgeneralupdate-skill-codegen/.claude/skil
 使用过程中遇到任何问题或有改进建议，欢迎提交 Issue：
 
 - **GitHub Issues**: [GeneralUpdate-Samples/issues](https://github.com/GeneralLibrary/GeneralUpdate-Samples/issues) — 报告 Bug、提出功能需求
+- **Skill 仓库**: [generalupdate-skill-codegen/issues](https://github.com/GeneralLibrary/generalupdate-skill-codegen/issues) — Skill 内容相关的问题和建议
 - **GeneralUpdate Issues**: [GeneralUpdate/issues](https://github.com/GeneralLibrary/GeneralUpdate/issues) — 核心库 Bug 和功能请求
 
 提交时请附上以下信息以便快速排查：
@@ -266,8 +379,11 @@ Updated for GeneralUpdate v10.5.0-beta.4 API:
 
 Initial beta release. All templates rewritten for NuGet v10.4.6 stable API.
 
+---
+
 ## 相关项目
 
 - [GeneralUpdate](https://github.com/GeneralLibrary/GeneralUpdate) — .NET 自动更新核心库
 - [GeneralSpacestation](https://github.com/JusterZhu/GeneralSpacestation) — 更新服务端
+- [generalupdate-skill-codegen](https://github.com/GeneralLibrary/generalupdate-skill-codegen) — Agent Skills 套件仓库
 - [GeneralUpdate-Samples](https://github.com/GeneralLibrary/GeneralUpdate-Samples) — 示例项目合集
