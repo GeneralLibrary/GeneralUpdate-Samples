@@ -16,56 +16,168 @@ Covers 50+ real-world issues discovered through GitHub/Gitee, providing producti
 
 ---
 
-## Installing Skills
+## 📖 What is an Agent Skill?
+
+An Agent Skill is a **reusable instruction template** that gives AI coding assistants domain-specific knowledge and standardized workflows.
+
+**In one sentence**: Skill = domain expert knowledge + standardized workflow, injected into the AI assistant so it can handle that domain like an experienced developer.
+
+### What problem does Skill solve?
+
+Without a Skill, asking an AI assistant to help with GeneralUpdate integration requires:
+
+1. Explaining the dual-process architecture, API, strategies in detail — every single time
+2. Repeating this background knowledge in each conversation
+3. Risk of missing edge cases, security considerations in generated code
+
+With a Skill:
+
+1. A single command (e.g., `/generalupdate-init`) triggers the complete workflow
+2. AI automatically loads domain knowledge (architecture, API, known issues, best practices)
+3. Output is standardized, production-verified code
+
+### This suite contains 7 Skills
+
+| Skill | One-line description |
+|-------|---------------------|
+| `generalupdate-init` | Scaffold dual projects + Bootstrap config from scratch |
+| `generalupdate-ui` | Auto-detect UI framework, generate full-state update window |
+| `generalupdate-strategy` | Choose the optimal update strategy (OSS/Silent/Diff/etc.) |
+| `generalupdate-advanced` | Bowl crash daemon, IPC, Pipeline, custom Hooks |
+| `generalupdate-troubleshoot` | Diagnose 50+ known issues, match fix solutions |
+| `generalupdate-migration` | v9.x → v10 / dev-branch → stable migration |
+| `generalupdate-security-audit` | 14 security checks + remediation recommendations |
+
+---
+
+## 📦 Installing Skills
 
 ### Get the Skill Files
 
-All Skill files are located in the `GeneralUpdate-Samples` repository under the `tmpgeneralupdate-skill-codegen` directory:
+All Skill files are hosted in a dedicated repository:
 
 ```
-samples-repo/
-└── src/Hub/Samples/
-    └── tmpgeneralupdate-skill-codegen/
-        ├── SKILL.md                          ← Suite entry point (required)
-        └── .claude/skills/
-            ├── generalupdate-init/           ← 🚀 Integration Guide
-            ├── generalupdate-ui/             ← 🎨 UI Generation
-            ├── generalupdate-strategy/       ← ⚙️ Strategy Guide
-            ├── generalupdate-advanced/       ← 🔧 Advanced Customization
-            ├── generalupdate-troubleshoot/   ← 🩺 Troubleshooting
-            ├── generalupdate-migration/      ← 🔄 Migration Guide
-            └── generalupdate-security-audit/ ← 🔒 Security Audit
+https://github.com/GeneralLibrary/generalupdate-skill-codegen
 ```
 
-### Install into Claude Code
+Repository structure:
 
-**Option 1 (Recommended)**: Clone the entire skill suite into your project's `.claude` directory:
+```
+generalupdate-skill-codegen/
+├── SKILL.md                          ← Suite entry point
+└── .claude/skills/
+    ├── generalupdate-init/           ← 🚀 Integration Guide
+    ├── generalupdate-ui/             ← 🎨 UI Generation
+    ├── generalupdate-strategy/       ← ⚙️ Strategy Guide
+    ├── generalupdate-advanced/       ← 🔧 Advanced Customization
+    ├── generalupdate-troubleshoot/   ← 🩺 Troubleshooting
+    ├── generalupdate-migration/      ← 🔄 Migration Guide
+    └── generalupdate-security-audit/ ← 🔒 Security Audit
+```
+
+### Option 1: Clone directly into your project
 
 ```bash
 # Run in your project root
-mkdir -p .claude/skills
-cp -r <samples-path>/src/Hub/Samples/tmpgeneralupdate-skill-codegen/.claude/skills/* .claude/skills/
-cp <samples-path>/src/Hub/Samples/tmpgeneralupdate-skill-codegen/SKILL.md .claude/
+git clone https://github.com/GeneralLibrary/generalupdate-skill-codegen.git
+cp -r generalupdate-skill-codegen/.claude/skills .claude/
+cp generalupdate-skill-codegen/SKILL.md .claude/
+rm -rf generalupdate-skill-codegen
 ```
 
-**Option 2**: If you already have a `.claude` directory, just copy the skills subdirectory:
+### Option 2: Git submodule (recommended for teams)
 
 ```bash
 # Run in your project root
-cp -r <samples-path>/src/Hub/Samples/tmpgeneralupdate-skill-codegen/.claude/skills .claude/
+git submodule add https://github.com/GeneralLibrary/generalupdate-skill-codegen.git .claude/generalupdate-skill-codegen
+ln -s .claude/generalupdate-skill-codegen/.claude/skills .claude/skills 2>/dev/null || \
+  cp -r .claude/generalupdate-skill-codegen/.claude/skills .claude/
 ```
 
-### Verify Installation
+> Benefit of submodule: `git submodule update --remote` pulls the latest Skill updates.
 
-Start Claude Code and type `/generalupdate-init`. If you see the integration guide output, installation was successful. You can also let Skills auto-activate by describing your needs, for example:
+### Option 3: Copy only what you need
 
-> *"Add auto-update to my WPF application"*
+```bash
+# Copy only the skill you need
+git clone https://github.com/GeneralLibrary/generalupdate-skill-codegen.git /tmp/gussc
+cp -r /tmp/gussc/.claude/skills/generalupdate-init .claude/skills/
+rm -rf /tmp/gussc
+```
+
+---
+
+## 🤖 Integration with Various AI Coding Assistants
+
+This suite supports the following AI coding assistants. Choose the integration method based on your tool:
+
+### Claude Code (Desktop / CLI)
+
+**Desktop**:
+1. Place the `.claude/skills/` directory in your project root (see installation steps above)
+2. Restart Claude Code desktop
+3. Type `/generalupdate-init` to use
+
+**CLI**:
+1. Place the `.claude/skills/` directory in your project root
+2. Restart Claude Code CLI
+3. Type `/generalupdate-init` to test
+
+> Verification: Type `/generalupdate-init` — if you see the integration guide output, installation was successful.
+
+### GitHub Copilot (VS Code)
+
+Install via `.github/copilot-instructions.md` (or project instructions):
+
+1. Extract the core instructions from `generalupdate-skill-codegen/SKILL.md`
+2. Place them in `.github/copilot-instructions.md` in your project root
+3. Or add the skill repository as a Copilot knowledge base in GitHub repository settings
+
+> Note: GitHub Copilot uses instructions rather than slash commands, so Skill content needs to be reformatted as instructions.
+
+### Cursor
+
+Cursor supports `.cursorrules` files, similar to Claude Code skills:
+
+1. Create or edit `.cursorrules` in your project root
+2. Append the core instructions from the needed Skill (e.g., `generalupdate-init/SKILL.md`)
+3. Or use Cursor's Docs feature to add the skill-codegen repo as a reference document
+
+### Windsurf
+
+1. Create a `.windsurfrules` file in your project root
+2. Embed the needed Skill knowledge into this file
+3. Reference: describe your requirements in conversation, the AI responds based on rules file knowledge
+
+### Cline / Continue.dev (VS Code Extensions)
+
+1. Reference Skill knowledge in `.clinerules` or `.continuerc`
+2. Or directly add Skill content to the project's AI rules file
+
+### DeepSeek / Tongyi Lingma / Other Chinese AI Assistants
+
+- Place an `AI_INSTRUCTIONS.md` or `CODEGEN.md` file in your project root
+- Write key Skill instructions in natural language into this file
+- Reference this file as context when starting a conversation
+
+---
+
+## ✅ Verify Installation
+
+Regardless of which AI assistant you use, the verification is the same:
+
+```
+Ask the AI: "Add auto-update to my .NET application"
+
+If the AI outputs a GeneralUpdate dual-project structure + Bootstrap config code → Success
+If the AI only gives generic suggestions → Needs more Skill context
+```
 
 ---
 
 ## Prerequisites
 
-1. **Claude Code**: Install and configure [Claude Code CLI](https://claude.com/claude-code)
+1. **AI Coding Assistant**: A tool that supports custom instructions/rules
 2. **.NET SDK**: Target project must be .NET 8+ (.NET 10 recommended)
 3. **GeneralUpdate Server**: For standard strategies, deploy [GeneralSpacestation](https://github.com/JusterZhu/GeneralSpacestation) or a compatible backend service
 4. **Dual-Process Architecture**: Understand the Client + Upgrade dual-process concept
@@ -104,7 +216,7 @@ Start Claude Code and type `/generalupdate-init`. If you see the integration gui
 
 ## Quick Start
 
-In Claude Code, just describe your needs and the corresponding Skill will auto-activate:
+In your AI coding assistant, just describe your needs and the corresponding Skill will auto-activate:
 
 ```
 "Add auto-update to my WPF application"
@@ -133,6 +245,7 @@ Regardless of which skill you use, check these items after integration:
 - [ ] All 6 required `UpdateRequest` fields are set (UpdateUrl, AppSecretKey, MainAppName, ClientVersion, ProductId, InstallPath)
 - [ ] `UpdateUrl` points to a server API that returns valid version info
 - [ ] `AppSecretKey` length ≥ 16 characters, consistent with server
+- [ ] `InstallPath` points to the correct install directory (production: `AppDomain.CurrentDomain.BaseDirectory`)
 - [ ] `AppType` is set correctly (Client = 1, Upgrade = 2)
 
 ### NuGet & Build
@@ -237,6 +350,7 @@ All skill content is based on real-world data:
 If you encounter any issues or have suggestions for improvement, please submit an Issue:
 
 - **GitHub Issues**: [GeneralUpdate-Samples/issues](https://github.com/GeneralLibrary/GeneralUpdate-Samples/issues) — Report bugs, request features
+- **Skill Repository**: [generalupdate-skill-codegen/issues](https://github.com/GeneralLibrary/generalupdate-skill-codegen/issues) — Skill content issues and suggestions
 - **GeneralUpdate Issues**: [GeneralUpdate/issues](https://github.com/GeneralLibrary/GeneralUpdate/issues) — Core library bugs and feature requests
 
 For faster resolution, please include:
@@ -265,8 +379,11 @@ Updated for GeneralUpdate v10.5.0-beta.4 API:
 
 Initial beta release. All templates rewritten for NuGet v10.4.6 stable API.
 
+---
+
 ## Related Projects
 
 - [GeneralUpdate](https://github.com/GeneralLibrary/GeneralUpdate) — .NET auto-update core library
 - [GeneralSpacestation](https://github.com/JusterZhu/GeneralSpacestation) — Update server
+- [generalupdate-skill-codegen](https://github.com/GeneralLibrary/generalupdate-skill-codegen) — Agent Skills suite repository
 - [GeneralUpdate-Samples](https://github.com/GeneralLibrary/GeneralUpdate-Samples) — Sample projects

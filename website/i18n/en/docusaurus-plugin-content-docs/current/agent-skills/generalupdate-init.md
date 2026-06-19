@@ -4,201 +4,68 @@ sidebar_label: 🚀 Integration
 title: 🚀 generalupdate-init — Quick Integration Guide
 ---
 
-# 🚀 GeneralUpdate Integration Complete Guide
+# 🚀 GeneralUpdate Integration Guide
 
-Helps developers integrate GeneralUpdate auto-update into any .NET application from scratch, covering all configuration methods, deployment scenarios, and production considerations.
-
-> ⚠️ **Targeting NuGet v10.5.0-beta.4**. `Configinfo` has been replaced by `UpdateRequest`, namespace moved to `GeneralUpdate.Core.Configuration`.
+Helps developers integrate GeneralUpdate auto-update into any .NET application. **Start from scratch — no prior knowledge of GeneralUpdate internals required.**
 
 ---
 
-## 📋 User Requirements Gathering
+## First: Why do you need two programs?
 
-Before generating code, the following information MUST be collected. **Uncertain fields MUST be clarified:**
+GeneralUpdate uses a **dual-process architecture**. Understanding this is key to everything else:
 
 ```
-### Project Status
-- Existing project type: ______ (new / existing / migrating from old version)
-- .NET version: ______
-- UI framework: ______ (WPF/WinForms/Avalonia/MAUI/Console/None)
-- Target platform: ______ (Windows/Linux/macOS/Multi-platform)
-
-### Update Requirements
-- Need progress UI: ______ (Yes/No)
-- Has backend service: ______ (Yes/No)
-- Strategy preference: ______ (Standard/OSS/Silent/Differential/CVP/Push)
-- Need Bowl crash daemon: ______ (Yes/No)
-
-### Existing Configuration (if any)
-- NuGet already installed: ______ (Yes/No, version)
-- UpdateRequest already configured: ______ (Yes/No)
-- manifest.json already exists: ______ (Yes/No)
+Your App.exe (Client — main application)
+    │
+    ├── Normally: runs your business logic
+    │
+    ├── When an update is found:
+    │   1. Downloads the update package
+    │   2. Writes download info to an IPC file (temporary file)
+    │   3. Launches the "upgrade program" (UpgradeApp.exe)
+    │   4. Exits itself (Windows won't let a program overwrite itself)
+    │
+    ▼
+UpgradeApp.exe (Upgrade — update installer)
+    │
+    ├── Reads the IPC file
+    ├── Extracts/replaces files (main program has exited, files are free)
+    ├── Launches the main program
+    └── Exits itself
 ```
+
+> **IPC file** (Inter-Process Communication) = a temporary file. The Client writes update info into it; the Upgrade reads it to perform the actual update.
+
+> **manifest.json** = a manifest file that tells GeneralUpdate what your main program is called and where the upgrade program lives.
+
+The reason is simple: **Windows doesn't allow a running program to overwrite its own .exe**, so a separate "helper" process is needed to do the file replacement.
 
 ---
 
-## Workflow (Execute in Order)
-
-### Step 1: Project Detection
+## What you'll need
 
 ```
-├── Check .csproj → target framework, UI type, NuGet references
-├── Check for existing generalupdate.manifest.json
-├── Check for existing UpdateRequest/Bootstrap configuration code
-└── Check project structure → is there a separate Upgrade project?
-```
-
-### Step 2: Select Integration Mode
-
-| Mode | Use Case | Output |
-|------|----------|--------|
-| **[Minimal]** | Quick start for new users, console/service apps | 3 lines of Bootstrap code |
-| **[Standard]** | Need precise control over update process | UpdateRequest + full event listeners |
-| **[Scaffold]** | Team project from scratch | Full Client + Upgrade dual-project structure |
-
-### Step 3: Generate Output
-
-```
-├── NuGet install commands (choose Core/Bowl by platform)
-├── Bootstrap configuration code (by mode)
-├── manifest.json template
-├── Deployment checklist
-└── Known issue warnings (for your config combination)
-```
-
-### Step 4: Guide Next Steps
-
-```
-├── Need UI → /generalupdate-ui
-├── Choose strategy → /generalupdate-strategy
-├── Need Bowl daemon → /generalupdate-advanced
-└── Having issues → /generalupdate-troubleshoot
+1. Your .NET project (WPF / WinForms / Avalonia / MAUI / Console — any works)
+2. .NET SDK (8.0+)
+3. A backend service (optional — you can use OSS object storage instead)
 ```
 
 ---
 
-## Core Concept: 4 Update Scenes
+## Install NuGet
 
-GeneralUpdate decides the update strategy based on the package type returned by the server:
-
-| Scene | Behavior |
-|-------|----------|
-| **None** | No update needed, launch main app directly |
-| **UpgradeOnly** | Only update the upgrade app itself: Client extracts Upgrade package in-place |
-| **MainOnly** | Only update the main app: Client → IPC → Launch Upgrade process |
-| **Both** | Update both |
-
-**Dual-Process Architecture**:
+```bash
+dotnet add package GeneralUpdate.Core --version 10.5.0-beta.4
 ```
-App.exe (Client) is responsible for:
-  ├── Version verification (HTTP request to server)
-  ├── Downloading all update packages
-  ├── IPC write (encrypted file to pass parameters to Upgrade)
-  └── Launching Upgrade.exe then exiting
 
-Upgrade.exe (Upgrade process) is responsible for:
-  ├── Reading the IPC file
-  ├── Applying the update (extract/patch/replace files)
-  └── Launching the main app then exiting
-```
+> If you need the crash daemon (Bowl), add one more package: `dotnet add package GeneralUpdate.Bowl --version 10.5.0-beta.4`  
+> Differential update is built into Core — **no need** for a separate `GeneralUpdate.Differential` package.
 
 ---
 
-## UpdateRequest Reference
+## Minimum setup: 3 lines to get it running
 
-### Complete UpdateRequest Properties
-
-```csharp
-// Method A: Directly construct UpdateRequest (recommended)
-var config = new UpdateRequest
-{
-    // === Required ===
-    UpdateUrl = "https://your-server.com/Upgrade/Verification",
-    AppSecretKey = "your-secret-key",
-    MainAppName = "MyApp.exe",
-    ClientVersion = "1.0.0.0",
-    ProductId = "my-product-001",
-    InstallPath = ".",
-    
-    // === Optional ===
-    ReportUrl = "https://your-server.com/Upgrade/Report",
-    UpdateLogUrl = "https://your-server.com/Upgrade/Log",
-    UpgradeClientVersion = "1.0.0.0",
-    
-    // === Authentication ===
-    AuthScheme = AuthScheme.Hmac,  // Hmac / Bearer / ApiKey / Basic
-    Token = "your-token",
-    BasicUsername = "user",
-    BasicPassword = "pass",
-    
-    // === Blacklist (excluded from backup/copy) ===
-    Files = new List<string> { "*.log", "*.tmp" },
-    Formats = new List<string> { ".pdb" },
-    Directories = new List<string> { "logs", "cache" },
-};
-
-// Method B: Using the builder pattern
-var config = UpdateRequestBuilder.Create()
-    .SetUpdateUrl("https://your-server.com/api")
-    .SetAppSecretKey("your-secret-key")
-    .SetMainAppName("MyApp.exe")
-    .SetClientVersion("1.0.0.0")
-    .SetProductId("my-product-001")
-    .SetInstallPath(".")
-    .Build();
-
-// Method C: Zero-config — discover from manifest.json
-await new GeneralUpdateBootstrap()
-    .SetSource(
-        updateUrl: "https://your-server.com/api",
-        appSecretKey: "your-secret-key")
-    .AddListenerUpdateInfo(...)
-    .LaunchAsync();
-```
-
-### AppType Roles
-
-`AppType` is an enum (v10.5.0-beta.4):
-
-| Value | Name | Description |
-|-------|------|-------------|
-| 1 | `AppType.Client` | Standard client (main app) |
-| 2 | `AppType.Upgrade` | Standard upgrade app |
-| 3 | `AppType.OssClient` | OSS client mode (silent) |
-| 4 | `AppType.OssUpgrade` | OSS upgrade mode |
-
-### Event Listener Checklist
-
-```csharp
-// All 7 events
-.AddListenerUpdateInfo((_, e) => {
-    /* Version verification results (e.Info?.Body contains VersionEntry list) */
-})
-.AddListenerMultiDownloadStatistics((_, e) => {
-    /* Batch download progress (e.ProgressPercentage, e.Speed, e.Remaining) */
-})
-.AddListenerMultiDownloadCompleted((_, e) => {
-    /* Per-version download complete (e.Version, e.IsCompleted) */
-})
-.AddListenerMultiDownloadError((_, e) => {
-    /* Download error (e.Exception, e.Version) */
-})
-.AddListenerMultiAllDownloadCompleted((_, e) => {
-    /* All downloads complete (e.IsAllDownloadCompleted, e.FailedVersions) */
-})
-.AddListenerException((_, e) => {
-    /* Exception (e.Message, e.Exception) */
-})
-.AddListenerProgress((_, e) => {
-    /* Progress (e.Progress or e.DiffProgress, v10.5+) */
-})
-```
-
----
-
-## Integration Code
-
-### Method A: Minimal — Using UpdateRequest
+This is the simplest integration, suitable for console apps or just verifying functionality:
 
 ```csharp
 using GeneralUpdate.Core;
@@ -206,20 +73,33 @@ using GeneralUpdate.Core.Configuration;
 
 var config = new UpdateRequest
 {
-    UpdateUrl = "https://your-server.com/api",
-    AppSecretKey = "your-32-char-secret-key-here!",
-    MainAppName = "MyApp.exe",
-    ClientVersion = "1.0.0.0",
-    ProductId = "my-product-001",
-    InstallPath = "."
+    UpdateUrl = "https://your-server.com/api",   // Server API endpoint
+    AppSecretKey = "your-secret-key",             // Secret key (≥ 16 chars)
+    MainAppName = "MyApp.exe",                    // Your main program filename
+    ClientVersion = "1.0.0.0",                    // Current version
+    ProductId = "my-product-001",                 // Your product ID
+    InstallPath = "."                              // Install directory (. = current dir)
 };
 
-await new GeneralUpdateBootstrap()
-    .SetConfig(config)
-    .LaunchAsync();
+await new GeneralUpdateBootstrap().SetConfig(config).LaunchAsync();
 ```
 
-### Method B: Standard — UpdateRequest + Event Listeners
+These 6 fields are **required** — missing any will cause an error:
+
+| Field | What to put | Why it's needed |
+|-------|-------------|-----------------|
+| `UpdateUrl` | Server API URL | The program queries this for new versions |
+| `AppSecretKey` | Your chosen key | Used for IPC encrypted communication; must match between Client & Upgrade |
+| `MainAppName` | `"MyApp.exe"` | Tells the Upgrade which exe to launch after updating |
+| `ClientVersion` | `"1.0.0.0"` | Server uses this to decide which versions to send |
+| `ProductId` | `"my-app-001"` | Differentiates products (if you have multiple apps) |
+| `InstallPath` | `"."` | Where to extract update packages |
+
+---
+
+## Full setup: with event listeners
+
+If you want to see download progress, handle errors, or add logging, attach event listeners:
 
 ```csharp
 using GeneralUpdate.Core;
@@ -233,137 +113,172 @@ var config = new UpdateRequest
     MainAppName = "MyApp.exe",
     ClientVersion = "1.0.0.0",
     ProductId = "my-product-001",
-    InstallPath = AppDomain.CurrentDomain.BaseDirectory,
-    ReportUrl = "https://your-server.com/Upgrade/Report",
+    InstallPath = AppDomain.CurrentDomain.BaseDirectory,  // Use this in production
 };
 
 await new GeneralUpdateBootstrap()
     .SetConfig(config)
     .AddListenerUpdateInfo((_, e) =>
     {
+        // Fires when update info is available
         Console.WriteLine($"Found {e.Info?.Body?.Count ?? 0} versions");
     })
     .AddListenerMultiDownloadStatistics((_, e) =>
     {
-        Console.WriteLine($"Progress: {e.ProgressPercentage}% | {e.Speed}");
+        // Download progress (bind to your progress bar)
+        Console.WriteLine($"Progress: {e.ProgressPercentage}% | Speed: {e.Speed}");
     })
     .AddListenerMultiDownloadCompleted((_, e) =>
     {
-        Console.WriteLine($"Version {e.Version} download complete");
-    })
-    .AddListenerMultiAllDownloadCompleted((_, e) =>
-    {
-        Console.WriteLine($"All done (IsAllDownloadCompleted={e.IsAllDownloadCompleted})");
+        Console.WriteLine($"Version {e.Version} downloaded");
     })
     .AddListenerMultiDownloadError((_, e) =>
     {
-        Console.WriteLine($"Download failed: version {e.Version} — {e.Exception?.Message}");
+        Console.WriteLine($"Download failed: {e.Exception?.Message}");
+    })
+    .AddListenerMultiAllDownloadCompleted((_, e) =>
+    {
+        Console.WriteLine("All downloads complete, starting update");
     })
     .AddListenerException((_, e) =>
     {
-        Console.WriteLine($"Exception: {e.Message}");
+        Console.WriteLine($"Error: {e.Message}");
+    })
+    .AddListenerProgress((_, e) =>
+    {
+        // v10.5.0-beta.4 new — the 7th event
     })
     .LaunchAsync();
 ```
 
-### Upgrade Process Configuration
+> **You usually only need 3 events**: `MultiDownloadStatistics` (progress bar), `MultiDownloadError` (download failed), `Exception` (errors). Add others as needed.
+
+---
+
+## UpdateRequest full reference
+
+Beyond the 6 required fields, these optional settings are available:
+
+```csharp
+var config = new UpdateRequest
+{
+    // === Required ===
+    UpdateUrl = "...", AppSecretKey = "...", MainAppName = "...",
+    ClientVersion = "1.0.0.0", ProductId = "...", InstallPath = ".",
+
+    // === Optional: Authentication ===
+    AuthScheme = AuthScheme.Hmac,         // Hmac / Bearer / ApiKey / Basic
+    Token = "your-token",
+    BasicUsername = "user",
+    BasicPassword = "pass",
+
+    // === Optional: Files to exclude during backup ===
+    Files = new List<string> { "*.log", "*.tmp" },
+    Formats = new List<string> { ".pdb" },
+    Directories = new List<string> { "logs", "cache" },
+};
+```
+
+You can also use the **builder pattern** (same result, more fluent syntax):
+
+```csharp
+var config = UpdateRequestBuilder.Create()
+    .SetUpdateUrl("https://your-server.com/api")
+    .SetAppSecretKey("your-secret-key")
+    .SetMainAppName("MyApp.exe")
+    .SetClientVersion("1.0.0.0")
+    .SetProductId("my-product-001")
+    .SetInstallPath(".")
+    .Build();
+```
+
+Or use **zero-config mode** (auto-discovers from manifest.json):
+
+```csharp
+await new GeneralUpdateBootstrap()
+    .SetSource(
+        updateUrl: "https://your-server.com/api",
+        appSecretKey: "your-secret-key")
+    .AddListenerUpdateInfo(...)
+    .LaunchAsync();
+```
+
+---
+
+## 4 update scenarios (based on server response)
+
+GeneralUpdate auto-selects its action based on what the server returns:
+
+| Scenario | What happens |
+|----------|-------------|
+| **None** | No update → launch main program |
+| **UpgradeOnly** | Update upgrade app only → extract and overwrite |
+| **MainOnly** | Update main app only → download → IPC → Upgrade replaces files |
+| **Both** | Update both |
+
+---
+
+## Upgrade process configuration
+
+The Upgrade (installer) doesn't need configuration — it reads from the IPC file automatically:
 
 ```csharp
 using GeneralUpdate.Core;
 
-// Upgrade mode reads config from IPC file, no SetConfig needed
 await new GeneralUpdateBootstrap()
     .AddListenerException((_, e) =>
         Console.WriteLine($"Error: {e.Message}"))
     .LaunchAsync();
 ```
 
+> Your project needs **two separate projects**: one Client (main app) and one Upgrade (installer).
+
 ---
 
-## Production Deployment Checklist
+## Deployment checklist
 
-### Directory Structure
+Your publish directory should look like:
 
 ```
 publish/
-├── MyApp.exe                  ← MainAppName (main program)
-├── generalupdate.manifest.json
+├── MyApp.exe                         ← Your main program
+├── generalupdate.manifest.json       ← Update manifest
 └── update/
-    └── UpgradeApp.exe         ← Upgrade program, must ship with first release
+    └── UpgradeApp.exe                ← Upgrade program (must exist from v1.0!)
 ```
 
-### Dual-Process Verification
-
-| Check | Description |
-|-------|-------------|
-| UpgradeApp.exe exists in publish directory | Must be present from first release |
-| Client and Upgrade use same AppSecretKey | Required for IPC encrypted communication |
-| Client and Upgrade use same NuGet version | Mismatch causes "Method not found" |
-| Upgrade process doesn't need network | All data pre-downloaded by Client |
+The most common first-time mistake is **forgetting to include UpgradeApp.exe**, which makes updates impossible to execute.
 
 ---
 
-## ⚠️ Known Issues
+## App type reference
 
-### NuGet Notes (v10.5.0-beta.4)
-`GeneralUpdate.Core` and `GeneralUpdate.Bowl` **can be referenced together** (no CS0433 conflict in v10.5.0-beta.4).
-- Using Core: `dotnet add package GeneralUpdate.Core`
-- Using Bowl: `dotnet add package GeneralUpdate.Bowl` (it does **not** transitively include Core, need to reference Core too)
-- Differential types are embedded in Core, **no need** for separate `GeneralUpdate.Differential` package
+`AppType` distinguishes the two processes:
 
-### New Features in v10.5.0-beta.4
-- ✅ `IUpdateHooks` lifecycle hooks — `Hooks<T>()`
-- ✅ Programmable `Option` system — `SetOption(Option.Silent, true)`
-- ✅ `SilentPollOrchestrator` silent poller
-- ✅ `SetSource()` zero-config entry
-- ✅ `UseDiffPipeline()` differential pipeline config
-- ✅ `AddListenerProgress()` 7th event
-- ✅ `IStrategy` custom strategy injection — `Strategy<T>()`
-- ✅ `IUpdateReporter` / `IHttpAuthProvider` extension points
+| Value | Enum | Who uses it |
+|-------|------|-------------|
+| 1 | `AppType.Client` | Main program (your business code) |
+| 2 | `AppType.Upgrade` | Upgrade program (UpgradeApp.exe) |
+| 3 | `AppType.OssClient` | OSS main program |
+| 4 | `AppType.OssUpgrade` | OSS upgrade program |
 
 ---
 
-## ✅ Integration Verification Checklist
+## Common beginner mistakes
 
-### Bootstrap Configuration
-- [ ] All 6 required `UpdateRequest` fields set (UpdateUrl, AppSecretKey, MainAppName, ClientVersion, ProductId, InstallPath)
-- [ ] `UpdateUrl` server API returns valid version info
-- [ ] `AppSecretKey` length ≥ 16 characters, matches server
-- [ ] `AppType` set correctly (Client = 1, Upgrade = 2)
-- [ ] Production uses `AppDomain.CurrentDomain.BaseDirectory` as InstallPath
-
-### NuGet & Build
-- [ ] Client and Upgrade use the **exact same** GeneralUpdate NuGet version
-- [ ] With Bowl: reference both `GeneralUpdate.Core` and `GeneralUpdate.Bowl` (no conflict in v10.5.0-beta.4)
-- [ ] `dotnet build` succeeds (0 errors)
-- [ ] No need for separate `GeneralUpdate.Differential` reference
-
-### Deployment Structure
-- [ ] UpgradeApp.exe exists in `update/` subdirectory (must from first release)
-- [ ] `generalupdate.manifest.json` has `UpdateAppName` including `.exe`
-- [ ] IPC file (`UpdateInfo.msg`) path is consistent between Client/Upgrade
-- [ ] `Encoding` set to `Encoding.UTF8` (prevents garbled text on Linux/macOS)
+| # | Mistake | Consequence | Correct approach |
+|---|---------|-------------|------------------|
+| 1 | Client and Upgrade use **different** NuGet versions | `Method not found` at runtime | Both projects use the **exact same** version |
+| 2 | Forgot to include UpgradeApp.exe | Update detected but can't execute | Include it in `update/` from the first release |
+| 3 | IPC encoding not set to UTF-8 | Garbled text on Linux/macOS | Set `Encoding.UTF8` |
+| 4 | Version not in 4-part format (e.g. `1.0`) | Version comparison breaks | Always use `1.0.0.0` format |
+| 5 | manifest.json exe name doesn't match | Can't find main program after update | Match the actual filename exactly |
 
 ---
 
-## ⚠️ Anti-Pattern Checklist
+## Next steps
 
-| # | Anti-Pattern | Consequence | Correct Approach |
-|---|-------------|-------------|------------------|
-| 1 | **Core and Bowl NuGet versions differ** | Runtime MethodNotFoundException | Use the same NuGet version |
-| 2 | **Bowl missing `GeneralUpdate.Core` reference** | Build fails, missing Core types | Bowl doesn't transitively include Core, reference Core separately |
-| 3 | **Misunderstanding Bowl transitively includes Core** | Build fails | In v10.5.0-beta.4, Bowl is independent, reference Core separately |
-| 4 | **Client/Upgrade NuGet versions differ** | Runtime MethodNotFoundException | Lock to exactly the same version |
-| 5 | **Blocking IO in event listeners** | Upgrade process UI freezes, killed by timeout | Only update UI state, async for heavy operations |
-| 6 | **IPC encoding not set to UTF-8** | Garbled text on Linux/macOS | `Encoding.UTF8` |
-| 7 | **Version not in 4-part format (1.0.0.0)** | Version comparison logic exception | Always use `x.y.z.w` format |
-| 8 | **manifest.json mainAppName doesn't match actual process name** | Main app not found after update | Match the actual exe name |
-
----
-
-## Related Skills
-
-- `/generalupdate-ui` — UI framework auto-detection + update window code generation
-- `/generalupdate-strategy` — 6 update strategy selection and configuration
-- `/generalupdate-advanced` — Advanced customization
-- `/generalupdate-troubleshoot` — Known issue diagnosis
+- Need an update UI → [generalupdate-ui](generalupdate-ui)
+- Choosing an update strategy → [generalupdate-strategy](generalupdate-strategy)
+- Need crash daemon / advanced features → [generalupdate-advanced](generalupdate-advanced)
+- Running into issues → [generalupdate-troubleshoot](generalupdate-troubleshoot)

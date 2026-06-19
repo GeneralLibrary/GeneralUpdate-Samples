@@ -4,193 +4,163 @@ sidebar_label: 🎨 UI Generation
 title: 🎨 generalupdate-ui — Update UI Generation
 ---
 
-# 🎨 GeneralUpdate Update UI Generation — Full State Coverage
+# 🎨 GeneralUpdate Update UI Guide
 
-Auto-detects the developer's UI framework and generates a complete update window with real GeneralUpdate.Core event bindings.
-
-> ⚠️ Targeting NuGet v10.5.0-beta.4. `RealDownloadService.cs` uses `UpdateRequest` and the correct namespaces.
+If your app needs to **show users the update progress** (instead of silently updating in the background), this page will help you generate the right UI code.
 
 ---
 
-## 📋 User Requirements Gathering
+## First: What each program displays
+
+GeneralUpdate uses a dual-process architecture, and each process shows a different UI:
 
 ```
-### UI Framework (Required)
-- Target framework: ______ (WPF/WinForms/Avalonia/MAUI/Console/Not sure)
-- Preferred UI library: ______ (Default / LayUI.Wpf / WPFDevelopers / AntdUI / SemiUrsa / Native)
-- Existing project template: ______ (Yes/No, if no start with generalupdate-init)
+Your main program (Client)
+    Shows "Checking for updates → Download progress"
+    User sees: Downloading 45% / Speed / Time remaining
 
-### Update Scenario (Required)
-- Update window role: ______ (Client / Upgrade / Both)
-- Manual update trigger needed: ______ (Yes/No, auto-check on startup)
-- Dark mode support: ______ (Yes/No)
+    ↓ After download completes, launches ↓
 
-### Advanced UI Needs (Optional)
-- Custom brand color/logo: ______ (Yes/No)
-- Multi-language support: ______ (Yes/No)
-- Accessibility support: ______ (Yes/No)
+Upgrade program (Upgrade)
+    Shows "Installing update, please wait..."
+    User sees: Installation progress bar / Failure message
 ```
+
+> **Client**: Handles downloading — show a progress bar, speed, version info
+> **Upgrade**: Handles file installation (fast) — just show a "please wait" screen
 
 ---
 
-## Workflow
+## Which situation are you in?
 
-```
-1. Framework Detection
-   ├── Scan .csproj → PackageReference to identify UI library
-   ├── If unrecognized → Ask the user
-   └── If no UI framework → Console progress bar
-
-2. State Code Generation
-   ├── IDownloadService bridge interface
-   ├── RealDownloadService bridge code (manually adapt to GeneralUpdate.Core events)
-   ├── ViewModel (MVVM) or Code-Behind
-   └── Window/Page XAML
-
-3. Integration Guidance
-   ├── How to introduce GeneralUpdateBootstrap
-   └── Bootstrap configuration (pair with generalupdate-init)
-```
+| Situation | What to do |
+|-----------|-----------|
+| **Already have a main app, need to add an update window** | Add an update window to your existing project (this page will help) |
+| **Starting from scratch** | First use [generalupdate-init](generalupdate-init) to set up the dual-project structure, then come back for the UI |
+| **No UI needed (silent update)** | Go to [generalupdate-strategy](generalupdate-strategy) for silent mode |
 
 ---
 
-## UI State Machine (Covered by All Templates)
+## Supported UI frameworks
 
-```
-                   ┌─────────────┐
-                   │    Idle     │ ← Initial state
-                   └──────┬──────┘
-                          │ Auto/manual trigger
-                          ▼
-                   ┌─────────────┐
-            ┌─────│  Checking    │ ← "Checking for updates..."
-            │     └──────┬──────┘
-            │            │
-            │     ┌──────┴──────┐
-            │     ▼             ▼
-            │  ┌────────┐  ┌──────────┐
-            │  │ Latest │  │  Found!  │ ← Show version/size
-            │  └────────┘  └────┬─────┘
-            │                   │ User clicks "Update"
-            │                   ▼
-            │            ┌──────────────┐
-            │      ┌─────│ Downloading  │ ← Progress bar/speed/time
-            │      │     └──────┬───────┘
-            │      │            │
-            │      │     ┌──────┴──────┐
-            │      │     ▼             ▼
-            │      │  ┌────────┐  ┌──────────┐
-            │      │  │ Paused │  │  Error   │ ← Show error + "Retry"
-            │      │  └───┬────┘  └────┬─────┘
-            │      │      │ Resume      │ Retry
-            │      │      ▼             ▼
-            │      │  ┌──────────────┐
-            │      │  │ Downloading  │
-            │      │  └──────────────┘
-            │      │
-            │      │     ┌──────────────┐
-            │      └────→│  Applying    │ ← "Installing update..."
-            │             └──────┬───────┘
-            │                    │
-            │             ┌──────┴──────┐
-            │             ▼             ▼
-            │       ┌─────────┐  ┌──────────┐
-            │       │ Success │  │  Failed  │
-            │       └────┬────┘  └──────────┘
-            │            │
-            │            ▼
-            │       ┌──────────┐
-            │       │ Restart  │ ← Restart app
-            │       └──────────┘
-            │
-            └── Back to Idle
-```
+| Framework | Template file | Highlights |
+|-----------|--------------|------------|
+| **WPF + LayUI.Wpf** | `LayUIStyle.xaml` | Glass-effect progress bar |
+| **WPF + WPFDevelopers** | `WPFDevelopersStyle.xaml` | Circular progress, breathing animation |
+| **Avalonia + SemiUrsa** | `SemiUrsaClientView.axaml` | Cross-platform, dark mode toggle |
+| **WinForms + AntdUI** | `AntdUIStyle.cs` | Dark theme |
+| **MAUI** | `MauiUpdatePage.xaml` | Mobile + desktop |
+
+The **update logic is the same** across all frameworks — only the visual style changes.
 
 ---
 
-## Core Bridge: RealDownloadService
+## The 4 key UI states
 
-All UI templates share this bridge class, mapping GeneralUpdate.Core events to the `IDownloadService` interface.
+An update window is essentially a **state machine** with 4 main states:
 
-### Bridge Logic (v10.5.0-beta.4)
+```
+┌────────────────────────────────────────────────────┐
+│  ① Checking                                         │
+│  "Checking for updates..."                           │
+│        │                                            │
+│        ▼                                            │
+│  ② Downloading (the main state)                    │
+│  ┌────────────────────────────────────────────────┐ │
+│  │ MyApp_2.0.0.0.zip   45%                        │ │
+│  │ ████████████████░░░░░░░░░                      │ │
+│  │ Speed: 3.2 MB/s  Remaining: 12s                │ │
+│  └────────────────────────────────────────────────┘ │
+│        │                                            │
+│        ▼                                            │
+│  ③ Installing                                      │
+│  "Installing update, please do not power off..."    │
+│        │                                            │
+│        ▼                                            │
+│  ④ Complete / Failed                               │
+│  "Update complete!" / "Download failed, retry"      │
+└────────────────────────────────────────────────────┘
+```
+
+There are additional sub-states ("Already up to date", "Paused", "Retrying"), but **beginners only need to focus on ① and ②**.
+
+---
+
+### How to connect update progress to your UI
+
+GeneralUpdate fires events with progress data — you just map the numbers to your UI controls:
 
 ```csharp
-// GeneralUpdate.Core Event → DownloadStatus State Machine Mapping:
+// GeneralUpdate progress event → update your UI
+bootstrap.AddListenerMultiDownloadStatistics((_, e) =>
+{
+    // e.ProgressPercentage  → your progress bar Value (0-100)
+    // e.Speed              → your speed label
+    // e.Remaining          → your time remaining label
+    // e.BytesReceived      → bytes downloaded
+    // e.TotalBytesToReceive → total bytes to download
+});
+```
 
-GeneralUpdateBootstrap.AddListenerMultiDownloadStatistics
-    → Downloading (update ProgressPercentage/Speed/Remaining)
+That's it. **The core work is mapping these 5 values to your UI controls.**
 
-GeneralUpdateBootstrap.AddListenerMultiDownloadCompleted
-    → Processing files (extraction/verification)
+---
 
-GeneralUpdateBootstrap.AddListenerMultiAllDownloadCompleted
-    → Applying → Success
+## Info to gather before generating UI
 
-GeneralUpdateBootstrap.AddListenerMultiDownloadError
-    → DownloadError (after N automatic retries)
+```
+### Your project
+- UI framework: ______ (WPF / WinForms / Avalonia / MAUI / Console)
+- Need dark mode: ______ (Yes/No)
 
-GeneralUpdateBootstrap.AddListenerException
-    → Failed (non-fatal exceptions don't change state)
+### Update window role (see "First" section above)
+- Client (main app): ______ (need to show download progress?)
+- Upgrade (installer): ______ (need to show installation status?)
 ```
 
 ---
 
-## UI Framework Template List
+## Simple example: Console progress bar
 
-| Template File | Framework | Features |
-|---------------|-----------|----------|
-| `SemiUrsaClientView.axaml` + `.cs` | Avalonia + SemiUrsa | Full state machine, dark toggle, animations |
-| `SemiUrsaUpgradeView.axaml` + `.cs` | Avalonia + SemiUrsa (Upgrade) | Waiting UI |
-| `LayUIStyle.xaml` + `.cs` | WPF + LayUI.Wpf | Glass effect, progress bar |
-| `WPFDevelopersStyle.xaml` + `.cs` | WPF + WPFDevelopers | Circular progress, breathing light animation |
-| `AntdUIStyle.cs` | WinForms + AntdUI | Dark theme, wave progress button |
-| `MauiUpdatePage.xaml` + `.cs` | MAUI | Dark mode, AppThemeBinding |
-| `DownloadViewModels.cs` | All frameworks shared | MVVM ViewModel |
-| `RealDownloadService.cs` | All frameworks shared | **Core bridge** |
+Even without a GUI, a console progress bar is easy:
 
----
-
-## ✅ Integration Verification Checklist
-
-### Event Bridging
-- [ ] All 7 events bound (including AddListenerProgress)
-- [ ] Bridge code uses correct EventArgs types (check namespaces `GeneralUpdate.Core.Download` / `GeneralUpdate.Core.Event`)
-- [ ] `IsCompleted` property name is correct (v10.5.0-beta.4 uses `IsCompleted`)
-
-### Thread Safety
-- [ ] UI updates executed on correct thread (WPF/Avalonia use `Dispatcher`, WinForms use `Invoke`, MAUI use `MainThread`)
-- [ ] No blocking operations in `MultiDownloadStatistics` event (UI updates only)
-- [ ] "Applying" state after download has timeout protection (> 30s show progress hint)
-
-### State Machine Coverage
-- [ ] All 11 states implemented (Idle → Checking → Latest/Found → Downloading → Paused → Error → Retrying → Applying → Success/Failed → Restart)
-- [ ] Download error retry count limited (no more than 3 times)
-- [ ] User can cancel the update operation
-
-### Framework-Specific Checks
-- [ ] **Avalonia**: ViewModel implements `INotifyPropertyChanged`, bindings use `{Binding}`
-- [ ] **WPF**: Use `Dispatcher.Invoke` to update bound properties
-- [ ] **WinForms AntdUI**: Use `Control.Invoke` for cross-thread updates
-- [ ] **MAUI**: Check `Platform.CurrentActivity` lifecycle on Android
+```csharp
+await new GeneralUpdateBootstrap()
+    .SetConfig(config)
+    .AddListenerMultiDownloadStatistics((_, e) =>
+    {
+        Console.Write($"\rDownload progress: {e.ProgressPercentage}% ");
+        Console.Write($"[{new string('■', (int)(e.ProgressPercentage / 5))}");
+        Console.WriteLine($"{new string('□', 20 - (int)(e.ProgressPercentage / 5))}]");
+        Console.Write($"Speed: {e.Speed}/s");
+    })
+    .LaunchAsync();
+```
 
 ---
 
-## ⚠️ Anti-Pattern Checklist
+## Known issues & tips
 
-| # | Anti-Pattern | Consequence | Correct Approach |
-|---|-------------|-------------|------------------|
-| 1 | **Using the same generic ViewModel across frameworks** | Thread model incompatibility, cross-thread exceptions | Adapt Dispatcher/Invoke/MainThread per framework |
-| 2 | **File IO or network requests in download statistics event** | Blocks update flow, UI stuttering | Only update bound UI properties |
-| 3 | **Progress bar jumps directly to 100%** | User sees no intermediate progress, poor UX | Use `e.ProgressPercentage` for incremental updates |
-| 4 | **Not handling MultiDownloadError event** | No user feedback on download failure, stuck waiting | At least show error + retry button |
-| 5 | **Not distinguishing Client vs Upgrade UI** | Upgrade shows unnecessary "download progress" | Upgrade should show "Installing, please wait" only |
-| 6 | **Using RealDownloadService.cs directly without adaptation** | Event bindings don't work | Must adjust `IDownloadService` implementation per project |
-| 7 | **Starting update in ViewModel constructor (Avalonia/WPF)** | UI not initialized, bindings don't work | Trigger check in Loaded event or View layer |
+| # | Issue | Note |
+|---|-------|------|
+| 1 | **Don't do heavy work in update callbacks** | Only update UI — no file I/O or network requests |
+| 2 | **Cross-thread UI updates** | WPF: `Dispatcher.Invoke`, WinForms: `Control.Invoke` |
+| 3 | **Upgrade doesn't need download progress** | Upgrade just installs — show "Please wait" |
+| 4 | **Show a retry button on failure** | Otherwise users get stuck at 99% |
+| 5 | **Don't jump progress to 100% instantly** | Users need to see intermediate progress |
 
 ---
 
-## Related Skills
+## Advanced: Full-state UI templates
 
-- `/generalupdate-init` — Bootstrap configuration
-- `/generalupdate-strategy` — Silent mode if no UI needed
-- `/generalupdate-troubleshoot` — UI display issues
+If you need a complete UI (pause, resume, retry, dark mode toggle, etc.), the skill repository provides full template code.
+
+To generate: describe your UI framework in Claude Code, and the AI will select and generate the appropriate template.
+
+---
+
+## Related pages
+
+- [generalupdate-init](generalupdate-init) — First set up the dual-project structure
+- [generalupdate-strategy](generalupdate-strategy) — Silent mode (no UI needed)
+- [generalupdate-advanced](generalupdate-advanced) — Advanced customization
