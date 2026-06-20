@@ -55,10 +55,10 @@ UpgradeApp.exe (Upgrade —— 升级程序)
 ## 安装 NuGet
 
 ```bash
-dotnet add package GeneralUpdate.Core --version 10.5.0-beta.4
+dotnet add package GeneralUpdate.Core --version 10.5.0-beta.6
 ```
 
-> 如果要用崩溃守护（Bowl），再加一个包：`dotnet add package GeneralUpdate.Bowl --version 10.5.0-beta.4`  
+> 如果要用崩溃守护（Bowl），再加一个包：`dotnet add package GeneralUpdate.Bowl --version 10.5.0-beta.6`  
 > 差分更新功能已经内置在 Core 里，**不需要**额外装 `GeneralUpdate.Differential`。
 
 ---
@@ -146,7 +146,7 @@ await new GeneralUpdateBootstrap()
     })
     .AddListenerProgress((_, e) =>
     {
-        // v10.5.0-beta.4 新增的第 7 个事件
+        // v10.5.0-beta.6 新增的第 7 个事件
     })
     .LaunchAsync();
 ```

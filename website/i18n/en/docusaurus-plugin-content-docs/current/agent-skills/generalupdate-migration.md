@@ -9,7 +9,7 @@ title: 🔄 generalupdate-migration — Migration Guide
 Guide developers through migrating GeneralUpdate from older versions to the latest API (v10.5.0-beta.6).
 
 > ⚠️ **Target Version: NuGet v10.5.0-beta.6**
-> Dev branch (v10.5.0-beta.6) APIs differ fundamentally from stable.
+> Dev branch (v10.5.0-beta.x) APIs differ fundamentally from stable.
 
 ---
 

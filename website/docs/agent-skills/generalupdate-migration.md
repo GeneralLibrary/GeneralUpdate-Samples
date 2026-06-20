@@ -9,7 +9,7 @@ title: 🔄 generalupdate-migration — 迁移指南
 帮助开发者从旧版本 GeneralUpdate 迁移到最新稳定版 API（v10.5.0-beta.6）。
 
 > ⚠️ **目标版本：NuGet v10.5.0-beta.6**
-> 开发分支（v10.5.0-beta.6）API 与稳定版有根本性差异。
+> 开发分支（v10.5.0-beta.x）API 与稳定版有根本性差异。
 
 ---
 
@@ -79,6 +79,8 @@ await new GeneralUpdateBootstrap()
 | N/A | `generalupdate.manifest.json` | 必须随首发版本发布 |
 
 ### 路径 B：v10.5.0-beta.x (开发分支) → v10.5.0-beta.6
+
+| 开发分支 API (v10.5.0-beta.x) | 稳定版替代 (v10.5.0-beta.6) | 处理方式 |
 
 | 开发分支 API (v10.5.0-beta.x) | 稳定版替代 (v10.5.0-beta.6) | 处理方式 |
 |-------------------------------|---------------------------|---------|

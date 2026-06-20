@@ -10,8 +10,8 @@ title: 🚀 Agent Skills Overview
 
 Covers 50+ real-world issues discovered through GitHub/Gitee, providing production-ready code generation + deep troubleshooting.
 
-> **Current Version: 0.0.2-beta.1** — targets NuGet `GeneralUpdate.Core 10.5.0-beta.4`  
-> Compatibility: `v10.5.0-beta.4` (latest NuGet preview release)  
+> **Current Version: 0.0.2-beta.1** — targets NuGet `GeneralUpdate.Core 10.5.0-beta.6`  
+> Compatibility: `v10.5.0-beta.6` (latest NuGet preview release)  
 > All templates have passed `dotnet build` verification (0 errors).
 
 ---
@@ -327,12 +327,12 @@ All skill content is based on real-world data:
 
 ## API Compatibility Notes
 
-> ⚠️ **NuGet Reference Rules (v10.5.0-beta.4)**:
-> - Core only: `dotnet add package GeneralUpdate.Core --version 10.5.0-beta.4`
-> - With Bowl: reference **both** `GeneralUpdate.Core` and `GeneralUpdate.Bowl` (no type conflicts in v10.5.0-beta.4)
+> ⚠️ **NuGet Reference Rules (v10.5.0-beta.6)**:
+> - Core only: `dotnet add package GeneralUpdate.Core --version 10.5.0-beta.6`
+> - With Bowl: reference **both** `GeneralUpdate.Core` and `GeneralUpdate.Bowl` (no type conflicts in v10.5.0-beta.6)
 > - Differential is embedded in Core, **no need** for a separate `GeneralUpdate.Differential` reference
 
-> ⚠️ **API Surface**: v10.5.0-beta.4 adopts a completely new configuration system:
+> ⚠️ **API Surface**: v10.5.0-beta.6 adopts a completely new configuration system:
 > - ✅ `UpdateRequest` / `UpdateRequestBuilder` — replaces old Configinfo
 > - ✅ `SetSource(updateUrl, appSecretKey)` — zero-config entry point
 > - ✅ `SetOption<T>(Option<T>, T)` — programmable configuration system
@@ -354,7 +354,7 @@ If you encounter any issues or have suggestions for improvement, please submit a
 - **GeneralUpdate Issues**: [GeneralUpdate/issues](https://github.com/GeneralLibrary/GeneralUpdate/issues) — Core library bugs and feature requests
 
 For faster resolution, please include:
-- GeneralUpdate version (e.g. v10.5.0-beta.4)
+- GeneralUpdate version (e.g. v10.5.0-beta.6)
 - Platform (Windows / Linux / macOS)
 - Update strategy (Standard / OSS / Silent / Differential / Push)
 - Full error log (available from `Logs/generalupdate-trace-*.log`)
@@ -365,14 +365,14 @@ For faster resolution, please include:
 
 ### 0.0.2-beta.1 — 2026-06-16
 
-Updated for GeneralUpdate v10.5.0-beta.4 API:
+Updated for GeneralUpdate v10.5.0-beta.6 API:
 - Configinfo → UpdateRequest (namespace: `GeneralUpdate.Core.Configuration`)
 - Event args moved to `GeneralUpdate.Core.Download` and `GeneralUpdate.Core.Event`
 - Added SetSource(), SetOption(), `Hooks<T>()`, `Strategy<T>()` API coverage
 - Updated all strategy examples to use the new API
 - Updated CustomHooks.cs and CustomStrategy.cs to show v10.5 capabilities
 - Fixed IsComplated → IsCompleted
-- NuGet version bumped to `10.5.0-beta.4`
+- NuGet version bumped to `10.5.0-beta.6`
 - Added 2 new skills: generalupdate-migration, generalupdate-security-audit
 
 ### 0.0.1-beta.1 — 2026-06-16

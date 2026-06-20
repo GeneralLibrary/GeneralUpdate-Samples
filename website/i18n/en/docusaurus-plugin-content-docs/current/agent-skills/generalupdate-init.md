@@ -55,10 +55,10 @@ The reason is simple: **Windows doesn't allow a running program to overwrite its
 ## Install NuGet
 
 ```bash
-dotnet add package GeneralUpdate.Core --version 10.5.0-beta.4
+dotnet add package GeneralUpdate.Core --version 10.5.0-beta.6
 ```
 
-> If you need the crash daemon (Bowl), add one more package: `dotnet add package GeneralUpdate.Bowl --version 10.5.0-beta.4`  
+> If you need the crash daemon (Bowl), add one more package: `dotnet add package GeneralUpdate.Bowl --version 10.5.0-beta.6`  
 > Differential update is built into Core — **no need** for a separate `GeneralUpdate.Differential` package.
 
 ---
@@ -146,7 +146,7 @@ await new GeneralUpdateBootstrap()
     })
     .AddListenerProgress((_, e) =>
     {
-        // v10.5.0-beta.4 new — the 7th event
+        // v10.5.0-beta.6 new — the 7th event
     })
     .LaunchAsync();
 ```
