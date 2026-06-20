@@ -8,12 +8,11 @@
         "PacketName": "packet_20260602210052838_full_client_2.0.0.0",
         "Url": "http://localhost:5000/File/Download/a1f180bfc0a58429a42be59d15421b810c993274af65b23a0b049880bb415d47",
         "IsFreeze": false,
-        "IsCrossVersion": false,
-        "FromVersion": null,
         "Platform": 1,
         "IsForcibly": false,
         "Size": 1068,
-        "Hash": "a1f180bfc0a58429a42be59d15421b810c993274af65b23a0b049880bb415d47"
+        "Hash": "a1f180bfc0a58429a42be59d15421b810c993274af65b23a0b049880bb415d47",
+        "packageType": 2
     },
     {
         "PubTime": "2026-06-02T21:00:52.9527877+08:00",
@@ -24,12 +23,11 @@
         "PacketName": "packet_20260602210052838_full_upgrade_2.0.0.0",
         "Url": "http://localhost:5000/File/Download/0d7727be7ea8520fe60ce37ce30b1a956ee6e33b252489045b4d852134b4abc6",
         "IsFreeze": false,
-        "IsCrossVersion": false,
-        "FromVersion": null,
         "Platform": 1,
         "IsForcibly": false,
         "Size": 227,
-        "Hash": "0d7727be7ea8520fe60ce37ce30b1a956ee6e33b252489045b4d852134b4abc6"
+        "Hash": "0d7727be7ea8520fe60ce37ce30b1a956ee6e33b252489045b4d852134b4abc6",
+        "packageType": 2
     },
     {
         "PubTime": "2026-06-02T21:00:52.9705223+08:00",
@@ -40,12 +38,11 @@
         "PacketName": "packet_20260602210052838_full_client_1.0.0.1",
         "Url": "http://localhost:5000/File/Download/47e693ac91230db216cf4ece7d6775e7bc73b79028eb76f847f74ad01d125ef6",
         "IsFreeze": false,
-        "IsCrossVersion": false,
-        "FromVersion": null,
         "Platform": 1,
         "IsForcibly": false,
         "Size": 140,
-        "Hash": "47e693ac91230db216cf4ece7d6775e7bc73b79028eb76f847f74ad01d125ef6"
+        "Hash": "47e693ac91230db216cf4ece7d6775e7bc73b79028eb76f847f74ad01d125ef6",
+        "packageType": 2
     },
     {
         "PubTime": "2026-06-02T21:00:52.9735836+08:00",
@@ -56,12 +53,11 @@
         "PacketName": "packet_20260602210052838_full_upgrade_1.0.0.1",
         "Url": "http://localhost:5000/File/Download/47e693ac91230db216cf4ece7d6775e7bc73b79028eb76f847f74ad01d125ef6",
         "IsFreeze": false,
-        "IsCrossVersion": false,
-        "FromVersion": null,
         "Platform": 1,
         "IsForcibly": false,
         "Size": 140,
-        "Hash": "47e693ac91230db216cf4ece7d6775e7bc73b79028eb76f847f74ad01d125ef6"
+        "Hash": "47e693ac91230db216cf4ece7d6775e7bc73b79028eb76f847f74ad01d125ef6",
+        "packageType": 2
     },
     {
         "PubTime": "2026-06-02T21:00:52.9849748+08:00",
@@ -72,12 +68,11 @@
         "PacketName": "packet_20260602210052838_full_client_1.0.0.2",
         "Url": "http://localhost:5000/File/Download/d0e74a16a230eb53cfd6d3d955582f3b1c22f838822e61a3148afcd2336ef94c",
         "IsFreeze": false,
-        "IsCrossVersion": false,
-        "FromVersion": null,
         "Platform": 1,
         "IsForcibly": false,
         "Size": 140,
-        "Hash": "d0e74a16a230eb53cfd6d3d955582f3b1c22f838822e61a3148afcd2336ef94c"
+        "Hash": "d0e74a16a230eb53cfd6d3d955582f3b1c22f838822e61a3148afcd2336ef94c",
+        "packageType": 2
     },
     {
         "PubTime": "2026-06-02T21:00:52.9889760+08:00",
@@ -88,12 +83,11 @@
         "PacketName": "packet_20260602210052838_full_upgrade_1.0.0.2",
         "Url": "http://localhost:5000/File/Download/d0e74a16a230eb53cfd6d3d955582f3b1c22f838822e61a3148afcd2336ef94c",
         "IsFreeze": false,
-        "IsCrossVersion": false,
-        "FromVersion": null,
         "Platform": 1,
         "IsForcibly": false,
         "Size": 140,
-        "Hash": "d0e74a16a230eb53cfd6d3d955582f3b1c22f838822e61a3148afcd2336ef94c"
+        "Hash": "d0e74a16a230eb53cfd6d3d955582f3b1c22f838822e61a3148afcd2336ef94c",
+        "packageType": 2
     },
     {
         "PacketName": "appupdate_2.0.0.0",
@@ -107,7 +101,6 @@
         "Format": ".apk",
         "Size": 43346849,
         "IsFreeze": false,
-        "IsCrossVersion": false,
-        "FromVersion": null
+        "packageType": 2
     }
 ]

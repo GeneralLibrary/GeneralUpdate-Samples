@@ -49,8 +49,7 @@ function New-VersionEntry {
         [string]$PacketName, [string]$Version, [int]$AppType,
         [int]$Platform = 1, [string]$ProductId,
         [bool]$IsForcibly = $false, [string]$Format = ".zip",
-        [bool]$IsCrossVersion = $false,
-        [string]$FromVersion = $null, [string]$ToVersion = $null,
+        [int]$PackageType = 2,  # 1=Chain(差分), 2=Full(完整包)
         [bool]$IsFreeze = $false
     )
     $zipPath = Join-Path $packagesDir "$PacketName.zip"
@@ -70,9 +69,7 @@ function New-VersionEntry {
         Format        = $Format
         Size          = $size
         IsFreeze      = $IsFreeze
-        IsCrossVersion = $(if ($IsCrossVersion) { $true } else { $false })
-        FromVersion   = $FromVersion
-        ToVersion     = $ToVersion
+        PackageType   = $PackageType
     }
 }
 
@@ -80,8 +77,7 @@ function Add-ZipPackage {
     param(
         [string]$SourceDir, [string]$PacketName,
         [string]$Version, [int]$AppType,
-        [bool]$IsCrossVersion = $false,
-        [string]$FromVersion = $null, [string]$ToVersion = $null
+        [int]$PackageType = 2  # 1=Chain(差分), 2=Full(完整包)
     )
     $zipPath = Join-Path $packagesDir "$PacketName.zip"
     Write-Host "  Creating: $PacketName.zip" -ForegroundColor Yellow
@@ -101,7 +97,7 @@ function Add-ZipPackage {
 
     $entry = New-VersionEntry -PacketName $PacketName -Version $Version `
         -AppType $AppType -ProductId $productId `
-        -IsCrossVersion $IsCrossVersion -FromVersion $FromVersion -ToVersion $ToVersion
+        -PackageType $PackageType
     $script:allVersions += $entry
 }
 
@@ -119,7 +115,7 @@ if ((Test-Path $clientV2) -and (Test-Path $clientV1)) {
     # Full (VersionChain) package
     $pkgName = "packet_${timestamp}_full_client_2.0.0.0"
     Add-ZipPackage -SourceDir $clientV2 -PacketName $pkgName `
-        -Version "2.0.0.0" -AppType 1 -IsCrossVersion $false
+        -Version "2.0.0.0" -AppType 1 -PackageType 2
 
     if (-not $FullOnly) {
         # Differential (CrossVersion) package via PatchGenerator
@@ -156,9 +152,7 @@ if ((Test-Path $clientV2) -and (Test-Path $clientV1)) {
                         Format        = $pe.Format
                         Size          = $pe.Size
                         IsFreeze      = $pe.IsFreeze
-                        IsCrossVersion = $(if ($pe.IsCrossVersion) { $true } else { $false })
-                        FromVersion   = $pe.FromVersion
-                        ToVersion     = $pe.ToVersion
+                        PackageType   = $(if ($pe.PackageType) { $pe.PackageType } elseif ($pe.IsCrossVersion) { 1 } else { 2 })
                     }
                 }
             }
@@ -186,7 +180,7 @@ if ((Test-Path $upgradeV2) -and (Test-Path $upgradeV1)) {
     # Full (VersionChain) package
     $pkgName = "packet_${timestamp}_full_upgrade_2.0.0.0"
     Add-ZipPackage -SourceDir $upgradeV2 -PacketName $pkgName `
-        -Version "2.0.0.0" -AppType 2 -IsCrossVersion $false
+        -Version "2.0.0.0" -AppType 2 -PackageType 2
 }
 else {
     Write-Host "  [Skip] content_upgrade directories not found: $upgradeV1 or $upgradeV2" -ForegroundColor Yellow
@@ -207,12 +201,12 @@ foreach ($ver in @("1.0.0.1", "1.0.0.2")) {
         # Client full package
         $pkgName = "packet_${timestamp}_full_client_$ver"
         Add-ZipPackage -SourceDir $srcPath -PacketName $pkgName `
-            -Version $ver -AppType 1 -IsCrossVersion $false
+            -Version $ver -AppType 1 -PackageType 2
 
         # Upgrade full package
         $pkgName = "packet_${timestamp}_full_upgrade_$ver"
         Add-ZipPackage -SourceDir $srcPath -PacketName $pkgName `
-            -Version $ver -AppType 2 -IsCrossVersion $false
+            -Version $ver -AppType 2 -PackageType 2
     }
 }
 
@@ -233,6 +227,6 @@ Write-Host "  Metadata: $versionsJsonPath" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
 foreach ($v in $uniqueVersions) {
-    $cross = if ($v.IsCrossVersion) { "Cross $($v.FromVersion) → $($v.ToVersion)" } else { "Full" }
+    $cross = if ($v.PackageType -eq 1) { "Chain" } else { "Full" }
     Write-Host "  AppType=$($v.AppType) v$($v.Version) [$cross] $($v.PacketName)" -ForegroundColor Gray
 }

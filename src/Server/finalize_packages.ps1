@@ -83,12 +83,10 @@ foreach ($f in $zipFiles) {
         Format         = ".zip"
         Size           = $size
         IsFreeze       = $false
-        IsCrossVersion = $isCross
-        FromVersion    = $fromVer
-        ToVersion      = $toVer
+        PackageType    = $(if ($isCross) { 1 } else { 2 })
     }
     $entries += $entry
-    $crossLabel = if ($isCross) { "Cross $fromVer -> $toVer" } else { "Full" }
+    $crossLabel = if ($isCross) { "Chain" } else { "Full" }
     Write-Host "  AppType=$appType v$version [$crossLabel] $($f.Name) ($size bytes)"
 }
 
