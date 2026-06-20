@@ -39,7 +39,7 @@ sidebar_position: 3
 
 | Item | Description |
 | --- | --- |
-| **Version** | `10.5.0-beta.2` |
+| **Version** | `10.5.0-beta.6` |
 | **Target Framework** | `netstandard2.0` (.NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+) |
 | **Dependencies** | `System.Collections.Immutable`, `System.Text.Json` |
 | **Bundled Tools** | Windows: `procdump.exe` / `procdump64.exe` / `procdump64a.exe`; Linux: `procdump` deb/rpm + `install.sh`; macOS: `/usr/bin/lldb` |

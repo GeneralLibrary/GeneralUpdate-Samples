@@ -7,6 +7,17 @@ tags: [log]
 
 # 📒Release log
 
+### 📍2026-06-20 — v10.5.0-beta.6
+
+- fix(core): resolve 16 audit findings — race conditions, design flaws, glue code, and performance issues
+- feat(core): PackageType enum migration + chain/full fallback mechanism
+- feat(core): unified HTTP auth provider + custom headers + CVP fix
+- fix(core): skip redundant chain packages after full fallback
+- fix(core): eliminate all AOT-incompatible patterns for Native AOT support
+- fix: resolve CI failures and address Copilot review comments
+- feat: align all components to SemVer 2.0 for version comparison (#521)
+- chore: bump version to v10.5.0-beta.6 and fix CI pipeline
+
 ### 📍2026-06-14
 
 - **GeneralUpdate.Core**: Fixed critical/high security issues found in code audit — BSDIFF overflow, Zip path traversal, ProcessExit deadlock, hardcoded IPC key, etc.; fixed download pipeline failure not aborting Upgrade launch; backup feature disabled by default; removed UpgradeMode pass-through field; added CVP-first upgrade strategy with automatic chain fallback

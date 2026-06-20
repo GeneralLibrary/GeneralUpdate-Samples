@@ -7,6 +7,17 @@ tags: [log]
 
 # 📒Release log
 
+### 📍2026-06-20 — v10.5.0-beta.6
+
+- fix(core): resolve 16 audit findings — race conditions, design flaws, glue code, and performance issues
+- feat(core): PackageType enum migration + chain/full fallback mechanism
+- feat(core): unified HTTP auth provider + custom headers + CVP fix
+- fix(core): skip redundant chain packages after full fallback
+- fix(core): eliminate all AOT-incompatible patterns for Native AOT support
+- fix: resolve CI failures and address Copilot review comments
+- feat: align all components to SemVer 2.0 for version comparison (#521)
+- chore: bump version to v10.5.0-beta.6 and fix CI pipeline
+
 ### 📍2026-06-14
 
 - **GeneralUpdate.Core**: 修复代码审计发现的 BSDIFF 溢出、Zip 路径遍历、ProcessExit 死锁、IPC 密钥硬编码等严重/高危安全问题；修复下载管道失败后继续启动 Upgrade 的错误行为；备份功能默认关闭（不再默认备份）；移除 UpgradeMode 透传字段；新增跨版本优先更新（CVP-first）策略，自动降级为链式更新

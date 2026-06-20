@@ -47,7 +47,7 @@ sidebar_position: 8
 
 | 项目 | 说明 |
 | --- | --- |
-| **版本** | `10.5.0-beta.2` |
+| **版本** | `10.5.0-beta.6` |
 | **目标框架** | `net8.0` / `net10.0`（多目标） |
 | **依赖包** | `Microsoft.Extensions.DependencyInjection`、`Microsoft.Extensions.Logging.Abstractions`、`Microsoft.Extensions.Options` |
 | **兼容性** | Windows（完整支持，需管理员权限）/ Linux（需 root/sudo）/ macOS（受 SIP 和系统扩展策略影响） |

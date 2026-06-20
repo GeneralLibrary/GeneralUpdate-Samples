@@ -8,8 +8,8 @@ title: 🔧 generalupdate-advanced — Advanced Customization
 
 Covers extension point architecture, Pipeline, differential engine, Bowl crash daemon, event system, and filesystem tools.
 
-> ⚠️ **API Version Note**: This guide is based on **NuGet v10.5.0-beta.4**.
-> All the following features are **available** in v10.5.0-beta.4:
+> ⚠️ **API Version Note**: This guide is based on **NuGet v10.5.0-beta.6**.
+> All the following features are **available** in v10.5.0-beta.6:
 > - ✅ `IUpdateHooks` lifecycle hooks (`Hooks<T>()`)
 > - ✅ `IStrategy` custom strategy injection (`Strategy<T>()`)
 > - ✅ `SilentPollOrchestrator` silent poller (`Option.Silent`)
@@ -49,7 +49,7 @@ Covers extension point architecture, Pipeline, differential engine, Bowl crash d
 
 ---
 
-## 1. Pipeline System (v10.5.0-beta.4 available)
+## 1. Pipeline System (v10.5.0-beta.6 available)
 
 GeneralUpdate uses the Pipeline pattern for update package verification, extraction, and patch application.
 
@@ -82,7 +82,7 @@ await new PipelineBuilder(context)
 
 ---
 
-## 2. Strategy System (v10.5.0-beta.4 available)
+## 2. Strategy System (v10.5.0-beta.6 available)
 
 GeneralUpdate has three built-in platform strategies via the `IStrategy` interface:
 
@@ -97,7 +97,7 @@ GeneralUpdate has three built-in platform strategies via the `IStrategy` interfa
 
 ---
 
-## 3. Bowl Crash Daemon (v10.5.0-beta.4)
+## 3. Bowl Crash Daemon (v10.5.0-beta.6)
 
 Bowl is a crash monitoring component configured via `BowlContext`.
 
@@ -137,11 +137,11 @@ Console.WriteLine($"Result: Success={result.Success}, Restored={result.Restored}
 | `DumpType` | DumpType | Mini / Full |
 | `OnCrash` | delegate | Crash callback |
 
-> ⚠️ In NuGet v10.5.0-beta.4, Bowl and Core have **no type conflicts** and can be referenced together.
+> ⚠️ In NuGet v10.5.0-beta.6, Bowl and Core have **no type conflicts** and can be referenced together.
 
 ---
 
-## 4. EventManager (v10.5.0-beta.4 available)
+## 4. EventManager (v10.5.0-beta.6 available)
 
 EventManager is a global singleton providing event publish/subscribe:
 
@@ -165,7 +165,7 @@ EventManager.Instance.Dispose();
 
 ---
 
-## 5. Filesystem Tools (v10.5.0-beta.4 available)
+## 5. Filesystem Tools (v10.5.0-beta.6 available)
 
 ### BlackList
 
@@ -194,7 +194,7 @@ var snapshot = tree.CreateSnapshot(@"C:\Program Files\MyApp");
 
 ---
 
-## 6. Differential Engine (v10.5.0-beta.4 available, no extra package needed)
+## 6. Differential Engine (v10.5.0-beta.6 available, no extra package needed)
 
 Differential types are embedded in `GeneralUpdate.Core`, **no need** for a separate `GeneralUpdate.Differential` package.
 
@@ -246,7 +246,7 @@ var dirtyMatcher = new DefaultDirtyMatcher();  // or implement IDirtyMatcher
 
 ## 7. AOT / NativeAOT Compatibility
 
-GeneralUpdate.Core v10.5.0-beta.4 supports .NET Native AOT (`net8.0` and `net10.0`):
+GeneralUpdate.Core v10.5.0-beta.6 supports .NET Native AOT (`net8.0` and `net10.0`):
 
 ```xml
 <PropertyGroup>
@@ -289,26 +289,26 @@ var result = GeneralDrivelution.InstallDriver(driverPath);
 
 | Feature | Availability | Reference |
 |---------|-------------|-----------|
-| Pipeline | ✅ v10.5.0-beta.4 | `GeneralUpdate.Core.Pipeline` |
-| Strategy System | ✅ v10.5.0-beta.4 | `GeneralUpdate.Core.Strategy` |
-| FileTree | ✅ v10.5.0-beta.4 | `GeneralUpdate.Core.FileSystem` |
-| BlackList | ✅ v10.5.0-beta.4 | `UpdateRequest.Files/Formats/Directories` → `ToBlackPolicy()` |
+| Pipeline | ✅ v10.5.0-beta.6 | `GeneralUpdate.Core.Pipeline` |
+| Strategy System | ✅ v10.5.0-beta.6 | `GeneralUpdate.Core.Strategy` |
+| FileTree | ✅ v10.5.0-beta.6 | `GeneralUpdate.Core.FileSystem` |
+| BlackList | ✅ v10.5.0-beta.6 | `UpdateRequest.Files/Formats/Directories` → `ToBlackPolicy()` |
 | Differential Engine | ✅ Embedded in Core | `DiffPipelineBuilder` / `DiffPipeline` |
-| AOT | ✅ v10.5.0-beta.4 | `JsonSerializerContext` subclasses |
-| EventManager | ✅ v10.5.0-beta.4 | `GeneralUpdate.Core.Event` |
-| Bowl Crash Daemon | ✅ v10.5.0-beta.4 | `GeneralUpdate.Bowl.Bowl` |
-| IUpdateHooks | ✅ v10.5.0-beta.4 | `GeneralUpdate.Core.Hooks` — `Hooks<T>()` |
-| Custom Strategy Injection | ✅ v10.5.0-beta.4 | `Strategy<T>()` |
+| AOT | ✅ v10.5.0-beta.6 | `JsonSerializerContext` subclasses |
+| EventManager | ✅ v10.5.0-beta.6 | `GeneralUpdate.Core.Event` |
+| Bowl Crash Daemon | ✅ v10.5.0-beta.6 | `GeneralUpdate.Bowl.Bowl` |
+| IUpdateHooks | ✅ v10.5.0-beta.6 | `GeneralUpdate.Core.Hooks` — `Hooks<T>()` |
+| Custom Strategy Injection | ✅ v10.5.0-beta.6 | `Strategy<T>()` |
 | IPC Replacement Interface | ❌ Not yet supported | Use NamedPipe alternative |
-| SilentPollOrchestrator | ✅ v10.5.0-beta.4 | `Option.Silent` + `SetOption()` |
-| Option System | ✅ v10.5.0-beta.4 | `SetOption<T>(Option<T>, T)` |
+| SilentPollOrchestrator | ✅ v10.5.0-beta.6 | `Option.Silent` + `SetOption()` |
+| Option System | ✅ v10.5.0-beta.6 | `SetOption<T>(Option<T>, T)` |
 
 ---
 
 ## ✅ Advanced Customization Verification Checklist
 
 ### Bowl Crash Daemon
-- [ ] With Bowl: reference both `GeneralUpdate.Core` and `GeneralUpdate.Bowl` (no conflict in v10.5.0-beta.4)
+- [ ] With Bowl: reference both `GeneralUpdate.Core` and `GeneralUpdate.Bowl` (no conflict in v10.5.0-beta.6)
 - [ ] `BowlContext.ProcessNameOrId` matches the actual process name
 - [ ] `TargetPath` set to app install root directory, not a subdirectory
 - [ ] `WorkModel` correct for the scenario (Normal/Upgrade)

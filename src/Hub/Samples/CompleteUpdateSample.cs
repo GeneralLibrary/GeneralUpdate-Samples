@@ -86,7 +86,7 @@ public class CompleteUpdateSample : ISample
                     {
                         Console.WriteLine($"    v{v.Version} — {v.Name} ({v.Size} bytes)");
                         Console.WriteLine($"      Hash: {v.Hash?[..16]}...");
-                        Console.WriteLine($"      IsCrossVersion: {v.IsCrossVersion}");
+                        Console.WriteLine($"      PackageType: {v.PackageType}");
                     }
                 }
             })

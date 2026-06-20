@@ -44,7 +44,7 @@ sidebar_position: 6
 
 | 项目 | 说明 |
 | --- | --- |
-| **版本** | `10.5.0-beta.2` |
+| **版本** | `10.5.0-beta.6` |
 | **目标框架** | `netstandard2.0`（兼容 .NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+） |
 | **依赖包** | 无外部依赖（纯 .NET BCL） |
 | **兼容性** | 所有支持 .NET Standard 2.0 的平台 |
