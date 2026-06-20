@@ -69,9 +69,7 @@ public class OssSample : ISample
                 {
                     foreach (var v in e.Info.Body)
                     {
-                        var type = v.IsCrossVersion == true
-                            ? $"[差分 {v.FromVersion} → {v.Version}]"
-                            : "[完整包]";
+                        var type = v.PackageType == 1 ? "[差分]" : "[完整包]";
                         Console.WriteLine($"    v{v.Version}  {type}");
                         Console.WriteLine($"      Name: {v.Name}");
                         Console.WriteLine($"      Size: {v.Size} bytes");
