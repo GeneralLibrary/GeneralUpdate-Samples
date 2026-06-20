@@ -7,7 +7,7 @@ namespace Hub.Samples;
 
 public class DifferentialSample : ISample
 {
-    public int Index => 4;
+    public int Index => 5;
     public string Name => "二进制差分 — 生成·应用·校验";
     public bool RequiresServer => false;
     public string[] CleanPaths => new[] {

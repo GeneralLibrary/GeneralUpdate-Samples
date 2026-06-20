@@ -14,7 +14,7 @@ namespace Hub.Samples;
 /// </summary>
 public class ImDiskQuickInstallSample : ISample
 {
-    public int Index => 8;
+    public int Index => 9;
     public string Name => "Driver Update";
     public bool RequiresServer => false;
     public string[] CleanPaths => Array.Empty<string>();

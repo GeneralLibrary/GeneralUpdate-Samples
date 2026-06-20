@@ -8,7 +8,7 @@ namespace Hub.Samples;
 
 public class PushSample : ISample
 {
-    public int Index => 5;
+    public int Index => 6;
     public string Name => "SignalR 推送 — 实时消息接收";
     public bool RequiresServer => false;
     public string[] CleanPaths => Array.Empty<string>();

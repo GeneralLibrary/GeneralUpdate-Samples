@@ -9,7 +9,7 @@ namespace Hub.Samples;
 
 public class ExtensionSample : ISample
 {
-    public int Index => 7;
+    public int Index => 8;
     public string Name => "插件系统 — 安装·管理·兼容性";
     public bool RequiresServer => false;
     public string[] CleanPaths => new[] { "{BaseDir}/extensions" };

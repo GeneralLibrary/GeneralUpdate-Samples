@@ -7,7 +7,7 @@ namespace Hub.Samples;
 
 public class CompleteUpdateSample : ISample
 {
-    public int Index => 1;
+    public int Index => 2;
     public string Name => "完整更新 — 版本发现→下载→应用";
     public bool RequiresServer => true;
     public string[] CleanPaths => new[] {
