@@ -31,9 +31,7 @@ function New-Package($SourceDir, $PacketName, $Version, $AppType) {
         Format = ".zip"
         Size = $size
         IsFreeze = $false
-        IsCrossVersion = $false
-        FromVersion = $null
-        ToVersion = $null
+        PackageType = 2  # Full
     }
     $script:allVersions += $entry
     Write-Host "  $PacketName ($size bytes)" -ForegroundColor Gray

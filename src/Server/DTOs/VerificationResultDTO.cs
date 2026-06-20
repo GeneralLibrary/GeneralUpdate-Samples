@@ -73,12 +73,7 @@ public record VerificationResultDTO
     public bool? IsFreeze { get; set; }
 
     /// <summary>
-    /// 是否为跨版本升级包
+    /// 包类型: 0=Unspecified, 1=Chain(差分), 2=Full(完整包), 3=Driver
     /// </summary>
-    public bool? IsCrossVersion { get; set; }
-
-    /// <summary>
-    /// 跨版本升级的源版本号
-    /// </summary>
-    public string? FromVersion { get; set; }
+    public int PackageType { get; set; }
 }
