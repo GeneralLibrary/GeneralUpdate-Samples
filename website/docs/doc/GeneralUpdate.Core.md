@@ -47,7 +47,7 @@ GeneralUpdate.Core 是整个生态的**核心引擎**。它不负责生成补丁
 
 | 项目 | 说明 |
 | --- | --- |
-| **版本** | `10.5.0-beta.2` |
+| **版本** | `10.5.0-beta.6` |
 | **目标框架** | `netstandard2.0`; `net8.0`; `net10.0`（兼容 .NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+；`net8.0`+ 支持 AOT/Trim） |
 | **依赖包** | `GeneralUpdate.Differential`（差分算法）、`System.Text.Json`、`Microsoft.AspNetCore.SignalR.Client` |
 | **兼容性** | Windows / Linux / macOS；支持 x86 / x64 / ARM64 |

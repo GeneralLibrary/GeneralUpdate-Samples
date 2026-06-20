@@ -43,7 +43,7 @@ Driver updates differ fundamentally from application file replacement. Drivers a
 
 | Item | Description |
 | --- | --- |
-| **Version** | `10.5.0-beta.2` |
+| **Version** | `10.5.0-beta.6` |
 | **Target Frameworks** | `net8.0` / `net10.0` (multi-target) |
 | **Dependencies** | `Microsoft.Extensions.DependencyInjection`, `Microsoft.Extensions.Logging.Abstractions`, `Microsoft.Extensions.Options` |
 | **Compatibility** | Windows (full, admin required) / Linux (root/sudo) / macOS (SIP & system extension policies apply) |

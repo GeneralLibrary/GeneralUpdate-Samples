@@ -6,10 +6,10 @@ title: 🔄 generalupdate-migration — 迁移指南
 
 # 🔄 GeneralUpdate 迁移指南
 
-帮助开发者从旧版本 GeneralUpdate 迁移到最新稳定版 API（v10.5.0-beta.4）。
+帮助开发者从旧版本 GeneralUpdate 迁移到最新稳定版 API（v10.5.0-beta.6）。
 
-> ⚠️ **目标版本：NuGet v10.5.0-beta.4**
-> 开发分支（v10.5.0-beta.2）API 与稳定版有根本性差异。
+> ⚠️ **目标版本：NuGet v10.5.0-beta.6**
+> 开发分支（v10.5.0-beta.6）API 与稳定版有根本性差异。
 
 ---
 
@@ -24,7 +24,7 @@ title: 🔄 generalupdate-migration — 迁移指南
 - 是否使用了 Differential: ______（是/否）
 
 ### 迁移后目标
-- 目标版本: ______（v10.5.0-beta.4 / 继续用开发分支）
+- 目标版本: ______（v10.5.0-beta.6 / 继续用开发分支）
 - 是否需要新的功能（Bowl/IPC 替换/AOT）: ______
 ```
 
@@ -32,7 +32,7 @@ title: 🔄 generalupdate-migration — 迁移指南
 
 ## 迁移路径
 
-### 路径 A：v9.x → v10.5.0-beta.4
+### 路径 A：v9.x → v10.5.0-beta.6
 
 这是最大的跳跃。v9.x 和 v10 的架构完全不同。
 
@@ -46,7 +46,7 @@ v9.x (单进程, HttpClient 直连)
     ├── 无 manifest.json → 必须携带 manifest
     └── API 命名空间全部重命名
          ↓
-v10.5.0-beta.4 (双进程, UpdateRequest + Bootstrap)
+v10.5.0-beta.6 (双进程, UpdateRequest + Bootstrap)
 ```
 
 **迁移步骤：**
@@ -56,7 +56,7 @@ v10.5.0-beta.4 (双进程, UpdateRequest + Bootstrap)
 // var updater = new GeneralUpdater("https://api/method");
 // updater.Start();
 
-// ✅ v10.5.0-beta.4 写法
+// ✅ v10.5.0-beta.6 写法
 await new GeneralUpdateBootstrap()
     .SetConfig(new UpdateRequest
     {
@@ -70,7 +70,7 @@ await new GeneralUpdateBootstrap()
     .LaunchAsync();
 ```
 
-| v9.x API | v10.5.0-beta.4 对应 | 说明 |
+| v9.x API | v10.5.0-beta.6 对应 | 说明 |
 |----------|---------------------|------|
 | `GeneralUpdater` | `GeneralUpdateBootstrap` | 完全重命名 |
 | `SetApiUrl()` / `SetMethod()` | `UpdateRequest.UpdateUrl` | 统一到 UpdateRequest |
@@ -78,9 +78,9 @@ await new GeneralUpdateBootstrap()
 | 单进程直接更新 | Client + Upgrade 双进程 | 必须创建独立 Upgrade 项目 |
 | N/A | `generalupdate.manifest.json` | 必须随首发版本发布 |
 
-### 路径 B：v10.5.0-beta.x (开发分支) → v10.5.0-beta.4
+### 路径 B：v10.5.0-beta.x (开发分支) → v10.5.0-beta.6
 
-| 开发分支 API (v10.5.0-beta.x) | 稳定版替代 (v10.5.0-beta.4) | 处理方式 |
+| 开发分支 API (v10.5.0-beta.x) | 稳定版替代 (v10.5.0-beta.6) | 处理方式 |
 |-------------------------------|---------------------------|---------|
 | `new Option()` / `SetOption()` | 存在且兼容 | 直接使用，命名空间有调整 |
 | `.Hooks<T>()` / `IUpdateHooks` | 存在且兼容 | 直接使用 |
@@ -98,7 +98,7 @@ await new GeneralUpdateBootstrap()
 ### 编译验证
 - [ ] `dotnet build` 无错误
 - [ ] 无 `MissingMethodException` 的风险
-- [ ] 无 `CS0433` 类型冲突（v10.5.0-beta.4 中 Core + Bowl 无冲突，可同时引用）
+- [ ] 无 `CS0433` 类型冲突（v10.5.0-beta.6 中 Core + Bowl 无冲突，可同时引用）
 
 ### 架构验证
 - [ ] 项目已拆分为 Client + Upgrade 两个独立项目

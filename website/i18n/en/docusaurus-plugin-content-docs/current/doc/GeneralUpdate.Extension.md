@@ -47,7 +47,7 @@ It's suited for scenarios where the main app and optional capabilities are distr
 
 | Item | Description |
 | --- | --- |
-| **Version** | `10.5.0-beta.2` |
+| **Version** | `10.5.0-beta.6` |
 | **Target Framework** | `netstandard2.0` (.NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+) |
 | **Dependencies** | `Microsoft.Extensions.DependencyInjection`, `Microsoft.Extensions.Logging.Abstractions`, `Microsoft.Extensions.Options`, `Newtonsoft.Json`, `System.Net.Http`, `System.IO.Compression`, `System.IO.Compression.ZipFile` |
 | **Compatibility** | All .NET Standard 2.0 platforms |
