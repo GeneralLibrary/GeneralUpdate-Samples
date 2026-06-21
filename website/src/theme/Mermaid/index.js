@@ -48,6 +48,22 @@ function MermaidRenderResult({ renderResult }) {
     });
     instanceRef.current = instance;
 
+    // Wheel zoom: forward wheel events from modal body to panzoom
+    const handleWheel = (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.3 : 0.3;
+      // Calculate zoom around cursor position
+      const rect = svgEl.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      instance.zoomWithWheel(e, {
+        step: 0.3,
+        minScale: 0.05,
+        maxScale: 10,
+      });
+    };
+    modalEl.addEventListener('wheel', handleWheel, { passive: false });
+
     // Auto-fit: scale the SVG to fill the modal while keeping aspect ratio
     const fitToScreen = () => {
       const parent = modalRef.current;
@@ -105,6 +121,7 @@ function MermaidRenderResult({ renderResult }) {
 
     return () => {
       clearTimeout(fitTimer);
+      modalEl.removeEventListener('wheel', handleWheel);
       window.removeEventListener('resize', fitToScreen);
       window.removeEventListener('keydown', handleKeyDown);
       if (instanceRef.current) {
