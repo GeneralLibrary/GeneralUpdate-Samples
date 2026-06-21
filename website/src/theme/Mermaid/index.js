@@ -5,203 +5,110 @@ import {
   MermaidContainerClassName,
   useMermaidRenderResult,
 } from '@docusaurus/theme-mermaid/client';
-import panzoom from '@panzoom/panzoom';
 
-import styles from './styles.module.css';
-
-const PADDING = 60;
+const LEVELS = [0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 2.5, 3, 4];
 
 function MermaidRenderResult({ renderResult }) {
-  const ref = useRef(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const modalRef = useRef(null);
-  const instanceRef = useRef(null);
+  const inlineRef = useRef(null);
+  const viewerRef = useRef(null);
+  const [open, setOpen] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [nat, setNat] = useState({ w: 800, h: 600 });
+  const dragRef = useRef({ on: false, x: 0, y: 0, sx: 0, sy: 0 });
 
   useEffect(() => {
-    const div = ref.current;
+    const div = inlineRef.current;
     if (div) renderResult.bindFunctions?.(div);
   }, [renderResult]);
 
-  const handleClick = useCallback(() => {
-    setModalOpen(true);
+  const onOpen = useCallback(() => {
+    setScale(1);
+    setOpen(true);
+    // measure the inline SVG (already rendered in page DOM)
+    const svg = inlineRef.current?.querySelector('svg');
+    if (svg) {
+      setNat({
+        w: svg.viewBox?.baseVal?.width || svg.width?.baseVal?.value || 800,
+        h: svg.viewBox?.baseVal?.height || svg.height?.baseVal?.value || 600,
+      });
+    }
+  }, []);
+  const onClose = useCallback(() => setOpen(false), []);
+
+  const zoomIn  = useCallback(() => setScale((s) => { const i = LEVELS.findIndex((l) => l > s); return i >= 0 ? LEVELS[i] : s; }), []);
+  const zoomOut = useCallback(() => setScale((s) => { const i = [...LEVELS].reverse().findIndex((l) => l < s); return i >= 0 ? LEVELS[LEVELS.length - 1 - i] : s; }), []);
+
+  // Drag → scroll viewer
+  const onMouseDown = useCallback((e) => {
+    const v = viewerRef.current;
+    dragRef.current = { on: true, x: e.clientX, y: e.clientY, sx: v?.scrollLeft || 0, sy: v?.scrollTop || 0 };
+    e.preventDefault();
   }, []);
 
-  // ── Modal: panzoom init + auto-fit ──────────────────
   useEffect(() => {
-    if (!modalOpen || !modalRef.current) return;
-
-    const body = modalRef.current;
-    const svg = body.querySelector('svg');
-    if (!svg) return;
-
-    // Clean up previous instance
-    if (instanceRef.current) {
-      instanceRef.current.destroy();
-    }
-
-    // 1. Create panzoom instance
-    const instance = panzoom(svg, {
-      maxScale: 12,
-      minScale: 0.05,
-      step: 0.2,
-      contain: false,
-      pinchAndPan: true,
-      // Let SVG keep its native size initially; we'll zoom below
-      cursor: 'grab',
-    });
-    instanceRef.current = instance;
-
-    // 2. Fit to screen – retry with exponential backoff
-    let fitAttempts = 0;
-    const maxAttempts = 8;
-
-    const fitToScreen = () => {
-      const svg = body.querySelector('svg');
-      if (!svg) return;
-
-      const w = body.clientWidth;
-      const h = body.clientHeight;
-      if (!w || !h) return;
-
-      // SVG native dimensions
-      let svgW = svg.viewBox?.baseVal?.width;
-      let svgH = svg.viewBox?.baseVal?.height;
-
-      // Fallback to width/height attributes
-      if (!svgW) svgW = svg.width?.baseVal?.value;
-      if (!svgH) svgH = svg.height?.baseVal?.value;
-
-      // Fallback to computed bounding rect
-      if (!svgW || !svgH) {
-        const rect = svg.getBoundingClientRect();
-        svgW = rect.width;
-        svgH = rect.height;
-      }
-
-      // If still zero and we have retries left, try again
-      if ((!svgW || !svgH) && fitAttempts < maxAttempts) {
-        fitAttempts++;
-        setTimeout(fitToScreen, 100 * fitAttempts);
-        return;
-      }
-
-      if (!svgW || !svgH) return;
-
-      const availW = w - PADDING * 2;
-      const availH = h - PADDING * 2;
-      const scale = Math.min(availW / svgW, availH / svgH, 3);
-
-      if (scale > 0) {
-        instance.zoom(scale, { animate: false });
-        instance.pan(
-          (w - svgW * scale) / 2,
-          (h - svgH * scale) / 2,
-          { animate: false }
-        );
-      }
+    if (!open) return;
+    const move = (e) => {
+      if (!dragRef.current.on || !viewerRef.current) return;
+      viewerRef.current.scrollLeft = dragRef.current.sx - (e.clientX - dragRef.current.x);
+      viewerRef.current.scrollTop  = dragRef.current.sy - (e.clientY - dragRef.current.y);
     };
-
-    // Kick off fit with first attempt
-    const fitTimer = setTimeout(fitToScreen, 100);
-
-    // 3. Wheel zoom on the body
-    const handleWheel = (e) => {
-      e.preventDefault();
-      const svgEl = body.querySelector('svg');
-      if (!svgEl) return;
-      instance.zoomWithWheel(e, { step: 0.3, minScale: 0.05, maxScale: 12 });
-    };
-    body.addEventListener('wheel', handleWheel, { passive: false });
-
-    // 4. Resize listener
-    window.addEventListener('resize', fitToScreen);
-
-    // 5. Keyboard shortcuts
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') { setModalOpen(false); return; }
-      if (e.key === '+' || e.key === '=') { e.preventDefault(); instance.zoomIn(); }
-      if (e.key === '-') { e.preventDefault(); instance.zoomOut(); }
-      if (e.key === '0') { e.preventDefault(); fitToScreen(); }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-
+    const up  = () => { dragRef.current.on = false; };
+    const key = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+    document.addEventListener('keydown', key);
+    document.body.style.overflow = 'hidden';
     return () => {
-      clearTimeout(fitTimer);
-      body.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('resize', fitToScreen);
-      window.removeEventListener('keydown', handleKeyDown);
-      if (instanceRef.current) {
-        instanceRef.current.destroy();
-        instanceRef.current = null;
-      }
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+      document.removeEventListener('keydown', key);
+      document.body.style.overflow = '';
+      dragRef.current.on = false;
     };
-  }, [modalOpen]);
+  }, [open]);
+
+  // Wrapper: explicit px = nat × scale → viewer overflow sees full zoomed size
+  // Inner div: transform: scale() renders the SVG at the zoomed size
+  const pw = Math.round(nat.w * scale);
+  const ph = Math.round(nat.h * scale);
 
   return (
     <>
-      {/* ── Inline diagram ─────────────────────────── */}
+      {/* Inline */}
       <div
-        ref={ref}
-        className={`${MermaidContainerClassName} ${styles.container}`}
+        ref={inlineRef}
+        className={`${MermaidContainerClassName} gu-mermaid-inline`}
+        onClick={onOpen}
+        role="button" tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter') onOpen(); }}
+        title="Click to view fullscreen"
         dangerouslySetInnerHTML={{ __html: renderResult.svg }}
-        onClick={handleClick}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter') handleClick(); }}
-        title="Click to zoom"
       />
 
-      {/* ── Fullscreen modal ─────────────────────────── */}
-      {modalOpen && (
-        <div
-          className={styles.overlay}
-          onClick={() => setModalOpen(false)}
-          role="presentation"
-        >
-          {/* Toolbar */}
-          <div className={styles.toolbar}>
-            <button className={styles.toolBtn}
-              onClick={(e) => { e.stopPropagation(); instanceRef.current?.zoomIn(); }}
-              title="Zoom in (+)">＋</button>
-            <button className={styles.toolBtn}
-              onClick={(e) => { e.stopPropagation(); instanceRef.current?.zoomOut(); }}
-              title="Zoom out (-)">−</button>
-            <button className={styles.toolBtn}
-              onClick={(e) => {
-                e.stopPropagation();
-                const body = modalRef.current;
-                if (!body || !instanceRef.current) return;
-                const svg = body.querySelector('svg');
-                if (!svg) return;
-                const w = body.clientWidth, h = body.clientHeight;
-                let svgW = svg.viewBox?.baseVal?.width || svg.width?.baseVal?.value || svg.getBoundingClientRect().width;
-                let svgH = svg.viewBox?.baseVal?.height || svg.height?.baseVal?.value || svg.getBoundingClientRect().height;
-                if (!svgW || !svgH) return;
-                const availW = w - PADDING * 2, availH = h - PADDING * 2;
-                const scale = Math.min(availW / svgW, availH / svgH, 3);
-                if (scale > 0) {
-                  instanceRef.current.zoom(scale, { animate: true });
-                  instanceRef.current.pan((w - svgW * scale) / 2, (h - svgH * scale) / 2, { animate: true });
-                }
-              }}
-              title="Fit to screen (0)">⊡</button>
-            <button className={styles.toolBtn}
-              onClick={(e) => { e.stopPropagation(); setModalOpen(false); }}
-              title="Close (Esc)">✕</button>
-            <span className={styles.toolHint}>Scroll zoom · Drag pan · 0 fit</span>
+      {/* Modal */}
+      {open && (
+        <div className="gu-backdrop" onClick={onClose}>
+          <div className="gu-toolbar" onClick={(e) => e.stopPropagation()}>
+            <button className="gu-tb-btn" onClick={zoomIn}  title="Zoom in">＋</button>
+            <button className="gu-tb-btn" onClick={zoomOut} title="Zoom out">−</button>
+            <span className="gu-tb-pct">{Math.round(scale * 100)}%</span>
+            <button className="gu-tb-btn" onClick={() => setScale(1)}>1:1</button>
+            <button className="gu-tb-btn" onClick={onClose} title="Esc">✕</button>
           </div>
-
-          {/* Body – scrollable fallback so content is never hidden */}
-          <div
-            ref={modalRef}
-            className={styles.modalBody}
-            onClick={(e) => e.stopPropagation()}
-            role="presentation"
-          >
-            <div
-              className={styles.svgWrapper}
-              dangerouslySetInnerHTML={{ __html: renderResult.svg }}
-            />
+          <div ref={viewerRef} className="gu-viewer"
+            onClick={(e) => e.stopPropagation()} onMouseDown={onMouseDown}>
+            {/* Wrapper: real px size → viewer overflow tracks it */}
+            <div className="gu-wrap-outer" style={{ width: pw, height: ph }}>
+              {/* Inner: transforms to visually scale while outer handles scroll range */}
+              <div className="gu-wrap-inner"
+                style={{
+                  width: nat.w, height: nat.h,
+                  transform: `scale(${scale})`,
+                  transformOrigin: '0 0',
+                }}>
+                <div dangerouslySetInnerHTML={{ __html: renderResult.svg }} />
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -210,15 +117,14 @@ function MermaidRenderResult({ renderResult }) {
 }
 
 function MermaidRenderer({ value }) {
-  const renderResult = useMermaidRenderResult({ text: value });
-  if (renderResult === null) return null;
-  return <MermaidRenderResult renderResult={renderResult} />;
+  const result = useMermaidRenderResult({ text: value });
+  if (result === null) return null;
+  return <MermaidRenderResult renderResult={result} />;
 }
 
 export default function Mermaid(props) {
   return (
-    <ErrorBoundary
-      fallback={(params) => <ErrorBoundaryErrorMessageFallback {...params} />}>
+    <ErrorBoundary fallback={(params) => <ErrorBoundaryErrorMessageFallback {...params} />}>
       <MermaidRenderer {...props} />
     </ErrorBoundary>
   );
