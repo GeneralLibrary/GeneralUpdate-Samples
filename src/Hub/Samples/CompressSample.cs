@@ -6,7 +6,7 @@ namespace Hub.Samples;
 
 public class CompressSample : ISample
 {
-    public int Index => 9;
+    public int Index => 10;
     public string Name => "压缩工具 — 压缩·解压·校验";
     public bool RequiresServer => false;
     public string[] CleanPaths => new[] { Path.Combine(Path.GetTempPath(), "compress_demo") };

@@ -7,7 +7,7 @@ namespace Hub.Samples;
 
 public class SilentUpdateSample : ISample
 {
-    public int Index => 2;
+    public int Index => 3;
     public string Name => "静默更新 — 后台轮询·退出前准备";
     public bool RequiresServer => true;
     public string[] CleanPaths => new[] {

@@ -7,7 +7,7 @@ namespace Hub.Samples;
 
 public class BowlSample : ISample
 {
-    public int Index => 6;
+    public int Index => 7;
     public string Name => "进程守护 — 崩溃监控·Dump导出";
     public bool RequiresServer => false;
     public string[] CleanPaths => Array.Empty<string>();

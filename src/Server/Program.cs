@@ -60,7 +60,7 @@ var handleVerification = (VerifyDTO request) =>
             return true;
         })
         .OrderByDescending(v => new Version(v.Version!))
-        .ThenBy(v => v.IsCrossVersion == true ? 1 : 0)
+        .ThenBy(v => v.PackageType == 1 ? 1 : 0)
         .ToList();
 
     if (available.Count == 0)
@@ -80,14 +80,13 @@ var handleVerification = (VerifyDTO request) =>
             Version = v.Version, AppType = v.AppType, Platform = v.Platform,
             ProductId = v.ProductId, IsForcibly = v.IsForcibly,
             Format = v.Format ?? ".zip", Size = v.Size, IsFreeze = v.IsFreeze,
-            IsCrossVersion = v.IsCrossVersion ?? false,
-            FromVersion = v.FromVersion
+            PackageType = v.PackageType,
         });
     }
 
     Console.WriteLine($"[Verification] Returning {results.Count} packages");
     foreach (var r in results)
-        Console.WriteLine($"    {r.Version} — {r.Name} ({(r.IsCrossVersion == true ? $"Cross {r.FromVersion} → {r.Version}" : "Full")})");
+        Console.WriteLine($"    {r.Version} — {r.Name} ({(r.PackageType == 1 ? "Chain" : "Full")})");
 
     return Results.Ok(HttpResponseDTO<IEnumerable<VerificationResultDTO>>.Success(results,
         $"Found {results.Count} update(s)."));
@@ -162,7 +161,7 @@ Console.WriteLine("╚═══════════════════�
 if (versionStore.Count > 0)
 {
     foreach (var v in versionStore.OrderBy(v => new Version(v.Version!)))
-        Console.WriteLine($"  {v.Version,-12} AppType={v.AppType} {(v.IsCrossVersion == true ? $"Cross {v.FromVersion} → {v.Version}" : "Full")}  {v.PacketName}");
+        Console.WriteLine($"  {v.Version,-12} AppType={v.AppType} {(v.PackageType == 1 ? "Chain" : "Full")}  {v.PacketName}");
 }
 else
 {
@@ -232,6 +231,8 @@ record VersionEntry
     public string? Format { get; set; }
     public long? Size { get; set; }
     public bool? IsFreeze { get; set; }
-    public bool? IsCrossVersion { get; set; }
-    public string? FromVersion { get; set; }
+    /// <summary>
+    /// 包类型: 0=Unspecified, 1=Chain(差分), 2=Full(完整包), 3=Driver
+    /// </summary>
+    public int PackageType { get; set; }
 }

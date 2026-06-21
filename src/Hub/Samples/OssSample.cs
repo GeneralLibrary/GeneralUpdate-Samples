@@ -7,7 +7,7 @@ namespace Hub.Samples;
 
 public class OssSample : ISample
 {
-    public int Index => 3;
+    public int Index => 4;
     public string Name => "OSS 模式 — 对象存储更新";
     public bool RequiresServer => true;
     public string[] CleanPaths => new[] {
