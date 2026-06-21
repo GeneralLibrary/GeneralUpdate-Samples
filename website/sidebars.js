@@ -34,8 +34,14 @@ const sidebars = {
       collapsed: false,
       items: [
         'doc/Component Introduction',
-        'doc/GeneralUpdate.Core',
-        'doc/Core-flow',
+        {
+          type: 'category',
+          label: 'GeneralUpdate.Core',
+          collapsible: true,
+          collapsed: true,
+          link: { type: 'doc', id: 'doc/GeneralUpdate.Core' },
+          items: ['doc/Core-flow'],
+        },
         'doc/GeneralUpdate.Bowl',
         'doc/GeneralUpdate.Differential',
         'doc/GeneralUpdate.Drivelution',

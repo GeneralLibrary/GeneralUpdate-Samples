@@ -1,5 +1,6 @@
 ---
 sidebar_position: 4
+sidebar_label: Execution Flow
 ---
 
 # GeneralUpdate.Core — Execution Flow Deep Dive
