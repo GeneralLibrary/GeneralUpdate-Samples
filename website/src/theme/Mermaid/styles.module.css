@@ -22,13 +22,15 @@
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(6px);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   animation: overlayIn 0.2s ease;
+  /* Prevent body scroll when modal is open */
+  overflow: hidden;
+  touch-action: none;
 }
 
 @keyframes overlayIn {
@@ -36,19 +38,19 @@
   to   { opacity: 1; }
 }
 
-/* ── Toolbar at top of overlay ─────────────────────────── */
+/* ── Toolbar at top-right ──────────────────────────────── */
 .toolbar {
-  position: absolute;
-  top: 16px;
-  right: 16px;
+  position: fixed;
+  top: 12px;
+  right: 12px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
-  border-radius: 8px;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  border-radius: 10px;
   padding: 6px 10px;
-  z-index: 10000;
+  z-index: 10001;
   user-select: none;
 }
 
@@ -56,61 +58,63 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
-  color: #eee;
-  font-size: 16px;
+  color: #ddd;
+  font-size: 18px;
   cursor: pointer;
   transition: background 0.15s;
 }
 
 .toolBtn:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .toolBtn:active {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .toolHint {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 12px;
-  margin-left: 6px;
-  padding-left: 8px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+  margin-left: 8px;
+  padding-left: 10px;
   border-left: 1px solid rgba(255, 255, 255, 0.15);
+  white-space: nowrap;
 }
 
-/* ── Scrollable body area (for large diagrams) ─────────── */
+/* ── Modal body = the fullscreen SVG container ──────────── */
 .modalBody {
-  width: 90vw;
-  height: 85vh;
-  overflow: auto;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+  position: absolute;
+  /* Leave room for toolbar */
+  inset: 0;
+  overflow: hidden;
   cursor: grab;
+  touch-action: none;
 }
 
 .modalBody:active {
   cursor: grabbing;
 }
 
-[data-theme='dark'] .modalBody {
-  background: #1a1a2e;
-}
-
-/* ── Panzoom container inside modal body ───────────────── */
-.zoomContainer {
-  display: inline-block;
-  padding: 32px;
-  transform-origin: 0 0;
-  touch-action: none;
-}
-
-.zoomContainer svg {
+/* The SVG gets transform-origin 0 0 by panzoom internally */
+.modalBody svg {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block;
-  max-width: none;
+  transform-origin: 0 0;
+  /* Panzoom handles the transform */
+}
+
+/* Light background for the SVG canvas itself */
+.modalBody {
+  background: #f8f9fa;
+}
+
+[data-theme='dark'] .modalBody {
+  background: #121220;
 }
