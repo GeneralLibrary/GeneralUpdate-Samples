@@ -28,7 +28,6 @@
   align-items: center;
   justify-content: center;
   animation: overlayIn 0.2s ease;
-  /* Prevent body scroll when modal is open */
   overflow: hidden;
   touch-action: none;
 }
@@ -38,7 +37,7 @@
   to   { opacity: 1; }
 }
 
-/* ── Toolbar at top-right ──────────────────────────────── */
+/* ── Toolbar ──────────────────────────────────────────── */
 .toolbar {
   position: fixed;
   top: 12px;
@@ -86,35 +85,32 @@
   white-space: nowrap;
 }
 
-/* ── Modal body = the fullscreen SVG container ──────────── */
+/* ── Modal body: fullscreen, scroll fallback ────────── */
 .modalBody {
   position: absolute;
-  /* Leave room for toolbar */
   inset: 0;
-  overflow: hidden;
+  overflow: auto;
+  /* Scroll fallback: user can always scroll if panzoom fails */
   cursor: grab;
-  touch-action: none;
+  touch-action: pan-x pan-y pinch-zoom;
+  background: #f8f9fa;
 }
 
 .modalBody:active {
   cursor: grabbing;
 }
 
-/* The SVG gets transform-origin 0 0 by panzoom internally */
-.modalBody svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
-  transform-origin: 0 0;
-  /* Panzoom handles the transform */
-}
-
-/* Light background for the SVG canvas itself */
-.modalBody {
-  background: #f8f9fa;
-}
-
 [data-theme='dark'] .modalBody {
   background: #121220;
+}
+
+/* ── SVG wrapper ─────────────────────────────────────── */
+.svgWrapper {
+  display: inline-block;
+  position: relative;
+}
+
+.svgWrapper svg {
+  display: block;
+  max-width: none;
 }
