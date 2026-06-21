@@ -35,7 +35,7 @@ const sidebars = {
       items: [
         'doc/Component Introduction',
         'doc/GeneralUpdate.Core',
-        'doc/Core-execution-flow',
+        'doc/Core-flow',
         'doc/GeneralUpdate.Bowl',
         'doc/GeneralUpdate.Differential',
         'doc/GeneralUpdate.Drivelution',
