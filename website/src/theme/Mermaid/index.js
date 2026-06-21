@@ -41,9 +41,9 @@ function MermaidRenderResult({ renderResult }) {
 
     const instance = panzoom(svgEl, {
       maxScale: 10,
-      minScale: 0.1,
+      minScale: 0.05,
       step: 0.15,
-      contain: 'outside',
+      contain: false,
       pinchAndPan: true,
     });
     instanceRef.current = instance;
