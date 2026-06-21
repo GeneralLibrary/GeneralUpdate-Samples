@@ -7,6 +7,10 @@ tags: [log]
 
 # 📒Release log
 
+### 📍2026-06-21 — v10.5.0-beta.7
+
+- chore: bump version to v10.5.0-beta.7
+
 ### 📍2026-06-20 — v10.5.0-beta.6
 
 - fix(core): resolve 16 audit findings — race conditions, design flaws, glue code, and performance issues

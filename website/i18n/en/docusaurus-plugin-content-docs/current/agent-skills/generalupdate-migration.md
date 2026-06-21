@@ -6,9 +6,9 @@ title: 🔄 generalupdate-migration — Migration Guide
 
 # 🔄 GeneralUpdate Migration Guide
 
-Guide developers through migrating GeneralUpdate from older versions to the latest API (v10.5.0-beta.6).
+Guide developers through migrating GeneralUpdate from older versions to the latest API (v10.5.0-beta.7).
 
-> ⚠️ **Target Version: NuGet v10.5.0-beta.6**
+> ⚠️ **Target Version: NuGet v10.5.0-beta.7**
 > Dev branch (v10.5.0-beta.x) APIs differ fundamentally from stable.
 
 ---
@@ -24,7 +24,7 @@ Guide developers through migrating GeneralUpdate from older versions to the late
 - Using Differential: ______ (Yes/No)
 
 ### Target State
-- Target version: ______ (v10.5.0-beta.6 / Stay on dev branch)
+- Target version: ______ (v10.5.0-beta.7 / Stay on dev branch)
 - Need new features (Bowl/IPC replacement/AOT): ______
 ```
 
@@ -32,7 +32,7 @@ Guide developers through migrating GeneralUpdate from older versions to the late
 
 ## Migration Paths
 
-### Path A: v9.x → v10.5.0-beta.6
+### Path A: v9.x → v10.5.0-beta.7
 
 This is the biggest jump. v9.x and v10 architectures are completely different.
 
@@ -46,7 +46,7 @@ v9.x (single process, HttpClient direct)
     ├── No manifest.json → manifest required
     └── All API namespaces renamed
          ↓
-v10.5.0-beta.6 (dual-process, UpdateRequest + Bootstrap)
+v10.5.0-beta.7 (dual-process, UpdateRequest + Bootstrap)
 ```
 
 **Migration steps:**
@@ -56,7 +56,7 @@ v10.5.0-beta.6 (dual-process, UpdateRequest + Bootstrap)
 // var updater = new GeneralUpdater("https://api/method");
 // updater.Start();
 
-// ✅ v10.5.0-beta.6 syntax
+// ✅ v10.5.0-beta.7 syntax
 await new GeneralUpdateBootstrap()
     .SetConfig(new UpdateRequest
     {
@@ -70,7 +70,7 @@ await new GeneralUpdateBootstrap()
     .LaunchAsync();
 ```
 
-| v9.x API | v10.5.0-beta.6 Equivalent | Notes |
+| v9.x API | v10.5.0-beta.7 Equivalent | Notes |
 |----------|---------------------------|-------|
 | `GeneralUpdater` | `GeneralUpdateBootstrap` | Completely renamed |
 | `SetApiUrl()` / `SetMethod()` | `UpdateRequest.UpdateUrl` | Unified into UpdateRequest |
@@ -78,9 +78,9 @@ await new GeneralUpdateBootstrap()
 | Single-process update | Client + Upgrade dual-process | Must create separate Upgrade project |
 | N/A | `generalupdate.manifest.json` | Must ship with first release |
 
-### Path B: v10.5.0-beta.x (dev branch) → v10.5.0-beta.6
+### Path B: v10.5.0-beta.x (dev branch) → v10.5.0-beta.7
 
-| Dev Branch API (v10.5.0-beta.x) | Stable Replacement (v10.5.0-beta.6) | Handling |
+| Dev Branch API (v10.5.0-beta.x) | Stable Replacement (v10.5.0-beta.7) | Handling |
 |--------------------------------|-----------------------------------|----------|
 | `new Option()` / `SetOption()` | Exists and compatible | Use directly, namespace adjusted |
 | `.Hooks<T>()` / `IUpdateHooks` | Exists and compatible | Use directly |
@@ -98,7 +98,7 @@ await new GeneralUpdateBootstrap()
 ### Build Verification
 - [ ] `dotnet build` with no errors
 - [ ] No risk of `MissingMethodException`
-- [ ] No `CS0433` type conflicts (no conflict between Core + Bowl in v10.5.0-beta.6)
+- [ ] No `CS0433` type conflicts (no conflict between Core + Bowl in v10.5.0-beta.7)
 
 ### Architecture Verification
 - [ ] Project split into Client + Upgrade independent projects
