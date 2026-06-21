@@ -23,7 +23,7 @@ public class StandardUpdateSample : ISample
     public async Task RunAsync(AppConfig config, CancellationToken ct)
     {
         Console.WriteLine();
-        Console.WriteLine("══ 标准更新流程 (v10.5.0-beta.6) ══");
+        Console.WriteLine("══ 标准更新流程 (v10.5.0-beta.7) ══");
 
         // ════════════════════════════════════════════════════════════════
         // 1. 组装请求参数

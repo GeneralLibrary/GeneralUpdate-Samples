@@ -10,8 +10,8 @@ title: 🚀 Agent Skills 总览
 
 覆盖 50+ 真实 Issue 发现的已知问题，提供即用型代码生成 + 深度故障排查。
 
-> **Current Version: 0.0.2-beta.1** — targets NuGet `GeneralUpdate.Core 10.5.0-beta.6`  
-> 兼容性：`v10.5.0-beta.6`（NuGet 最新预览版）  
+> **Current Version: 0.0.2-beta.1** — targets NuGet `GeneralUpdate.Core 10.5.0-beta.7`  
+> 兼容性：`v10.5.0-beta.7`（NuGet 最新预览版）  
 > 所有模板已通过 `dotnet build` 编译验证（0 errors）。
 
 ---
@@ -327,12 +327,12 @@ Cursor 支持 `.cursorrules` 文件，类似 Claude Code 的 skills：
 
 ## API 兼容性说明
 
-> ⚠️ **NuGet 引用规则（v10.5.0-beta.6）**:
-> - Core only: `dotnet add package GeneralUpdate.Core --version 10.5.0-beta.6`
-> - With Bowl: 同时引用 `GeneralUpdate.Core` 和 `GeneralUpdate.Bowl`（v10.5.0-beta.6 中无类型冲突）
+> ⚠️ **NuGet 引用规则（v10.5.0-beta.7）**:
+> - Core only: `dotnet add package GeneralUpdate.Core --version 10.5.0-beta.7`
+> - With Bowl: 同时引用 `GeneralUpdate.Core` 和 `GeneralUpdate.Bowl`（v10.5.0-beta.7 中无类型冲突）
 > - Differential 已嵌入 Core，**无需**额外引用 `GeneralUpdate.Differential`
 
-> ⚠️ **API Surface**: v10.5.0-beta.6 采用了全新的配置系统：
+> ⚠️ **API Surface**: v10.5.0-beta.7 采用了全新的配置系统：
 > - ✅ `UpdateRequest` / `UpdateRequestBuilder` — 替代旧的 Configinfo
 > - ✅ `SetSource(updateUrl, appSecretKey)` — 零配置入口
 > - ✅ `SetOption<T>(Option<T>, T)` — 可编程配置系统
@@ -354,7 +354,7 @@ Cursor 支持 `.cursorrules` 文件，类似 Claude Code 的 skills：
 - **GeneralUpdate Issues**: [GeneralUpdate/issues](https://github.com/GeneralLibrary/GeneralUpdate/issues) — 核心库 Bug 和功能请求
 
 提交时请附上以下信息以便快速排查：
-- GeneralUpdate 版本号（如 v10.5.0-beta.6）
+- GeneralUpdate 版本号（如 v10.5.0-beta.7）
 - 平台（Windows / Linux / macOS）
 - 更新策略（标准 / OSS / 静默 / 差分 / 推送）
 - 完整错误日志（可从 `Logs/generalupdate-trace-*.log` 获取）
@@ -365,14 +365,14 @@ Cursor 支持 `.cursorrules` 文件，类似 Claude Code 的 skills：
 
 ### 0.0.2-beta.1 — 2026-06-16
 
-Updated for GeneralUpdate v10.5.0-beta.6 API:
+Updated for GeneralUpdate v10.5.0-beta.7 API:
 - Configinfo → UpdateRequest (namespace: `GeneralUpdate.Core.Configuration`)
 - Event args moved to `GeneralUpdate.Core.Download` and `GeneralUpdate.Core.Event`
 - Added SetSource(), SetOption(), `Hooks<T>()`, `Strategy<T>()` API coverage
 - Updated all strategy examples to use the new API
 - Updated CustomHooks.cs and CustomStrategy.cs to show v10.5 capabilities
 - Fixed IsComplated → IsCompleted
-- NuGet version bumped to `10.5.0-beta.6`
+- NuGet version bumped to `10.5.0-beta.7`
 - Added 2 new skills: generalupdate-migration, generalupdate-security-audit
 
 ### 0.0.1-beta.1 — 2026-06-16
