@@ -1,0 +1,116 @@
+/* ── Inline diagram (clickable) ─────────────────────────── */
+.container {
+  max-width: 100%;
+  cursor: zoom-in;
+  transition: box-shadow 0.2s ease;
+}
+
+.container > svg {
+  max-width: 100%;
+}
+
+.container:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .container:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Fullscreen modal overlay ─────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: overlayIn 0.2s ease;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Toolbar at top of overlay ─────────────────────────── */
+.toolbar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  border-radius: 8px;
+  padding: 6px 10px;
+  z-index: 10000;
+  user-select: none;
+}
+
+.toolBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #eee;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.toolBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.toolBtn:active {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.toolHint {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  margin-left: 6px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ── Scrollable body area (for large diagrams) ─────────── */
+.modalBody {
+  width: 90vw;
+  height: 85vh;
+  overflow: auto;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+  cursor: grab;
+}
+
+.modalBody:active {
+  cursor: grabbing;
+}
+
+[data-theme='dark'] .modalBody {
+  background: #1a1a2e;
+}
+
+/* ── Panzoom container inside modal body ───────────────── */
+.zoomContainer {
+  display: inline-block;
+  padding: 32px;
+  transform-origin: 0 0;
+  touch-action: none;
+}
+
+.zoomContainer svg {
+  display: block;
+  max-width: none;
+}

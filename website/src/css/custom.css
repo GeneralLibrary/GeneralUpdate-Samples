@@ -637,60 +637,6 @@
 }
 
 /* ════════════════════════════════════════════════════════════════
-   MERMAID DIAGRAMS — horizontal scroll + zoom on hover
-   ════════════════════════════════════════════════════════════════ */
-
-/* Wrapper around each mermaid SVG: enable horizontal scroll */
-.docusaurus-mermaid-container {
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  margin: 1.5rem 0;
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: var(--gu-radius);
-  background: #fff;
-  padding: 0.5rem;
-}
-
-[data-theme='dark'] .docusaurus-mermaid-container {
-  background: #1a1a2e;
-  border-color: rgba(93, 173, 226, 0.15);
-}
-
-/* Allow the SVG to keep its natural width (don't shrink to container) */
-.docusaurus-mermaid-container svg {
-  width: auto !important;
-  max-width: none !important;
-  height: auto !important;
-  min-width: 600px; /* Ensures diagrams don't get squashed too small */
-  display: block;
-}
-
-/* Zoom-on-hover: scale up slightly for readability */
-.docusaurus-mermaid-container:hover {
-  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
-}
-[data-theme='dark'] .docusaurus-mermaid-container:hover {
-  box-shadow: 0 2px 12px rgba(0,0,0,0.35);
-}
-
-/* Make the scrollbar visible and styled */
-.docusaurus-mermaid-container::-webkit-scrollbar {
-  height: 8px;
-}
-.docusaurus-mermaid-container::-webkit-scrollbar-track {
-  background: var(--ifm-color-emphasis-100);
-  border-radius: 4px;
-}
-.docusaurus-mermaid-container::-webkit-scrollbar-thumb {
-  background: var(--ifm-color-emphasis-400);
-  border-radius: 4px;
-}
-.docusaurus-mermaid-container::-webkit-scrollbar-thumb:hover {
-  background: var(--ifm-color-emphasis-500);
-}
-
-/* ════════════════════════════════════════════════════════════════
    PRINT-FRIENDLY
    ════════════════════════════════════════════════════════════════ */
 
