@@ -15,7 +15,7 @@
 .EXAMPLE
     .\Run.ps1                              # Normal use
     .\Run.ps1 -BuildLibs                    # Rebuild DLLs after component code changes
-    .\Run.ps1 -BuildLibs -GeneralUpdateSrc "D:\repos\GeneralUpdate\src\c#"
+    .\Run.ps1 -BuildLibs -GeneralUpdateSrc "D:\repos\GeneralUpdate\src"
 #>
 
 param(
@@ -32,10 +32,10 @@ if ($BuildLibs) {
     Write-Host "[BuildLibs] Building components and copying DLLs..." -ForegroundColor Cyan
 
     # Auto-detect GeneralUpdate source root if not provided.
-    # Default: sibling repo at ../GeneralUpdate/src/c# relative to the Samples repo root.
+    # Default: sibling repo at ../GeneralUpdate/src relative to the Samples repo root.
     if (-not $GeneralUpdateSrc) {
         $samplesRepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
-        $candidate = Join-Path $samplesRepoRoot "..\GeneralUpdate\src\c#"
+        $candidate = Join-Path $samplesRepoRoot "..\GeneralUpdate\src"
         if (Test-Path $candidate) {
             $GeneralUpdateSrc = $candidate
         }

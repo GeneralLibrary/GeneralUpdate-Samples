@@ -574,16 +574,16 @@ Release Notes
 **[7] Test Cases and Example Code**
 
 Example Code:
-- src/c#/GeneralUpdate.Api/Program.cs
-- src/c#/GeneralUpdate.Client/MainPage.xaml.cs
-- src/c#/GeneralUpdate.Upgrad/Program.cs
+- src/GeneralUpdate.Api/Program.cs
+- src/GeneralUpdate.Client/MainPage.xaml.cs
+- src/GeneralUpdate.Upgrad/Program.cs
 
 Test Cases (still in progress):
-- src/c#/TestClientCore/UnitTest1.cs
-- src/c#/TestDifferential/UnitTest1.cs
-- src/c#/TestMD5/UnitTest1.cs
-- src/c#/TestService/Program.cs
-- src/c#/TestZIP/UnitTest1.cs
+- src/TestClientCore/UnitTest1.cs
+- src/TestDifferential/UnitTest1.cs
+- src/TestMD5/UnitTest1.cs
+- src/TestService/Program.cs
+- src/TestZIP/UnitTest1.cs
 
 
 
