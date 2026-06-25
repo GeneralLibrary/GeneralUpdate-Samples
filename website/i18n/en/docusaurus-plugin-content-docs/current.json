@@ -18,5 +18,9 @@
   "sidebar.tutorialSidebar.category.Release Log": {
     "message": "Release Log",
     "description": "The label for category Release Log in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.执行流程详解": {
+    "message": "Execution Flow",
+    "description": "The label for category 执行流程详解 in sidebar tutorialSidebar"
   }
 }

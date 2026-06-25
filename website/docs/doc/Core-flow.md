@@ -1,6 +1,6 @@
 ---
 sidebar_position: 4
-sidebar_label: 执行流程详解
+sidebar_label: Core 执行流程
 ---
 
 # GeneralUpdate.Core — 执行流程详解
