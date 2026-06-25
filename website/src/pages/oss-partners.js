@@ -87,6 +87,12 @@ export default function OssPartners() {
       description: '全球不唯一，但是超级好用的 Agentic Coding 软件，集 AI 编程、游戏化工作空间于一体的全栈开发平台。',
       descriptionEn: 'Not the only one in the world, but a super useful Agentic Coding software — an all-in-one AI-powered development workspace with gamification.',
     },
+    {
+      name: 'TouchSocket',
+      url: 'https://touchsocket.net/',
+      description: '一个轻量级、高性能、易用的 .NET 网络通信框架，支持 TCP、UDP、HTTP 等多种协议。',
+      descriptionEn: 'A lightweight, high-performance, easy-to-use .NET networking framework supporting TCP, UDP, HTTP and more.',
+    },
   ];
 
   const title = isEn ? 'Open Source Partners' : '开源生态伙伴';
