@@ -42,7 +42,7 @@ export default function OssPartners() {
     {
       name: 'WPFDevelopers',
       url: 'https://github.com/WPFDevelopersOrg/WPFDevelopers',
-      description: '一个专注于 WPF 开发的开源项目集合，汇集了大量实用的 WPF 控件、模板和开发资源。',
+      description: 'WPFDevelopers 是一个开源 WPF UI 控件库，提供截图、动画、主题切换等高级功能，覆盖 .NET 4.0 至 10.0 全系列版本。核心价值：提升开发效率，降低造轮子成本，帮助 .NET 桌面开发者快速构建现代化应用。',
       descriptionEn: 'An open-source project collection focused on WPF development, featuring a wealth of practical WPF controls, templates, and resources.',
     },
     {
