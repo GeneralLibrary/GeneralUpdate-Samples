@@ -7,6 +7,18 @@ tags: [log]
 
 # 📒Release log
 
+### 📍2026-06-24 — v10.5.0-rc.1
+
+- **Zero-config SetSource() API**: Automatically discovers update source URL from manifest.json — no more hardcoded URLs in bootstrap code
+- **manifest.json auto-discovery**: Scans for manifest.json to resolve update configuration, simplifying multi-environment deployments
+- **IUpdateHooks extension points**: New lifecycle hooks for injecting custom logic at key stages — before/after download, before/after install, on error
+- **LoadFromConfiguration() support**: Read update settings directly from appsettings.json for zero-code environment-aware configuration
+- **SSL/HttpClient lifecycle fixes**: Resolved HttpClient socket exhaustion and SSL certificate validation issues in long-running processes
+- **OSS update flow improvements**: More reliable OSS delivery with better error recovery and progress reporting
+- **Chain-to-full fallback strategy**: Count-first heuristic replaces 80% size threshold — intelligently falls back to full package when too many delta patches are needed
+- **Bowl → BowlBootstrap rename**: Clarified crash daemon naming to better reflect its bootstrap role
+- **CI/CD reliability fixes**: Normalized version input handling, fixed fetch-depth in publish workflow, improved Linux test stability
+
 ### 📍2026-06-21 — v10.5.0-beta.7
 
 - chore: bump version to v10.5.0-beta.7
