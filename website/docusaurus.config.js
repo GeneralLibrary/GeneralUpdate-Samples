@@ -128,9 +128,23 @@ const config = {
             position: 'right',
           },
           {
-            href: 'https://github.com/GeneralLibrary',
-            label: 'GitHub',
+            type: 'dropdown',
+            label: '源码平台',
             position: 'right',
+            items: [
+              {
+                href: 'https://github.com/GeneralLibrary/GeneralUpdate',
+                label: 'GitHub',
+              },
+              {
+                href: 'https://gitee.com/GeneralLibrary/GeneralUpdate',
+                label: 'Gitee',
+              },
+              {
+                href: 'https://gitcode.com/GeneralLibrary/GeneralUpdate',
+                label: 'GitCode',
+              },
+            ],
           },
           {
             type: 'localeDropdown',
@@ -155,8 +169,16 @@ const config = {
             items: [
               {
                 label: 'GitHub',
-                href: 'https://github.com/GeneralLibrary',
-              }
+                href: 'https://github.com/GeneralLibrary/GeneralUpdate',
+              },
+              {
+                label: 'Gitee',
+                href: 'https://gitee.com/GeneralLibrary/GeneralUpdate',
+              },
+              {
+                label: 'GitCode',
+                href: 'https://gitcode.com/GeneralLibrary/GeneralUpdate',
+              },
             ],
           },
           {
@@ -164,7 +186,15 @@ const config = {
             items: [
               {
                 label: 'GitHub',
-                href: 'https://github.com/GeneralLibrary',
+                href: 'https://github.com/GeneralLibrary/GeneralUpdate',
+              },
+              {
+                label: 'Gitee',
+                href: 'https://gitee.com/GeneralLibrary/GeneralUpdate',
+              },
+              {
+                label: 'GitCode',
+                href: 'https://gitcode.com/GeneralLibrary/GeneralUpdate',
               },
             ],
           },
