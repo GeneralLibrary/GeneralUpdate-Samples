@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Project Path="Client.Avalonia/Client.Avalonia.csproj" />
+  <Project Path="Common.Avalonia/Common.Avalonia.csproj" />
+  <Project Path="Mobile.Avalonia/Mobile.Avalonia.csproj" />
+  <Project Path="Upgrade.Avalonia/Upgrade.Avalonia.csproj" />
+</Solution>

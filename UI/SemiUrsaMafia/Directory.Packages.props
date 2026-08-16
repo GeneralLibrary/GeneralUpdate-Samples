@@ -1,0 +1,20 @@
+﻿<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <AvaloniaVersion>12.1.1</AvaloniaVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)"/>
+        <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)"/>
+        <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3"/>
+
+        <PackageVersion Include="Semi.Avalonia" Version="12.1.0.1"/>
+        <PackageVersion Include="Irihi.Ursa" Version="2.2.0"/>
+        <PackageVersion Include="Irihi.Ursa.Themes.Semi" Version="2.2.0"/>
+        <PackageVersion Include="Irihi.Mafia" Version="0.0.2"/>
+        <PackageVersion Include="Irihi.Mafia.Themes.TDesign" Version="0.0.2"/>
+
+        <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2"/>
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11"/>
+    </ItemGroup>
+</Project>

@@ -1,0 +1,34 @@
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml;
+using Client.Avalonia.ViewModels;
+using Client.Avalonia.Views;
+using Common.Avalonia.Services;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Client.Avalonia;
+
+public partial class App : Application
+{
+    public static IServiceProvider? ServiceProvider { get; private set; }
+
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
+
+    public override void OnFrameworkInitializationCompleted()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IDownloadService, MockDownloadService>();
+        services.AddTransient<MainViewViewModel>();
+        ServiceProvider = new DefaultServiceProviderFactory().CreateServiceProvider(services);
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            desktop.MainWindow = new MainWindow();
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+}
