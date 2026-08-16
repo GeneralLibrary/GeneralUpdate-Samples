@@ -13,7 +13,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Semi.Avalonia"/>
         <PackageReference Include="Irihi.Ursa"/>
         <PackageReference Include="Irihi.Ursa.Themes.Semi"/>
     </ItemGroup>
