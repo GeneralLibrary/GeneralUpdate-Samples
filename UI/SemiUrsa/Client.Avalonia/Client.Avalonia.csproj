@@ -14,7 +14,6 @@
 
     <ItemGroup>
         <PackageReference Include="Semi.Avalonia"/>
-        <PackageReference Include="Svg.Controls.Skia.Avalonia"/>
     </ItemGroup>
 
     <ItemGroup>
