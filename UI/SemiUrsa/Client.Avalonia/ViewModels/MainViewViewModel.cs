@@ -14,10 +14,11 @@ public partial class MainViewViewModel : ViewModelBase
     private readonly IDownloadService _downloadService;
     private readonly WindowNotificationManager _notificationManager;
 
-    [ObservableProperty] private DownloadStatistics _statistics;
+    [ObservableProperty] public partial DownloadStatistics Statistics { get; set; }
 
-    [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(StopCommand))]
-    private DownloadStatus _status;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(StopCommand))]
+    public partial DownloadStatus Status { get; set; }
 
     public MainViewViewModel(IDownloadService downloadService)
     {

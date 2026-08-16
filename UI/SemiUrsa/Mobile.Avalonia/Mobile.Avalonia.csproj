@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Irihi.Mafia"/>
+        <PackageReference Include="Irihi.Mafia.Themes.TDesign"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Common.Avalonia\Common.Avalonia.csproj"/>
+    </ItemGroup>
+</Project>
