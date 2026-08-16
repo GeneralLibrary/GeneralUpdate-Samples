@@ -11,4 +11,8 @@ namespace GeneralUpdate.Samples.Mafia.Android;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 public class MainActivity : AvaloniaMainActivity
 {
+    public override void OnBackPressed()
+    {
+        base.OnBackPressed();
+    }
 }
