@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Irihi.Ursa"/>
+        <PackageReference Include="Irihi.Ursa.Themes.Semi"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\GeneralUpdate.Samples.Shared\GeneralUpdate.Samples.Shared.csproj" />
+    </ItemGroup>
+</Project>

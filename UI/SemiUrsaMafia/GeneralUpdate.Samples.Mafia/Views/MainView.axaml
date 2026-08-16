@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:pages="using:GeneralUpdate.Samples.Mafia.Views.Pages"
+             xmlns:td="https://irihi.tech/td"
+             mc:Ignorable="d" d:DesignWidth="375" d:DesignHeight="812"
+             x:Class="GeneralUpdate.Samples.Mafia.Views.MainView">
+    <TabbedPage SelectedIndex="1" TabPlacement="Bottom" Classes="Tag">
+        <TabbedPage.PageTransition>
+            <CompositePageTransition>
+                <CrossFade Duration="0:0:0.15" />
+                <PageSlide Orientation="Horizontal" Duration="0:0:0.2" />
+            </CompositePageTransition>
+        </TabbedPage.PageTransition>
+        <ContentPage Header="首页">
+            <ContentPage.Icon>
+                <td:Home Width="20" Height="20" />
+            </ContentPage.Icon>
+            <pages:HomePageView Name="HomePageContent" />
+        </ContentPage>
+        <ContentPage Header="设置">
+            <ContentPage.Icon>
+                <td:Setting Width="20" Height="20" />
+            </ContentPage.Icon>
+            <pages:SettingsPageView Name="SettingsPageContent" />
+        </ContentPage>
+    </TabbedPage>
+</UserControl>

@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Project Path="GeneralUpdate.Samples.Mafia.Android/GeneralUpdate.Samples.Mafia.Android.csproj" />
+  <Project Path="GeneralUpdate.Samples.Mafia/GeneralUpdate.Samples.Mafia.csproj" />
+  <Project Path="GeneralUpdate.Samples.Mafia.Desktop/GeneralUpdate.Samples.Mafia.Desktop.csproj" />
+  <Project Path="GeneralUpdate.Samples.Semi.Desktop/GeneralUpdate.Samples.Semi.Desktop.csproj" />
+  <Project Path="GeneralUpdate.Samples.Shared/GeneralUpdate.Samples.Shared.csproj" />
+  <Project Path="GeneralUpdate.Samples.Ursa.Desktop/GeneralUpdate.Samples.Ursa.Desktop.csproj" />
+</Solution>
