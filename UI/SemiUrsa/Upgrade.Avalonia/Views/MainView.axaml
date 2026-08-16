@@ -42,7 +42,7 @@
                 Height="150"
                 Opacity="{Binding Statistics.ProgressPercentage, 
                 Converter={x:Static cvt:ProgressConverter.ProgressToOpacityConverter}}"
-                Source="/Assets/GeneralUpdate.png">
+                Source="avares://Common.Avalonia/Assets/GeneralUpdate.png">
                 <u:Avatar.Styles>
                     <Style Selector="Image">
                         <Setter Property="Transitions">

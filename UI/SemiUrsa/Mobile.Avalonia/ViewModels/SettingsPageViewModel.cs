@@ -16,8 +16,6 @@ public partial class SettingsPageViewModel : ViewModelBase
 
     public string CurrentVersion => "12.1.0";
 
-    public string NewVersion => "12.1.1";
-
     [ObservableProperty] public partial int SelectedThemeIndex { get; set; } = GetInitialThemeIndex();
 
     [ObservableProperty] public partial bool IsCheckUpdatePopupOpen { get; set; }

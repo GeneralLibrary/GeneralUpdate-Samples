@@ -60,7 +60,7 @@
                         TextAlignment="Center"
                         TextWrapping="Wrap">
                         <Run Text="检测到新版本 " />
-                        <Run Text="{Binding NewVersion}" FontWeight="Bold" />
+                        <Run Text="{Binding Statistics.Version}" FontWeight="Bold" />
                         <Run Text=" 是否立即更新?" />
                     </TextBlock>
                     <UniformGrid Columns="2" ColumnSpacing="12">
@@ -139,7 +139,7 @@
                     <TextBlock TextWrapping="Wrap" TextAlignment="Center"
                                HorizontalAlignment="Center">
                         <Run Text="新版本 " />
-                        <Run Text="{Binding NewVersion}" FontWeight="Bold" />
+                        <Run Text="{Binding Statistics.Version}" FontWeight="Bold" />
                         <Run Text=" 已下载，是否立即安装?" />
                     </TextBlock>
                     <UniformGrid Columns="2" ColumnSpacing="12">

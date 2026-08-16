@@ -6,6 +6,7 @@
              xmlns:vm="clr-namespace:Client.Avalonia.ViewModels"
              xmlns:services="clr-namespace:Common.Avalonia.Services;assembly=Common.Avalonia"
              xmlns:cvt="clr-namespace:Common.Avalonia.Converters;assembly=Common.Avalonia"
+             xmlns:iri="https://irihi.tech/shared"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Client.Avalonia.Views.MainView"
              x:DataType="vm:MainViewViewModel">
@@ -14,17 +15,16 @@
     </UserControl.Resources>
 
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" MinWidth="550">
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="20">
             <Image
-                Margin="30"
                 Width="150"
                 Height="150"
-                Source="/Assets/GeneralUpdate.png" />
-            <Image
-                Margin="30"
-                Width="150"
-                Height="150"
-                Source="{SvgImage /Assets/Semi.svg}" />
+                Source="avares://Common.Avalonia/Assets/GeneralUpdate.png" />
+            <PathIcon Data="{DynamicResource SemiIconClose}"/>
+            <iri:IrihiBand
+                Label="Semi"
+                Width="250"
+                Fill="{DynamicResource SemiAIGeneral7}" />
         </StackPanel>
 
         <SelectableTextBlock

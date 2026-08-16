@@ -17,4 +17,8 @@
         </PackageReference>
     </ItemGroup>
 
+    <ItemGroup>
+      <AvaloniaResource Include="Assets\**" />
+    </ItemGroup>
+
 </Project>
