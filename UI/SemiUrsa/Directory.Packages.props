@@ -1,19 +1,19 @@
 ﻿<Project>
     <PropertyGroup>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-        <AvaloniaVersion>11.2.6</AvaloniaVersion>
+        <AvaloniaVersion>12.1.1</AvaloniaVersion>
     </PropertyGroup>
     <ItemGroup>
         <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)"/>
         <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)"/>
-        <PackageVersion Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)"/>
+        <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3"/>
 
-        <PackageVersion Include="Avalonia.Svg" Version="11.2.0.2"/>
-        <PackageVersion Include="Semi.Avalonia" Version="11.2.1.6"/>
-        <PackageVersion Include="Irihi.Ursa" Version="1.10.0"/>
-        <PackageVersion Include="Irihi.Ursa.Themes.Semi" Version="1.10.0"/>
+        <PackageVersion Include="Svg.Controls.Skia.Avalonia" Version="12.0.0.15"/>
+        <PackageVersion Include="Semi.Avalonia" Version="12.1.0.1"/>
+        <PackageVersion Include="Irihi.Ursa" Version="2.2.0"/>
+        <PackageVersion Include="Irihi.Ursa.Themes.Semi" Version="2.2.0"/>
 
-        <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
-        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0"/>
+        <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2"/>
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11"/>
     </ItemGroup>
 </Project>

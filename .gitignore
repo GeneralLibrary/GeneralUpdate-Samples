@@ -198,6 +198,4 @@ FakesAssemblies/
 
 # Generated extensions directory
 **/extensions/
-*.slnx
-!src/GeneralUpdate-Samples.slnx
 .DS_Store
