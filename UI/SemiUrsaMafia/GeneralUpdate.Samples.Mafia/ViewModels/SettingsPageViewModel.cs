@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Styling;
-using Common.Avalonia.Models;
-using Common.Avalonia.Services;
+using GeneralUpdate.Samples.Shared.Models;
+using GeneralUpdate.Samples.Shared.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 

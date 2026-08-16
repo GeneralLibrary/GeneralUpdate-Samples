@@ -10,7 +10,7 @@
         <Image
             Width="150"
             Height="150"
-            Source="avares://Common.Avalonia/Assets/GeneralUpdate.png" />
+            Source="avares://GeneralUpdate.Samples.Shared/Assets/GeneralUpdate.png" />
         <td:Close Width="60" Height="60" />
         <iri:IrihiBand Label="Mafia" Fill="{DynamicResource TDBrandColor}" Width="250" HorizontalAlignment="Center" />
     </StackPanel>

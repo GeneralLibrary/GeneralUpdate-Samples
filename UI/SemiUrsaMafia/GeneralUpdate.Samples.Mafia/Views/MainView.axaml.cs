@@ -1,5 +1,5 @@
 using Avalonia.Controls;
-using Common.Avalonia.Services;
+using GeneralUpdate.Samples.Shared.Services;
 using GeneralUpdate.Samples.Mafia.ViewModels;
 
 namespace GeneralUpdate.Samples.Mafia.Views;

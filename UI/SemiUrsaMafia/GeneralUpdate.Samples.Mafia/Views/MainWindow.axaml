@@ -7,7 +7,7 @@
         Width="375" Height="812"
         MinWidth="300" MinHeight="700"
         WindowStartupLocation="CenterScreen"
-        Icon="avares://Common.Avalonia/Assets/irihi.ico"
+        Icon="avares://GeneralUpdate.Samples.Shared/Assets/irihi.ico"
         x:Class="GeneralUpdate.Samples.Mafia.Views.MainWindow"
         Title="General Update Demo">
     <views:MainView />
