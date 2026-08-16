@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace Sandbox.Views;
+namespace GeneralUpdate.Samples.Mafia.Views;
 
 public partial class MainWindow : Window
 {

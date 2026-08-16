@@ -6,7 +6,7 @@ using Common.Avalonia.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace Sandbox.ViewModels;
+namespace GeneralUpdate.Samples.Mafia.ViewModels;
 
 public partial class SettingsPageViewModel : ViewModelBase
 {

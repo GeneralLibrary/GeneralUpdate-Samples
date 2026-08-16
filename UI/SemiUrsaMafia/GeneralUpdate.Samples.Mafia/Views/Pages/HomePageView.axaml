@@ -5,7 +5,7 @@
              xmlns:iri="https://irihi.tech/shared"
              xmlns:td="https://irihi.tech/td"
              mc:Ignorable="d" d:DesignWidth="375" d:DesignHeight="812"
-             x:Class="Sandbox.Views.Pages.HomePageView">
+             x:Class="GeneralUpdate.Samples.Mafia.Views.Pages.HomePageView">
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
         <Image
             Width="150"

@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace Sandbox.Views.Pages;
+namespace GeneralUpdate.Samples.Mafia.Views.Pages;
 
 public partial class HomePageView : UserControl
 {

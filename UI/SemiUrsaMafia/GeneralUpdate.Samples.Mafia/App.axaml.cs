@@ -1,9 +1,9 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Sandbox.Views;
+using GeneralUpdate.Samples.Mafia.Views;
 
-namespace Sandbox;
+namespace GeneralUpdate.Samples.Mafia;
 
 public partial class App : Application
 {

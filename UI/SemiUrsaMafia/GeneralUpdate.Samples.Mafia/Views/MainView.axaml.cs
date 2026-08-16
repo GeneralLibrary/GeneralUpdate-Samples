@@ -1,8 +1,8 @@
 using Avalonia.Controls;
 using Common.Avalonia.Services;
-using Sandbox.ViewModels;
+using GeneralUpdate.Samples.Mafia.ViewModels;
 
-namespace Sandbox.Views;
+namespace GeneralUpdate.Samples.Mafia.Views;
 
 public partial class MainView : UserControl
 {

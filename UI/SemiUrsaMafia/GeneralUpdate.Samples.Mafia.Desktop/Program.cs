@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using System;
 
-namespace Sandbox;
+namespace GeneralUpdate.Samples.Mafia.Desktop;
 
 sealed class Program
 {
