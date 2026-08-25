@@ -1,13 +1,19 @@
 name: Azure Static Web Apps Deploy
 
+# ⚠️ 已暂停：Azure 上的 Static Web App 资源已被删除（2026-08），部署失败
+# （"No matching Static Web App was found or the api key was invalid"）。
+# 恢复步骤：
+#   1. 在 Azure 门户重新创建 Static Web App 并关联本仓库；
+#   2. 复制新的 Deployment Token，更新 GitHub secret AZURE_STATIC_WEB_APPS_API_TOKEN；
+#   3. 取消下方 push 触发器的注释。
 on:
     workflow_dispatch:
-    push:
-      branches:
-        - main
-      paths:
-        - 'website/**'
-        - '.github/workflows/az-swa-deploy.yml'
+    # push:
+    #   branches:
+    #     - main
+    #   paths:
+    #     - 'website/**'
+    #     - '.github/workflows/az-swa-deploy.yml'
 
 jobs:
   build_and_deploy_job:
