@@ -614,6 +614,176 @@ var bootstrap = new GeneralUpdateBootstrap()
 await bootstrap.LaunchAsync();
 ```
 
+### 5.4 OSS Object Storage Update (Zero Server Deployment)
+
+**Scenario**: The OSS (Object Storage Service) update mode is for deployments **without a backend service**: host the version manifest and update packages directly on an object storage service (Aliyun OSS / AWS S3 / MinIO, etc.), and the client performs version checking and updates through a static `versions.json` file — no server-side API is required.
+
+**Workflow:**
+
+```
+Object Storage Bucket (Aliyun OSS / AWS S3 / MinIO)
+├── versions.json                            ← Version manifest (static file)
+└── packet_20250102230201638_1.0.0.1.zip     ← Update package
+```
+
+| Step | Role | Description |
+| --- | --- | --- |
+| 1 | Ops | Upload `versions.json` and update packages to the object storage bucket |
+| 2 | `OssClient` (main app) | Downloads `versions.json` from `UpdateUrl` on startup, picks the latest version by `PubTime` descending |
+| 3 | `OssClient` (main app) | Compares the latest version with `ClientVersion` (SemVer 2.0); ends if up to date |
+| 4 | `OssClient` (main app) | If a new version is found → launches the upgrade process → the main app exits itself |
+| 5 | `OssUpgrade` (upgrade app) | Reads the version manifest, downloads every package newer than the current version, extracts and overwrites the install directory |
+| 6 | `OssUpgrade` (upgrade app) | Writes the version back to `generalupdate.manifest.json` → launches the main app → exits itself |
+
+**How the two processes cooperate:**
+
+OSS mode requires **two separate executables**, and each process's role is determined by the `AppType` in its own code — not passed via command-line arguments or an IPC file:
+
+| Executable | Project code | AppType | Responsibility |
+| --- | --- | --- | --- |
+| Main app (e.g. `MyApp.exe`) | Your business app | `AppType.OssClient` | Check version, launch the upgrade process, exit |
+| Upgrade app (e.g. `UpgradeApp.exe`) | A separate small project | `AppType.OssUpgrade` | Download packages, extract & install, launch the main app, exit |
+
+When `OssClient` finds a new version, it starts the upgrade app via `Process.Start` **with no arguments** — the upgrade app knows it must perform the update from its own `AppType.OssUpgrade` code and obtains the main app identity from `generalupdate.manifest.json` in the install directory (see "Install directory layout" below).
+
+**`versions.json` manifest format:**
+
+```json
+[
+  {
+    "PacketName": "packet_20250102230201638_1.0.0.1",
+    "Hash": "ad1a85a9169ca0083ab54ba390e085c56b9059efc3ca8aa1ec9ed857683cc4b1",
+    "Version": "1.0.0.1",
+    "Url": "https://your-bucket.example.com/packages/packet_20250102230201638_1.0.0.1.zip",
+    "PubTime": "2025-01-02T23:48:21"
+  }
+]
+```
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `PacketName` | `string` | Update package name, used to derive the local archive file name (`{PacketName}.zip`) |
+| `Hash` | `string` | SHA256 hash of the update package, verified against the downloaded file |
+| `Version` | `string` | Version number (SemVer 2.0 format), used for version comparison |
+| `Url` | `string` | Download URL of the update package (public or pre-signed object storage URL) |
+| `PubTime` | `DateTime` | Publish time; the OSS mode picks the latest version by this field in descending order |
+
+:::info Manifest file naming
+After download, `versions.json` is saved into the install directory as `{MainAppName}_versions.json`, and the upgrade process reads it from the same location. The main app and the upgrade app must use consistent `MainAppName` / `UpdateAppName` configuration.
+:::
+
+**Install directory layout (main app + upgrade app + manifest):**
+
+```
+Install directory (InstallPath)
+├── MyApp.exe                    ← Main app (AppType.OssClient)
+├── MyApp.dll / resources...
+├── generalupdate.manifest.json  ← App identity manifest (example below)
+└── update/
+    └── UpgradeApp.exe           ← Upgrade app (AppType.OssUpgrade)
+```
+
+Corresponding `generalupdate.manifest.json` example (identity fields can also all be set in code; when both exist, the manifest wins):
+
+```json
+{
+  "mainAppName": "MyApp.exe",
+  "clientVersion": "1.0.0.0",
+  "appType": "OssClient",
+  "updateAppName": "UpgradeApp.exe",
+  "updatePath": "update/"
+}
+```
+
+- The upgrade app must reside in `InstallPath` or the directory specified by `UpdatePath`; otherwise `OssClient` cannot launch it and throws `FileNotFoundException`
+- The upgrade app reads `{MainAppName}_versions.json` (downloaded by `OssClient` into `InstallPath`) and obtains `MainAppName` / `UpdateAppName` / `ClientVersion` identity from `generalupdate.manifest.json`
+- If the upgrade app is placed in an `update/` subdirectory (its base directory is the subdirectory) while the manifest lives in the parent directory, the upgrade app must point to the parent explicitly via `SetSource(..., installPath: ...)`, e.g. `Path.GetFullPath(Path.Combine(baseDir, ".."))`
+
+**`UpdateRequest` fields in OSS mode:**
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `UpdateUrl` | Yes | Public URL of `versions.json`; `OssClient` downloads the version manifest from it on startup |
+| `MainAppName` | Recommended | Main app executable name; determines the local manifest file name (`{MainAppName}_versions.json`) and is the target launched after the upgrade completes |
+| `UpdateAppName` | Recommended | Upgrade app executable name; the process launched by `OssClient` when a new version is found; defaults to `Update.exe` |
+| `ClientVersion` | Recommended | Current main app version (SemVer 2.0 format), used for version comparison and package filtering |
+| `InstallPath` | Optional | Application install root directory, defaults to `AppDomain.CurrentDomain.BaseDirectory`; where `versions.json` is saved and update packages are extracted |
+| `UpdatePath` | Optional | Directory of the upgrade app, defaults to `InstallPath`; `OssClient` resolves the upgrade executable from this directory first |
+
+:::info Fields not needed in OSS mode
+OSS mode has no server-side API, so the following auth / reporting / logging related fields are **not required** (they are ignored if set): `AppSecretKey`, `ReportUrl`, `UpdateLogUrl`, `Token`, `AuthScheme`, `BasicUsername`, `BasicPassword`, `Bowl`.
+:::
+
+In addition, the following `Option` runtime options are used in OSS mode:
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `Option.AppType` | — | Required, sets the current process role: `OssClient` (main app) or `OssUpgrade` (upgrade app) |
+| `Option.Encoding` | `UTF8` | Character encoding used when extracting update packages |
+| `Option.DownloadTimeout` | `60` | Download timeout for update packages (seconds) |
+
+**Main app example (`AppType.OssClient`):**
+
+```csharp
+using GeneralUpdate.Core;
+using GeneralUpdate.Core.Configuration;
+
+var request = new UpdateRequest
+{
+    UpdateUrl = "https://your-bucket.example.com/packages/versions.json",
+    UpdateAppName = "OSSUpgradeSample.exe",
+    MainAppName = "OSSClientSample.exe",
+    ClientVersion = "1.0.0.0",
+    InstallPath = AppDomain.CurrentDomain.BaseDirectory
+};
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .SetOption(Option.AppType, AppType.OssClient)
+    .AddListenerException((_, e) => Console.WriteLine(e.Exception))
+    .LaunchAsync();
+```
+
+**Upgrade app example (`AppType.OssUpgrade`):**
+
+```csharp
+using GeneralUpdate.Core;
+
+// The upgrade app needs no SetConfig: identity fields such as MainAppName /
+// UpdateAppName / ClientVersion are auto-discovered from generalupdate.manifest.json
+// in the install directory (AppMetadataDiscoverer).
+// If the upgrade app lives in an update/ subdirectory (manifest in the parent),
+// point to the parent explicitly:
+//
+//   var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+//   await new GeneralUpdateBootstrap()
+//       .SetSource("https://your-bucket.example.com/packages/versions.json", "",
+//           installPath: Path.GetFullPath(Path.Combine(baseDir, "..")))
+//       .SetOption(Option.AppType, AppType.OssUpgrade)
+//       .LaunchAsync();
+
+await new GeneralUpdateBootstrap()
+    .SetOption(Option.AppType, AppType.OssUpgrade)
+    .AddListenerException((_, e) => Console.WriteLine(e.Exception))
+    .LaunchAsync();
+```
+
+:::tip Getting started in 5 steps
+1. **Create the main app project**: reference NuGet package `GeneralUpdate.Core`, write code as in the "Main app example" above (`AppType.OssClient`), and set `UpdateAppName` to your upgrade app file name
+2. **Create the upgrade app project**: a separate small project, write code as in the "Upgrade app example" above (`AppType.OssUpgrade`); the build output file name must match `UpdateAppName`
+3. **Prepare the manifest**: generate `generalupdate.manifest.json` with `GeneralUpdate.Tools` (or write it manually as in the example above) and place it in the install directory together with both executables
+4. **Publish an update package**: zip your application files and upload to object storage; write and upload `versions.json` (`Hash` = SHA256 of that zip, `Url` = accessible URL of the zip)
+5. **Verify**: run the main app and watch the logs to confirm it downloads `versions.json`, detects the new version, launches the upgrade app, and completes the install
+:::
+
+**Effect & caveats**
+- `UpdateUrl` points directly to the public URL of `versions.json`, and update packages are also hosted on object storage — no Verification / Report API is needed
+- Keep the bucket private and use pre-signed URLs; if it must be public-read, do not store sensitive content
+- OSS mode does not distinguish main-app vs. upgrade-app packages: every package in `versions.json` newer than the current version is downloaded and applied in sequence
+- Do not include the component's internal dependency assemblies (e.g. `System.Text.Json.dll`, `Microsoft.Bcl.AsyncInterfaces.dll`) in the update package; alternatively exclude them via the `Files` / `Formats` / `Directories` skip configuration
+- Use SemVer 2.0 version numbers (e.g. `1.0.0.0`), otherwise version comparison fails
+- Same as the standard mode, OSS mode supports `generalupdate.manifest.json` identity discovery, `Hooks<T>()` lifecycle hooks, `UpdateReporter<T>()` status reporting, and custom `DownloadSource<T>()` / `DownloadOrchestrator<T>()`
+
 ---
 
 ## 6. Global Configuration

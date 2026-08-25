@@ -62,6 +62,20 @@ const config = {
     ],
   ],
 
+  plugins: [
+    [
+      '@easyops-cn/docusaurus-search-local',
+      {
+        // 索引文件名加 hash，避免发布后浏览器缓存旧索引
+        hashed: true,
+        // 启用英文与中文分词（中文基于 nodejieba）
+        language: ['en', 'zh'],
+        // 仅索引 docs（默认），不索引独立页面
+        indexPages: false,
+      },
+    ],
+  ],
+
   markdown: {
     mermaid: true,
   },

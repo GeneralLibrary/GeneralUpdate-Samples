@@ -31,10 +31,11 @@ sidebar_label: Core 执行流程
 8. [Chain→Full 回退机制](#8-chainfull-回退机制)
 9. [IPC 通信协议](#9-ipc-通信协议)
 10. [UpdateStrategy：Upgrade 进程的执行流程](#10-updatestrategyupgrade-进程的执行流程)
-11. [Silent Mode：延迟升级机制](#11-silent-mode延迟升级机制)
-12. [OS 策略的平台差异](#12-os-策略的平台差异)
-13. [错误恢复全景](#13-错误恢复全景)
-14. [关键代码路径索引](#14-关键代码路径索引)
+11. [OSS 模式：对象存储更新执行流程](#11-oss-模式对象存储更新执行流程)
+12. [Silent Mode：延迟升级机制](#12-silent-mode延迟升级机制)
+13. [OS 策略的平台差异](#13-os-策略的平台差异)
+14. [错误恢复全景](#14-错误恢复全景)
+15. [关键代码路径索引](#15-关键代码路径索引)
 
 ---
 
@@ -100,6 +101,8 @@ GeneralUpdate.Core 采用**三层调度 + 两层引擎**的设计：
 |------|---------|---------------|------|
 | 主程序（如 `MyApp.exe`） | `Client` | `ClientStrategy` | 服务端版本校验、一次性下载所有包、原地升级自身（Upgrade 包）、写 IPC 文件、拉起 Upgrade 进程、退出 |
 | 升级程序（如 `Updater.exe`） | `Upgrade` | `UpdateStrategy` | 读 IPC 文件获取版本信息、运行管道升级主程序文件、写回 manifest、拉起主程序、退出 |
+| 主程序（OSS 模式） | `OssClient` | `OssStrategy` | 下载 `versions.json`、SemVer 对比、拉起升级程序、退出（无 IPC） |
+| 升级程序（OSS 模式） | `OssUpgrade` | `OssStrategy` | 读 `versions.json`、下载并解压更新包、写回 manifest、拉起主程序、退出（无 IPC） |
 
 ---
 
@@ -1224,11 +1227,106 @@ Upgrade 进程
 
 ---
 
-## 11. Silent Mode：延迟升级机制
+## 11. OSS 模式：对象存储更新执行流程
+
+`OssStrategy` 是 OSS（Object Storage Service，对象存储服务）模式的核心策略，适用于**没有后端服务**的部署场景：版本配置与更新包直接托管在对象存储（阿里云 OSS / AWS S3 / MinIO 等）上，客户端通过静态 `versions.json` 文件完成版本检查与更新。
+
+与标准模式不同，OSS 模式**不写 IPC 文件、不请求 Verification / Report API**。Client 与 Upgrade 之间通过安装目录下的 `versions.json` 文件传递更新上下文，因此 `OssClient` 与 `OssUpgrade` 必须使用一致的 `MainAppName` / `UpdateAppName` 配置。
+
+### 11.1 完整流程
+
+```mermaid
+flowchart TB
+    subgraph OSS_CLIENT["OssClient 主程序"]
+        direction TB
+        START(["启动"]) --> OC1["下载 versions.json\nUpdateUrl → {MainAppName}_versions.json"]
+        OC1 --> OC2["反序列化版本列表\n按 PubTime 倒序取最新版本"]
+        OC2 --> OC3{"SemVer 对比\n最新版本大于 ClientVersion?"}
+        OC3 -- "否" --> OC_EXIT["返回\n无需更新"]
+        OC3 -- "是" --> OC4["解析升级程序路径\n优先 UpdatePath → InstallPath"]
+        OC4 --> OC5["Process.Start(升级程序)"]
+        OC5 --> OC6["GracefulExit\n主程序退出"]
+    end
+
+    subgraph OSS_UPGRADE["OssUpgrade 升级程序"]
+        direction TB
+        US1(["启动"]) --> US2["读取 versions.json\n或自定义 DownloadSource"]
+        US2 --> US3["筛选 Version 大于 ClientVersion\n按 PubTime 升序 → DownloadAsset"]
+        US3 --> US4["计算 LastVersion\nSemVer 最大值"]
+        US4 --> US5["OnBeforeUpdateAsync 钩子"]
+        US5 --> US6{"返回 false?"}
+        US6 -- "是" --> US_EXIT["取消更新"]
+        US6 -- "否" --> US7["下载所有更新包\nDefaultDownloadOrchestrator"]
+        US7 --> US8["解压 zip → 安装目录\n删除压缩包"]
+        US8 --> US9["写回 manifest\nClientVersion = LastVersion"]
+        US9 --> US10["OnDownloadCompleted / OnAfterUpdate 钩子"]
+        US10 --> US11["OnBeforeStartApp 钩子"]
+        US11 --> US12["StartAppAsync\n拉起主程序"]
+        US12 --> US13["GracefulExit\n升级程序退出"]
+    end
+
+    OC5 -. "共享 versions.json（无 IPC）" .-> US1
+```
+
+### 11.2 与标准模式的关键差异
+
+| 维度 | 标准 Client / Upgrade | OSS 模式 |
+|------|----------------------|----------|
+| 服务端 API | 需要 Verification / Report API | 不需要，纯静态文件 |
+| 进程间通信 | 加密 IPC 文件 | 安装目录下的 `versions.json` 文件 |
+| 包类型 | Chain（差分）+ Full（全量） | 仅 Full（zip 全量包） |
+| 更新管道 | Hash → Compress → Patch | Hash 校验 + 解压（无差分 Patch） |
+| 备份 / 回滚 | 有（`.backups/`） | 无 |
+| 黑名单机制 | 有（CheckFail） | 无 |
+| 版本对比 | 服务端返回 Assets 列表 | 本地解析 versions.json + SemVer 对比 |
+| 防止更新循环 | `AllPackagesSucceeded` 闸门 | 更新成功后回写 manifest 的 `ClientVersion` |
+
+### 11.3 OssClient：版本检查与拉起升级
+
+【说明】`OssClient` 只负责"检查 + 拉起"，**不下载更新包**。版本配置下载失败或文件不存在时直接返回，不抛异常、不阻塞主程序启动。
+
+| 步骤 | 行为 | 关键实现 |
+|------|------|----------|
+| 1 | 下载版本配置 | `UpdateUrl` → 保存为 `{MainAppName}_versions.json`（InstallPath 下） |
+| 2 | 解析并取最新 | `JsonContext.OssVersionRecordJsonContext` 反序列化，按 `PubTime` 倒序 |
+| 3 | 版本对比 | SemVer 2.0：`latest.Version > ClientVersion` 才继续 |
+| 4 | 解析升级程序路径 | 优先 `UpdatePath`，回退 `InstallPath`；`UpdateAppName` 默认 `Update.exe` |
+| 5 | 拉起升级程序 | `Process.Start(appPath)`，**不传任何参数**；升级程序靠自身代码的 `AppType.OssUpgrade` 和 manifest 身份执行升级 |
+| 6 | 退出主程序 | `GracefulExit.CurrentProcessAsync()` |
+
+### 11.4 OssUpgrade：下载、解压与应用
+
+【说明】`OssUpgrade` 完成实际的下载与安装，全程不依赖服务端。
+
+| 步骤 | 行为 | 关键实现 |
+|------|------|----------|
+| 1 | 读取版本配置 | `{MainAppName}_versions.json`（Client 已下载）或自定义 `DownloadSource` |
+| 2 | 筛选更新包 | 过滤 `Version > ClientVersion`，按 `PubTime` 升序转为 `DownloadAsset`（`SHA256 = Hash`） |
+| 3 | 计算目标版本 | 所有可解析版本号的 SemVer 最大值 → `LastVersion` |
+| 4 | 前置钩子 | `OnBeforeUpdateAsync`，返回 false 可取消更新 |
+| 5 | 下载更新包 | 默认 `DefaultDownloadOrchestrator`（超时默认 60s），或自定义 `DownloadOrchestrator` |
+| 6 | 解压安装 | `Format.Zip` 解压到 InstallPath，完成后删除压缩包 |
+| 7 | 回写版本 | `ManifestInfo.TryUpdateVersion` 更新 manifest 的 `ClientVersion`，防止无限更新循环 |
+| 8 | 收尾钩子 | `OnDownloadCompleted` → `OnAfterUpdate` → `OnBeforeStartApp` |
+| 9 | 拉起主程序 | `StartAppAsync()` |
+| 10 | 退出 | `GracefulExit.CurrentProcessAsync()`；异常时触发 `OnUpdateErrorAsync` + 上报 UpdateFailed |
+
+### 11.5 注意事项
+
+- OSS 模式**没有备份 / 回滚机制**，更新包解压后直接覆盖安装目录，建议发布前充分测试
+- OSS 模式**不区分主程序与升级程序的更新包**：`versions.json` 中所有高于当前版本的包都会被依次下载并应用
+- 打包更新包时请勿包含组件内部依赖程序集（如 `System.Text.Json.dll`、`Microsoft.Bcl.AsyncInterfaces.dll` 等）
+- 版本号必须使用 SemVer 2.0 格式（如 `1.0.0.0`），否则版本对比会静默失败
+- Bucket 建议设为私有并使用预签名 URL；`OssDownloadSource` 原生支持预签名 URL 场景
+- 与标准模式一致，OSS 模式同样支持 `Hooks<T>()` 生命周期钩子、`UpdateReporter<T>()` 状态上报、`DownloadSource<T>()` / `DownloadOrchestrator<T>()` 自定义下载来源与编排
+
+---
+
+## 12. Silent Mode：延迟升级机制
 
 Silent Mode 是标准更新流程的一种变体，唯一的区别是**启动升级进程的时机从"立即"变成了"进程退出时"**。
 
-### 11.1 标准模式 vs 静默模式
+### 12.1 标准模式 vs 静默模式
 
 ```
 标准模式：
@@ -1250,7 +1348,7 @@ AppDomain.ProcessExit (进程退出时):
   → Upgrade 进程启动 → 应用更新 → 下次启动时版本已更新
 ```
 
-### 11.2 完整流程图
+### 12.2 完整流程图
 
 ```mermaid
 flowchart TB
@@ -1292,7 +1390,7 @@ flowchart TB
     end
 ```
 
-### 11.3 TryLaunchUpgrade — 兜底方法
+### 12.3 TryLaunchUpgrade — 兜底方法
 
 ```csharp
 // SilentPollOrchestrator.cs:187-210
@@ -1310,7 +1408,7 @@ public bool TryLaunchUpgrade()
 
 ---
 
-## 12. OS 策略的平台差异
+## 13. OS 策略的平台差异
 
 | 方面 | Windows | Linux | macOS |
 |------|---------|-------|-------|
@@ -1323,7 +1421,7 @@ Bowl 是一个 Windows-only 的崩溃守护进程。当主程序意外退出时�
 
 ---
 
-## 13. 错误恢复全景
+## 14. 错误恢复全景
 
 | 错误场景 | 捕获位置 | 处理方式 | 后果 |
 |----------|----------|----------|------|
@@ -1357,7 +1455,7 @@ private void TryRollback()
 
 ---
 
-## 14. 关键代码路径索引
+## 15. 关键代码路径索引
 
 | 步骤 | 文件 | 关键行 |
 |------|------|--------|

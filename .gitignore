@@ -199,3 +199,6 @@ FakesAssemblies/
 # Generated extensions directory
 **/extensions/
 .DS_Store
+
+# Reasonix local tool state
+.reasonix/

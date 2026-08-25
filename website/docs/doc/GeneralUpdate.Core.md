@@ -909,6 +909,174 @@ var bootstrap = new GeneralUpdateBootstrap()
 await bootstrap.LaunchAsync();
 ```
 
+### 5.4 OSS 对象存储更新（零服务端部署）
+
+【场景说明】OSS（Object Storage Service，对象存储服务）更新模式适用于**没有后端服务**的部署场景：将版本配置与更新包直接托管在对象存储（阿里云 OSS / AWS S3 / MinIO 等）上，客户端通过静态 `versions.json` 文件完成版本检查与更新，全程无需编写服务端 API。
+
+**工作流程：**
+
+```
+对象存储 Bucket（阿里云 OSS / AWS S3 / MinIO）
+├── versions.json                            ← 版本配置（静态文件）
+└── packet_20250102230201638_1.0.0.1.zip     ← 更新包
+```
+
+| 步骤 | 角色 | 说明 |
+| --- | --- | --- |
+| 1 | 运维 | 将 `versions.json` 与更新包上传至对象存储 Bucket |
+| 2 | `OssClient`（主程序） | 启动时从 `UpdateUrl` 下载 `versions.json`，按 `PubTime` 倒序取最新版本 |
+| 3 | `OssClient`（主程序） | 最新版本与 `ClientVersion` 做 SemVer 2.0 对比，无新版本则结束检查 |
+| 4 | `OssClient`（主程序） | 检测到新版本 → 启动升级程序 → 主程序自行退出 |
+| 5 | `OssUpgrade`（升级程序） | 读取版本配置，下载所有高于当前版本的更新包并解压覆盖安装目录 |
+| 6 | `OssUpgrade`（升级程序） | 回写 `generalupdate.manifest.json` 版本号 → 启动主程序 → 自行退出 |
+
+**两个进程如何配合：**
+
+OSS 模式需要**两个独立的可执行程序**，角色由各自代码中的 `AppType` 决定，而不是通过启动参数或 IPC 文件传递：
+
+| 程序 | 项目代码 | AppType | 职责 |
+| --- | --- | --- | --- |
+| 主程序（如 `MyApp.exe`） | 业务应用 | `AppType.OssClient` | 检查版本、拉起升级程序、退出 |
+| 升级程序（如 `UpgradeApp.exe`） | 独立小项目 | `AppType.OssUpgrade` | 下载更新包、解压安装、拉起主程序、退出 |
+
+`OssClient` 检测到新版本后通过 `Process.Start` 直接启动升级程序，**不传任何参数**——升级程序靠自身代码中的 `AppType.OssUpgrade` 知道自己该执行升级，并依靠安装目录下的 `generalupdate.manifest.json` 获取主程序身份（见下文"安装目录布局"）。
+
+**versions.json 版本配置格式：**
+
+```json
+[
+  {
+    "PacketName": "packet_20250102230201638_1.0.0.1",
+    "Hash": "ad1a85a9169ca0083ab54ba390e085c56b9059efc3ca8aa1ec9ed857683cc4b1",
+    "Version": "1.0.0.1",
+    "Url": "https://your-bucket.example.com/packages/packet_20250102230201638_1.0.0.1.zip",
+    "PubTime": "2025-01-02T23:48:21"
+  }
+]
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `PacketName` | `string` | 更新包名称，用于生成本地压缩文件名（`{PacketName}.zip`） |
+| `Hash` | `string` | 更新包 SHA256 哈希，下载完成后与本地文件比对校验 |
+| `Version` | `string` | 版本号（SemVer 2.0 格式），用于版本对比 |
+| `Url` | `string` | 更新包下载地址（对象存储公开或预签名 URL） |
+| `PubTime` | `DateTime` | 发布时间，OSS 模式按此字段倒序选取最新版本 |
+
+:::info 配置文件命名
+`versions.json` 下载后会以 `{MainAppName}_versions.json` 的名称保存在安装目录，升级程序从同一位置读取。主程序与升级程序必须使用一致的 `MainAppName` / `UpdateAppName` 配置。
+:::
+
+**安装目录布局（主程序 + 升级程序 + manifest）：**
+
+```
+安装目录（InstallPath）
+├── MyApp.exe                    ← 主程序（AppType.OssClient）
+├── MyApp.dll / 资源文件...
+├── generalupdate.manifest.json  ← 应用身份清单（见下方示例）
+└── update/
+    └── UpgradeApp.exe           ← 升级程序（AppType.OssUpgrade）
+```
+
+对应 `generalupdate.manifest.json` 示例（身份字段也可全部写在代码里，两者共存时 manifest 优先）：
+
+```json
+{
+  "mainAppName": "MyApp.exe",
+  "clientVersion": "1.0.0.0",
+  "appType": "OssClient",
+  "updateAppName": "UpgradeApp.exe",
+  "updatePath": "update/"
+}
+```
+
+- 升级程序必须位于 `InstallPath` 或 `UpdatePath` 指定的目录，否则 `OssClient` 无法拉起它并抛出 `FileNotFoundException`
+- 升级程序运行时会读取 `{MainAppName}_versions.json`（`OssClient` 下载后保存在 `InstallPath`），并依靠 `generalupdate.manifest.json` 获得 `MainAppName` / `UpdateAppName` / `ClientVersion` 等身份
+- 若升级程序放在 `update/` 子目录（其程序基目录是子目录）而 manifest 在父目录，升级程序代码中需通过 `SetSource(..., installPath: ...)` 显式指向父目录，例如 `Path.GetFullPath(Path.Combine(baseDir, ".."))`
+
+**OSS 模式 UpdateRequest 字段说明：**
+
+| 字段 | 是否必填 | 说明 |
+| --- | --- | --- |
+| `UpdateUrl` | 必填 | `versions.json` 的公开访问地址，`OssClient` 启动时据此下载版本配置 |
+| `MainAppName` | 推荐 | 主程序可执行文件名；决定版本配置的本地文件名（`{MainAppName}_versions.json`），也是升级完成后拉起的目标 |
+| `UpdateAppName` | 推荐 | 升级程序可执行文件名；`OssClient` 检测到新版本后拉起的进程，默认 `Update.exe` |
+| `ClientVersion` | 推荐 | 当前主程序版本号（SemVer 2.0 格式），用于版本对比与更新包筛选 |
+| `InstallPath` | 可选 | 应用安装根目录，默认 `AppDomain.CurrentDomain.BaseDirectory`；`versions.json` 的保存位置与更新包的解压目标目录 |
+| `UpdatePath` | 可选 | 升级程序所在目录，默认 `InstallPath`；`OssClient` 优先从此目录解析升级程序 |
+
+:::info OSS 模式无需配置的字段
+OSS 模式没有服务端 API，以下与认证、上报、日志相关的字段**无需配置**（配置了也不会被使用）：`AppSecretKey`、`ReportUrl`、`UpdateLogUrl`、`Token`、`AuthScheme`、`BasicUsername`、`BasicPassword`、`Bowl`。
+:::
+
+另外，OSS 模式还会用到以下 `Option` 运行时选项：
+
+| Option | 默认值 | 说明 |
+| --- | --- | --- |
+| `Option.AppType` | — | 必填，指定当前进程角色：`OssClient`（主程序）或 `OssUpgrade`（升级程序） |
+| `Option.Encoding` | `UTF8` | 更新包解压时的字符编码 |
+| `Option.DownloadTimeout` | `60` | 更新包下载超时时间（秒） |
+
+**主程序示例（`AppType.OssClient`）：**
+
+```csharp
+using GeneralUpdate.Core;
+using GeneralUpdate.Core.Configuration;
+
+var request = new UpdateRequest
+{
+    UpdateUrl = "https://your-bucket.example.com/packages/versions.json",
+    UpdateAppName = "OSSUpgradeSample.exe",
+    MainAppName = "OSSClientSample.exe",
+    ClientVersion = "1.0.0.0",
+    InstallPath = AppDomain.CurrentDomain.BaseDirectory
+};
+
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
+    .SetOption(Option.AppType, AppType.OssClient)
+    .AddListenerException((_, e) => Console.WriteLine(e.Exception))
+    .LaunchAsync();
+```
+
+**升级程序示例（`AppType.OssUpgrade`）：**
+
+```csharp
+using GeneralUpdate.Core;
+
+// 升级程序无需 SetConfig：MainAppName / UpdateAppName / ClientVersion 等身份
+// 字段由安装目录下的 generalupdate.manifest.json 自动发现（AppMetadataDiscoverer）。
+// 若升级程序位于 update/ 子目录（manifest 在父目录），需显式指向父目录：
+//
+//   var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+//   await new GeneralUpdateBootstrap()
+//       .SetSource("https://your-bucket.example.com/packages/versions.json", "",
+//           installPath: Path.GetFullPath(Path.Combine(baseDir, "..")))
+//       .SetOption(Option.AppType, AppType.OssUpgrade)
+//       .LaunchAsync();
+
+await new GeneralUpdateBootstrap()
+    .SetOption(Option.AppType, AppType.OssUpgrade)
+    .AddListenerException((_, e) => Console.WriteLine(e.Exception))
+    .LaunchAsync();
+```
+
+:::tip 新手 5 步上手
+1. **建主程序项目**：引入 NuGet 包 `GeneralUpdate.Core`，按上文"主程序示例"编写代码（`AppType.OssClient`），`UpdateAppName` 填你的升级程序文件名
+2. **建升级程序项目**：独立小项目，按上文"升级程序示例"编写代码（`AppType.OssUpgrade`），编译产物文件名与 `UpdateAppName` 保持一致
+3. **准备 manifest**：用 `GeneralUpdate.Tools` 生成 `generalupdate.manifest.json`（或参照上文示例手写），与主程序、升级程序一同放入安装目录
+4. **发布更新包**：将应用文件打成 zip 上传对象存储；编写 `versions.json` 并上传（`Hash` 填该 zip 的 SHA256，`Url` 填 zip 的可访问地址）
+5. **运行验证**：启动主程序，观察日志确认下载 `versions.json`、检测到新版本、拉起升级程序并完成安装
+:::
+
+【效果&注意事项】
+- `UpdateUrl` 直接指向 `versions.json` 的公开地址，更新包同样托管在对象存储上，无需 Verification / Report API
+- Bucket 建议设为私有并使用预签名 URL；若设为公共读，请勿存放敏感内容
+- OSS 模式不区分主程序与升级程序的更新包：`versions.json` 中所有高于当前版本的包都会被依次下载并应用
+- 打包更新包时请勿包含组件内部依赖程序集（如 `System.Text.Json.dll`、`Microsoft.Bcl.AsyncInterfaces.dll` 等），也可通过 `Files` / `Formats` / `Directories` 跳过配置排除
+- 版本号使用 SemVer 2.0 格式（如 `1.0.0.0`），否则版本对比会失败
+- 与标准模式一致，OSS 模式同样支持 `generalupdate.manifest.json` 身份发现、`Hooks<T>()` 生命周期钩子、`UpdateReporter<T>()` 状态上报，以及 `DownloadSource<T>()` / `DownloadOrchestrator<T>()` 自定义下载来源与编排
+
 ---
 
 ## 6. 全局配置

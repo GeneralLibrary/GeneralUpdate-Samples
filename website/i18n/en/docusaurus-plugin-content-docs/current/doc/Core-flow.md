@@ -31,10 +31,11 @@ sidebar_label: Core Execution Flow
 8. [Chain→Full Fallback Mechanism](#8-chainfull-fallback-mechanism)
 9. [IPC Communication Protocol](#9-ipc-communication-protocol)
 10. [UpdateStrategy: Upgrade Process Execution Flow](#10-updatestrategy-upgrade-process-execution-flow)
-11. [Silent Mode: Delayed Upgrade Mechanism](#11-silent-mode-delayed-upgrade-mechanism)
-12. [OS Strategy Platform Differences](#12-os-strategy-platform-differences)
-13. [Error Recovery Panorama](#13-error-recovery-panorama)
-14. [Key Code Path Index](#14-key-code-path-index)
+11. [OSS Mode: Object Storage Update Execution Flow](#11-oss-mode-object-storage-update-execution-flow)
+12. [Silent Mode: Delayed Upgrade Mechanism](#12-silent-mode-delayed-upgrade-mechanism)
+13. [OS Strategy Platform Differences](#13-os-strategy-platform-differences)
+14. [Error Recovery Panorama](#14-error-recovery-panorama)
+15. [Key Code Path Index](#15-key-code-path-index)
 
 ---
 
@@ -101,6 +102,8 @@ GeneralUpdate.Core adopts a **three-layer dispatch + two-engine** design:
 |---------|---------|----------------|-----------------|
 | Main app (e.g. `MyApp.exe`) | `Client` | `ClientStrategy` | Server version check, download all packages at once, self-upgrade (Upgrade package), write IPC file, launch Upgrade process, exit |
 | Updater (e.g. `Updater.exe`) | `Upgrade` | `UpdateStrategy` | Read IPC file for version info, run pipeline to upgrade main app files, write back manifest, launch main app, exit |
+| Main app (OSS mode) | `OssClient` | `OssStrategy` | Download `versions.json`, compare via SemVer, launch upgrade process, exit (no IPC) |
+| Updater (OSS mode) | `OssUpgrade` | `OssStrategy` | Read `versions.json`, download and extract update packages, write back manifest, launch main app, exit (no IPC) |
 
 ---
 
@@ -1226,11 +1229,106 @@ Upgrade process
 
 ---
 
-## 11. Silent Mode: Delayed Upgrade Mechanism
+## 11. OSS Mode: Object Storage Update Execution Flow
+
+`OssStrategy` is the core strategy of the OSS (Object Storage Service) mode, designed for deployments **without a backend service**: the version manifest and update packages are hosted directly on an object storage service (Aliyun OSS / AWS S3 / MinIO, etc.), and the client performs version checking and updates through a static `versions.json` file.
+
+Unlike the standard mode, OSS mode **writes no IPC file and calls no Verification / Report API**. The Client and Upgrade processes exchange update context through the `versions.json` file in the install directory, so `OssClient` and `OssUpgrade` must use consistent `MainAppName` / `UpdateAppName` configuration.
+
+### 11.1 Full Flow
+
+```mermaid
+flowchart TB
+    subgraph OSS_CLIENT["OssClient Main App"]
+        direction TB
+        START(["Start"]) --> OC1["Download versions.json\nUpdateUrl → {MainAppName}_versions.json"]
+        OC1 --> OC2["Deserialize version list\npick latest by PubTime descending"]
+        OC2 --> OC3{"SemVer compare\nlatest &gt; ClientVersion?"}
+        OC3 -- "No" --> OC_EXIT["Return\nno update needed"]
+        OC3 -- "Yes" --> OC4["Resolve upgrade exe path\nUpdatePath first → InstallPath"]
+        OC4 --> OC5["Process.Start(upgrade app)"]
+        OC5 --> OC6["GracefulExit\nmain app exits"]
+    end
+
+    subgraph OSS_UPGRADE["OssUpgrade Upgrade App"]
+        direction TB
+        US1(["Start"]) --> US2["Read versions.json\nor custom DownloadSource"]
+        US2 --> US3["Filter Version &gt; ClientVersion\norder by PubTime ascending → DownloadAsset"]
+        US3 --> US4["Compute LastVersion\nSemVer max"]
+        US4 --> US5["OnBeforeUpdateAsync hook"]
+        US5 --> US6{"returns false?"}
+        US6 -- "Yes" --> US_EXIT["Cancel update"]
+        US6 -- "No" --> US7["Download all packages\nDefaultDownloadOrchestrator"]
+        US7 --> US8["Extract zip → install dir\ndelete archives"]
+        US8 --> US9["Write back manifest\nClientVersion = LastVersion"]
+        US9 --> US10["OnDownloadCompleted / OnAfterUpdate hooks"]
+        US10 --> US11["OnBeforeStartApp hook"]
+        US11 --> US12["StartAppAsync\nlaunch main app"]
+        US12 --> US13["GracefulExit\nupgrade app exits"]
+    end
+
+    OC5 -. "shared versions.json (no IPC)" .-> US1
+```
+
+### 11.2 Key Differences from the Standard Mode
+
+| Aspect | Standard Client / Upgrade | OSS Mode |
+|--------|---------------------------|----------|
+| Server API | Requires Verification / Report API | Not needed, pure static files |
+| Inter-process communication | Encrypted IPC file | `versions.json` in the install directory |
+| Package types | Chain (diff) + Full | Full only (zip packages) |
+| Update pipeline | Hash → Compress → Patch | Hash verification + extraction (no diff Patch) |
+| Backup / rollback | Yes (`.backups/`) | No |
+| Blacklist mechanism | Yes (CheckFail) | No |
+| Version comparison | Asset list from the server | Local `versions.json` parsing + SemVer compare |
+| Loop prevention | `AllPackagesSucceeded` gate | Write back manifest `ClientVersion` after success |
+
+### 11.3 OssClient: Version Check & Launching the Upgrade
+
+**Note**: `OssClient` only performs "check + launch" — it does **not** download update packages. If downloading the version manifest fails or the file is missing, it returns directly without throwing, so the main app startup is never blocked.
+
+| Step | Behavior | Key implementation |
+|------|----------|--------------------|
+| 1 | Download version manifest | `UpdateUrl` → saved as `{MainAppName}_versions.json` (under InstallPath) |
+| 2 | Parse and pick latest | Deserialize via `JsonContext.OssVersionRecordJsonContext`, sort by `PubTime` descending |
+| 3 | Version compare | SemVer 2.0: continue only if `latest.Version > ClientVersion` |
+| 4 | Resolve upgrade exe path | `UpdatePath` first, fall back to `InstallPath`; `UpdateAppName` defaults to `Update.exe` |
+| 5 | Launch upgrade app | `Process.Start(appPath)`, **no arguments passed**; the upgrade app performs the update based on its own `AppType.OssUpgrade` code and manifest identity |
+| 6 | Exit main app | `GracefulExit.CurrentProcessAsync()` |
+
+### 11.4 OssUpgrade: Download, Extract & Apply
+
+**Note**: `OssUpgrade` performs the actual download and installation, with no server dependency at all.
+
+| Step | Behavior | Key implementation |
+|------|----------|--------------------|
+| 1 | Read version manifest | `{MainAppName}_versions.json` (downloaded by Client) or a custom `DownloadSource` |
+| 2 | Filter update packages | Keep `Version > ClientVersion`, order by `PubTime` ascending → `DownloadAsset` (`SHA256 = Hash`) |
+| 3 | Compute target version | SemVer max of all parseable versions → `LastVersion` |
+| 4 | Pre hook | `OnBeforeUpdateAsync`, returning false cancels the update |
+| 5 | Download packages | Default `DefaultDownloadOrchestrator` (60s default timeout) or a custom `DownloadOrchestrator` |
+| 6 | Extract & install | `Format.Zip` extraction into InstallPath, archives deleted afterwards |
+| 7 | Write back version | `ManifestInfo.TryUpdateVersion` updates manifest `ClientVersion` to prevent update loops |
+| 8 | Closing hooks | `OnDownloadCompleted` → `OnAfterUpdate` → `OnBeforeStartApp` |
+| 9 | Launch main app | `StartAppAsync()` |
+| 10 | Exit | `GracefulExit.CurrentProcessAsync()`; on error, fires `OnUpdateErrorAsync` + reports UpdateFailed |
+
+### 11.5 Caveats
+
+- OSS mode has **no backup / rollback mechanism** — extracted packages overwrite the install directory directly, so test thoroughly before releasing
+- OSS mode does **not distinguish main-app vs. upgrade-app packages**: every package in `versions.json` newer than the current version is downloaded and applied in sequence
+- Do not include the component's internal dependency assemblies (e.g. `System.Text.Json.dll`, `Microsoft.Bcl.AsyncInterfaces.dll`) in update packages
+- Versions must use SemVer 2.0 format (e.g. `1.0.0.0`), otherwise version comparison silently fails
+- Keep the bucket private and use pre-signed URLs; `OssDownloadSource` natively supports pre-signed URL scenarios
+- As in the standard mode, OSS mode supports `Hooks<T>()` lifecycle hooks, `UpdateReporter<T>()` status reporting, and custom `DownloadSource<T>()` / `DownloadOrchestrator<T>()`
+
+---
+
+## 12. Silent Mode: Delayed Upgrade Mechanism
 
 Silent Mode is a variant of the standard update flow — the only difference is **the timing of launching the Upgrade process changes from "immediately" to "on process exit."**
 
-### 11.1 Standard Mode vs Silent Mode
+### 12.1 Standard Mode vs Silent Mode
 
 ```
 Standard mode:
@@ -1252,7 +1350,7 @@ AppDomain.ProcessExit (on process exit):
   → Upgrade process starts → applies update → version updated on next launch
 ```
 
-### 11.2 Complete Flow Diagram
+### 12.2 Complete Flow Diagram
 
 ```mermaid
 flowchart TB
@@ -1294,7 +1392,7 @@ flowchart TB
     end
 ```
 
-### 11.3 TryLaunchUpgrade — Fallback Method
+### 12.3 TryLaunchUpgrade — Fallback Method
 
 ```csharp
 // SilentPollOrchestrator.cs:187-210
@@ -1312,7 +1410,7 @@ public bool TryLaunchUpgrade()
 
 ---
 
-## 12. OS Strategy Platform Differences
+## 13. OS Strategy Platform Differences
 
 | Aspect | Windows | Linux | macOS |
 |--------|---------|-------|-------|
@@ -1325,7 +1423,7 @@ Bowl is a Windows-only crash daemon process. When the main app exits unexpectedl
 
 ---
 
-## 13. Error Recovery Panorama
+## 14. Error Recovery Panorama
 
 | Error Scenario | Catch Location | Handling | Consequence |
 |---------------|----------------|----------|-------------|
@@ -1359,7 +1457,7 @@ private void TryRollback()
 
 ---
 
-## 14. Key Code Path Index
+## 15. Key Code Path Index
 
 | Step | File | Key Line |
 |------|------|----------|
