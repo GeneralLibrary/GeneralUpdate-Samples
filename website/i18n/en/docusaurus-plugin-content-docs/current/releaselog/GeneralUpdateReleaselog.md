@@ -7,6 +7,17 @@ tags: [log]
 
 # 📒Release log
 
+### 📍2026-10-03 — GeneralUpdate.Avalonia v0.0.1-beta.10
+
+- **GeneralUpdate.Avalonia.Android**: Version validation is now **server-queried** (breaking change) — `ValidateAsync(currentVersion)` no longer accepts an `UpdatePackageInfo`. The component queries the server itself using the new `UpdateServerOptions` (`RequestUrl`/`AppKey`/`AppType`/`Platform`/`ProductId`) and picks the newest non-frozen full APK; set `UseJsonEndpoint = true` to GET a single `UpdatePackageInfo` JSON document instead
+- **GeneralUpdate.Avalonia.Android**: Added the `IUpdatePackageSource` abstraction with the default `HttpUpdatePackageClient` implementation, so a custom version API can be plugged in via `CreateDefault(options, packageSource: ...)` without changing the server
+- **GeneralUpdate.Avalonia.Android**: Added the one-shot `PrepareUpdateAsync(currentVersion)` entry point — query, version comparison, pre-check, download and SHA256 verification all run under a single operation lock, returning `UpdatePreparationResult.IsReadyToInstall`
+- **GeneralUpdate.Avalonia.Android**: Added the **installation result loop** — `LaunchInstallerAsync` atomically persists an `InstallationRecord` (default `<FilesDir>/update/installation.json`, overridable with `InstallationStateFilePath`) before handing off to the installer; together with `CheckInstallationAsync` / `ResetInstallationAsync`, the new `AddListenerInstallationConfirmed` event, the new `UpdateState.InstallationPending` / `Installed` states and the `IInstallationStore` / `JsonFileInstallationStore` abstraction, this answers "the installer launched ≠ the installation succeeded"
+- **GeneralUpdate.Avalonia.Android**: Added the update pre-check callback `AddListenerUpdatePrecheck(Func<UpdateInfoEventArgs, bool>)`, mirroring `GeneralUpdate.Core`'s `CanSkip` semantics (return `true` to skip; forced updates bypass it)
+- **GeneralUpdate.Avalonia.Android**: Added localization of built-in user-facing messages (`UpdateLanguage.English` / `Chinese`), `AllowInsecureHttpDownloads` (plaintext HTTP downloads are rejected by default) and speed smoothing configuration; `CreateDefault` gained the `packageSource` / `installationStore` injection parameters
+- **GeneralUpdate.Avalonia.Android**: HTTP transport hardening — global authentication is only sent to HTTPS download URLs on the same origin as the verification endpoint, external `HttpClient` ownership is explicit and conflicting TLS/proxy configuration throws `ArgumentException`, transient HEAD/GET/response-stream failures retry and resume, and operation serialization plus `Dispose` lifetime contracts are documented
+- **Docs**: Component reference, execution flow and quickstart cookbook synced to `v0.0.1-beta.10` (new sections for the server query protocol, installation result loop, update pre-check and acceptance checklist, in both Chinese and English)
+
 ### 📍2026-06-24 — v10.5.0-rc.1
 
 - **Zero-config SetSource() API**: Automatically discovers update source URL from manifest.json — no more hardcoded URLs in bootstrap code

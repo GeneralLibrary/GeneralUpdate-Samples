@@ -7,6 +7,17 @@ tags: [log]
 
 # 📒Release log
 
+### 📍2026-10-03 — GeneralUpdate.Avalonia v0.0.1-beta.10
+
+- **GeneralUpdate.Avalonia.Android**: 版本校验改为**服务端查询式**（破坏性变更）——`ValidateAsync(currentVersion)` 不再接收 `UpdatePackageInfo`，组件按新增的 `UpdateServerOptions`（`RequestUrl`/`AppKey`/`AppType`/`Platform`/`ProductId`）自行请求服务端，并挑选最新的非冻结完整 APK；`UseJsonEndpoint = true` 时改为 GET 单个 `UpdatePackageInfo` JSON
+- **GeneralUpdate.Avalonia.Android**: 新增 `IUpdatePackageSource` 抽象与默认实现 `HttpUpdatePackageClient`，自有版本接口可通过 `CreateDefault(options, packageSource: ...)` 直接替换，无需改造服务端
+- **GeneralUpdate.Avalonia.Android**: 新增一体化入口 `PrepareUpdateAsync(currentVersion)`——在同一个操作锁内完成查询、版本比较、pre-check、下载与 SHA256 校验，返回 `UpdatePreparationResult.IsReadyToInstall`
+- **GeneralUpdate.Avalonia.Android**: 新增**安装结果闭环**——`LaunchInstallerAsync` 拉起安装器前先原子写入 `InstallationRecord`（默认 `<FilesDir>/update/installation.json`，可用 `InstallationStateFilePath` 覆盖），配合 `CheckInstallationAsync` / `ResetInstallationAsync`、新增事件 `AddListenerInstallationConfirmed`、新增状态 `UpdateState.InstallationPending` / `Installed` 与抽象 `IInstallationStore` / `JsonFileInstallationStore`，解决"安装器已拉起 ≠ 安装成功"的确认问题
+- **GeneralUpdate.Avalonia.Android**: 新增更新前回调 `AddListenerUpdatePrecheck(Func<UpdateInfoEventArgs, bool>)`，对齐 `GeneralUpdate.Core` 的 `CanSkip` 语义（返回 `true` 跳过、强制更新不调用）
+- **GeneralUpdate.Avalonia.Android**: 新增内建提示消息本地化（`UpdateLanguage.English` / `Chinese`）、`AllowInsecureHttpDownloads`（默认拒绝明文 HTTP 下载）、速度平滑窗口配置；`CreateDefault` 新增 `packageSource` / `installationStore` 注入参数
+- **GeneralUpdate.Avalonia.Android**: HTTP 传输加固——全局认证只发送给与验证端点同源的 HTTPS 下载地址、外部 `HttpClient` 所有权明确且 TLS/代理冲突显式抛 `ArgumentException`、瞬态 HEAD/GET/响应流错误重试续传、操作串行化与 `Dispose` 生命周期约定
+- **文档**: 组件参考、执行流程与实战手册同步至 `v0.0.1-beta.10`（新增服务端查询协议、安装结果闭环、更新前回调、闭环验收清单等章节，中英文同步更新）
+
 ### 📍2026-06-24 — v10.5.0-rc.1
 
 - **零配置 SetSource() API**: 自动从 manifest.json 获取更新源地址，无需在启动代码中硬编码 URL
