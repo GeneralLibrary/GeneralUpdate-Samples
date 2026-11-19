@@ -6,7 +6,7 @@
  * Pages are grouped by role:
  *   1. Quick Start          — Beginner cookbook & Tools reference
  *   2. Components           — non-firmware component reference (Core, Bowl,
- *                              Differential, Drivelution, Extension)
+ *                              Differential, Drivelution, Extension, GeneralZip)
  *   3. Help                 — operational / platform-specific guides
  *   4. Release Log          — changelog and roadmap
  */
@@ -41,6 +41,7 @@ const sidebars = {
         'doc/GeneralUpdate.Extension',
         'doc/GeneralUpdate.Avalonia.Android',
         'doc/GeneralUpdate.Maui.Android',
+        'doc/GeneralZip',
         {
           type: 'category',
           label: '执行流程详解',
