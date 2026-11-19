@@ -7,6 +7,25 @@ tags: [log]
 
 # 📒Release log
 
+### 📍2026-11-20 — 更新自检与崩溃诊断体系（待发布）
+
+*以下变更位于主仓库 `feature/diagnostics-server-contract-alignment` 分支（PR #538），尚未随版本发布；正式发布后此处将标注版本号。*
+
+- **升级自检 + 失败自动回滚**: 更新落盘后对新版本执行自检——规则引擎内置进程启动校验（`ProcessLaunchRule`）、关键文件存在校验（`FilePresenceRule`）与确认文件协议（`AckFileRule`，宿主通过 `UpdateSelfCheck` API 写入 Ack）；验证失败由 `RollbackManager` 自动回滚（文件恢复、manifest 版本回写、UpgradeFail 标记），配合 `UpdateVerificationMarker` 生命周期管理与孤儿标记客户端兜底，闭环解决"更新完成 ≠ 应用可用"
+- **崩溃诊断收集与上传**: 新增 Diagnostics 模块——诊断包生成（隐私黑名单过滤、体积上限）、schema-2 outbox 磁盘契约持久化与后台补传扫描；上传对齐 GeneralSpace `/Fault/UploadArtifact` 契约（multipart/form-data + manifest 头字段），幂等 GUID 服务端去重、2xx 后安全删除；失败归因随上报上送（自检报告 phase=Startup、回滚报告 phase=Rollback）
+- **Bowl 组件外置化（架构调整）**: 原内嵌 `GeneralUpdate.Bowl` 类库、测试与专属资源迁移至独立仓库 [GeneralLibrary/Bowl](https://github.com/GeneralLibrary/Bowl) 单独部署维护，本仓库仅保留可选外部集成与真实宿主契约测试；Core 侧提供 `BowlLauncher.EnsureRunningAsync`（单实例 mutex 探测 + 分离启动），`Option.LaunchBowl` 默认关闭；未启用监护的应用无需部署 Bowl
+- **外部监护与自检共存**: 活跃的外部 Bowl 监护拥有更新判定优先权，自检在受监护的运行中让位跳过；`SelfCheckEnabled` 与 `Monitoring.Enabled` 相互独立且默认关闭，默认流程与旧版行为一致；自检仅在未显式指定备份时自动开启备份联动
+- **更新证据持久化**: 更新尝试现场（客户端与升级进程关联的失败证据）在应用目录之外持久化，文件应用以版本化监护就绪握手为门控，文件完成与启动观察分离；沿用旧版 HTTP 上报载荷，失败的上报保留待重试
+- **更新管线加固**: 所有库内 await 路径加 `ConfigureAwait(false)`，UI 宿主阻塞 `.Result` 不再死锁更新；manifest 写入原子化（temp+move / `File.Replace`），杜绝半写状态驱动下一轮版本判定；服务端仅提供全量包时生成全量下载计划而非空计划崩溃；下载改用 64KB 缓冲并逐读重置空闲超时（stall 连接不再占用下载槽位）；`DiffPipeline` 以 O(1) 相对路径索引替代逐文件线性扫描、补丁决策复用 Compare 已算哈希、删除清单优先按相对路径匹配；`EventManager.RemoveListener` CAS 重试闭合并发移除竞态；IPC 解密遇损坏密文降级为 null 而非崩溃；`VersionService` 重试分类区分请求超时（可重试）与调用方取消（不重试）；28 处静态 `Process.Start` 收敛至 `ProcessLauncher` 包装
+- **修复**: watchdog mutex 改为按文档全名（`Global\GeneralUpdate.Bowl.{key}`）探测——此前名称不匹配导致主程序每次启动都重复拉起守护进程；Client+Upgrade 多 track 同发时不再丢失任一 track 的全量包；自检原因上报前对配置凭据脱敏；启动判定上报增加 5 秒上限，上报服务不可达不阻塞恢复流程
+- **测试**: CoreTest 1061 / ExtensionTest 367 / DifferentialTest 113 / DrivelutionTest 274 全部通过
+
+### 📍2026-11-19 — v10.5.0
+
+- **异常处理全面加固**: 审计修复 178 处 catch——链式回退失败不再误置 `AllPackagesSucceeded=true`（避免把失败版本记为已升级）；用户取消不再伪装成"SHA256 校验失败"结果；HTTP 超时恢复重试、调用方取消绝不重试；补丁应用改为原子 `File.Replace`（FAT32/exFAT 降级为覆盖复制），失败保留原文件并清理半写临时文件；扩展宿主依赖安装失败中止父安装；下载队列失败路径可观测、信号量释放增加 Dispose 竞态防护
+- **Tracer 加固**: 日志系统自身绝不抛异常——监听器故障不再顶替调用方正在处理的异常；`TextTraceListener` 逐条 try/catch，瞬时写日志失败不再杀死日志线程（对 Bowl 守护进程致命）
+- **静默路径补全 Trace**: 更新请求配置回退、IPC 加密失败、下载生命周期（启动/断点回退/失败）、DiffPipeline 逐文件失败、临时目录清理跳过、重试、权限/签名助手故障、Linux 包回退、扩展目录清理等此前静默的失败路径现在均有日志记录
+
 ### 📍2026-10-03 — GeneralUpdate.Avalonia v0.0.1-beta.10
 
 - **GeneralUpdate.Avalonia.Android**: 版本校验改为**服务端查询式**（破坏性变更）——`ValidateAsync(currentVersion)` 不再接收 `UpdatePackageInfo`，组件按新增的 `UpdateServerOptions`（`RequestUrl`/`AppKey`/`AppType`/`Platform`/`ProductId`）自行请求服务端，并挑选最新的非冻结完整 APK；`UseJsonEndpoint = true` 时改为 GET 单个 `UpdatePackageInfo` JSON
@@ -17,6 +36,11 @@ tags: [log]
 - **GeneralUpdate.Avalonia.Android**: 新增内建提示消息本地化（`UpdateLanguage.English` / `Chinese`）、`AllowInsecureHttpDownloads`（默认拒绝明文 HTTP 下载）、速度平滑窗口配置；`CreateDefault` 新增 `packageSource` / `installationStore` 注入参数
 - **GeneralUpdate.Avalonia.Android**: HTTP 传输加固——全局认证只发送给与验证端点同源的 HTTPS 下载地址、外部 `HttpClient` 所有权明确且 TLS/代理冲突显式抛 `ArgumentException`、瞬态 HEAD/GET/响应流错误重试续传、操作串行化与 `Dispose` 生命周期约定
 - **文档**: 组件参考、执行流程与实战手册同步至 `v0.0.1-beta.10`（新增服务端查询协议、安装结果闭环、更新前回调、闭环验收清单等章节，中英文同步更新）
+
+### 📍2026-09-19 — v10.5.0-rc.2
+
+- **修复 #534**: `AddListenerUpdatePrecheck` 收到的版本信息丢失 `UpdateLog` 字段（PR #535）——服务端已下发 `updateLog`，却在 `VersionEntry` → `DownloadAsset` → `UpdateInfoEventArgs` 映射链路中被丢弃；`DownloadAsset` 新增 init-only `UpdateLog` 属性（既有构造签名不变），映射链路完整透传
+- **修复 #536**: 下载统计与完成通知从未触发（PR #537）——Client/OSS 策略构造下载编排器时未传入进度事件桥，且事件桥本身不派发旧版统计事件，导致更新成功却收不到 `AddListenerMultiDownloadStatistics` / `AddListenerMultiDownloadCompleted` 回调；现两策略均向默认与注入的编排器传入同步事件桥，旧版统计与通用进度一并派发（速度/ETA 不可用时分别上报空串/0，统计事件保留版本上下文）
 
 ### 📍2026-06-24 — v10.5.0-rc.1
 
