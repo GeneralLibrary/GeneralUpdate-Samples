@@ -10,7 +10,11 @@ sidebar_position: 11
 
 ### 1.1 Introduction
 
-**GeneralZip** is a cross-format, encryption-capable (including Chinese national crypto), event-driven compression library for .NET. It covers nine common archive/compression formats — ZIP, 7z, RAR, TAR, GZ, BZ2, XZ, Zstd, and LZ4 — with one unified API, detecting formats automatically by magic bytes when opening an archive. The whole compress/extract pipeline is event-driven (progress, interactive password prompts, overwrite decisions, error policies), and every API accepts a `CancellationToken`. For encryption, it ships with WinZip AES (universal interoperability) and SM4-GM (Chinese national crypto, implemented as a documented custom ZIP extension), switchable via a single `EncryptionAlgorithm` switch. The core package has zero third-party NuGet dependencies: the SM3/SM4 cryptographic primitives and the TAR container are pure C# implementations locked by GB/T standard test vectors, while 7z/bzip2/xz/zstd/lz4 come from an optional Rust native core that degrades gracefully when missing.
+**GeneralZip** is a cross-format, encryption-capable (including Chinese national crypto), event-driven compression library for .NET. It covers a dozen-plus common archive/compression formats — ZIP, 7z, RAR, TAR, GZ, BZ2, XZ, Zstd, LZ4, Brotli, CPIO, ISO9660, and CAB — with one unified API, detecting formats automatically by magic bytes when opening an archive. The whole compress/extract pipeline is event-driven (progress, interactive password prompts, overwrite decisions, error policies), every API accepts a `CancellationToken`, and parallel compress/extract, stream-to-stream operations, and `IAsyncEnumerable` entry enumeration are supported. For encryption, it ships with WinZip AES (universal interoperability), SM4-GM (Chinese national crypto, implemented as a documented custom ZIP extension), and the SM2-GM national-crypto envelope (public-key sealing, no shared password), switchable via a single `EncryptionAlgorithm` switch. The core package has zero third-party NuGet dependencies: the SM3/SM4/SM2 cryptographic primitives and the TAR/CPIO containers are pure C# implementations locked by GB/T standard test vectors, while 7z/bzip2/xz/zstd/lz4/brotli come from an optional Rust native core that degrades gracefully when missing.
+
+:::info v2.0.0 capability highlights
+One-line `Append` / `Remove` / `Convert`, stream-to-stream overloads, parallel compress/extract, glob entry filters, ZIP extended compression methods (BZip2/Zstd/LZMA), SM2-GM envelope encryption, a pluggable KDF registry, split-volume ZIP, Unix attributes/symlinks, the CPIO/ISO9660/CAB/Brotli formats, and the `gz` command-line tool — see the [release log](../releaselog/GeneralZipReleaselog.md) for the full list.
+:::
 
 **Core Capabilities:**
 
@@ -52,8 +56,8 @@ GeneralZip is a general-purpose compression component **independent of GeneralUp
 | **Version** | `2.0.0` |
 | **Target Frameworks** | `netstandard2.0`, `net8.0` (netstandard2.0 supports .NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+) |
 | **NuGet Dependencies** | Only Microsoft-maintained packages: `Microsoft.Bcl.AsyncInterfaces`, `System.Text.Json` (both netstandard2.0 only); **zero third-party NuGet dependencies in the core package** |
-| **Native Core** | Bundled Rust cdylib `generalzip_native` (provides 7z / RAR / BZ2 / XZ / ZSTD / LZ4); the NuGet package ships prebuilt binaries for win-x64, linux-x64, linux-musl-x64, osx-x64, osx-arm64 |
-| **Degradation Policy** | Without the native core, 7z/RAR and native codecs are unavailable; everything else (ZIP/TAR/TAR.GZ/GZ + all ZIP-family encryption) is unaffected |
+| **Native Core** | Bundled Rust cdylib `generalzip_native` (provides 7z / RAR / BZ2 / XZ / ZSTD / LZ4 / Brotli); the NuGet package ships prebuilt binaries for win-x64, linux-x64, linux-musl-x64, linux-arm64, win-arm64, win-x86, osx-x64, osx-arm64 |
+| **Degradation Policy** | Without the native core, 7z/RAR and native codecs are unavailable; everything else (ZIP/TAR/TAR.GZ/CPIO/GZ + all ZIP-family encryption) is unaffected |
 | **License** | MIT |
 
 ---
@@ -76,23 +80,34 @@ GeneralZip is a general-purpose compression component **independent of GeneralUp
 | Custom Formats | Implement `IArchiveFormat` and register | Advanced | Optional | `GeneralZip.Registry.Register` |
 | Custom Encryption | Implement `IEncryptionProvider` and register | Advanced | Optional | `GeneralZip.Encryption.Register` |
 | Native Formats | 7z (LZMA2, read/write + AES-256), RAR4/RAR5 (read-only) | Advanced | Optional | Requires the Rust native core |
-| Native Codecs | BZ2 / XZ / ZSTD / LZ4, TAR.BZ2 | Advanced | Optional | Requires the Rust native core |
+| Native Codecs | BZ2 / XZ / ZSTD / LZ4 / Brotli, TAR.BZ2 | Advanced | Optional | Requires the Rust native core; callback-streaming transcode, zero temp files |
+| One-Line Append/Remove/Convert | Append entries to an existing archive, delete entries by name/predicate, cross-format conversion | Advanced | Optional | `Append` / `Remove` / `Convert`, read→rewrite semantics |
+| Stream-to-Stream Operations | Stream→Stream compress/extract/test without touching disk | Advanced | Optional | `Compress` / `Extract` / `Test` stream overloads |
+| Parallel Compress/Extract | Entry-level parallelism: staged fragments on write, per-worker reopen on read | Advanced | Optional | `MaxDegreeOfParallelism`, default 1 (serial) |
+| Glob Entry Filters | `**` cross-layer matching and character classes, include/exclude | Advanced | Optional | `IncludePatterns` / `ExcludePatterns` |
+| Split-Volume ZIP | Split into `.001/.002/…` by byte cap; opening `.001` auto-concatenates | Advanced | Optional | `ArchiveWriteOptions.VolumeSize` |
+| Unix Attributes/Symlinks | Unix mode read/write, symlink writing (skipped by default) | Advanced | Optional | `IUnixEntry` / `SymlinkPolicy` / `PreserveUnixAttributes` |
+| Command-Line Tool | `gz` dotnet global tool: a/x/t/l/c/rm/i/detect/keygen | Advanced | Optional | `GeneralZip.Cli` |
 
 ### Format & Encryption Matrix
 
 | Format | Read | Write | Encrypted Read | Encrypted Write | Implementation |
 | --- | :---: | :---: | :---: | :---: | --- |
-| ZIP (Store/Deflate/Zip64) | ✓ | ✓ | ZipCrypto / WinZip AES / **SM4-GM** | ✓ | In-house engine (pure C#) |
+| ZIP (Store/Deflate/**BZip2/Zstd/LZMA**/Zip64) | ✓ | ✓ | ZipCrypto / WinZip AES / **SM4-GM** / **SM2-GM** | ✓ | In-house engine (pure C#) |
 | 7z (LZMA2) | ✓ | ✓ | AES-256 | AES-256 | Rust native core |
 | RAR4/RAR5 | ✓ | — (proprietary) | ✓ password | — | Rust native core |
 | TAR / TAR.GZ | ✓ | ✓ | — | — | In-house ustar + .NET GZipStream |
 | TAR.BZ2 | ✓ | ✓ | — | — | In-house ustar + native core |
 | GZ (.gz/.gzip) | ✓ | ✓ | — | — | .NET built-in GZipStream |
-| BZ2 / XZ / ZSTD / LZ4 | ✓ | ✓ | — | — | Rust native core |
+| BZ2 / XZ / ZSTD / LZ4 / Brotli | ✓ | ✓ | — | — | Rust native core (callback streaming, zero temp files) |
+| CPIO (newc/odc/binary) | ✓ | ✓ (newc) | — | — | In-house container (pure C#) |
+| ISO9660 (+Joliet/Rock Ridge) | ✓ | — (read-only) | — | — | In-house engine (pure C#) |
+| CAB | ✓ (NONE-stored) | — (read-only) | — | — | In-house engine (pure C#) |
 
 **Why some cells are "—":**
 - **RAR cannot be written** — the RAR compression algorithm is proprietary to RARLAB, and the public unrar license explicitly forbids using it to implement a compressor. Reading (including password decryption) is fully supported via the native core.
-- **TAR / GZ / BZ2 / XZ / ZSTD / LZ4 have no encryption column** — these format specifications have no encryption mechanism at all: there is nowhere to store KDF parameters, IVs, or authentication tags. When encryption is needed, encrypt-then-compress at the application layer, or switch to ZIP + WinZip AES / SM4-GM.
+- **TAR / GZ / BZ2 / XZ / ZSTD / LZ4 / Brotli / CPIO have no encryption column** — these format specifications have no encryption mechanism at all: there is nowhere to store KDF parameters, IVs, or authentication tags. When encryption is needed, encrypt-then-compress at the application layer, or switch to ZIP + WinZip AES / SM4-GM / SM2-GM.
+- **ISO9660 / CAB are read-only** — write support is not implemented; only NONE-stored CAB folders are readable (MSZIP/LZX compressed folders are explicitly unsupported).
 - **SM4-GM is ZIP-only by design** — ZIP's extra field mechanism naturally supports third-party extensions, and the container binary spec is fully documented in [docs/CRYPTO-SPEC.md](https://github.com/GeneralLibrary/GeneralZip/blob/main/docs/CRYPTO-SPEC.md). Injecting custom encryption into a standardized container like 7z would produce archives no other tool can open.
 - **ZipCrypto writing is off by default** — legacy 56-bit weak encryption, legacy-compatibility only; enable explicitly with `AllowWeakZipCrypto = true`.
 
@@ -115,6 +130,11 @@ GeneralZip is a general-purpose compression component **independent of GeneralUp
 | `ArchiveComment` | `string?` | `null` | No | — | Archive-level comment (supported by some formats) |
 | `DefaultLastWriteTime` | `DateTimeOffset?` | `null` | No | — | Used when an entry provides no timestamp; null means current time |
 | `Progress` | `IProgress<ArchiveProgress>?` | `null` | No | — | Progress sink; usable in parallel with events |
+| `ZipCompressionMethod` | `ZipCompressionMethodChoice` | `Auto` (Deflate) | No | `Auto(0)` / `Deflate(1)` / `BZip2(2)` / `Zstd(3)` / `Lzma(4)` | ZIP entry compression method (ignored by other formats); extended methods interoperate with 7-Zip / Info-ZIP |
+| `MaxDegreeOfParallelism` | `int` | `1` (serial) | No | ≥1 | Entry-level parallel compression degree (staged fragments on write) |
+| `VolumeSize` | `long` | `0` (no split) | No | Bytes | Split-volume ZIP: split into `.001/.002/…` by cap; opening `.001` auto-concatenates |
+| `KdfAlgorithmId` | `string?` | `null` (algorithm default) | No | KdfId from the registry | KDF provider switch (built-in `SM3-PBKDF2` / `PBKDF2-SHA256`) |
+| `RecipientPublicKey` | `string?` | `null` | Required for SM2-GM encryption | Base64 public key | SM2-GM envelope recipient public key (passwordless write path) |
 | `AllowWeakZipCrypto` | `bool` | `false` | No | `true` / `false` | Whether writing ZipCrypto (weak legacy encryption) is allowed; must be enabled explicitly |
 
 **ArchiveOpenOptions (opening archives):**
@@ -141,6 +161,11 @@ GeneralZip is a general-purpose compression component **independent of GeneralUp
 | `PropagateEventExceptions` | `bool` | `false` | No | `true` / `false` | Whether exceptions thrown by event handlers propagate; by default they are isolated and treated as Skip |
 | `MaxRetryPerEntry` | `int` | `3` | No | Positive integer | Upper limit on consecutive Retry decisions under the `RaiseEvent` policy |
 | `BufferSize` | `int` | `81920` | No | Positive integer | Per-entry copy buffer size (bytes) |
+| `MaxDegreeOfParallelism` | `int` | `1` (serial) | No | ≥1 | Entry-level parallel extraction degree (per-worker archive reopen) |
+| `IncludePatterns` | `IReadOnlyList<string>?` | `null` (all) | No | Glob patterns | Extract only entries matching any pattern (`**` cross-layer, character classes) |
+| `ExcludePatterns` | `IReadOnlyList<string>?` | `null` | No | Glob patterns | Skip entries matching any pattern (takes priority over include patterns) |
+| `SymlinkPolicy` | `SymlinkPolicy` | `Skip` | No | Enum | Symbolic-link entry handling policy (safe-by-default) |
+| `PreserveUnixAttributes` | `bool` | `false` | No | `true` / `false` | Preserve Unix mode bits on extraction (requires entries providing `IUnixEntry`) |
 
 **Event Response Enums:**
 
@@ -170,6 +195,11 @@ GeneralZip is a general-purpose compression component **independent of GeneralUp
 | `ExtractAsync(archivePath, destinationDirectory, configure, extraction, cancellationToken)` | Archive path, destination directory, open-options callback, extraction options, cancellation token | One-line extraction | Returns `ArchiveResult`; sync version is `Extract` |
 | `Test(archivePath, configure, cancellationToken)` | Archive path, open-options callback, cancellation token | Integrity testing | Equivalent to `TestAll` + `ErrorPolicy.SkipAll`, nothing written to disk; supply the password via `configure` for encrypted archives |
 | `DetectFormat(path)` / `DetectFormat(stream)` | File path or stream | Format detection | Magic bytes first, extension fallback; the stream overload restores `Position` after reading; returns `null` when unrecognized |
+| `Append(archivePath, sourcePath, configure, cancellationToken)` / `AppendAsync` | Existing archive path, file/directory to append, write-options callback, cancellation token | Append entries to an existing archive | Read→rewrite semantics; encrypted archives automatically re-encrypt with the inherited algorithm (salt/IV not preserved); read-only formats (RAR) unsupported |
+| `Remove(archivePath, entryNames, predicate, configure, cancellationToken)` / `RemoveAsync` | Archive path, entry-name set, entry predicate, open-options callback, cancellation token | Delete archive entries | Exact names (OrdinalIgnoreCase) and predicate may be combined (union); encrypted archives inherit the algorithm like Append |
+| `Convert(sourceArchive, targetArchive, writeConfigure, openConfigure, cancellationToken)` / `ConvertAsync` | Source archive, target path (extension picks the new format), write/open options callbacks, cancellation token | Cross-format conversion | Encryption does not carry across formats; re-encrypt via `writeConfigure` when needed |
+
+Stream-to-stream overloads are also provided: `Compress(Stream source, Stream output, formatName, entryName, …)`, `Extract(Stream input, destinationDirectory, …)`, and `Test(Stream input, …)` — memory/network stream operations without touching disk.
 
 :::note The facade class shares its name with the namespace
 The static class inside `namespace GeneralZip` is also named `GeneralZip`. To mix with other qualified usages, add `using static GeneralZip.GeneralZip;` and call `CompressAsync()` etc. unqualified.
@@ -629,9 +659,11 @@ NativeCoreLoader.TryLoad();
 | `WinZipAES256` | AES-256-CTR + HMAC-SHA1 (AE-2, extra field 0x9901) | WinZip / 7-Zip / Windows Explorer | First choice for universal interop |
 | `WinZipAES128` | AES-128-CTR + HMAC-SHA1 (AE-2) | Same | Compatibility with older tools |
 | `SM4-GM` | SM4-CTR + SM3-HMAC (extra field 0x4D53) | This component and third parties implementing the same spec | National-crypto compliance (government/finance etc.) |
+| `SM2-GM` | SM2-ECIES envelope (random per-entry data key, extra field 0x4D54) | This component and third parties implementing the same spec | Public-key distribution, no shared password (`RecipientPublicKey`) |
 | `ZipCrypto` | 56-bit (weak) | Nearly all tools | Read legacy archives only; writing requires `AllowWeakZipCrypto = true`, not recommended |
 
-- KDF: WinZip AES uses a fixed PBKDF2-SHA1 1000 rounds; SM4-GM defaults to SM3-PBKDF2 10000 rounds, adjustable via `KdfIterations`
+- KDF: WinZip AES uses a fixed PBKDF2-SHA1 1000 rounds; SM4-GM defaults to SM3-PBKDF2 10000 rounds, adjustable via `KdfIterations`; the KDF registry is pluggable (`IKdfProvider`, built-in `SM3-PBKDF2` / `PBKDF2-SHA256`), with the SM4-GM container selecting by SpecId and staying compatible with old archives
+- The SM2-GM envelope is a **passwordless write path**: a random per-entry data key is sealed with the recipient's SM2 public key (ECIES C1-C3-C2), and the private key is delivered via the password pipeline
 - WinZip AES-192 is not supported (throws `NotSupportedException`) — that strength is rare and offers no real benefit
 - Wrong passwords fail fast via verifier bytes (constant-time comparison); corrupt data is never produced silently
 - 7z encryption (AES-256) is provided by the native core; just set `Password`; RAR encryption is read-only
@@ -648,8 +680,8 @@ NativeCoreLoader.TryLoad();
 Known limitations:
 - RAR is **read-only** — the compression algorithm is proprietary; no compliant implementation can create RAR archives
 - 7z archives do not support appending; each write produces a complete new archive
-- Native zstd compression is a one-shot in-memory API; xz/lz4/bzip2 encode/decode via temporary files
-- SM4-GM is a custom specification (ZIP has no official SM4 standard); interop is limited to this component and third parties implementing the same spec
+- ISO9660 / CAB are read-only; CAB supports only NONE-stored folders (MSZIP/LZX explicitly unsupported)
+- SM4-GM and the SM2-GM envelope are custom specifications (ZIP has no official national-crypto standard); interop is limited to this component and third parties implementing the same specs
 
 ### Performance Reference
 

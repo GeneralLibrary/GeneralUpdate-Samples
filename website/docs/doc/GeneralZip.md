@@ -10,7 +10,11 @@ sidebar_position: 11
 
 ### 1.1 组件概述
 
-**GeneralZip** 是一个跨格式、可加密（含国密）、事件驱动的 .NET 压缩组件。它用一套统一的 API 覆盖 ZIP、7z、RAR、TAR、GZ、BZ2、XZ、Zstd、LZ4 九种常见归档/压缩格式，打开归档时按魔数自动探测格式；压缩与解压全程提供事件系统（进度、交互式取密、覆盖决策、错误策略），全 API 支持 `CancellationToken`。加密方面内置 WinZip AES（通用互通）与 SM4-GM 国密（以文档化自定义 ZIP 扩展实现）两套方案，一个 `EncryptionAlgorithm` 开关切换。核心包零第三方 NuGet 依赖：SM3/SM4 密码学原语与 TAR 容器为纯 C# 实现（GB/T 标准向量锁定），7z/bzip2/xz/zstd/lz4 由可选的 Rust 原生核心提供，核心缺失时优雅降级。
+**GeneralZip** 是一个跨格式、可加密（含国密）、事件驱动的 .NET 压缩组件。它用一套统一的 API 覆盖 ZIP、7z、RAR、TAR、GZ、BZ2、XZ、Zstd、LZ4、Brotli、CPIO、ISO9660、CAB 等十余种常见归档/压缩格式，打开归档时按魔数自动探测格式；压缩与解压全程提供事件系统（进度、交互式取密、覆盖决策、错误策略），全 API 支持 `CancellationToken`，并支持并行压缩/解压、流到流操作与 `IAsyncEnumerable` 条目枚举。加密方面内置 WinZip AES（通用互通）、SM4-GM 国密（文档化自定义 ZIP 扩展）与 SM2-GM 国密信封（公钥封装、无共享口令）三套方案，一个 `EncryptionAlgorithm` 开关切换。核心包零第三方 NuGet 依赖：SM3/SM4/SM2 密码学原语与 TAR/CPIO 容器为纯 C# 实现（GB/T 标准向量锁定），7z/bzip2/xz/zstd/lz4/brotli 由可选的 Rust 原生核心提供，核心缺失时优雅降级。
+
+:::info v2.0.0 新增能力速览
+一行式 `Append` / `Remove` / `Convert`、流到流重载、并行压缩/解压、Glob 条目过滤、ZIP 扩展压缩方法（BZip2/Zstd/LZMA）、SM2-GM 信封加密、可插拔 KDF 注册表、分卷 ZIP、Unix 属性/符号链接、CPIO/ISO9660/CAB/Brotli 格式与 `gz` 命令行工具——完整清单见[发布日志](../releaselog/GeneralZipReleaselog.md)。
+:::
 
 **核心能力：**
 
@@ -52,8 +56,8 @@ GeneralZip 是 GeneralLibrary 家族中**独立于 GeneralUpdate** 的通用压�
 | **版本** | `2.0.0` |
 | **目标框架** | `netstandard2.0`、`net8.0`（netstandard2.0 兼容 .NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+） |
 | **NuGet 依赖** | 仅微软官方维护的包：`Microsoft.Bcl.AsyncInterfaces`、`System.Text.Json`（均仅 netstandard2.0）；**核心包零第三方 NuGet 依赖** |
-| **原生核心** | 内置 Rust cdylib `generalzip_native`（提供 7z / RAR / BZ2 / XZ / ZSTD / LZ4），NuGet 包捆绑 win-x64、linux-x64、linux-musl-x64、osx-x64、osx-arm64 五个平台的预编译产物 |
-| **降级策略** | 原生核心缺失时 7z/RAR 与原生编解码不可用，其余能力（ZIP/TAR/TAR.GZ/GZ + 全部 ZIP 系加密）不受影响 |
+| **原生核心** | 内置 Rust cdylib `generalzip_native`（提供 7z / RAR / BZ2 / XZ / ZSTD / LZ4 / Brotli），NuGet 包捆绑 win-x64、linux-x64、linux-musl-x64、linux-arm64、win-arm64、win-x86、osx-x64、osx-arm64 八个平台的预编译产物 |
+| **降级策略** | 原生核心缺失时 7z/RAR 与原生编解码不可用，其余能力（ZIP/TAR/TAR.GZ/CPIO/GZ + 全部 ZIP 系加密）不受影响 |
 | **许可协议** | MIT |
 
 ---
@@ -76,23 +80,34 @@ GeneralZip 是 GeneralLibrary 家族中**独立于 GeneralUpdate** 的通用压�
 | 自定义格式 | 实现 `IArchiveFormat` 后注册 | 拓展 | 可选 | `GeneralZip.Registry.Register` |
 | 自定义加密 | 实现 `IEncryptionProvider` 后注册 | 拓展 | 可选 | `GeneralZip.Encryption.Register` |
 | 原生格式 | 7z（LZMA2，读写 + AES-256）、RAR4/RAR5（只读） | 拓展 | 可选 | 需 Rust 原生核心 |
-| 原生编解码 | BZ2 / XZ / ZSTD / LZ4、TAR.BZ2 | 拓展 | 可选 | 需 Rust 原生核心 |
+| 原生编解码 | BZ2 / XZ / ZSTD / LZ4 / Brotli、TAR.BZ2 | 拓展 | 可选 | 需 Rust 原生核心；回调式流式转码零临时文件 |
+| 一行式追加/删除/转换 | 向既有归档追加条目、按名称/谓词删除条目、跨格式转换 | 拓展 | 可选 | `Append` / `Remove` / `Convert`，读出→重写语义 |
+| 流到流操作 | Stream→Stream 压缩/解压/测试，无需落盘 | 拓展 | 可选 | `Compress` / `Extract` / `Test` 流重载 |
+| 并行压缩/解压 | 条目级并行，写侧分片、读侧多 worker | 拓展 | 可选 | `MaxDegreeOfParallelism`，默认 1 串行 |
+| Glob 条目过滤 | `**` 跨层匹配、字符类的包含/排除模式 | 拓展 | 可选 | `IncludePatterns` / `ExcludePatterns` |
+| 分卷 ZIP | 按字节上限切分 `.001/.002/…`，打开 `.001` 自动拼接 | 拓展 | 可选 | `ArchiveWriteOptions.VolumeSize` |
+| Unix 属性/符号链接 | Unix mode 读写、符号链接写入（默认跳过） | 拓展 | 可选 | `IUnixEntry` / `SymlinkPolicy` / `PreserveUnixAttributes` |
+| 命令行工具 | `gz` dotnet 全局工具：a/x/t/l/c/rm/i/detect/keygen | 拓展 | 可选 | `GeneralZip.Cli` |
 
 ### 格式与加密矩阵
 
 | 格式 | 读 | 写 | 加密读 | 加密写 | 实现层 |
 | --- | :---: | :---: | :---: | :---: | --- |
-| ZIP（Store/Deflate/Zip64） | ✓ | ✓ | ZipCrypto / WinZip AES / **SM4-GM** | ✓ | 自研引擎（纯 C#） |
+| ZIP（Store/Deflate/**BZip2/Zstd/LZMA**/Zip64） | ✓ | ✓ | ZipCrypto / WinZip AES / **SM4-GM** / **SM2-GM** | ✓ | 自研引擎（纯 C#） |
 | 7z（LZMA2） | ✓ | ✓ | AES-256 | AES-256 | Rust 原生核心 |
 | RAR4/RAR5 | ✓ | —（专有） | ✓ 密码 | — | Rust 原生核心 |
 | TAR / TAR.GZ | ✓ | ✓ | — | — | 自研 ustar + .NET GZipStream |
 | TAR.BZ2 | ✓ | ✓ | — | — | 自研 ustar + 原生核心 |
 | GZ（.gz/.gzip） | ✓ | ✓ | — | — | .NET 内置 GZipStream |
-| BZ2 / XZ / ZSTD / LZ4 | ✓ | ✓ | — | — | Rust 原生核心 |
+| BZ2 / XZ / ZSTD / LZ4 / Brotli | ✓ | ✓ | — | — | Rust 原生核心（回调式流式转码） |
+| CPIO（newc/odc/binary） | ✓ | ✓（newc） | — | — | 自研容器（纯 C#） |
+| ISO9660（+Joliet/Rock Ridge） | ✓ | —（只读） | — | — | 自研引擎（纯 C#） |
+| CAB | ✓（NONE 存储） | —（只读） | — | — | 自研引擎（纯 C#） |
 
 **部分 "—" 的原因：**
 - **RAR 不可写** —— RAR 压缩算法为 RARLAB 专有，公开的 unrar 许可证明确禁止用于实现压缩器；读取（含密码解密）由原生核心完整支持。
-- **TAR / GZ / BZ2 / XZ / ZSTD / LZ4 无加密列** —— 这些格式的规范中不存在加密机制，没有存放 KDF 参数、IV 或认证标签的位置；需要加密时可在应用层"先加密后压缩"，或改用 ZIP + WinZip AES / SM4-GM。
+- **TAR / GZ / BZ2 / XZ / ZSTD / LZ4 / Brotli / CPIO 无加密列** —— 这些格式的规范中不存在加密机制，没有存放 KDF 参数、IV 或认证标签的位置；需要加密时可在应用层"先加密后压缩"，或改用 ZIP + WinZip AES / SM4-GM / SM2-GM。
+- **ISO9660 / CAB 只读** —— 写支持未实现；CAB 仅 NONE 存储文件夹可读（MSZIP/LZX 压缩文件夹明确不支持）。
 - **SM4-GM 仅落地于 ZIP 是刻意设计** —— ZIP 的 extra field 机制天生支持第三方扩展，容器二进制规范已在 [docs/CRYPTO-SPEC.md](https://github.com/GeneralLibrary/GeneralZip/blob/main/docs/CRYPTO-SPEC.md) 完整文档化；向 7z 这类标准化容器注入自定义加密会产出其他工具无法打开的归档。
 - **ZipCrypto 写入默认关闭** —— 56 位弱加密，仅限遗留兼容，需显式设置 `AllowWeakZipCrypto = true`。
 
@@ -115,6 +130,11 @@ GeneralZip 是 GeneralLibrary 家族中**独立于 GeneralUpdate** 的通用压�
 | `ArchiveComment` | `string?` | `null` | 否 | — | 归档级注释（部分格式支持） |
 | `DefaultLastWriteTime` | `DateTimeOffset?` | `null` | 否 | — | 条目未提供时间戳时使用；null 表示当前时间 |
 | `Progress` | `IProgress<ArchiveProgress>?` | `null` | 否 | — | 进度接收器，与事件并行可用 |
+| `ZipCompressionMethod` | `ZipCompressionMethodChoice` | `Auto`（Deflate） | 否 | `Auto(0)` / `Deflate(1)` / `BZip2(2)` / `Zstd(3)` / `Lzma(4)` | ZIP 条目压缩方法（其它格式忽略）；扩展方法与 7-Zip / Info-ZIP 互通 |
+| `MaxDegreeOfParallelism` | `int` | `1`（串行） | 否 | ≥1 | 条目级并行压缩度（写侧分片并行） |
+| `VolumeSize` | `long` | `0`（不分卷） | 否 | 字节数 | 分卷 ZIP：按上限切分 `.001/.002/…`，打开 `.001` 自动拼接 |
+| `KdfAlgorithmId` | `string?` | `null`（算法默认） | 否 | 注册表中的 KdfId | KDF 提供者开关（内置 `SM3-PBKDF2` / `PBKDF2-SHA256`） |
+| `RecipientPublicKey` | `string?` | `null` | SM2-GM 加密时必填 | Base64 公钥 | SM2-GM 信封收件人公钥（无共享口令写路径） |
 | `AllowWeakZipCrypto` | `bool` | `false` | 否 | `true` / `false` | 是否允许写入 ZipCrypto（弱加密，仅遗留兼容场景），显式开启才可写 |
 
 **ArchiveOpenOptions（打开归档）：**
@@ -141,6 +161,11 @@ GeneralZip 是 GeneralLibrary 家族中**独立于 GeneralUpdate** 的通用压�
 | `PropagateEventExceptions` | `bool` | `false` | 否 | `true` / `false` | 事件处理器抛出的异常是否透传；默认隔离并按 Skip 处理 |
 | `MaxRetryPerEntry` | `int` | `3` | 否 | 正整数 | `RaiseEvent` 策略下处理器连选 Retry 的上限 |
 | `BufferSize` | `int` | `81920` | 否 | 正整数 | 单条目复制缓冲区大小（字节） |
+| `MaxDegreeOfParallelism` | `int` | `1`（串行） | 否 | ≥1 | 条目级并行解压度（每 worker 重开归档） |
+| `IncludePatterns` | `IReadOnlyList<string>?` | `null`（全部） | 否 | Glob 模式 | 只解压命中任一模式的条目（`**` 跨层、字符类） |
+| `ExcludePatterns` | `IReadOnlyList<string>?` | `null` | 否 | Glob 模式 | 跳过命中任一模式的条目（优先于包含模式） |
+| `SymlinkPolicy` | `SymlinkPolicy` | `Skip` | 否 | 枚举 | 符号链接条目处理策略（默认安全优先，不落盘链接） |
+| `PreserveUnixAttributes` | `bool` | `false` | 否 | `true` / `false` | 解压保留 Unix mode 位（需条目提供 `IUnixEntry`） |
 
 **事件应答枚举：**
 
@@ -170,6 +195,11 @@ GeneralZip 是 GeneralLibrary 家族中**独立于 GeneralUpdate** 的通用压�
 | `ExtractAsync(archivePath, destinationDirectory, configure, extraction, cancellationToken)` | 归档路径、目标目录、打开选项回调、解压选项、取消令牌 | 一行式解压 | 返回 `ArchiveResult`；同步版为 `Extract` |
 | `Test(archivePath, configure, cancellationToken)` | 归档路径、打开选项回调、取消令牌 | 完整性测试 | 等价 `TestAll` + `ErrorPolicy.SkipAll`，不落盘；加密归档需在 `configure` 中提供口令 |
 | `DetectFormat(path)` / `DetectFormat(stream)` | 文件路径或流 | 格式探测 | 魔数优先、扩展名兜底；流版本读取后恢复 `Position`；无法识别返回 `null` |
+| `Append(archivePath, sourcePath, configure, cancellationToken)` / `AppendAsync` | 既有归档路径、追加的文件/目录、写入选项回调、取消令牌 | 向已有归档追加条目 | 读出→重写语义；加密归档自动继承原算法重新加密（盐/IV 不保留）；只读格式（RAR）不支持 |
+| `Remove(archivePath, entryNames, predicate, configure, cancellationToken)` / `RemoveAsync` | 归档路径、条目名集合、条目谓词、打开选项回调、取消令牌 | 删除归档条目 | 精确名称（OrdinalIgnoreCase）与谓词可同时提供（并集）；加密归档同 Append 继承算法 |
+| `Convert(sourceArchive, targetArchive, writeConfigure, openConfigure, cancellationToken)` / `ConvertAsync` | 源归档、目标路径（扩展名决定新格式）、写入/打开选项回调、取消令牌 | 跨格式转换 | 加密不跨格式保留，需重新加密时经 `writeConfigure` 指定 |
+
+此外提供流到流重载：`Compress(Stream source, Stream output, formatName, entryName, …)`、`Extract(Stream input, destinationDirectory, …)`、`Test(Stream input, …)`，无需落盘即可完成内存/网络流操作。
 
 :::note 门面类与命名空间同名
 `namespace GeneralZip` 中的静态类也叫 `GeneralZip`。若需要与其它类型限定写法混用，可用 `using static GeneralZip.GeneralZip;` 裸调用 `CompressAsync()` 等方法。
@@ -628,9 +658,11 @@ NativeCoreLoader.TryLoad();
 | `WinZipAES256` | AES-256-CTR + HMAC-SHA1（AE-2，extra field 0x9901） | WinZip / 7-Zip / Windows 资源管理器 | 通用互通首选 |
 | `WinZipAES128` | AES-128-CTR + HMAC-SHA1（AE-2） | 同上 | 兼容老旧工具 |
 | `SM4-GM` | SM4-CTR + SM3-HMAC（extra field 0x4D53） | 本组件及实现同一规范的第三方 | 国密合规（政务/金融等） |
+| `SM2-GM` | SM2-ECIES 信封（每条目随机数据密钥，extra field 0x4D54） | 本组件及实现同一规范的第三方 | 公钥分发、无共享口令场景（`RecipientPublicKey`） |
 | `ZipCrypto` | 56 位（弱） | 几乎所有工具 | 仅读取遗留包；写入需 `AllowWeakZipCrypto = true`，不推荐 |
 
-- KDF：WinZip AES 固定 PBKDF2-SHA1 1000 轮；SM4-GM 默认 SM3-PBKDF2 10000 轮，`KdfIterations` 可调
+- KDF：WinZip AES 固定 PBKDF2-SHA1 1000 轮；SM4-GM 默认 SM3-PBKDF2 10000 轮，`KdfIterations` 可调；KDF 注册表可插拔（`IKdfProvider`，内置 `SM3-PBKDF2` / `PBKDF2-SHA256`），SM4-GM 容器按 SpecId 选择、旧包兼容
+- SM2-GM 信封为**无口令写路径**：每条目随机数据密钥以收件人 SM2 公钥封装（ECIES C1-C3-C2），私钥经口令管道下发
 - WinZip AES-192 不受支持（抛 `NotSupportedException`）——该强度罕见且无实际增益
 - 加密归档的错误口令经校验值快速失败（常数时间比较），不会静默产生坏数据
 - 7z 加密（AES-256）由原生核心提供，`Password` 直接可用；RAR 加密仅支持读取
@@ -647,8 +679,8 @@ NativeCoreLoader.TryLoad();
 已知限制：
 - RAR **仅读取**——压缩算法专有，任何合规实现均无法创建 RAR 归档
 - 7z 归档不支持追加，每次写入生成完整新包
-- 原生 zstd 压缩为一次性内存 API；xz/lz4/bzip2 经临时文件整段编解码
-- SM4-GM 为自定义规范（ZIP 无官方 SM4 标准），互通限于本组件与实现同一规范的第三方
+- ISO9660 / CAB 仅读取；CAB 仅支持 NONE 存储文件夹（MSZIP/LZX 明确不支持）
+- SM4-GM 与 SM2-GM 信封为自定义规范（ZIP 无官方国密标准），互通限于本组件与实现同一规范的第三方
 
 ### 性能参考
 
