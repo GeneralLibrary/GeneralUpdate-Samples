@@ -1,0 +1,133 @@
+---
+sidebar_position: 2
+---
+
+![](imgs/GeneralUpdate_h2.png)
+
+## 1. What is GeneralUpdate?
+
+**Updates limitless, upgrades boundless.**
+
+GeneralUpdate is an open-source cross-platform application automatic update component based on .NET Standard 2.0 and licensed under the Apache license.
+
+| Github               | Gitee               | GitCode               |
+| -------------------- | ------------------- | --------------------- |
+| ![](imgs/github.png) | ![](imgs/gitee.png) | ![](imgs/gitcode.jpg) |
+
+:::note 一句话理解
+把 Client（你的主程序）、Upgrade（升级进程）、Server（更新服务）和 Tools（打包工具）拆开，通过 manifest + IPC 加密契约串联成一个**全自动的更新闭环**。
+:::
+
+
+## 2. What does GeneralUpdate offer?
+
+##### Component Features
+
+| Feature                    | Supported      | Notes                                                        |
+| -------------------------- | -------------- | ------------------------------------------------------------ |
+| Resume Download            | Yes            | If an update fails, it will resume downloading the update package the next time it starts. (Effective by default when the component is referenced) |
+| Version-by-Version Update  | Yes            | If the current client version is multiple versions behind the server, it will update one by one based on the release dates of the versions. (Effective by default when the component is referenced) |
+| Binary Differential Update | Yes            | Generates patch files by comparing new and old versions using differential algorithms. (Effective by default when the component is referenced) |
+| Incremental Update         | Yes            | Updates only the files that have changed compared to the previous version and deletes files that do not exist in the current version. (Effective by default when the component is referenced) |
+| Forced Update              | Yes            | Forces an update directly after opening the client.          |
+| Multi-Branch Update        | Yes            | Supports updating different content based on different branches of a product. |
+| Latest Version Push        | Yes            | Implemented based on Signal R to push the latest version.    |
+| Multi-Language             | Yes            | Cross-platform, language-agnostic; can serve as an update "script" for apps written in any language. GeneralUpdate.Tools UI supports Chinese/English toggle. |
+| Skip Update                | Yes            | Supports injecting a pop-up to let users decide whether to update this release; forced updates from the server side will override this. |
+| Mutual Upgrade             | Yes            | The main program can update the upgrade program, and vice versa. |
+| Blacklist                  | Yes            | Skips files and file extensions listed in the blacklist during the update process. |
+| OSS                        | Yes            | Simplifies updates with an independent update mechanism. Only requires placing a `version.json` configuration file on the file server. The component will update and download based on the version information in the configuration file. |
+| Rollback and Backup        | Yes            | Backs up local client files before updating, and rolls back if the client fails to start or crashes. |
+| Driver Update              | Supported      | Cross-platform driver auto-update implemented based on the GeneralUpdate.Drivelution component, supporting Windows and Linux platforms. Provides complete functions including driver validation, backup, rollback, signature verification, and permission management. |
+| Extension Management       | Supported      | VS Code-like extension system implemented based on the GeneralUpdate.Extension component, managing extension plugins such as Lua/Python. Supports extension directory management, remote query, download queue, version compatibility check, multi-platform support, dependency resolution, rollback mechanism, event notification, and other functions. |
+| Custom Method List         | Yes            | Injects a collection of custom methods that execute before the update starts. If any exception occurs while executing the custom method list, it will be notified through exception subscription. (Recommended to check the current software environment before updating) |
+| Multi-Protocol Auth        | Yes            | Supports HMAC-SHA256, Bearer Token, API Key, and HTTP Basic authentication schemes with custom extension. |
+| Silent Update              | Yes            | Background version polling, silent download, and upgrade triggered on process exit — fully transparent to the user. |
+| Concurrent Download        | Yes            | Multi-package concurrent downloads with resume support, SHA256 verification, and configurable concurrency. |
+| File Tree Diff             | Yes            | Directory-level structural comparison between old and new versions, producing an incremental file manifest. |
+| AOT                        | Yes            | Supports AOT compilation and publishing.                     |
+| Authentication             | Supported      | Identity authentication information (token) can be passed in HTTP requests for server resources. |
+
+## 3. What does GeneralUpdate support?
+
+##### .NET Framework
+
+| Framework Name                   | Supported |
+| -------------------------------- | --------- |
+| .NET Core 2.0                    | Yes       |
+| .NET 5 ... to the latest version | Yes       |
+| .NET Framework 4.6.1             | Yes       |
+
+##### UI Framework
+
+| UI Framework Name | Supported                                | Contributor |
+| ----------------- | ---------------------------------------- | ----------- |
+| WPF               | Yes                                      | JusterZhu   |
+| UWP               | Not updatable in store mode              | lindexi     |
+| MAUI              | Currently supports only Android platform | JusterZhu   |
+| Avalonia          | Yes                                      | JusterZhu   |
+| WinUI             | Yes                                      | JusterZhu   |
+| Console           | Yes                                      | JusterZhu   |
+| WinForms          | Yes                                      | JusterZhu   |
+
+##### Operating Systems
+
+| Operating System Name         | Supported | Contributor                                     |
+| ----------------------------- | --------- | ----------------------------------------------- |
+| Windows                       | Yes       | JusterZhu                                       |
+| Linux                         | Yes       | JusterZhu                                       |
+| Android                       | Yes       | JusterZhu                                       |
+| Kylin V10 (Feiteng S2500)     | Yes       | Wei                                             |
+| Kylin V10 (Feiteng FT-2000)   | Yes       | Yao Shengwei                                    |
+| Kylin V10 (x64)               | Yes       | Wei                                             |
+| Ubuntu                        | Yes       | JusterZhu                                       |
+| Huawei EulerOS (Kunpeng)      | Yes       | Yao Shengwei                                    |
+| Loongson (Loongnix LoongArch) | Yes       | Avalonia Chinese Community (Dong Bin Rabbitism) |
+| Apple Mac (M1)                | Yes       | JusterZhu                                       |
+| UOS                           | Yes       | JusterZhu                                       |
+
+## 4. Repositories
+
+| Name                  | Description                | Address                                                      |
+| --------------------- | -------------------------- | ------------------------------------------------------------ |
+| GeneralUpdate         | Automatic Updates          | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate) |
+| GeneralUpdate.Maui    | MAUI Android Auto-Updates  | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate.Maui)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate.Maui)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate-Maui) |
+| GeneralUpdate.Avalonia | Avalonia Android Auto-Updates | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate.Avalonia) |
+| GeneralUpdate.Tools   | Update Patch Creation Tool | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate.Tools)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate.Tools)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate-Tools) |
+| GeneralUpdate-Samples | Usage Examples             | [GitHub](https://github.com/GeneralLibrary/GeneralUpdate-Samples)<br />[Gitee](https://gitee.com/GeneralLibrary/GeneralUpdate-Samples)<br />[GitCode](https://gitcode.com/GeneralLibrary/GeneralUpdate-Samples) |
+
+
+
+## 5. Unified Language
+
+![](imgs/client_server_upgrade.jpg)
+
+Before starting to use GeneralUpdate, we need to understand some basic concepts in the system. Please download the GeneralUpdate-Samples repository and navigate to the `..\GeneralUpdate-Samples\src` directory for better understanding.
+
+| Name                | Description                                                  | Explanation                                                  |
+| ------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Client              | The client being updated.                                    | If you want to update QQ, then QQ is the Client.             |
+| Upgrade             | The upgrade program is an independent process. It should be placed in the same directory as the Client and should not be associated with any business or design during use (or coding); it must remain independently referenced. | QQ cannot update its own files during runtime, so the Upgrade handles this task. |
+| Packet              | Update Patch Package                                         | Gamers often hear the concept of "patches," which are used to update vulnerabilities or content in a game. Similarly, here the update patch package contains files with content differences or new files from the old and new versions, and files that need to be deleted. |
+| Server              | Server Application                                           | Manages version update information, patch packages, and version verification. (In the Samples, only a simple example is provided and does not fulfill these functions; developers need to implement this themselves or purchase the GeneralSpacestation service). |
+| GeneralUpdate.Tools | Update Patch Creation Tool                                   | A packaging tool provided by this open-source project for generating update patch packages (.zip file format). |
+
+:::tip 更新闭环
+典型的更新流程是：**Client → Server（版本检查）→ 下载补丁包 → 写 IPC 加密契约 → 启动 Upgrade → Upgrade 校验 Hash → 解压覆盖 → 启动新版本 Client**。
+:::
+
+##### Quick Start
+
+- Quick Start: https://www.justerzhu.cn/docs/quickstart/quikstart
+- Tutorial Video: https://www.bilibili.com/video/BV1c8iyYZE7P
+- Official Website: https://www.justerzhu.cn/
+- Help Documentation & Official Website Source Repository: https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website/doc
+
+##### Version Number Standards
+
+GeneralUpdate follows [Semantic Versioning](https://semver.org/) core principles (`MAJOR.MINOR.PATCH`), extended with a fourth `Revision` segment (`MAJOR.MINOR.PATCH.REVISION`) for .NET `System.Version` compatibility.
+
+- Semantic Versioning: https://semver.org/
+- NuGet Versioning Guidelines: https://docs.microsoft.com/en-us/nuget/concepts/package-versioning 
+- Assembly Versioning Guidelines: https://docs.microsoft.com/en-us/dotnet/standard/assembly/versioning
+

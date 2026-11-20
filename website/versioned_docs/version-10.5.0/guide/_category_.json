@@ -1,0 +1,8 @@
+{
+  "label": "帮助",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "平台与运维帮助文档。"
+  }
+}

@@ -706,3 +706,27 @@
   .alert { break-inside: avoid; box-shadow: none; }
   .markdown table thead { background: #eee; color: #000; }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   NAVBAR 紧凑化（多产品 + 多版本导航）
+   左侧含产品链接与版本下拉、右侧含搜索/语言等，在 997~1440px
+   宽度下收紧间距并禁止标签换行，避免导航挤压变形。
+   ════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 997px) {
+  /* 标签（含下拉箭头）永不内部换行 */
+  .navbar__link {
+    white-space: nowrap;
+  }
+  /* 收紧每个导航项的水平留白：0.75rem → 0.5rem */
+  .navbar__item {
+    padding: var(--ifm-navbar-item-padding-vertical) 0.5rem;
+  }
+}
+
+/* 中等宽度下收窄搜索框，为左侧产品+版本项让位 */
+@media (min-width: 997px) and (max-width: 1439px) {
+  .navbar__search-input {
+    width: 9.5rem;
+  }
+}

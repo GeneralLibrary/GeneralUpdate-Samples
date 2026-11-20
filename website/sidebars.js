@@ -41,7 +41,6 @@ const sidebars = {
         'doc/GeneralUpdate.Extension',
         'doc/GeneralUpdate.Avalonia.Android',
         'doc/GeneralUpdate.Maui.Android',
-        'doc/GeneralZip',
         {
           type: 'category',
           label: '执行流程详解',
@@ -66,21 +65,8 @@ const sidebars = {
       collapsed: true,
       items: [
         'releaselog/GeneralUpdateReleaselog',
-        'releaselog/GeneralZipReleaselog',
       ],
     },
-  ],
-
-  // ── Agent Skills Sidebar (独立侧边栏) ────────────────────────────
-  agentSkillsSidebar: [
-    'agent-skills/overview',
-    'agent-skills/generalupdate-init',
-    'agent-skills/generalupdate-ui',
-    'agent-skills/generalupdate-strategy',
-    'agent-skills/generalupdate-advanced',
-    'agent-skills/generalupdate-troubleshoot',
-    'agent-skills/generalupdate-migration',
-    'agent-skills/generalupdate-security-audit',
   ],
 };
 

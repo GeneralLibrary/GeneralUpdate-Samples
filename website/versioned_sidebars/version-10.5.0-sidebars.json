@@ -1,0 +1,52 @@
+{
+  "tutorialSidebar": [
+    {
+      "type": "category",
+      "label": "Quick Start",
+      "collapsed": false,
+      "items": [
+        "quickstart/Beginner cookbook",
+        "quickstart/GeneralUpdate.PacketTool",
+        "quickstart/Avalonia Android cookbook",
+        "quickstart/Maui Android cookbook"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Components",
+      "collapsed": false,
+      "items": [
+        "doc/Component Introduction",
+        "doc/GeneralUpdate.Core",
+        "doc/GeneralUpdate.Bowl",
+        "doc/GeneralUpdate.Differential",
+        "doc/GeneralUpdate.Drivelution",
+        "doc/GeneralUpdate.Extension",
+        "doc/GeneralUpdate.Avalonia.Android",
+        "doc/GeneralUpdate.Maui.Android",
+        {
+          "type": "category",
+          "label": "执行流程详解",
+          "collapsible": true,
+          "collapsed": true,
+          "items": [
+            "doc/Core-flow",
+            "doc/Bowl-flow",
+            "doc/Drivelution-flow",
+            "doc/Extension-flow",
+            "doc/Avalonia.Android-flow",
+            "doc/Maui.Android-flow"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Release Log",
+      "collapsed": true,
+      "items": [
+        "releaselog/GeneralUpdateReleaselog"
+      ]
+    }
+  ]
+}

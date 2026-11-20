@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-![](imgs\GeneralUpdate_h2.png)
+![](imgs/GeneralUpdate_h2.png)
 
 ## 1. What is GeneralUpdate?
 
@@ -12,7 +12,7 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 
 | Github               | Gitee               | GitCode               |
 | -------------------- | ------------------- | --------------------- |
-| ![](imgs\github.png) | ![](imgs\gitee.png) | ![](imgs\gitcode.jpg) |
+| ![](imgs/github.png) | ![](imgs/gitee.png) | ![](imgs/gitcode.jpg) |
 
 :::note 一句话理解
 把 Client（你的主程序）、Upgrade（升级进程）、Server（更新服务）和 Tools（打包工具）拆开，通过 manifest + IPC 加密契约串联成一个**全自动的更新闭环**。
@@ -100,7 +100,7 @@ GeneralUpdate is an open-source cross-platform application automatic update comp
 
 ## 5. Unified Language
 
-![](D:\github_project\GeneralUpdate-Samples\website\i18n\en\docusaurus-plugin-content-docs\current\docs\doc\imgs\client_server_upgrade.jpg)
+![](imgs/client_server_upgrade.jpg)
 
 Before starting to use GeneralUpdate, we need to understand some basic concepts in the system. Please download the GeneralUpdate-Samples repository and navigate to the `..\GeneralUpdate-Samples\src` directory for better understanding.
 

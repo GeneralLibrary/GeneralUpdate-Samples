@@ -1,0 +1,13 @@
+{
+  "zipSidebar": [
+    "doc/GeneralZip",
+    {
+      "type": "category",
+      "label": "Release Log",
+      "collapsed": true,
+      "items": [
+        "releaselog/GeneralZipReleaselog"
+      ]
+    }
+  ]
+}

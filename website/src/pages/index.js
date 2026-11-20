@@ -68,13 +68,13 @@ function Features() {
             icon="🚀"
             title="GeneralUpdate"
             description={isEn ? 'Lightweight cross-platform auto-update client' : '轻量级跨平台自动更新客户端'}
-            link="/docs/doc/GeneralSpacestation"
+            link="/docs/doc/Component Introduction"
           />
           <FeatureCard
             icon="🛠️"
             title="Update Tools"
             description={isEn ? 'Automated patch generation and publishing tools' : '自动化补丁包生成与发布工具'}
-            link="/docs/doc/GeneralSpacestation"
+            link="/docs/quickstart/GeneralUpdate.PacketTool"
           />
           <FeatureCard
             icon="💡"

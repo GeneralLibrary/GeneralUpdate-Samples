@@ -7,9 +7,21 @@
     "message": "GeneralLibrary Logo",
     "description": "The alt text of navbar logo"
   },
-  "item.label.Doc": {
-    "message": "文档",
-    "description": "Navbar item with label Doc"
+  "item.label.GeneralUpdate": {
+    "message": "GeneralUpdate",
+    "description": "Navbar item with label GeneralUpdate"
+  },
+  "item.label.GeneralZip": {
+    "message": "GeneralZip",
+    "description": "Navbar item with label GeneralZip"
+  },
+  "item.label.Agent Skills": {
+    "message": "Agent Skills",
+    "description": "Navbar item with label Agent Skills"
+  },
+  "item.label.更多": {
+    "message": "更多",
+    "description": "Navbar item with label 更多"
   },
   "item.label.定价": {
     "message": "定价",

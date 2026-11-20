@@ -52,7 +52,16 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website/doc',
+            'https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website',
+          // 多实例版本化：docs/ 为 GeneralUpdate 实例（默认插件），
+          // versions.json 里第一个版本即 lastVersion，挂在 /docs 基础路由；
+          // 未冻结的 docs/ 为 current（"Next"），挂在 /docs/next。
+          // 发布新版本时执行 npm run docusaurus docs:version <新版本号> 冻结快照。
+          versions: {
+            current: {
+              label: 'Next',
+            },
+          },
         },
         blog: false,
         theme: {
@@ -70,8 +79,47 @@ const config = {
         hashed: true,
         // 启用英文与中文分词（中文基于 nodejieba）
         language: ['en', 'zh'],
+        // 覆盖所有 docs 实例的路由（默认只索引 "docs"）
+        docsRouteBasePath: ['docs', 'zip', 'agent-skills', 'spacestation'],
         // 仅索引 docs（默认），不索引独立页面
         indexPages: false,
+      },
+    ],
+    // ── GeneralZip 独立 docs 实例（独立版本线）──────────────────────
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'generalzip',
+        path: 'generalzip',
+        routeBasePath: 'zip',
+        sidebarPath: './sidebars.generalzip.js',
+        editUrl:
+          'https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website',
+        versions: {
+          current: {
+            label: 'Next',
+          },
+        },
+      },
+    ],
+    // ── Agent Skills 独立 docs 实例（暂不版本化）────────────────────
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'agent-skills',
+        path: 'agent-skills',
+        routeBasePath: 'agent-skills',
+        sidebarPath: './sidebars.agent-skills.js',
+      },
+    ],
+    // ── GeneralSpacestation 独立 docs 实例（单页，不版本化）─────────
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'spacestation',
+        path: 'spacestation',
+        routeBasePath: 'spacestation',
+        sidebarPath: false,
       },
     ],
   ],
@@ -95,14 +143,24 @@ const config = {
         },
         items: [
           {
-            type: 'docSidebar',
-            sidebarId: 'tutorialSidebar',
+            // 产品名做下拉标签，悬停/点开显示已发布版本号（隐藏 Next）
+            // 见 src/theme/NavbarItem/DocsVersionDropdownNavbarItem
+            type: 'docsVersionDropdown',
             position: 'left',
-            label: 'Doc',
+            label: 'GeneralUpdate',
+            hideCurrentVersion: true,
+          },
+          {
+            type: 'docsVersionDropdown',
+            docsPluginId: 'generalzip',
+            position: 'left',
+            label: 'GeneralZip',
+            hideCurrentVersion: true,
           },
           {
             type: 'docSidebar',
             sidebarId: 'agentSkillsSidebar',
+            docsPluginId: 'agent-skills',
             position: 'left',
             label: 'Agent Skills',
           },
@@ -113,7 +171,8 @@ const config = {
             items: [
               {
                 type: 'doc',
-                docId: 'doc/GeneralSpacestation',
+                docId: 'GeneralSpacestation',
+                docsPluginId: 'spacestation',
                 label: 'GeneralSpacestation',
               },
               {
@@ -127,19 +186,23 @@ const config = {
             ],
           },
           {
-            to: '/contact',
-            label: '联系方式',
+            type: 'dropdown',
+            label: '更多',
             position: 'right',
-          },
-          {
-            to: '/corporate-wall',
-            label: '企业墙',
-            position: 'right',
-          },
-          {
-            to: '/oss-partners',
-            label: '开源生态伙伴',
-            position: 'right',
+            items: [
+              {
+                to: '/contact',
+                label: '联系方式',
+              },
+              {
+                to: '/corporate-wall',
+                label: '企业墙',
+              },
+              {
+                to: '/oss-partners',
+                label: '开源生态伙伴',
+              },
+            ],
           },
           {
             type: 'dropdown',
