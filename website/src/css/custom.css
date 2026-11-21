@@ -730,3 +730,21 @@
     width: 9.5rem;
   }
 }
+
+/* ── 文档▾ 分组下拉：产品名分组标题 ─────────────────────────────── */
+.navbar__menu-group {
+  display: block;
+  padding: 0.4rem 0.5rem 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ifm-color-emphasis-600);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.menu__list-item > li .navbar__menu-group,
+ul.menu__list li .navbar__menu-group {
+  cursor: default;
+}

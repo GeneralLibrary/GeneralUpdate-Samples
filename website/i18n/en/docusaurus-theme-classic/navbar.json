@@ -7,13 +7,9 @@
     "message": "GeneralLibrary Logo",
     "description": "The alt text of navbar logo"
   },
-  "item.label.GeneralUpdate": {
-    "message": "GeneralUpdate",
-    "description": "Navbar item with label GeneralUpdate"
-  },
-  "item.label.GeneralZip": {
-    "message": "GeneralZip",
-    "description": "Navbar item with label GeneralZip"
+  "item.label.文档": {
+    "message": "Docs",
+    "description": "Navbar item with label 文档"
   },
   "item.label.Agent Skills": {
     "message": "Agent Skills",

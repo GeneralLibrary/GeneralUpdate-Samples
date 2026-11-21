@@ -505,6 +505,6 @@ Use the Mobile module for Android app releases:
 - [GeneralUpdate.Core](../doc/GeneralUpdate.Core): Client/Upgrade main update flow
 - [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential): Differential algorithm Clean/Dirty modes
 - [GeneralUpdate.Extension](../doc/GeneralUpdate.Extension): Extension install and version management
-- [GeneralUpdate.Avalonia.Android](../doc/GeneralUpdate.Avalonia.Android): Avalonia Android APK update component
-- [GeneralUpdate.Maui.Android](../doc/GeneralUpdate.Maui.Android): MAUI Android APK update component
+- [GeneralUpdate.Avalonia.Android](/avalonia/doc/GeneralUpdate.Avalonia.Android): Avalonia Android APK update component
+- [GeneralUpdate.Maui.Android](/maui/doc/GeneralUpdate.Maui.Android): MAUI Android APK update component
 - [Beginner cookbook](./Beginner%20cookbook): Complete end-to-end update walkthrough

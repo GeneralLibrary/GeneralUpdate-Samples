@@ -82,7 +82,7 @@ const config = {
         // 启用英文与中文分词（中文基于 nodejieba）
         language: ['en', 'zh'],
         // 覆盖所有 docs 实例的路由（默认只索引 "docs"）
-        docsRouteBasePath: ['docs', 'zip', 'agent-skills', 'spacestation'],
+        docsRouteBasePath: ['docs', 'zip', 'maui', 'avalonia', 'agent-skills', 'spacestation'],
         // 仅索引 docs（默认），不索引独立页面
         indexPages: false,
       },
@@ -95,6 +95,40 @@ const config = {
         path: 'generalzip',
         routeBasePath: 'zip',
         sidebarPath: './sidebars.generalzip.js',
+        editUrl:
+          'https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website',
+        versions: {
+          current: {
+            label: 'Next',
+          },
+        },
+      },
+    ],
+    // ── GeneralUpdate.Maui 独立 docs 实例（独立版本线）──────────────
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'gumaui',
+        path: 'maui',
+        routeBasePath: 'maui',
+        sidebarPath: './sidebars.gumaui.js',
+        editUrl:
+          'https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website',
+        versions: {
+          current: {
+            label: 'Next',
+          },
+        },
+      },
+    ],
+    // ── GeneralUpdate.Avalonia 独立 docs 实例（独立版本线）──────────
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'guavalonia',
+        path: 'avalonia',
+        routeBasePath: 'avalonia',
+        sidebarPath: './sidebars.guavalonia.js',
         editUrl:
           'https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website',
         versions: {
@@ -145,19 +179,19 @@ const config = {
         },
         items: [
           {
-            // 产品名做下拉标签，悬停/点开显示已发布版本号（隐藏 Next）
-            // 见 src/theme/NavbarItem/DocsVersionDropdownNavbarItem
-            type: 'docsVersionDropdown',
+            // "文档"分组下拉：产品名做分组标题，悬停/点开才显示已发布版本号
+            // （隐藏未发布的 Next 子项）。版本列表随 docs:version 自动更新，
+            // 发布新版无需改导航。见 src/theme/NavbarItem/ProductsVersionsNavbarItem
+            type: 'custom-productsVersions',
             position: 'left',
-            label: 'GeneralUpdate',
+            label: '文档',
             hideCurrentVersion: true,
-          },
-          {
-            type: 'docsVersionDropdown',
-            docsPluginId: 'generalzip',
-            position: 'left',
-            label: 'GeneralZip',
-            hideCurrentVersion: true,
+            groups: [
+              { label: 'GeneralUpdate', docsPluginId: 'default', basePath: '/docs' },
+              { label: 'GeneralZip', docsPluginId: 'generalzip', basePath: '/zip' },
+              { label: 'GeneralUpdate.Maui', docsPluginId: 'gumaui', basePath: '/maui' },
+              { label: 'GeneralUpdate.Avalonia', docsPluginId: 'guavalonia', basePath: '/avalonia' },
+            ],
           },
           {
             type: 'docSidebar',

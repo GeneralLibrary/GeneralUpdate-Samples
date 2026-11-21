@@ -6,9 +6,7 @@
       "collapsed": false,
       "items": [
         "quickstart/Beginner cookbook",
-        "quickstart/GeneralUpdate.PacketTool",
-        "quickstart/Avalonia Android cookbook",
-        "quickstart/Maui Android cookbook"
+        "quickstart/GeneralUpdate.PacketTool"
       ]
     },
     {
@@ -22,8 +20,6 @@
         "doc/GeneralUpdate.Differential",
         "doc/GeneralUpdate.Drivelution",
         "doc/GeneralUpdate.Extension",
-        "doc/GeneralUpdate.Avalonia.Android",
-        "doc/GeneralUpdate.Maui.Android",
         {
           "type": "category",
           "label": "执行流程详解",
@@ -33,9 +29,7 @@
             "doc/Core-flow",
             "doc/Bowl-flow",
             "doc/Drivelution-flow",
-            "doc/Extension-flow",
-            "doc/Avalonia.Android-flow",
-            "doc/Maui.Android-flow"
+            "doc/Extension-flow"
           ]
         }
       ]

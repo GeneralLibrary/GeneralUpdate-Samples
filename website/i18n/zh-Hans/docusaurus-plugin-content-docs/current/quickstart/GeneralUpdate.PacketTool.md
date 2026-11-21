@@ -519,6 +519,6 @@ Generate Sample 额外输出：
 - [GeneralUpdate.Core](../doc/GeneralUpdate.Core)：Client/Upgrade 更新主流程
 - [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential)：差分算法 Clean/Dirty 模式
 - [GeneralUpdate.Extension](../doc/GeneralUpdate.Extension)：扩展包安装与版本管理
-- [GeneralUpdate.Avalonia.Android](../doc/GeneralUpdate.Avalonia.Android)：Avalonia Android APK 更新组件
-- [GeneralUpdate.Maui.Android](../doc/GeneralUpdate.Maui.Android)：MAUI Android APK 更新组件
+- [GeneralUpdate.Avalonia.Android](/avalonia/doc/GeneralUpdate.Avalonia.Android)：Avalonia Android APK 更新组件
+- [GeneralUpdate.Maui.Android](/maui/doc/GeneralUpdate.Maui.Android)：MAUI Android APK 更新组件
 - [入门实战手册](./Beginner%20cookbook)：从零跑通完整更新闭环

@@ -22,8 +22,6 @@ const sidebars = {
       items: [
         'quickstart/Beginner cookbook',
         'quickstart/GeneralUpdate.PacketTool',
-        'quickstart/Avalonia Android cookbook',
-        'quickstart/Maui Android cookbook',
       ],
     },
 
@@ -39,8 +37,6 @@ const sidebars = {
         'doc/GeneralUpdate.Differential',
         'doc/GeneralUpdate.Drivelution',
         'doc/GeneralUpdate.Extension',
-        'doc/GeneralUpdate.Avalonia.Android',
-        'doc/GeneralUpdate.Maui.Android',
         {
           type: 'category',
           label: '执行流程详解',
@@ -51,8 +47,6 @@ const sidebars = {
             'doc/Bowl-flow',
             'doc/Drivelution-flow',
             'doc/Extension-flow',
-            'doc/Avalonia.Android-flow',
-            'doc/Maui.Android-flow',
           ],
         },
       ],
