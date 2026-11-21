@@ -28,6 +28,7 @@ tags: [log]
 - **发布矩阵扩展**: 原生核心构建矩阵从 5 个 RID 扩展到 8 个（新增 linux-arm64 / win-arm64 / win-x86）
 - **健壮性**: 新增 SharpFuzz 模糊测试 harness 与 `RobustnessTests` 回归（随机/截断/位翻转输入永不崩溃读取器）；互操作 fixtures 由独立实现生成（py7zr、pycdlib、python zipfile、GNU cpio newc）作为读侧兼容锚点
 - **修复**: `NativeTempDecodeStream` 不再在构造时耗尽并关闭调用方来源流（修复非可寻址流 TAR.BZ2 往返 `ObjectDisposedException`）；转码回调异常经 `ExceptionDispatchInfo` 重抛，保留原始堆栈
+- **修复**: 无 UTF-8 标志的 ZIP 条目名/注释按 APPNOTE 约定回退 **IBM437** 解码——此前实现误回退 UTF-8，旧包 GBK/CP437 文件名会解出 U+FFFD 乱码；采用内置 256 项 CP437 单字节表，零第三方依赖、保持 AOT 兼容
 - **文档**: 组件参考文档（中/英）同步更新格式矩阵、加密算法指南与功能列表，并新增本发布日志页
 
 ### 📍2026-11-02 — v0.0.1-beta（首个公开预览）

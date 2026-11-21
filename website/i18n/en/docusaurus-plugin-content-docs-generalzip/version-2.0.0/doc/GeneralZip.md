@@ -134,7 +134,7 @@ GeneralZip is a general-purpose compression component **independent of GeneralUp
 | `MaxDegreeOfParallelism` | `int` | `1` (serial) | No | ≥1 | Entry-level parallel compression degree (staged fragments on write) |
 | `VolumeSize` | `long` | `0` (no split) | No | Bytes | Split-volume ZIP: split into `.001/.002/…` by cap; opening `.001` auto-concatenates |
 | `KdfAlgorithmId` | `string?` | `null` (algorithm default) | No | KdfId from the registry | KDF provider switch (built-in `SM3-PBKDF2` / `PBKDF2-SHA256`) |
-| `RecipientPublicKey` | `string?` | `null` | Required for SM2-GM encryption | Base64 public key | SM2-GM envelope recipient public key (passwordless write path) |
+| `RecipientPublicKey` | `string?` | `null` | Required for SM2-GM encryption | hex public key (`04\|\|X\|\|Y` 130 chars, or `X\|\|Y` 128 chars) | SM2-GM envelope recipient public key (passwordless write path) |
 | `AllowWeakZipCrypto` | `bool` | `false` | No | `true` / `false` | Whether writing ZipCrypto (weak legacy encryption) is allowed; must be enabled explicitly |
 
 **ArchiveOpenOptions (opening archives):**
@@ -186,8 +186,8 @@ GeneralZip is a general-purpose compression component **independent of GeneralUp
 | Property | Type | Description |
 | --- | --- | --- |
 | `Version` | `Version` | Component version (assembly version) |
-| `Registry` | `GeneralZipFormatRegistry` | Default format registry (9 managed formats built in + native 7z/RAR registered by capability bits) |
-| `Encryption` | `GeneralZipEncryptionRegistry` | Default encryption registry (4 algorithms built in) |
+| `Registry` | `GeneralZipFormatRegistry` | Default format registry (13 managed formats built in + native 7z/RAR registered by capability bits) |
+| `Encryption` | `GeneralZipEncryptionRegistry` | Default encryption registry (5 algorithms built in) |
 
 | Method | Parameters | Use Case | Notes |
 | --- | --- | --- | --- |
@@ -311,7 +311,7 @@ ArchiveException (base class, carries EntryName)
 | Exception | Typical Trigger | Handling Advice |
 | --- | --- | --- |
 | `UnsupportedFormatException` | Opening an unrecognized format; `EncryptionAlgorithm` not registered | Tell the user the format is unsupported, or register a custom provider |
-| `NativeCoreMissingException` | Using 7z/RAR/BZ2/XZ/ZSTD/LZ4 without the native core | Deploy the native core per the exception message, or fall back to managed formats |
+| `NativeCoreMissingException` | Using 7z/RAR/BZ2/XZ/ZSTD/LZ4/BROTLI without the native core | Deploy the native core per the exception message, or fall back to managed formats |
 | `PasswordRequiredException` | Encrypted archive with no password supplied and the event gave up | Prompt the user for a password and retry |
 | `InvalidPasswordException` | Wrong password (verifier mismatch) | Prompt again; in event mode the component re-prompts automatically |
 | `ArchiveCorruptedException` | Corrupted transfer, tampering, truncation | Re-acquire the archive after verifying the source |
@@ -333,7 +333,7 @@ GeneralZip's formats and encryption algorithms are registry-driven; built-in imp
 | Progress sink | `IProgress<ArchiveProgress>` | Progress channel in parallel with events | `Progress` property on the option classes |
 | Overwrite/error policies | `OverwritePolicy` / `ErrorPolicy` | Policy enums + event response decisions | `ExtractionOptions` |
 
-Built-in registry contents: the format registry pre-registers ZIP, TAR, TAR.GZ, TAR.BZ2, GZIP, BZ2, XZ, ZSTD, and LZ4, and attaches native 7Z/RAR by capability bits; the encryption registry pre-registers `ZipCrypto`, `WinZipAES128`, `WinZipAES256`, and `SM4-GM`.
+Built-in registry contents: the format registry pre-registers 13 managed formats — ZIP, TAR, TAR.GZ, TAR.BZ2, GZIP, BZ2, XZ, ZSTD, LZ4, Brotli, CPIO, ISO9660, CAB — and attaches native 7Z/RAR by capability bits; the encryption registry pre-registers 5 algorithms: `ZipCrypto`, `WinZipAES128`, `WinZipAES256`, `SM4-GM`, and `SM2-GM`.
 
 ### 4.2 Scenario Examples
 
@@ -620,7 +620,7 @@ GeneralZip does not rely on global configuration files. All behavior is determin
 
 ### Native Core Deployment
 
-The NuGet package bundles prebuilt Rust native cores for five platforms; a regular install requires **no action at all**: the core is probed and loaded automatically on first use (idempotent, thread safe), with no initialization call needed.
+The NuGet package bundles prebuilt Rust native cores for 8 RIDs (Windows x64/ARM64/x86, Linux x64/musl/ARM64, macOS x64/ARM64); a regular install requires **no action at all**: the core is probed and loaded automatically on first use (idempotent, thread safe), with no initialization call needed.
 
 For manual deployment, place `generalzip_native.dll` (`.so` / `.dylib`) in any of the following locations:
 
@@ -642,8 +642,8 @@ NativeCoreLoader.TryLoad();
 
 | Scenario | Behavior |
 | --- | --- |
-| Native core available | ZIP/TAR/TAR.GZ/TAR.BZ2/GZ + 7z/RAR + BZ2/XZ/ZSTD/LZ4, all capabilities available |
-| Native core missing | ZIP/TAR/TAR.GZ/GZ and all ZIP-family encryption keep working; 7z/RAR/BZ2/XZ/ZSTD/LZ4 throw `NativeCoreMissingException` (message includes deployment guidance) |
+| Native core available | ZIP/TAR/TAR.GZ/TAR.BZ2/GZ + 7z/RAR + BZ2/XZ/ZSTD/LZ4/BROTLI, all capabilities available |
+| Native core missing | ZIP/TAR/TAR.GZ/GZ and all ZIP-family encryption keep working; 7z/RAR/BZ2/XZ/ZSTD/LZ4/BROTLI throw `NativeCoreMissingException` (message includes deployment guidance) |
 
 ### Entry Name Encoding & Chinese File Names
 
@@ -672,8 +672,8 @@ NativeCoreLoader.TryLoad();
 
 | Platform | Native Core | Notes |
 | --- | --- | --- |
-| Windows (win-x64) | Bundled | Full capabilities |
-| Linux (linux-x64 / linux-musl-x64) | Bundled | musl suits Alpine and similar distributions |
+| Windows (win-x64 / win-arm64 / win-x86) | Bundled | Full capabilities |
+| Linux (linux-x64 / linux-musl-x64 / linux-arm64) | Bundled | musl suits Alpine and similar distributions |
 | macOS (osx-x64 / osx-arm64) | Bundled | Full capabilities (including Apple Silicon) |
 | Other platforms | None | Graceful degradation to managed capabilities (ZIP/TAR/TAR.GZ/GZ + ZIP-family encryption) |
 

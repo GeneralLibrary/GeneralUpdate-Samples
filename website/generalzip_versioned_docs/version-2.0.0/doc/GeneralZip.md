@@ -134,7 +134,7 @@ GeneralZip 是 GeneralLibrary 家族中**独立于 GeneralUpdate** 的通用压�
 | `MaxDegreeOfParallelism` | `int` | `1`（串行） | 否 | ≥1 | 条目级并行压缩度（写侧分片并行） |
 | `VolumeSize` | `long` | `0`（不分卷） | 否 | 字节数 | 分卷 ZIP：按上限切分 `.001/.002/…`，打开 `.001` 自动拼接 |
 | `KdfAlgorithmId` | `string?` | `null`（算法默认） | 否 | 注册表中的 KdfId | KDF 提供者开关（内置 `SM3-PBKDF2` / `PBKDF2-SHA256`） |
-| `RecipientPublicKey` | `string?` | `null` | SM2-GM 加密时必填 | Base64 公钥 | SM2-GM 信封收件人公钥（无共享口令写路径） |
+| `RecipientPublicKey` | `string?` | `null` | SM2-GM 加密时必填 | hex 公钥（`04\|\|X\|\|Y` 130 字符或 `X\|\|Y` 128 字符） | SM2-GM 信封收件人公钥（无共享口令写路径） |
 | `AllowWeakZipCrypto` | `bool` | `false` | 否 | `true` / `false` | 是否允许写入 ZipCrypto（弱加密，仅遗留兼容场景），显式开启才可写 |
 
 **ArchiveOpenOptions（打开归档）：**
@@ -186,8 +186,8 @@ GeneralZip 是 GeneralLibrary 家族中**独立于 GeneralUpdate** 的通用压�
 | 属性名 | 数据类型 | 说明 |
 | --- | --- | --- |
 | `Version` | `Version` | 组件版本（程序集版本） |
-| `Registry` | `GeneralZipFormatRegistry` | 默认格式注册表（内置 9 种托管格式 + 原生 7z/RAR 按能力位自动注册） |
-| `Encryption` | `GeneralZipEncryptionRegistry` | 默认加密注册表（内置 4 种算法） |
+| `Registry` | `GeneralZipFormatRegistry` | 默认格式注册表（内置 13 种托管格式 + 原生 7z/RAR 按能力位自动注册） |
+| `Encryption` | `GeneralZipEncryptionRegistry` | 默认加密注册表（内置 5 种算法） |
 
 | 方法名 | 入参明细 | 使用场景 | 注意事项 |
 | --- | --- | --- | --- |
@@ -311,7 +311,7 @@ ArchiveException（基类，携带 EntryName）
 | 异常类型 | 典型触发场景 | 处理建议 |
 | --- | --- | --- |
 | `UnsupportedFormatException` | 打开不识别的格式；`EncryptionAlgorithm` 未注册 | 提示用户格式不支持，或注册自定义提供者 |
-| `NativeCoreMissingException` | 使用 7z/RAR/BZ2/XZ/ZSTD/LZ4 但核心缺失 | 按异常消息部署原生核心，或降级使用托管格式 |
+| `NativeCoreMissingException` | 使用 7z/RAR/BZ2/XZ/ZSTD/LZ4/BROTLI 但核心缺失 | 按异常消息部署原生核心，或降级使用托管格式 |
 | `PasswordRequiredException` | 加密归档未提供口令且事件放弃 | 引导用户输入口令后重试 |
 | `InvalidPasswordException` | 口令错误（校验值不匹配） | 提示重输；事件模式下自动重新询问 |
 | `ArchiveCorruptedException` | 传输损坏、篡改、截断 | 校验源完整性后重新获取归档 |
@@ -333,7 +333,7 @@ GeneralZip 的格式与加密算法均为注册表驱动，内置实现与第三
 | 进度接收 | `IProgress<ArchiveProgress>` | 与事件并行的进度通道 | 选项类 `Progress` 属性 |
 | 覆盖/错误策略 | `OverwritePolicy` / `ErrorPolicy` | 策略枚举 + 事件应答决策 | `ExtractionOptions` |
 
-内置注册清单：格式注册表预注册 ZIP、TAR、TAR.GZ、TAR.BZ2、GZIP、BZ2、XZ、ZSTD、LZ4，并按能力位自动挂接原生 7Z/RAR；加密注册表预注册 `ZipCrypto`、`WinZipAES128`、`WinZipAES256`、`SM4-GM`。
+内置注册清单：格式注册表预注册 ZIP、TAR、TAR.GZ、TAR.BZ2、GZIP、BZ2、XZ、ZSTD、LZ4、Brotli、CPIO、ISO9660、CAB 共 13 种托管格式，并按能力位自动挂接原生 7Z/RAR；加密注册表预注册 `ZipCrypto`、`WinZipAES128`、`WinZipAES256`、`SM4-GM`、`SM2-GM` 共 5 种算法。
 
 ### 4.2 分场景示例
 
@@ -619,7 +619,7 @@ GeneralZip 不依赖全局配置文件。所有行为通过选项对象（`Archi
 
 ### 原生核心部署
 
-NuGet 包已捆绑五个平台的预编译 Rust 原生核心，常规安装**无需任何操作**：首次使用时自动探测并加载（幂等、线程安全），无需任何初始化调用。
+NuGet 包已捆绑 8 个 RID（Windows x64/ARM64/x86、Linux x64/musl/ARM64、macOS x64/ARM64）的预编译 Rust 原生核心，常规安装**无需任何操作**：首次使用时自动探测并加载（幂等、线程安全），无需任何初始化调用。
 
 手动部署时，将 `generalzip_native.dll`（`.so` / `.dylib`）放到以下任一位置：
 
@@ -641,8 +641,8 @@ NativeCoreLoader.TryLoad();
 
 | 场景 | 行为 |
 | --- | --- |
-| 原生核心可用 | ZIP/TAR/TAR.GZ/TAR.BZ2/GZ + 7z/RAR + BZ2/XZ/ZSTD/LZ4 全能力可用 |
-| 原生核心缺失 | ZIP/TAR/TAR.GZ/GZ 与全部 ZIP 系加密照常可用；7z/RAR/BZ2/XZ/ZSTD/LZ4 抛 `NativeCoreMissingException`（消息含部署指引） |
+| 原生核心可用 | ZIP/TAR/TAR.GZ/TAR.BZ2/GZ + 7z/RAR + BZ2/XZ/ZSTD/LZ4/BROTLI 全能力可用 |
+| 原生核心缺失 | ZIP/TAR/TAR.GZ/GZ 与全部 ZIP 系加密照常可用；7z/RAR/BZ2/XZ/ZSTD/LZ4/BROTLI 抛 `NativeCoreMissingException`（消息含部署指引） |
 
 ### 条目名编码与中文文件名
 
@@ -671,8 +671,8 @@ NativeCoreLoader.TryLoad();
 
 | 平台 | 原生核心 | 说明 |
 | --- | --- | --- |
-| Windows（win-x64） | 捆绑 | 完整能力 |
-| Linux（linux-x64 / linux-musl-x64） | 捆绑 | musl 适用于 Alpine 等发行版 |
+| Windows（win-x64 / win-arm64 / win-x86） | 捆绑 | 完整能力 |
+| Linux（linux-x64 / linux-musl-x64 / linux-arm64） | 捆绑 | musl 适用于 Alpine 等发行版 |
 | macOS（osx-x64 / osx-arm64） | 捆绑 | 完整能力（含 Apple Silicon） |
 | 其它平台 | 无 | 优雅降级为纯托管能力（ZIP/TAR/TAR.GZ/GZ + ZIP 系加密） |
 
