@@ -202,3 +202,7 @@ FakesAssemblies/
 
 # Reasonix local tool state
 .reasonix/
+
+# Tool-generated local data (security scanner / CLI session state)
+.mimosa/
+.zcode/
