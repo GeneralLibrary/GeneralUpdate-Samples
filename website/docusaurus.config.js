@@ -13,7 +13,9 @@ const config = {
   favicon: 'img/general.ico',
 
   // Set the production url of your site here
-  url: 'https://your-docusaurus-site.example.com',
+  // 部署目标：自有 Azure VM nginx 静态站（见 .github/workflows/deploy-docs.yml 与 ServerInfo 仓库）。
+  // 此值用于 canonical/og:url 与 sitemap 生成，必须与实际域名一致。
+  url: 'https://www.justerzhu.cn',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
