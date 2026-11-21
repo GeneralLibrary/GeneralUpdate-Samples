@@ -47,7 +47,7 @@ GeneralUpdate.Core 是整个生态的**核心引擎**。它不负责生成补丁
 
 | 项目 | 说明 |
 | --- | --- |
-| **版本** | `10.5.0-beta.7` |
+| **版本** | `10.5.0` |
 | **目标框架** | `netstandard2.0`; `net8.0`; `net10.0`（兼容 .NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+；`net8.0`+ 支持 AOT/Trim） |
 | **依赖包** | `GeneralUpdate.Differential`（差分算法）、`System.Text.Json`、`Microsoft.AspNetCore.SignalR.Client` |
 | **兼容性** | Windows / Linux / macOS；支持 x86 / x64 / ARM64 |
@@ -83,7 +83,7 @@ GeneralUpdate.Core 是整个生态的**核心引擎**。它不负责生成补丁
 | 多协议认证 | 支持 HMAC-SHA256、Bearer Token、API Key、HTTP Basic 四种认证方案 | 基础 | 可选 | 通过 `AuthScheme` 枚举或 `HttpAuth<T>()` 自定义 |
 | 跨平台策略 | 内置 Windows / Linux / macOS 三种 OS 级更新策略，自动选择 | 基础 | 自动 | 根据运行时平台自动选择对应策略 |
 | 文件树比对 | 新旧版本目录结构级差异对比，生成增量文件清单 | 基础 | 可选 | `FileTree` / `FileTreeDiffer` / `FileTreeComparer` |
-| AOT/Trim 兼容 | `net8.0`+ 目标框架支持 AOT 发布和裁剪，含源生成 JSON 序列化上下文 | 基础 | 可选 | `JsonContext` 命名空间下 9 个序列化上下文 |
+| AOT/Trim 兼容 | `net8.0`+ 目标框架支持 AOT 发布和裁剪，含源生成 JSON 序列化上下文 | 基础 | 可选 | `JsonContext` 命名空间下 10 个序列化上下文 |
 
 ---
 
@@ -97,8 +97,8 @@ GeneralUpdate.Core 是整个生态的**核心引擎**。它不负责生成补丁
 | --- | --- | --- | --- | --- | --- |
 | `UpdateUrl` | `string` | — | 是 | 有效绝对 URL | 更新检查 API 地址 |
 | `UpdateAppName` | `string` | `"Update.exe"` | 推荐 | 有效文件名 | 升级程序文件名，如与实际不同必须显式设置 |
-| `MainAppName` | `string` | — | 推荐 | 有效文件名 | 主程序文件名，用于重启和识别 |
-| `ClientVersion` | `string` | — | 推荐 | SemVer 格式 | 当前主程序版本 |
+| `MainAppName` | `string` | `"Client"` | 推荐 | 有效文件名 | 主程序文件名，用于重启和识别 |
+| `ClientVersion` | `string` | `"1.0.0"` | 推荐 | SemVer 格式 | 当前主程序版本 |
 | `AppSecretKey` | `string` | — | 推荐 | — | 应用密钥，用于服务端认证 |
 | `InstallPath` | `string` | `AppDomain.CurrentDomain.BaseDirectory` | 可选 | 有效目录路径 | 应用安装根目录 |
 | `ReportUrl` | `string` | `null` | 可选 | 有效绝对 URL | 更新状态上报 API |
@@ -107,9 +107,9 @@ GeneralUpdate.Core 是整个生态的**核心引擎**。它不负责生成补丁
 | `ProductId` | `string` | — | 可选 | — | 产品标识，多产品时用于区分 |
 | `UpdatePath` | `string` | `InstallPath` | 可选 | 有效目录路径 | 升级程序所在目录 |
 | `Bowl` | `string` | `null` | 可选 | 有效文件名 | 更新前需关闭的辅助进程名 |
-| `Scheme` | `string` | `null` | 可选 | `"Bearer"` 等 | 认证方案（已废弃，推荐使用 `AuthScheme`） |
+| `Scheme` | `string` | `null` | 可选 | `"Bearer"` 等 | 认证方案 |
 | `Token` | `string` | `null` | 可选 | — | 认证令牌 |
-| `AuthScheme` | `AuthScheme?` | `null` | 可选 | `Hmac`, `Bearer`, `ApiKey`, `Basic` | 认证方案枚举，设置后自动选择对应 Provider |
+| `AuthScheme` | `AuthScheme` | `Hmac` | 可选 | `Hmac`, `Bearer`, `ApiKey`, `Basic` | 认证方案枚举，设置后自动选择对应 Provider |
 | `BasicUsername` | `string` | `null` | 可选 | — | HTTP Basic 认证用户名（`AuthScheme = Basic` 时必填） |
 | `BasicPassword` | `string` | `null` | 可选 | — | HTTP Basic 认证密码（`AuthScheme = Basic` 时必填） |
 | `Files` | `List<string>` | `null` | 可选 | — | 更新时跳过的指定文件列表 |
@@ -127,7 +127,7 @@ GeneralUpdate.Core 是整个生态的**核心引擎**。它不负责生成补丁
 | `Option.Format` | `Format` | `Zip` | 可选 | `Zip` | 更新包格式 |
 | `Option.DownloadTimeout` | `int?` | `30` | 可选 | 正整数（秒） | 下载超时时间 |
 | `Option.PatchEnabled` | `bool?` | `true` | 可选 | `true` / `false` | 是否启用差分补丁 |
-| `Option.BackupEnabled` | `bool?` | `true` | 可选 | `true` / `false` | 更新前是否备份被替换文件 |
+| `Option.BackupEnabled` | `bool?` | `false` | 可选 | `true` / `false` | 更新前是否备份被替换文件（默认关闭） |
 | `Option.Silent` | `bool` | `false` | 可选 | `true` / `false` | 是否启用静默轮询更新 |
 | `Option.SilentPollIntervalMinutes` | `int` | `60` | 可选 | 正整数 | 静默模式轮询间隔（分钟） |
 | `Option.LaunchClientAfterUpdate` | `bool` | `true` | 可选 | `true` / `false` | 升级后是否启动主程序 |
@@ -150,14 +150,14 @@ GeneralUpdate.Core 是整个生态的**核心引擎**。它不负责生成补丁
 | `SetSource(...)` | `updateUrl`, `appSecretKey`, `reportUrl?`, `scheme?`, `token?`, `authScheme?`, `basicUsername?`, `basicPassword?`, `installPath?` | 轻配置入口，配合 manifest 使用 | 只提供服务端入口和密钥，身份信息由 manifest 补齐；支持 HMAC / Bearer / Basic 多种认证方式 |
 | `SetOption(Option<T>, T)` | `option` — 选项键, `value` — 选项值 | 设置运行时选项 | 传入 `null` 给可空选项会移除当前设置 |
 | `UseDiffPipeline(Action<DiffPipelineBuilder>)` | `configure` — 差分管道配置委托 | 替换或调整差分补丁管道 | 未调用时使用默认配置 |
-| `AddListenerUpdateInfo(...)` | `EventHandler<UpdateInfoEventArgs>` | 接收服务端版本信息 | 无更新时也会触发（`Info.Code = 404`） |
+| `AddListenerUpdateInfo(...)` | `Action<object, UpdateInfoEventArgs>` | 接收服务端版本信息 | 无更新时也会触发（`Info.Code = 404`） |
 | `AddListenerUpdatePrecheck(...)` | `Func<UpdateInfoEventArgs, bool>` | 下载前预检查 | 返回 `true` 表示跳过非强制更新 |
-| `AddListenerProgress(...)` | `EventHandler<ProgressEventArgs>` | 更新进度条、状态文本 | 同时包含下载进度和差分进度 |
-| `AddListenerMultiDownloadCompleted(...)` | `EventHandler<MultiDownloadCompletedEventArgs>` | 标记单个资源下载完成 | 不要当做"全部下载完成" |
-| `AddListenerMultiAllDownloadCompleted(...)` | `EventHandler<MultiAllDownloadCompletedEventArgs>` | 全部下载完成后的后续处理 | 包含失败汇总 `FailedVersions` |
-| `AddListenerMultiDownloadError(...)` | `EventHandler<MultiDownloadErrorEventArgs>` | 记录单个资源下载失败 | 整体成功仍以 `MultiAllDownloadCompleted` 为准 |
-| `AddListenerMultiDownloadStatistics(...)` | `EventHandler<MultiDownloadStatisticsEventArgs>` | 展示下载速度和剩余时间 | 新代码优先使用 `AddListenerProgress` |
-| `AddListenerException(...)` | `EventHandler<ExceptionEventArgs>` | 上报异常、展示错误信息 | 仅通知，不自动重试 |
+| `AddListenerProgress(...)` | `Action<object, ProgressEventArgs>` | 更新进度条、状态文本 | 同时包含下载进度和差分进度 |
+| `AddListenerMultiDownloadCompleted(...)` | `Action<object, MultiDownloadCompletedEventArgs>` | 标记单个资源下载完成 | 不要当做"全部下载完成" |
+| `AddListenerMultiAllDownloadCompleted(...)` | `Action<object, MultiAllDownloadCompletedEventArgs>` | 全部下载完成后的后续处理 | 包含失败汇总 `FailedVersions` |
+| `AddListenerMultiDownloadError(...)` | `Action<object, MultiDownloadErrorEventArgs>` | 记录单个资源下载失败 | 整体成功仍以 `MultiAllDownloadCompleted` 为准 |
+| `AddListenerMultiDownloadStatistics(...)` | `Action<object, MultiDownloadStatisticsEventArgs>` | 展示下载速度和剩余时间 | 新代码优先使用 `AddListenerProgress` |
+| `AddListenerException(...)` | `Action<object, ExceptionEventArgs>` | 上报异常、展示错误信息 | 仅通知，不自动重试 |
 | `AddEventListener<TListener>()` | 泛型参数 — 监听器类型 | 批量注册事件监听器 | `T` 必须实现 `IUpdateEventListener`，推荐继承 `UpdateEventListenerBase` |
 | `Hooks<T>()` | 泛型参数 — Hook 类型 | 注册生命周期钩子 | `T` 必须实现 `IUpdateHooks` 且有无参构造函数 |
 | `UpdateReporter<T>()` | 泛型参数 — Reporter 类型 | 注册状态上报器 | `T` 必须实现 `IUpdateReporter` |
@@ -775,6 +775,7 @@ await hub.DisposeAsync();
 using GeneralUpdate.Core;
 using GeneralUpdate.Core.Configuration;
 using GeneralUpdate.Core.Download;
+using GeneralUpdate.Core.Download.Models;
 using GeneralUpdate.Core.Download.Reporting;
 using GeneralUpdate.Core.Event;
 using GeneralUpdate.Core.Hooks;
@@ -862,7 +863,7 @@ var bootstrap = new GeneralUpdateBootstrap()
     .UseDiffPipeline(configurePipeline)
     .AddListenerUpdateInfo((_, e) =>
     {
-        if (e.Info?.Code == "404")
+        if (e.Info?.Code == 404)
         {
             Console.WriteLine("Already up to date.");
             return;
@@ -896,8 +897,10 @@ var bootstrap = new GeneralUpdateBootstrap()
         else
         {
             Console.WriteLine($"Download completed with {e.FailedVersions.Count} failure(s):");
-            foreach (var (asset, error) in e.FailedVersions)
-                Console.WriteLine($"  - {asset.Name}: {error}");
+            // FailedVersions 元素类型为 (object, string)，实际对象为 DownloadAsset
+            foreach (var (failed, error) in e.FailedVersions)
+                if (failed is DownloadAsset asset)
+                    Console.WriteLine($"  - {asset.Name}: {error}");
         }
     })
     .AddListenerException((_, e) =>
@@ -1015,7 +1018,7 @@ OSS 模式没有服务端 API，以下与认证、上报、日志相关的字段
 | --- | --- | --- |
 | `Option.AppType` | — | 必填，指定当前进程角色：`OssClient`（主程序）或 `OssUpgrade`（升级程序） |
 | `Option.Encoding` | `UTF8` | 更新包解压时的字符编码 |
-| `Option.DownloadTimeout` | `60` | 更新包下载超时时间（秒） |
+| `Option.DownloadTimeout` | `30` | 更新包下载超时时间（秒） |
 
 **主程序示例（`AppType.OssClient`）：**
 
@@ -1148,19 +1151,20 @@ GeneralTracer.Dispose();
 
 ### AOT / Trim 兼容性
 
-`net8.0` 和 `net10.0` 目标框架支持 AOT 发布和裁剪。Core 在 `JsonContext` 命名空间下提供了 9 个源生成 JSON 序列化上下文，覆盖所有配置和模型类型的序列化需求，避免反射导致的裁剪问题：
+`net8.0` 和 `net10.0` 目标框架支持 AOT 发布和裁剪。Core 在 `JsonContext` 命名空间下提供了 10 个源生成 JSON 序列化上下文，覆盖所有配置和模型类型的序列化需求，避免反射导致的裁剪问题：
 
 | 上下文类 | 覆盖类型 |
 | --- | --- |
-| `BaseResponseJsonContext` | `BaseResponseDTO<T>`、`VersionRespDTO` |
-| `VersionEntryJsonContext` | `VersionEntry`、`VersionIdentity` |
-| `UpdateRequestJsonContext` | `UpdateRequest`、`UpdateConfiguration` |
+| `FileNodesJsonContext` | `List<FileNode>` |
+| `HttpParameterJsonContext` | `bool`、`bool?`、`int`、`int?`、`string`、`Dictionary<string, object>`、`UpdateRequest`、`ManifestInfo` |
+| `OssConfigurationJsonContext` | `OssConfiguration` |
+| `OssVersionRecordJsonContext` | `List<OssVersionRecord>` |
 | `ProcessContractJsonContext` | `ProcessContract` |
-| `ManifestInfoJsonContext` | `ManifestInfo` |
-| `OssVersionRecordJsonContext` | `OssVersionRecord` |
-| `DownloadAssetJsonContext` | `DownloadAsset` |
-| `BlackPolicyJsonContext` | `BlackPolicy` |
 | `PushPayloadJsonContext` | `PushPayload` |
+| `ReportRespJsonContext` | `BaseResponseDTO<bool>` |
+| `UpdateReportJsonContext` | `UpdateReport` |
+| `UpdateRequestConfigJsonContext` | `UpdateRequest` |
+| `VersionRespJsonContext` | `VersionRespDTO` |
 
 ### 进程环境变量（IPC 辅助）
 
@@ -1174,10 +1178,10 @@ GeneralTracer.Dispose();
 using GeneralUpdate.Core.Configuration;
 
 // 设置环境变量（Client 端写入）
-Environments.Set("UpgradeFail", "2.0.0");
+Environments.SetEnvironmentVariable("UpgradeFail", "2.0.0");
 
 // 读取环境变量（Upgrade 端读取）
-var failedVersion = Environments.Get("UpgradeFail");
+var failedVersion = Environments.GetEnvironmentVariable("UpgradeFail");
 ```
 
 ---

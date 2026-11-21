@@ -51,7 +51,7 @@ sidebar_position: 7
 
 | 项目 | 说明 |
 | --- | --- |
-| **版本** | `10.5.0-beta.7` |
+| **版本** | `10.5.0` |
 | **目标框架** | `netstandard2.0`（兼容 .NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+） |
 | **依赖包** | `Microsoft.Extensions.DependencyInjection`、`Microsoft.Extensions.Logging.Abstractions`、`Microsoft.Extensions.Options`、`Newtonsoft.Json`、`System.Net.Http`、`System.IO.Compression`、`System.IO.Compression.ZipFile` |
 | **兼容性** | 所有支持 .NET Standard 2.0 的平台 |
@@ -122,12 +122,15 @@ sidebar_position: 7
 | --- | --- | --- | --- | --- |
 | `Id` | `string?` | `null` | 可选 | 按 ID 精确查询 |
 | `Name` | `string?` | `null` | 可选 | 按名称模糊匹配 |
+| `Version` | `string?` | `null` | 可选 | 按版本精确匹配 |
 | `Publisher` | `string?` | `null` | 可选 | 按发布者模糊匹配 |
 | `Category` | `string?` | `null` | 可选 | 按分类筛选 |
 | `Platform` | `TargetPlatform?` | `null` | 可选 | 按目标平台筛选 |
 | `HostVersion` | `string?` | `null` | 可选 | 用于服务端兼容性判断 |
 | `IsPreRelease` | `bool?` | `null` | 可选 | 是否包含预发布 |
 | `Status` | `bool?` | `null` | 可选 | 按启用状态筛选 |
+| `BeginDate` | `DateTime?` | `null` | 可选 | 按上传开始日期筛选 |
+| `EndDate` | `DateTime?` | `null` | 可选 | 按上传结束日期筛选 |
 | `PageNumber` | `int` | `1` | 可选 | 页码（从 1 开始） |
 | `PageSize` | `int` | `10` | 可选 | 每页大小 |
 

@@ -283,18 +283,14 @@ finally
 }
 ```
 
-### 示例 3：搭配 GeneralClientBootstrap 使用
+### 示例 3：搭配 GeneralUpdateBootstrap 使用
 
-实际项目中，`UpgradeHubService` 通常与 `GeneralClientBootstrap` 一起使用。客户端先通过 `GeneralClientBootstrap` 完成常规版本检查和下载，同时用 `UpgradeHubService` 接收服务端的实时推送通知，无需等待下一次轮询即可立即触发更新。
+实际项目中，`UpgradeHubService` 通常与 `GeneralUpdateBootstrap` 一起使用。客户端先通过 `GeneralUpdateBootstrap` 完成常规版本检查和下载，同时用 `UpgradeHubService` 接收服务端的实时推送通知，无需等待下一次轮询即可立即触发更新。
 
 ```csharp
-using System.Text;
 using GeneralUpdate.Core;
+using GeneralUpdate.Core.Configuration;
 using GeneralUpdate.Core.Hubs;
-
-
-
-
 
 // 1. 启动 SignalR 推送监听
 var hub = new UpgradeHubService("http://localhost:5000/UpgradeHub",
@@ -303,11 +299,11 @@ hub.AddListenerReceive(msg => Console.WriteLine($"实时推送: {msg}"));
 await hub.StartAsync();
 
 // 2. 常规更新流程
-var config = new Configinfo
+var request = new UpdateRequest
 {
     UpdateUrl = "http://127.0.0.1:5000/Upgrade/Verification",
     ReportUrl = "http://127.0.0.1:5000/Upgrade/Report",
-    AppName = "UpgradeSample.exe",
+    UpdateAppName = "UpgradeSample.exe",
     MainAppName = "ClientSample.exe",
     ClientVersion = "1.0.0.0",
     UpgradeClientVersion = "1.0.0.0",
@@ -316,9 +312,9 @@ var config = new Configinfo
     AppSecretKey = "dfeb5833-975e-4afb-88f1-6278ee9aeff6"
 };
 
-await new GeneralClientBootstrap()
+await new GeneralUpdateBootstrap()
+    .SetConfig(request)
     .AddListenerException((_, e) => Console.WriteLine(e.Exception))
-    .SetConfig(config)
     .LaunchAsync();
 ```
 
@@ -334,7 +330,7 @@ await new GeneralClientBootstrap()
 
 2. **appkey 唯一性**
    - `appkey` 用于服务端定向推送，每个客户端实例应使用唯一值
-   - 推荐使用固定 GUID（与 `Configinfo.AppSecretKey` 保持一致）
+   - 推荐使用固定 GUID（与 `UpdateRequest.AppSecretKey` 保持一致）
 
 3. **StopAsync vs DisposeAsync**
    - `StopAsync`：暂停连接，之后可重新调用 `StartAsync` 恢复
@@ -365,6 +361,6 @@ await new GeneralClientBootstrap()
 
 ## 相关资源
 
-- **示例代码：** [查看 GitHub 示例](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Push/Program.cs)
+- **示例代码：** [查看 GitHub 示例](https://github.com/GeneralLibrary/GeneralUpdate-Samples/blob/main/src/Hub/Samples/PushSample.cs)
 - **主仓库：** [GeneralUpdate 项目](https://github.com/GeneralLibrary/GeneralUpdate)
 - **相关组件：** [GeneralUpdate.Core](./GeneralUpdate.Core) | [GeneralUpdate.Core](./GeneralUpdate.Core)

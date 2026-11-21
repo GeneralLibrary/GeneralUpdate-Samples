@@ -4,24 +4,24 @@ sidebar_position: 3
 
 # GeneralUpdate.Bowl
 
-**命名空间:** `GeneralUpdate.Bowl` | **主要入口:** `new Bowl().LaunchAsync(BowlContext, CancellationToken)` | **NuGet 包:** `GeneralUpdate.Bowl`
+**命名空间:** `GeneralUpdate.Bowl` | **主要入口:** `new BowlBootstrap().LaunchAsync(BowlContext, CancellationToken)` | **NuGet 包:** `GeneralUpdate.Bowl`
 
 ## 1. 组件简介
 
 ### 1.1 组件概述
 
-**GeneralUpdate.Bowl** 是升级完成后的启动守护组件。它不负责下载、解压或替换升级包，而是在新版本文件落地后、主程序即将启动或已启动时，监控目标进程是否在启动阶段崩溃。如果捕获到崩溃，它会生成 Dump 内存快照、写出失败报告 JSON、导出系统诊断信息，并在升级模式下自动将备份目录恢复回安装目录，避免用户一直停留在不可启动的新版本上。
+**GeneralUpdate.Bowl** 是升级完成后的启动守护组件（入口类 `Bowl` 自 10.5.0-rc.1 起更名为 `BowlBootstrap`）。它不负责下载、解压或替换升级包，而是在新版本文件落地后、主程序即将启动或已启动时，监控目标进程是否在启动阶段崩溃。如果捕获到崩溃，它会生成 Dump 内存快照、写出失败报告 JSON、导出系统诊断信息，并在升级模式下自动将备份目录恢复回安装目录，避免用户一直停留在不可启动的新版本上。
 
 **核心能力：**
 
 | 能力 | 说明 |
 | --- | --- |
-| 进程崩溃监控 | 通过 ProcDump（Windows/Linux）或 lldb（macOS）附加到目标进程，捕获启动期未处理异常 |
+| 进程崩溃监控 | 通过 ProcDump（Windows/Linux）附加到目标进程，捕获启动期未处理异常 |
 | Dump 内存快照 | 支持 Full / Mini / Heap 三种 Dump 类型，可按需选择文件大小和完整度 |
 | 崩溃报告生成 | 自动生成包含监控参数和工具输出的 `{version}_fail.json` 报告文件 |
 | 系统诊断导出 | Windows 下自动导出驱动列表、系统信息和最近系统事件日志 |
 | 自动回滚恢复 | 升级模式下将备份目录覆盖复制回安装目录，实现一键回退到旧版本 |
-| 失败版本标记 | 写入 `UpgradeFail` 标记，Core 后续跳过该失败版本直到服务端提供更高版本 |
+| 失败版本标记 | 预写入升级失败标记（`UpgradeFail`）；注：10.5.0 的升级管线尚未写入该标记（预留） |
 | 事件回调通知 | `OnCrash` 回调允许上传诊断包、通知用户或记录审计信息 |
 | 独立监控模式 | Normal 模式只做崩溃捕获和报告输出，不自动恢复备份，适合通用进程监控 |
 
@@ -43,11 +43,11 @@ Bowl **不负责**下载、解压或替换升级包。它的唯一职责是：�
 
 | 项目 | 说明 |
 | --- | --- |
-| **版本** | `10.5.0-beta.7` |
+| **版本** | `10.5.0` |
 | **目标框架** | `netstandard2.0`（兼容 .NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+） |
 | **依赖包** | `System.Collections.Immutable`, `System.Text.Json` |
-| **内置工具** | Windows: `procdump.exe` / `procdump64.exe` / `procdump64a.exe`；Linux: `procdump` deb/rpm 包 + `install.sh`；macOS: `/usr/bin/lldb` |
-| **兼容性** | Windows（完整支持）/ Linux（deb/rpm 发行版）/ macOS（基础支持，受 SIP 和调试权限限制） |
+| **内置工具** | Windows: `procdump.exe` / `procdump64.exe` / `procdump64a.exe`；Linux: `procdump` deb/rpm 包 + `install.sh` |
+| **兼容性** | Windows（完整支持）/ Linux（deb/rpm 发行版）；其他平台抛 `PlatformNotSupportedException` |
 
 ---
 
@@ -63,7 +63,7 @@ Bowl **不负责**下载、解压或替换升级包。它的唯一职责是：�
 | 崩溃报告 JSON | 自动生成结构化崩溃报告文件 | 基础 | 自动 | 输出到 `FailDirectory` |
 | 系统诊断导出 | Windows 下导出驱动/系统信息/事件日志 | 拓展 | 自动 | Windows only |
 | 自动备份恢复 | 崩溃后将备份目录覆盖回安装目录 | 基础 | 可选 | `AutoRestore = true` |
-| 失败版本标记 | 写入升级失败版本，Core 后续跳过 | 基础 | 自动 | 升级模式下生效 |
+| 失败版本标记 | 预写入升级失败版本，Core 后续跳过 | 基础 | 自动 | 升级模式下生效；10.5.0 的升级管线尚未写入该标记（预留） |
 | 崩溃回调通知 | 检测到崩溃后触发业务回调 | 拓展 | 可选 | `OnCrash` 回调函数 |
 | 日志追踪 | `GeneralTracer` 运行时诊断日志 | 拓展 | 可选 | 默认开启，可关闭 |
 
@@ -100,7 +100,7 @@ Bowl **不负责**下载、解压或替换升级包。它的唯一职责是：�
 
 ### 3.2 实例方法
 
-**Bowl：**
+**BowlBootstrap：**
 
 | 方法名 | 入参明细 | 使用场景 | 注意事项 |
 | --- | --- | --- | --- |
@@ -192,7 +192,7 @@ var context = new BowlContext
     }
 };
 
-BowlResult result = await new Bowl().LaunchAsync(context);
+BowlResult result = await new BowlBootstrap().LaunchAsync(context);
 
 if (result.DumpCaptured && result.Restored)
     Console.WriteLine("Crash detected and backup restored.");
@@ -231,7 +231,7 @@ var context = new BowlContext
     }
 };
 
-BowlResult result = await new Bowl().LaunchAsync(context);
+BowlResult result = await new BowlBootstrap().LaunchAsync(context);
 
 if (result.DumpCaptured)
 {
@@ -263,7 +263,7 @@ var context = new BowlContext
     BackupDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backup"),
 }.Normalize();  // 应用默认值
 
-BowlResult result = await new Bowl().LaunchAsync(context);
+BowlResult result = await new BowlBootstrap().LaunchAsync(context);
 Console.WriteLine($"Success: {result.Success}, Dump captured: {result.DumpCaptured}");
 ```
 
@@ -293,7 +293,7 @@ var context = new BowlContext
     }
 };
 
-BowlResult result = await new Bowl().LaunchAsync(context);
+BowlResult result = await new BowlBootstrap().LaunchAsync(context);
 
 if (result.DumpCaptured && result.Restored)
     Console.WriteLine("The upgraded version crashed and the backup was restored.");
@@ -353,7 +353,7 @@ var bowlContext = new BowlContext
     }
 };
 
-var result = await new Bowl().LaunchAsync(bowlContext);
+var result = await new BowlBootstrap().LaunchAsync(bowlContext);
 
 if (result.Success)
 {
@@ -384,7 +384,7 @@ Bowl 不依赖全局配置文件。所有配置通过 `BowlContext` 传入。日
 // 性能敏感场景关闭日志
 GeneralTracer.SetTracingEnabled(false);
 
-var result = await new Bowl().LaunchAsync(context);
+var result = await new BowlBootstrap().LaunchAsync(context);
 
 // 排查问题时重新开启
 GeneralTracer.SetTracingEnabled(true);
@@ -413,7 +413,6 @@ MyApp/
 | --- | --- | --- | --- |
 | Windows | 内置 ProcDump（`procdump.exe`/`procdump64.exe`/`procdump64a.exe`） | 支持 `driverInfo.txt`、`systeminfo.txt`、`systemlog.evtx` | 需要足够权限生成 Dump |
 | Linux | 内置 deb/rpm 包 + `install.sh` 安装 ProcDump | 当前为 no-op | 支持 Ubuntu/Debian/RHEL/CentOS/Fedora/ClearOS |
-| macOS | `/usr/bin/lldb` | 当前为 no-op | 受 SIP、调试权限、签名策略影响，基础实现 |
 
 ---
 

@@ -47,7 +47,6 @@ tags: [log]
 - **Zero-config SetSource() API**: Automatically discovers update source URL from manifest.json — no more hardcoded URLs in bootstrap code
 - **manifest.json auto-discovery**: Scans for manifest.json to resolve update configuration, simplifying multi-environment deployments
 - **IUpdateHooks extension points**: New lifecycle hooks for injecting custom logic at key stages — before/after download, before/after install, on error
-- **LoadFromConfiguration() support**: Read update settings directly from appsettings.json for zero-code environment-aware configuration
 - **SSL/HttpClient lifecycle fixes**: Resolved HttpClient socket exhaustion and SSL certificate validation issues in long-running processes
 - **OSS update flow improvements**: More reliable OSS delivery with better error recovery and progress reporting
 - **Chain-to-full fallback strategy**: Count-first heuristic replaces 80% size threshold — intelligently falls back to full package when too many delta patches are needed

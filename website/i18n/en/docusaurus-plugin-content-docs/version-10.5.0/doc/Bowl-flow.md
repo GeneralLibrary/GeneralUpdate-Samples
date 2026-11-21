@@ -14,7 +14,7 @@ sidebar_label: Bowl Execution Flow
 > - Dump file detection logic and crash determination rules
 > - The five-step remediation pipeline when a crash is detected (Report → Diagnostics → Rollback → Cleanup → Callback)
 > - Behavioral differences between Upgrade and Normal modes
-> - Cross-platform strategy adaptation (Windows / Linux / macOS)
+> - Cross-platform strategy adaptation (Windows / Linux)
 > - Graceful degradation and fault tolerance design
 
 ---
@@ -30,7 +30,7 @@ sidebar_label: Bowl Execution Flow
 7. [Phase 3: FindDumpFile — Dump Detection & Crash Determination](#7-phase-3-finddumpfile--dump-detection--crash-determination)
 8. [Phase 4: HandleCrashAsync — Crash Remediation Pipeline](#8-phase-4-handlecrashasync--crash-remediation-pipeline)
 9. [Upgrade vs Normal: Two Working Modes](#9-upgrade-vs-normal-two-working-modes)
-10. [Platform Strategy Adaptation: Windows / Linux / macOS](#10-platform-strategy-adaptation-windows--linux--macos)
+10. [Platform Strategy Adaptation: Windows / Linux](#10-platform-strategy-adaptation-windows--linux)
 11. [Fault Tolerance & Graceful Degradation](#11-fault-tolerance--graceful-degradation)
 12. [Integration with GeneralUpdate.Core](#12-integration-with-generalupdatecore)
 13. [Key Code Path Index](#13-key-code-path-index)
@@ -82,8 +82,6 @@ Bowl uses a **Strategy + Reporter + Diagnostics** three-layer DI design:
 │  │LinuxBowlStrategy │                    │LinuxSystem │ │
 │  │(procdump pkg)    │                    │InfoProvider│ │
 │  ├──────────────────┤                    └────────────┘ │
-│  │MacBowlStrategy   │                                    │
-│  │(lldb)            │                                    │
 │  └──────────────────┘                                    │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -93,7 +91,7 @@ Bowl uses a **Strategy + Reporter + Diagnostics** three-layer DI design:
 | Principle | Description |
 |-----------|-------------|
 | **Monitor Only, No Update** | Bowl never downloads, extracts, or replaces files — only monitors process crash status |
-| **Strategy Pattern** | `IBowlStrategy` encapsulates platform differences: ProcDump for Windows/Linux, lldb for macOS |
+| **Strategy Pattern** | `IBowlStrategy` encapsulates platform differences: ProcDump for Windows/Linux; other platforms are unsupported (throws `PlatformNotSupportedException`) |
 | **Graceful Degradation** | Failure of any step does not block subsequent steps — report failure won't prevent rollback, rollback failure won't prevent callback |
 | **Crash = Dump Exists** | The sole criterion for crash determination is whether a dump file exists |
 | **Immutable Context** | `BowlContext` is a `readonly record struct`, normalized via `Normalize()` |
@@ -148,9 +146,7 @@ StrategyFactory.Create()
   │                     Auto-detects distro (deb/rpm)
   │                     Installs procdump package on demand
   │
-  └── IsMacOS()    ──▶ MacBowlStrategy
-                        Uses /usr/bin/lldb
-                        Limited by SIP and debug permissions
+  └── Other platforms ──▶ throws PlatformNotSupportedException
 ```
 
 ---
@@ -165,13 +161,13 @@ StrategyFactory.Create()
 |-------|------|---------|-------------|
 | `ProcessNameOrId` | `string` | — **(required)** | Target process name or PID |
 | `TargetPath` | `string` | — | Target installation path |
-| `FailDirectory` | `string` | `TargetPath/fails/` | Dump and report output directory |
-| `BackupDirectory` | `string` | `TargetPath/.backups/latest/` | Backup directory (rollback source in Upgrade mode) |
-| `DumpFileName` | `string` | `{processName}.dmp` | Expected dump file name |
+| `FailDirectory` | `string` | `null` (not set) | Dump and report output directory |
+| `BackupDirectory` | `string` | `null` (not set) | Backup directory (rollback source in Upgrade mode) |
+| `DumpFileName` | `string` | `null` (not set) | Expected dump file name |
 | `TimeoutMs` | `int` | `30000` (30s) | Monitoring timeout |
 | `DumpType` | `DumpType` | `Full` | Dump type: Full / Mini / Heap |
 | `WorkModel` | `string` | `"Upgrade"` | Working mode: Upgrade / Normal |
-| `AutoRestore` | `bool` | `true` | Auto-rollback backup on crash |
+| `AutoRestore` | `bool` | `false` | Auto-rollback backup on crash |
 | `ExtendedField` | `string` | — | Extended field (typically stores version) |
 | `OnCrash` | `Func<CrashInfo, CT, Task>` | `null` | Crash callback |
 
@@ -216,7 +212,7 @@ flowchart TB
 
 ## 5. Phase 1: Strategy.Prepare — Platform Strategy Preparation
 
-The `Prepare` method's responsibility is to construct the `ProcessStartInfo` needed to launch the ProcDump (or lldb) child process based on platform differences. **If the tool is unavailable, return `null` for graceful degradation.**
+The `Prepare` method's responsibility is to construct the `ProcessStartInfo` needed to launch the ProcDump child process based on platform differences. **If the tool is unavailable, return `null` for graceful degradation.**
 
 ### 5.1 WindowsBowlStrategy
 
@@ -231,10 +227,9 @@ public ProcessStartInfo? Prepare(BowlContext context)
     return new ProcessStartInfo
     {
         FileName = procDumpPath,
-        Arguments = $"-e -ma -accepteula {context.ProcessNameOrId} {dumpOutputPath}",
+        Arguments = $"-e {dumpFlag} {context.ProcessNameOrId} \"{dumpFullPath}\"",
         // -e: capture unhandled exceptions only
-        // -ma: Full Dump
-        // -accepteula: auto-accept EULA
+        // dumpFlag: mapped by DumpType — Full=-ma / Mini=-mm / Heap=-mh
     };
 }
 ```
@@ -338,7 +333,7 @@ await _systemInfoProvider.ExportAsync(context.FailDirectory, ct);
 ```
 
 **Windows:** Runs built-in `export.bat` collecting driver list, system info, recent event logs.
-**Linux/macOS:** Collects `dmesg`, `journalctl`, and other system logs.
+**Linux:** Currently a no-op (reserved; may export `dmesg` / `journalctl` system logs in the future).
 
 **Fault tolerance:** Diagnostic export failure does not block subsequent steps.
 
@@ -362,7 +357,7 @@ if (context.AutoRestore && context.WorkModel == "Upgrade")
 await _strategy.PostProcessAsync(context, exitResult, ct);
 ```
 
-Platform-specific: Windows cleans temp ProcDump files, Linux terminates residual procdump processes, macOS cleans lldb session files.
+Platform-specific: Windows cleans temp ProcDump files, Linux terminates residual procdump processes.
 
 ### 8.5 Step 5: Callback Notification
 
@@ -391,21 +386,23 @@ if (context.OnCrash != null)
 | **System Diagnostics** | ✅ Exported | ✅ Exported |
 | **Auto Rollback** | ✅ `StorageHelper.Restore` | ❌ Skipped |
 | **Failed Version Mark** | ✅ Write `UpgradeFail` | ❌ Not marked |
-| **Environment Variable** | ✅ Set `GU_UPGRADE_FAIL` | ❌ Not set |
+| **Environment Variable** | ✅ Set `UpgradeFail` (reserved, no writer in the current version) | ❌ Not set |
 | **OnCrash Callback** | ✅ Invoked | ✅ Invoked |
+
+> Note: the `UpgradeFail` environment variable has no writer in the current version's code (reserved); Core already implements the read and failed-version skip logic.
 
 ---
 
-## 10. Platform Strategy Adaptation: Windows / Linux / macOS
+## 10. Platform Strategy Adaptation: Windows / Linux
 
-| Dimension | Windows | Linux | macOS |
-|-----------|---------|-------|-------|
-| **Monitor Tool** | `procdump.exe` / `procdump64.exe` | `procdump` (deb/rpm) | `/usr/bin/lldb` |
-| **Tool Acquisition** | Bundled in NuGet | Auto-detect + `install.sh` | System built-in |
-| **Dump Args** | `-e -ma` | `-e -ma` | lldb script |
-| **Arch Selection** | Auto x86/x64/ARM64 by process | Not differentiated | Not differentiated |
-| **Permissions** | Admin (debug privilege) | root (ptrace) | SIP authorization |
-| **System Diagnostics** | `export.bat`: drivers/sysinfo/events | `dmesg` / `journalctl` | `sysdiagnose` |
+| Dimension | Windows | Linux |
+|-----------|---------|-------|
+| **Monitor Tool** | `procdump.exe` / `procdump64.exe` | `procdump` (deb/rpm) |
+| **Tool Acquisition** | Bundled in NuGet | Auto-detect + `install.sh` |
+| **Dump Args** | `-e -ma` | `-e -ma` |
+| **Arch Selection** | Auto x86/x64/ARM64 by process | Not differentiated |
+| **Permissions** | Admin (debug privilege) | root (ptrace) |
+| **System Diagnostics** | `export.bat`: drivers/sysinfo/events | `dmesg` / `journalctl` |
 
 ---
 
@@ -443,9 +440,12 @@ Level 5: OnCrash callback exception
 
 ### 12.1 Call Timing
 
-Bowl should be called after Core completes file replacement and before launching the new version:
+Bowl should be called after Core completes file replacement and before launching the new version.
+
+In Core 10.5.0 on Windows, Bowl is started as an **external process** via `WindowsStrategy.LaunchBowl` (`Process.Start` launches a standalone Bowl executable), not instantiated in-process. Business code can also call it directly in its own process:
 
 ```csharp
+// Typical in-process invocation by business code
 var bowlContext = new BowlContext
 {
     ProcessNameOrId = "MyApp",
@@ -469,7 +469,7 @@ var result = await bowl.LaunchAsync(bowlContext);
 | State Channel | Writer | Reader | Purpose |
 |---------------|--------|--------|---------|
 | `{version}_fail.json` | Bowl | Core + Business | Persistent crash report |
-| Env var `GU_UPGRADE_FAIL` | Bowl | Core | Failed version skip |
+| Env var `UpgradeFail` | — (reserved, no writer in the current version) | Core | Failed version skip |
 | `.backups/` directory | Core (create) | Bowl (rollback) | Backup & restore |
 
 ---
@@ -485,7 +485,6 @@ var result = await bowl.LaunchAsync(bowlContext);
 | File Rollback | `FileSystem/StorageHelper.cs` | `Restore()` |
 | Windows Strategy | `Strategies/WindowsBowlStrategy.cs` | `Prepare()` / `PostProcessAsync()` |
 | Linux Strategy | `Strategies/LinuxBowlStrategy.cs` | `Prepare()` / `PostProcessAsync()` |
-| Mac Strategy | `Strategies/MacBowlStrategy.cs` | `Prepare()` / `PostProcessAsync()` |
 | Process Runner | `Strategies/ProcessRunner.cs` | `RunAsync()` |
 | Strategy Factory | `Strategies/StrategyFactory.cs` | `Create()` |
 | Crash DTO | `Internal/Crash.cs` | — |

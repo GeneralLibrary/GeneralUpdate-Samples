@@ -4,24 +4,24 @@ sidebar_position: 3
 
 # GeneralUpdate.Bowl
 
-**Namespace:** `GeneralUpdate.Bowl` | **Main Entry Point:** `new Bowl().LaunchAsync(BowlContext, CancellationToken)` | **NuGet Package:** `GeneralUpdate.Bowl`
+**Namespace:** `GeneralUpdate.Bowl` | **Main Entry Point:** `new BowlBootstrap().LaunchAsync(BowlContext, CancellationToken)` | **NuGet Package:** `GeneralUpdate.Bowl`
 
 ## 1. Component Overview
 
 ### 1.1 Introduction
 
-**GeneralUpdate.Bowl** is a startup watchdog component that runs after an upgrade completes. It does not download, extract, or replace update packages. Instead, after new version files are deployed and the main process is about to start or has started, it monitors the target process for startup crashes. If a crash is detected, it generates a memory dump, writes a failure report JSON, exports system diagnostics, and in Upgrade mode automatically restores the backup directory to the install directory, preventing users from being stuck on a non-bootable new version.
+**GeneralUpdate.Bowl** is a startup watchdog component that runs after an upgrade completes (the entry class `Bowl` was renamed to `BowlBootstrap` as of 10.5.0-rc.1). It does not download, extract, or replace update packages. Instead, after new version files are deployed and the main process is about to start or has started, it monitors the target process for startup crashes. If a crash is detected, it generates a memory dump, writes a failure report JSON, exports system diagnostics, and in Upgrade mode automatically restores the backup directory to the install directory, preventing users from being stuck on a non-bootable new version.
 
 **Core Capabilities:**
 
 | Capability | Description |
 | --- | --- |
-| Process Crash Monitoring | Attaches to target process via ProcDump (Windows/Linux) or lldb (macOS) to catch unhandled startup exceptions |
+| Process Crash Monitoring | Attaches to target process via ProcDump (Windows/Linux) to catch unhandled startup exceptions |
 | Memory Dump Snapshots | Supports Full / Mini / Heap dump types, selectable by file size and completeness |
 | Crash Report Generation | Auto-generates `{version}_fail.json` report with monitoring parameters and tool output |
 | System Diagnostics Export | On Windows, exports driver list, system info, and recent system event logs |
 | Automatic Rollback | In Upgrade mode, copies backup directory back to install directory for one-click rollback |
-| Failed Version Marking | Writes `UpgradeFail` marker; Core skips this version until server provides a higher one |
+| Failed Version Marking | Pre-writes the upgrade failure marker (`UpgradeFail`); note: the 10.5.0 upgrade pipeline does not yet write this marker (reserved) |
 | Event Callback | `OnCrash` callback for uploading diagnostics, notifying users, or recording audit info |
 | Standalone Monitoring | Normal mode only captures crashes and generates reports without auto-restore |
 
@@ -39,11 +39,11 @@ sidebar_position: 3
 
 | Item | Description |
 | --- | --- |
-| **Version** | `10.5.0-beta.7` |
+| **Version** | `10.5.0` |
 | **Target Framework** | `netstandard2.0` (.NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+) |
 | **Dependencies** | `System.Collections.Immutable`, `System.Text.Json` |
-| **Bundled Tools** | Windows: `procdump.exe` / `procdump64.exe` / `procdump64a.exe`; Linux: `procdump` deb/rpm + `install.sh`; macOS: `/usr/bin/lldb` |
-| **Compatibility** | Windows (full) / Linux (deb/rpm distros) / macOS (basic, SIP and debug permissions apply) |
+| **Bundled Tools** | Windows: `procdump.exe` / `procdump64.exe` / `procdump64a.exe`; Linux: `procdump` deb/rpm + `install.sh` |
+| **Compatibility** | Windows (full) / Linux (deb/rpm distros); other platforms throw `PlatformNotSupportedException` |
 
 ---
 
@@ -59,7 +59,7 @@ sidebar_position: 3
 | Crash Report JSON | Auto-generate structured crash report file | Core | Automatic | Output to `FailDirectory` |
 | System Diagnostics Export | Export driver list, system info, event logs (Windows) | Extended | Automatic | Windows only |
 | Auto Backup Restore | Copy backup directory back to install directory on crash | Core | Optional | `AutoRestore = true` |
-| Failed Version Marking | Write upgrade failure version; Core skips subsequently | Core | Automatic | Upgrade mode only |
+| Failed Version Marking | Pre-write upgrade failure version; Core skips subsequently | Core | Automatic | Upgrade mode only; the 10.5.0 upgrade pipeline does not yet write this marker (reserved) |
 | Crash Callback | Business callback triggered on crash detection | Extended | Optional | `OnCrash` callback function |
 | Trace Logging | `GeneralTracer` runtime diagnostic logs | Extended | Optional | Enabled by default, can be disabled |
 
@@ -96,7 +96,7 @@ sidebar_position: 3
 
 ### 3.2 Instance Methods
 
-**Bowl:**
+**BowlBootstrap:**
 
 | Method | Parameters | Returns | Use Case | Notes |
 | --- | --- | --- | --- | --- |
@@ -172,7 +172,7 @@ var context = new BowlContext
     }
 };
 
-BowlResult result = await new Bowl().LaunchAsync(context);
+BowlResult result = await new BowlBootstrap().LaunchAsync(context);
 
 if (result.DumpCaptured && result.Restored)
     Console.WriteLine("Crash detected and backup restored.");
@@ -197,7 +197,7 @@ var context = new BowlContext
     AutoRestore = false
 };
 
-BowlResult result = await new Bowl().LaunchAsync(context);
+BowlResult result = await new BowlBootstrap().LaunchAsync(context);
 
 if (result.DumpCaptured)
 {
@@ -225,7 +225,7 @@ var context = new BowlContext
     BackupDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "backup"),
 }.Normalize();
 
-BowlResult result = await new Bowl().LaunchAsync(context);
+BowlResult result = await new BowlBootstrap().LaunchAsync(context);
 Console.WriteLine($"Success: {result.Success}, Dump captured: {result.DumpCaptured}");
 ```
 
@@ -255,7 +255,7 @@ var context = new BowlContext
     }
 };
 
-BowlResult result = await new Bowl().LaunchAsync(context);
+BowlResult result = await new BowlBootstrap().LaunchAsync(context);
 
 if (result.DumpCaptured && result.Restored)
     Console.WriteLine("The upgraded version crashed and the backup was restored.");
@@ -307,7 +307,7 @@ var bowlContext = new BowlContext
     }
 };
 
-var result = await new Bowl().LaunchAsync(bowlContext);
+var result = await new BowlBootstrap().LaunchAsync(bowlContext);
 
 if (result.Success)
     Console.WriteLine("New version started successfully.");
@@ -329,7 +329,7 @@ Bowl does not rely on global configuration files. All configuration is passed vi
 
 ```csharp
 GeneralTracer.SetTracingEnabled(false);
-var result = await new Bowl().LaunchAsync(context);
+var result = await new BowlBootstrap().LaunchAsync(context);
 GeneralTracer.SetTracingEnabled(true);
 ```
 
@@ -354,7 +354,6 @@ MyApp/
 | --- | --- | --- | --- |
 | Windows | Built-in ProcDump (`procdump.exe`/`procdump64.exe`/`procdump64a.exe`) | Supports `driverInfo.txt`, `systeminfo.txt`, `systemlog.evtx` | Requires sufficient permissions for dumps |
 | Linux | Built-in deb/rpm + `install.sh` ProcDump install | Currently no-op | Supports Ubuntu/Debian/RHEL/CentOS/Fedora/ClearOS |
-| macOS | `/usr/bin/lldb` | Currently no-op | Affected by SIP, debug permissions, signing policy |
 
 ---
 

@@ -43,9 +43,9 @@ Driver updates differ fundamentally from application file replacement. Drivers a
 
 | Item | Description |
 | --- | --- |
-| **Version** | `10.5.0-beta.7` |
-| **Target Frameworks** | `net8.0` / `net10.0` (multi-target) |
-| **Dependencies** | `Microsoft.Extensions.DependencyInjection`, `Microsoft.Extensions.Logging.Abstractions`, `Microsoft.Extensions.Options` |
+| **Version** | `10.5.0` |
+| **Target Framework** | `net10.0` |
+| **Dependencies** | `Microsoft.Extensions.DependencyInjection.Abstractions` (`10.0.8`) |
 | **Compatibility** | Windows (full, admin required) / Linux (root/sudo) / macOS (SIP & system extension policies apply) |
 
 ---
@@ -118,6 +118,8 @@ Driver updates differ fundamentally from application file replacement. Drivers a
 | `AutoCleanupBackups` | `bool` | `true` | Optional | Auto-clean old backups |
 | `BackupsToKeep` | `int` | `5` | Optional | Number of backups to keep |
 | `UseExponentialBackoff` | `bool` | `false` | Optional | Use exponential backoff |
+| `TrustedCertificateThumbprints` | `List<string>` | `new()` | Optional | Trusted certificate thumbprints (for signature validation) |
+| `TrustedGpgKeys` | `List<string>` | `new()` | Optional | Trusted GPG public keys (for Linux) |
 
 ### 3.2 Instance Methods
 

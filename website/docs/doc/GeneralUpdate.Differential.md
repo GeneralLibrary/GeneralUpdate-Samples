@@ -44,7 +44,7 @@ sidebar_position: 6
 
 | 项目 | 说明 |
 | --- | --- |
-| **版本** | `10.5.0-beta.7` |
+| **版本** | `10.5.0` |
 | **目标框架** | `netstandard2.0`（兼容 .NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+） |
 | **依赖包** | 无外部依赖（纯 .NET BCL） |
 | **兼容性** | 所有支持 .NET Standard 2.0 的平台 |
@@ -218,7 +218,7 @@ await differ.CleanAsync(oldLargeFile, newLargeFile, patchFile);
 
 【效果&注意事项】
 - `blockSize` 越小，哈希索引越密集，匹配更精确但内存消耗更大
-- `maxWindowSize` 决定能参与计算的最大数据量，超出部分不参与匹配
+- `maxWindowSize` 决定加载文件时的内存预算，超出窗口预算的文件自动回退为全内存加载以保证正确性（不会不参与匹配）
 - 超大文件建议先在业务侧压测补丁体积和应用还原结果
 
 ---

@@ -46,7 +46,7 @@ GeneralUpdate.Core is the **core engine** of the ecosystem. It doesn't generate 
 
 | Item | Description |
 | --- | --- |
-| **Version** | `10.5.0-beta.7` |
+| **Version** | `10.5.0` |
 | **Target Framework** | `netstandard2.0` (.NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+) |
 | **Dependencies** | `GeneralUpdate.Differential`, `System.Text.Json`, `Microsoft.Extensions.Logging.Abstractions` |
 | **Compatibility** | Windows (primary) / Linux / macOS; x86 / x64 / ARM64 |
@@ -92,8 +92,8 @@ GeneralUpdate.Core is the **core engine** of the ecosystem. It doesn't generate 
 | --- | --- | --- | --- | --- | --- |
 | `UpdateUrl` | `string` | — | Yes | Valid absolute URL | Update check API endpoint |
 | `UpdateAppName` | `string` | `"Update.exe"` | Recommended | Valid filename | Upgrade process filename |
-| `MainAppName` | `string` | — | Recommended | Valid filename | Main app filename for restart & identification |
-| `ClientVersion` | `string` | — | Recommended | SemVer format | Current main app version |
+| `MainAppName` | `string` | `"Client"` | Recommended | Valid filename | Main app filename for restart & identification |
+| `ClientVersion` | `string` | `"1.0.0"` | Recommended | SemVer format | Current main app version |
 | `AppSecretKey` | `string` | — | Recommended | — | App key for server authentication |
 | `InstallPath` | `string` | `BaseDirectory` | Optional | Valid directory path | Application install root |
 | `ReportUrl` | `string` | `null` | Optional | Valid absolute URL | Status report API |
@@ -122,7 +122,7 @@ GeneralUpdate.Core is the **core engine** of the ecosystem. It doesn't generate 
 | `Option.Format` | `Format` | `Zip` | Optional | `Zip` | Package format |
 | `Option.DownloadTimeout` | `int?` | `30` | Optional | Positive integer (sec) | Download timeout |
 | `Option.PatchEnabled` | `bool?` | `true` | Optional | `true` / `false` | Enable differential patching |
-| `Option.BackupEnabled` | `bool?` | `true` | Optional | `true` / `false` | Backup files before update |
+| `Option.BackupEnabled` | `bool?` | `false` | Optional | `true` / `false` | Backup files before update (disabled by default) |
 | `Option.Silent` | `bool` | `false` | Optional | `true` / `false` | Enable silent polling |
 | `Option.SilentPollIntervalMinutes` | `int` | `60` | Optional | Positive integer | Polling interval (minutes) |
 | `Option.LaunchClientAfterUpdate` | `bool` | `true` | Optional | `true` / `false` | Launch main app after upgrade |
@@ -145,14 +145,14 @@ GeneralUpdate.Core is the **core engine** of the ecosystem. It doesn't generate 
 | `SetSource(...)` | `updateUrl`, `appSecretKey`, `reportUrl?`, `scheme?`, `token?`, `authScheme?`, `basicUsername?`, `basicPassword?`, `installPath?` | `GeneralUpdateBootstrap` | Lightweight entry with manifest | Identity info filled by manifest; supports HMAC / Bearer / Basic auth methods |
 | `SetOption(Option<T>, T)` | `option` — key, `value` — value | `GeneralUpdateBootstrap` | Set runtime options | Pass `null` to reset nullable options |
 | `UseDiffPipeline(Action<DiffPipelineBuilder>)` | `configure` — delegate | `GeneralUpdateBootstrap` | Replace or tune diff pipeline | Default used if not called |
-| `AddListenerUpdateInfo(...)` | `EventHandler<UpdateInfoEventArgs>` | `GeneralUpdateBootstrap` | Receive server version info | Also fires when no update available |
+| `AddListenerUpdateInfo(...)` | `Action<object, UpdateInfoEventArgs>` | `GeneralUpdateBootstrap` | Receive server version info | Also fires when no update available |
 | `AddListenerUpdatePrecheck(...)` | `Func<UpdateInfoEventArgs, bool>` | `GeneralUpdateBootstrap` | Pre-download check | Return `true` to skip non-forced update |
-| `AddListenerProgress(...)` | `EventHandler<ProgressEventArgs>` | `GeneralUpdateBootstrap` | Progress bar, status text | Contains both download & diff progress |
-| `AddListenerMultiDownloadCompleted(...)` | `EventHandler<MultiDownloadCompletedEventArgs>` | `GeneralUpdateBootstrap` | Mark single asset download completion | Not "all downloads complete" |
-| `AddListenerMultiAllDownloadCompleted(...)` | `EventHandler<MultiAllDownloadCompletedEventArgs>` | `GeneralUpdateBootstrap` | Post-all-downloads processing | Includes `FailedVersions` summary |
-| `AddListenerMultiDownloadError(...)` | `EventHandler<MultiDownloadErrorEventArgs>` | `GeneralUpdateBootstrap` | Log single download failure | Overall success still determined by `MultiAllDownloadCompleted` |
-| `AddListenerMultiDownloadStatistics(...)` | `EventHandler<MultiDownloadStatisticsEventArgs>` | `GeneralUpdateBootstrap` | Display speed & ETA | Prefer `AddListenerProgress` for new code |
-| `AddListenerException(...)` | `EventHandler<ExceptionEventArgs>` | `GeneralUpdateBootstrap` | Report exceptions, show errors | Notification only; no automatic retry |
+| `AddListenerProgress(...)` | `Action<object, ProgressEventArgs>` | `GeneralUpdateBootstrap` | Progress bar, status text | Contains both download & diff progress |
+| `AddListenerMultiDownloadCompleted(...)` | `Action<object, MultiDownloadCompletedEventArgs>` | `GeneralUpdateBootstrap` | Mark single asset download completion | Not "all downloads complete" |
+| `AddListenerMultiAllDownloadCompleted(...)` | `Action<object, MultiAllDownloadCompletedEventArgs>` | `GeneralUpdateBootstrap` | Post-all-downloads processing | Includes `FailedVersions` summary |
+| `AddListenerMultiDownloadError(...)` | `Action<object, MultiDownloadErrorEventArgs>` | `GeneralUpdateBootstrap` | Log single download failure | Overall success still determined by `MultiAllDownloadCompleted` |
+| `AddListenerMultiDownloadStatistics(...)` | `Action<object, MultiDownloadStatisticsEventArgs>` | `GeneralUpdateBootstrap` | Display speed & ETA | Prefer `AddListenerProgress` for new code |
+| `AddListenerException(...)` | `Action<object, ExceptionEventArgs>` | `GeneralUpdateBootstrap` | Report exceptions, show errors | Notification only; no automatic retry |
 | `AddEventListener<TListener>()` | Generic — listener type | `GeneralUpdateBootstrap` | Batch register event listeners | `T` must implement `IUpdateEventListener` |
 | `Hooks<T>()` | Generic — hook type | `GeneralUpdateBootstrap` | Register lifecycle hooks | `T` needs parameterless constructor |
 | `UpdateReporter<T>()` | Generic — reporter type | `GeneralUpdateBootstrap` | Register status reporter | — |
@@ -592,7 +592,7 @@ var bootstrap = new GeneralUpdateBootstrap()
         .WithParallelism(4))
     .AddListenerUpdateInfo((_, e) =>
     {
-        Console.WriteLine(e.Info?.Code == "404"
+        Console.WriteLine(e.Info?.Code == 404
             ? "Already up to date."
             : $"Found {e.Info?.Body?.Count ?? 0} version(s).");
     })
@@ -720,7 +720,7 @@ In addition, the following `Option` runtime options are used in OSS mode:
 | --- | --- | --- |
 | `Option.AppType` | — | Required, sets the current process role: `OssClient` (main app) or `OssUpgrade` (upgrade app) |
 | `Option.Encoding` | `UTF8` | Character encoding used when extracting update packages |
-| `Option.DownloadTimeout` | `60` | Download timeout for update packages (seconds) |
+| `Option.DownloadTimeout` | `30` | Download timeout for update packages (seconds) |
 
 **Main app example (`AppType.OssClient`):**
 

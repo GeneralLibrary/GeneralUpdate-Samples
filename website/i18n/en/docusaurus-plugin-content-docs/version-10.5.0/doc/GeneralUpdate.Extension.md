@@ -47,7 +47,7 @@ It's suited for scenarios where the main app and optional capabilities are distr
 
 | Item | Description |
 | --- | --- |
-| **Version** | `10.5.0-beta.7` |
+| **Version** | `10.5.0` |
 | **Target Framework** | `netstandard2.0` (.NET Framework 4.6.1+ / .NET Core 2.0+ / .NET 5+) |
 | **Dependencies** | `Microsoft.Extensions.DependencyInjection`, `Microsoft.Extensions.Logging.Abstractions`, `Microsoft.Extensions.Options`, `Newtonsoft.Json`, `System.Net.Http`, `System.IO.Compression`, `System.IO.Compression.ZipFile` |
 | **Compatibility** | All .NET Standard 2.0 platforms |
@@ -117,10 +117,13 @@ It's suited for scenarios where the main app and optional capabilities are distr
 | --- | --- | --- | --- | --- |
 | `Id` | `string?` | `null` | Optional | Exact match by ID |
 | `Name` | `string?` | `null` | Optional | Partial match by name |
+| `Version` | `string?` | `null` | Optional | Exact match by version |
 | `Publisher` | `string?` | `null` | Optional | Partial match by publisher |
 | `Category` | `string?` | `null` | Optional | Filter by category |
 | `Platform` | `TargetPlatform?` | `null` | Optional | Filter by target platform |
 | `HostVersion` | `string?` | `null` | Optional | For server-side compatibility check |
+| `BeginDate` | `DateTime?` | `null` | Optional | Filter by upload start date |
+| `EndDate` | `DateTime?` | `null` | Optional | Filter by upload end date |
 | `PageNumber` | `int` | `1` | Optional | Page number (1-based) |
 | `PageSize` | `int` | `10` | Optional | Page size |
 

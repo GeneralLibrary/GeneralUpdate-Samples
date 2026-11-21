@@ -47,7 +47,6 @@ tags: [log]
 - **零配置 SetSource() API**: 自动从 manifest.json 获取更新源地址，无需在启动代码中硬编码 URL
 - **manifest.json 自动发现**: 自动扫描 manifest.json 解析更新配置，简化多环境部署
 - **IUpdateHooks 扩展点**: 新增生命周期钩子，可在下载前后、安装前后、出错时注入自定义逻辑
-- **LoadFromConfiguration() 支持**: 直接从 appsettings.json 读取更新设置，零代码变更实现环境感知配置
 - **SSL/HttpClient 生命周期修复**: 解决长时间运行过程中 HttpClient 套接字耗尽和 SSL 证书验证问题
 - **OSS 更新流程改进**: 更可靠的 OSS 更新交付，具备更好的错误恢复和进度上报
 - **链式转全量回退策略**: 用数量优先启发式替代 80% 体积阈值，增量补丁过多时智能回退到全量包安装

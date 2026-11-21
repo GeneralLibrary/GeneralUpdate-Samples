@@ -47,9 +47,9 @@ sidebar_position: 8
 
 | 项目 | 说明 |
 | --- | --- |
-| **版本** | `10.5.0-beta.7` |
-| **目标框架** | `net8.0` / `net10.0`（多目标） |
-| **依赖包** | `Microsoft.Extensions.DependencyInjection`、`Microsoft.Extensions.Logging.Abstractions`、`Microsoft.Extensions.Options` |
+| **版本** | `10.5.0` |
+| **目标框架** | `net10.0` |
+| **依赖包** | `Microsoft.Extensions.DependencyInjection.Abstractions`（`10.0.8`） |
 | **兼容性** | Windows（完整支持，需管理员权限）/ Linux（需 root/sudo）/ macOS（受 SIP 和系统扩展策略影响） |
 
 ---
@@ -123,6 +123,8 @@ sidebar_position: 8
 | `AutoCleanupBackups` | `bool` | `true` | 可选 | 自动清理旧备份 |
 | `BackupsToKeep` | `int` | `5` | 可选 | 保留备份数量 |
 | `UseExponentialBackoff` | `bool` | `false` | 可选 | 是否使用指数退避 |
+| `TrustedCertificateThumbprints` | `List<string>` | `new()` | 可选 | 信任的证书指纹列表（用于签名验证） |
+| `TrustedGpgKeys` | `List<string>` | `new()` | 可选 | 信任的 GPG 公钥列表（Linux 用） |
 
 ### 3.2 实例方法
 

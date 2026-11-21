@@ -14,7 +14,7 @@ sidebar_label: Bowl 执行流程
 > - Dump 文件的检测逻辑与崩溃判定规则
 > - 崩溃发生后的五步修复管线（报告 → 诊断 → 回滚 → 清理 → 回调）
 > - Upgrade 模式与 Normal 模式的行为差异
-> - 跨平台策略（Windows / Linux / macOS）的适配机制
+> - 跨平台策略（Windows / Linux）的适配机制
 > - 优雅降级与容错设计
 
 ---
@@ -30,7 +30,7 @@ sidebar_label: Bowl 执行流程
 7. [Phase 3：FindDumpFile — Dump 检测与崩溃判定](#7-phase-3finddumpfile--dump-检测与崩溃判定)
 8. [Phase 4：HandleCrashAsync — 崩溃修复管线](#8-phase-4handlecrashasync--崩溃修复管线)
 9. [Upgrade vs Normal：两种工作模式对比](#9-upgrade-vs-normal两种工作模式对比)
-10. [平台策略适配：Windows / Linux / macOS](#10-平台策略适配windows--linux--macos)
+10. [平台策略适配：Windows / Linux](#10-平台策略适配windows--linux)
 11. [容错与优雅降级](#11-容错与优雅降级)
 12. [与 GeneralUpdate.Core 的集成](#12-与-generalupdatecore-的集成)
 13. [关键代码路径索引](#13-关键代码路径索引)
@@ -81,8 +81,6 @@ Bowl 采用**策略 + 报告 + 诊断**的三层依赖注入设计：
 │  │LinuxBowlStrategy │                    │LinuxSystem │ │
 │  │(procdump包安装)   │                    │InfoProvider│ │
 │  ├──────────────────┤                    └────────────┘ │
-│  │MacBowlStrategy   │                                    │
-│  │(lldb)            │                                    │
 │  └──────────────────┘                                    │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -92,7 +90,7 @@ Bowl 采用**策略 + 报告 + 诊断**的三层依赖注入设计：
 | 原则 | 说明 |
 |------|------|
 | **只监控不更新** | Bowl 不下载、不解压、不替换文件，只监控进程崩溃状态 |
-| **策略模式** | `IBowlStrategy` 封装平台差异，Windows 用 ProcDump，Linux 用 ProcDump，macOS 用 lldb |
+| **策略模式** | `IBowlStrategy` 封装平台差异，Windows 用 ProcDump，Linux 用 ProcDump；其他平台不支持（抛 `PlatformNotSupportedException`） |
 | **优雅降级** | 任何步骤失败都不影响后续步骤执行——报告生成失败仍会尝试回滚，回滚失败仍会触发回调 |
 | **崩溃判定 = Dump 存在** | 崩溃的唯一判定标准是 Dump 文件是否存在。有 Dump = 崩溃，无 Dump = 正常退出 |
 | **不可变上下文** | `BowlContext` 是 `readonly record struct`，通过 `Normalize()` 产生标准化副本 |
@@ -147,9 +145,7 @@ StrategyFactory.Create()
   │                     自动识别发行版（deb/rpm）
   │                     按需安装 procdump 包
   │
-  └── IsMacOS()    ──▶ MacBowlStrategy
-                        使用 /usr/bin/lldb
-                        受 SIP 和调试权限限制
+  └── 其他平台      ──▶ 抛出 PlatformNotSupportedException
 ```
 
 ---
@@ -164,13 +160,13 @@ StrategyFactory.Create()
 |------|------|--------|------|
 | `ProcessNameOrId` | `string` | — **(必填)** | 目标进程名或 PID |
 | `TargetPath` | `string` | — | 目标安装路径 |
-| `FailDirectory` | `string` | `TargetPath/fails/` | Dump 和报告输出目录 |
-| `BackupDirectory` | `string` | `TargetPath/.backups/latest/` | 备份目录（升级模式回滚源） |
-| `DumpFileName` | `string` | `{进程名}.dmp` | 期望的 Dump 文件名 |
+| `FailDirectory` | `string` | `null`（未设置） | Dump 和报告输出目录 |
+| `BackupDirectory` | `string` | `null`（未设置） | 备份目录（升级模式回滚源） |
+| `DumpFileName` | `string` | `null`（未设置） | 期望的 Dump 文件名 |
 | `TimeoutMs` | `int` | `30000` (30s) | 监控超时时间 |
 | `DumpType` | `DumpType` | `Full` | Dump 类型：Full / Mini / Heap |
 | `WorkModel` | `string` | `"Upgrade"` | 工作模式：Upgrade / Normal |
-| `AutoRestore` | `bool` | `true` | 崩溃后是否自动回滚备份 |
+| `AutoRestore` | `bool` | `false` | 崩溃后是否自动回滚备份 |
 | `ExtendedField` | `string` | — | 扩展字段（通常存版本号） |
 | `OnCrash` | `Func<CrashInfo, CT, Task>` | `null` | 崩溃回调 |
 
@@ -182,10 +178,6 @@ context = context.Normalize();
 // if (string.IsNullOrEmpty(context.WorkModel)) context = context with { WorkModel = "Upgrade" };
 // if (context.TimeoutMs <= 0) context = context with { TimeoutMs = 30000 };
 // if (context.DumpType == default) context = context with { DumpType = DumpType.Full };
-// if (string.IsNullOrEmpty(context.FailDirectory)) 
-//     context = context with { FailDirectory = Path.Combine(context.TargetPath, "fails") };
-// if (string.IsNullOrEmpty(context.DumpFileName))
-//     context = context with { DumpFileName = $"{context.ProcessNameOrId}.dmp" };
 ```
 
 ---
@@ -243,7 +235,7 @@ public readonly record struct BowlResult
 
 ## 5. Phase 1：Strategy.Prepare — 平台策略准备
 
-`Prepare` 方法的职责是：根据平台差异，构造启动 ProcDump（或 lldb）子进程所需的 `ProcessStartInfo`。**如果工具不可用，返回 `null` 表示优雅降级**。
+`Prepare` 方法的职责是：根据平台差异，构造启动 ProcDump 子进程所需的 `ProcessStartInfo`。**如果工具不可用，返回 `null` 表示优雅降级**。
 
 ### 5.1 WindowsBowlStrategy
 
@@ -258,10 +250,9 @@ public ProcessStartInfo? Prepare(BowlContext context)
     return new ProcessStartInfo
     {
         FileName = procDumpPath,
-        Arguments = $"-e -ma -accepteula {context.ProcessNameOrId} {dumpOutputPath}",
+        Arguments = $"-e {dumpFlag} {context.ProcessNameOrId} \"{dumpFullPath}\"",
         // -e: 仅捕获未处理异常
-        // -ma: Full Dump
-        // -accepteula: 自动接受 EULA
+        // dumpFlag: 按 DumpType 映射 — Full=-ma / Mini=-mm / Heap=-mh
     };
 }
 ```
@@ -285,10 +276,6 @@ public ProcessStartInfo? Prepare(BowlContext context)
     };
 }
 ```
-
-### 5.3 MacBowlStrategy
-
-macOS 策略使用系统内置的 `lldb`，但由于 SIP（系统完整性保护）限制，需要额外的调试权限。通常仅在开发/调试环境中可用。
 
 ---
 
@@ -384,7 +371,7 @@ await _systemInfoProvider.ExportAsync(context.FailDirectory, ct);
 - 系统信息（`systeminfo`）
 - 最近的系统事件日志
 
-**Linux/macOS：** 收集 `dmesg`、`journalctl` 等系统日志。
+**Linux：** 当前为 no-op（预留，未来可扩展 `dmesg`、`journalctl` 等系统日志导出）。
 
 **容错设计：** 诊断导出失败不中断后续步骤。
 
@@ -416,7 +403,6 @@ await _strategy.PostProcessAsync(context, exitResult, ct);
 平台特定的后处理：
 - **Windows：** 清理临时 ProcDump 文件
 - **Linux：** 终止残留的 procdump 进程
-- **macOS：** 清理 lldb 会话文件
 
 ### 8.5 步骤 5：回调通知
 
@@ -451,8 +437,10 @@ if (context.OnCrash != null)
 | **系统诊断** | ✅ 导出 | ✅ 导出 |
 | **自动回滚** | ✅ `StorageHelper.Restore` | ❌ 跳过 |
 | **失败版本标记** | ✅ 写 `UpgradeFail` | ❌ 不标记 |
-| **环境变量** | ✅ 设 `GU_UPGRADE_FAIL` | ❌ 不设 |
+| **环境变量** | ✅ 设 `UpgradeFail`（预留，当前版本尚无写入方） | ❌ 不设 |
 | **OnCrash 回调** | ✅ 触发 | ✅ 触发 |
+
+> 注：环境变量 `UpgradeFail` 在当前版本代码中尚无写入方（预留）；Core 侧已实现读取与失败版本跳过逻辑。
 
 ### 9.1 与 Core 的联动（Upgrade 模式）
 
@@ -473,7 +461,7 @@ Core 升级流程
         └── 启动崩溃 → 有 Dump → 进入修复管线
               ├── 回滚到 .backups/
               ├── 写 {version}_fail.json
-              └── 设环境变量 GU_UPGRADE_FAIL={version}
+              └── 设环境变量 UpgradeFail={version}（预留，当前版本尚无写入方）
                     │
                     └── Core 下次启动读取环境变量
                           → CheckFail() 命中
@@ -483,19 +471,19 @@ Core 升级流程
 
 ---
 
-## 10. 平台策略适配：Windows / Linux / macOS
+## 10. 平台策略适配：Windows / Linux
 
 ### 10.1 策略对比
 
-| 维度 | Windows | Linux | macOS |
-|------|---------|-------|-------|
-| **监控工具** | `procdump.exe` / `procdump64.exe` | `procdump` (deb/rpm) | `/usr/bin/lldb` |
-| **工具获取** | 内置在 NuGet 包中 | 自动检测 + `install.sh` 安装 | 系统内置 |
-| **Dump 参数** | `-e -ma` | `-e -ma` | lldb 脚本 |
-| **架构选择** | 根据进程位数自动选择 x86/x64/ARM64 | 不区分 | 不区分 |
-| **权限要求** | 管理员权限（调试权限） | root（ptrace 权限） | SIP 授权 |
-| **系统诊断** | `export.bat`：驱动/系统信息/事件日志 | `dmesg` / `journalctl` | `sysdiagnose` |
-| **支持级别** | 完整支持 | 完整支持（需网络安装工具） | 基础支持（受 SIP 限制） |
+| 维度 | Windows | Linux |
+|------|---------|-------|
+| **监控工具** | `procdump.exe` / `procdump64.exe` | `procdump` (deb/rpm) |
+| **工具获取** | 内置在 NuGet 包中 | 自动检测 + `install.sh` 安装 |
+| **Dump 参数** | `-e -ma` | `-e -ma` |
+| **架构选择** | 根据进程位数自动选择 x86/x64/ARM64 | 不区分 |
+| **权限要求** | 管理员权限（调试权限） | root（ptrace 权限） |
+| **系统诊断** | `export.bat`：驱动/系统信息/事件日志 | `dmesg` / `journalctl` |
+| **支持级别** | 完整支持 | 完整支持（需网络安装工具） |
 
 ### 10.2 StrategyFactory 自动检测
 
@@ -506,8 +494,6 @@ public static IBowlStrategy Create()
         return new WindowsBowlStrategy();
     if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         return new LinuxBowlStrategy();
-    if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        return new MacBowlStrategy();
     throw new PlatformNotSupportedException();
 }
 ```
@@ -562,10 +548,12 @@ Level 5: OnCrash 回调异常
 
 ### 12.1 调用时机
 
-Bowl 应在 Core 完成文件替换之后、启动新版本主程序之前被调用：
+Bowl 应在 Core 完成文件替换之后、启动新版本主程序之前被调用。
+
+Core 10.5.0 在 Windows 下通过 `WindowsStrategy.LaunchBowl` 以**外部进程**方式启动 Bowl（`Process.Start` 拉起独立的 Bowl 可执行文件），而非进程内实例化。业务代码也可以在自己的进程中直接调用，典型模式如下：
 
 ```csharp
-// Core ClientStrategy 中的典型调用模式
+// 业务代码进程内调用 Bowl 的典型模式
 public async Task LaunchAsync()
 {
     // ... Core 完成下载、验证、应用更新 ...
@@ -602,7 +590,7 @@ public async Task LaunchAsync()
 | 状态通道 | 写入方 | 读取方 | 用途 |
 |----------|--------|--------|------|
 | `{version}_fail.json` | Bowl | Core + 业务 | 崩溃报告持久化 |
-| 环境变量 `GU_UPGRADE_FAIL` | Bowl | Core | 失败版本跳过 |
+| 环境变量 `UpgradeFail` | —（预留，当前版本尚无写入方） | Core | 失败版本跳过 |
 | `.backups/` 目录 | Core（创建） | Bowl（回滚） | 备份与恢复 |
 
 ---
@@ -618,7 +606,6 @@ public async Task LaunchAsync()
 | 文件回滚 | `FileSystem/StorageHelper.cs` | `Restore()` |
 | Windows 策略 | `Strategies/WindowsBowlStrategy.cs` | `Prepare()` / `PostProcessAsync()` |
 | Linux 策略 | `Strategies/LinuxBowlStrategy.cs` | `Prepare()` / `PostProcessAsync()` |
-| Mac 策略 | `Strategies/MacBowlStrategy.cs` | `Prepare()` / `PostProcessAsync()` |
 | 进程运行器 | `Strategies/ProcessRunner.cs` | `RunAsync()` |
 | 策略工厂 | `Strategies/StrategyFactory.cs` | `Create()` |
 | 崩溃 DTO | `Internal/Crash.cs` | — |
