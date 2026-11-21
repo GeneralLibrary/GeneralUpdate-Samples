@@ -1,0 +1,71 @@
+name: Deploy Docs (nginx)
+
+# 文档站部署工作流。
+# 原 Azure Static Web Apps 资源已于 2026-08 删除（资源不存在，无法恢复 SWA），
+# 站点已迁移至自有 Azure VM 的 nginx 静态站（www.justerzhu.cn / justerzhu.cn）。
+# 服务器地址、登录方式与 webroot 见 ServerInfo 仓库《服务器信息.md》。
+# 认证：专用部署私钥存于 GitHub secret DOCS_DEPLOY_SSH_KEY，
+# 对应公钥已安装到服务器 zhuzhen 账户的 authorized_keys（注释 github-actions-docs-deploy@GeneralUpdate-Samples）。
+# webroot 属主已改为 zhuzhen:www（nginx 仅需读权限，文件为 world-readable）。
+# 注意：webroot 内的 .well-known/ 是 acme.sh 证书续期验证路由，部署时必须排除，不得删除。
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'website/**'
+      - '.github/workflows/deploy-docs.yml'
+
+concurrency:
+  group: deploy-docs
+  cancel-in-progress: true
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    name: Build and deploy
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Build site (zh-Hans + en)
+        working-directory: website
+        run: |
+          npm ci --no-audit --no-fund
+          NODE_OPTIONS="--max-old-space-size=8192" npm run build
+
+      - name: Set up SSH
+        env:
+          SSH_KEY: ${{ secrets.DOCS_DEPLOY_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          cat >> ~/.ssh/known_hosts <<'HOSTKEYS'
+          20.189.114.78 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKpiaKvLT8BUc06fA3B92ts0zpcUtBqarOcWt6hKVaZy
+          HOSTKEYS
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy to nginx webroot
+        working-directory: website
+        run: |
+          rsync -az --delete --exclude='.well-known/' \
+            -e 'ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes' \
+            build/ zhuzhen@20.189.114.78:/www/wwwroot/www.justerzhu.cn/
+
+      - name: Verify deployment
+        run: |
+          sleep 2
+          status=$(curl -s -o /dev/null -w '%{http_code}' https://www.justerzhu.cn/)
+          echo "https://www.justerzhu.cn/ -> HTTP $status"
+          if [ "$status" != "200" ]; then
+            echo "::error::Site returned HTTP $status after deploy"
+            exit 1
+          fi
