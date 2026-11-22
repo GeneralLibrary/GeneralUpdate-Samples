@@ -11,6 +11,12 @@ const sidebars = {
     'quickstart/Avalonia Android cookbook',
     'doc/GeneralUpdate.Avalonia.Android',
     'doc/Avalonia.Android-flow',
+    {
+      type: 'category',
+      label: 'Release Log',
+      collapsed: true,
+      items: ['releaselog/GeneralUpdateAvaloniaReleaselog'],
+    },
   ],
 };
 

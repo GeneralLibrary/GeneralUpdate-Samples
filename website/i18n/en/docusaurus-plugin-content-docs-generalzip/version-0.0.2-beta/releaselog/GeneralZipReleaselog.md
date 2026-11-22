@@ -7,9 +7,9 @@ tags: [log]
 
 # 📒Release log
 
-### 📍2026-11-20 — v2.0.0 capability expansion (unreleased)
+### 📍2026-11-20 — v0.0.2-beta capability expansion (unreleased)
 
-*These changes are merged to the [`main` branch of the GeneralZip repository](https://github.com/GeneralLibrary/GeneralZip) (PR #1, PR #2); the component version has moved to `2.0.0` but no release tag has been cut yet — the NuGet version will be noted here once published.*
+*These changes are merged to the [`main` branch of the GeneralZip repository](https://github.com/GeneralLibrary/GeneralZip) (PR #1, PR #2) and correspond to version `0.0.2-beta`; the NuGet version will be noted here once published.*
 
 - **Implicit bootstrap (breaking refactor)**: the Rust native core is now assembled automatically when `GeneralZipFormatRegistry.Default` is first constructed — the core is loaded, 7z/RAR providers are registered per capability bits, and the native codec delegates are injected; custom registries are covered by the codec router's `EnsureBridge()` fallback. `GeneralZip.Initialize()` and `GeneralZipNative.Initialize()` have been removed — use `NativeCoreLoader.TryLoad()` to probe core availability
 - **One-line archive operations**: the facade gains `Append/AppendAsync` (append entries to an existing ZIP archive), `Remove/RemoveAsync` (delete entries by name) and `Convert/ConvertAsync` (cross-format conversion) — read→rewrite semantics; converting an encrypted archive automatically inherits its algorithm and password, never silently producing a plaintext output

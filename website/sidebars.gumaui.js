@@ -11,6 +11,12 @@ const sidebars = {
     'quickstart/Maui Android cookbook',
     'doc/GeneralUpdate.Maui.Android',
     'doc/Maui.Android-flow',
+    {
+      type: 'category',
+      label: 'Release Log',
+      collapsed: true,
+      items: ['releaselog/GeneralUpdateMauiReleaselog'],
+    },
   ],
 };
 

@@ -59,6 +59,7 @@ const sidebars = {
       collapsed: true,
       items: [
         'releaselog/GeneralUpdateReleaselog',
+        'releaselog/GeneralUpdateToolsReleaselog',
       ],
     },
   ],

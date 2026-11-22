@@ -7,9 +7,9 @@ tags: [log]
 
 # 📒Release log
 
-### 📍2026-11-20 — v2.0.0 能力扩展（待发布）
+### 📍2026-11-20 — v0.0.2-beta 能力扩展（待发布）
 
-*以下变更已合入 [GeneralZip 仓库](https://github.com/GeneralLibrary/GeneralZip) `main` 分支（PR #1、PR #2），组件版本已升至 `2.0.0`，尚未打发布 tag；正式发布后此处将标注 NuGet 版本号。*
+*以下变更已合入 [GeneralZip 仓库](https://github.com/GeneralLibrary/GeneralZip) `main` 分支（PR #1、PR #2），对应版本为 `0.0.2-beta`；正式发布后此处将标注 NuGet 版本号。*
 
 - **隐式引导（破坏性重构）**: Rust 原生核心改为在 `GeneralZipFormatRegistry.Default` 首次构造时自动装配——自动加载核心、按能力位注册 7z/RAR 提供者、注入原生编解码委托，自定义注册表场景由编解码路由 `EnsureBridge()` 兜底；`GeneralZip.Initialize()` 与 `GeneralZipNative.Initialize()` 已移除，改用 `NativeCoreLoader.TryLoad()` 探测核心可用性
 - **一行式归档操作**: 门面新增 `Append/AppendAsync`（向已有 ZIP 归档追加条目）、`Remove/RemoveAsync`（按条目名删除）、`Convert/ConvertAsync`（跨格式转换）——读出→重写语义；加密归档转换时自动继承原加密算法与口令，杜绝静默产出明文包
