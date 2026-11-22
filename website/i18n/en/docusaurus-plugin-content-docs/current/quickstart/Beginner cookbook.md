@@ -383,7 +383,7 @@ After this flow works, read these pages in order:
 1. [GeneralUpdate.Core](../doc/GeneralUpdate.Core): update strategies, event notifications, silent updates, and manifest-based minimal configuration
 2. [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential): differential algorithms, parallel processing, and Clean/Dirty
 3. [GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl): crash monitoring, backup, and failure recovery
-4. [GeneralUpdate.Tools](./GeneralUpdate.PacketTool): complete guides for patches, hashes, OSS config, and simulation
+4. [GeneralUpdate.Tools](/tools/quickstart/GeneralUpdate.PacketTool): complete guides for patches, hashes, OSS config, and simulation
 
 ## Installation directory notes
 

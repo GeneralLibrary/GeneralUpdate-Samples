@@ -387,7 +387,7 @@ Use this table to diagnose common issues quickly. Most failures trace back to on
 1. [GeneralUpdate.Core](../doc/GeneralUpdate.Core)：更新策略、事件通知、静默更新、manifest 极简配置
 2. [GeneralUpdate.Differential](../doc/GeneralUpdate.Differential)：差分算法、并行处理和 Clean/Dirty
 3. [GeneralUpdate.Bowl](../doc/GeneralUpdate.Bowl)：崩溃监控、备份和失败恢复
-4. [GeneralUpdate.Tools](./GeneralUpdate.PacketTool)：补丁包、Hash、OSS Config、Simulation 的完整操作指南
+4. [GeneralUpdate.Tools](/tools/quickstart/GeneralUpdate.PacketTool)：补丁包、Hash、OSS Config、Simulation 的完整操作指南
 
 ## 安装目录注意事项
 

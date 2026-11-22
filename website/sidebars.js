@@ -21,7 +21,6 @@ const sidebars = {
       collapsed: false,
       items: [
         'quickstart/Beginner cookbook',
-        'quickstart/GeneralUpdate.PacketTool',
       ],
     },
 
@@ -59,7 +58,6 @@ const sidebars = {
       collapsed: true,
       items: [
         'releaselog/GeneralUpdateReleaselog',
-        'releaselog/GeneralUpdateToolsReleaselog',
       ],
     },
   ],

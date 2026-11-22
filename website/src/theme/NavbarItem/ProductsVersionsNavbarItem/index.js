@@ -2,8 +2,8 @@
  * 自定义导航栏类型 productsVersions（经 src/theme/NavbarItem/ComponentTypes 注册）
  *
  * "文档"分组下拉：groups 里每个产品一个小节——产品名做分组标题，
- * 已发布版本号做菜单项。悬停/点开菜单后才显示版本号，未发布的
- * current（"Next"）版本始终隐藏。
+ * 已发布版本号做菜单项。通常隐藏未发布的 current（"Next"）；
+ * 尚无文档版本快照的产品可通过 showCurrentVersion 显示当前文档。
  *
  * 版本列表随各实例的 docs:version 自动更新，发布新版无需改导航配置。
  * 切换版本时优先跳转到当前页面在目标版本下的对应文档（保留 ?search#hash），
@@ -30,7 +30,7 @@ function GroupSection({group, hideCurrentVersion = true, mobile, search, hash, o
   const versions = useVersions(group.docsPluginId);
   const activeDocContext = useActiveDocContext(group.docsPluginId);
   const {savePreferredVersionName} = useDocsPreferredVersion(group.docsPluginId);
-  const visibleVersions = hideCurrentVersion
+  const visibleVersions = hideCurrentVersion && !group.showCurrentVersion
     ? versions.filter((version) => version.name !== 'current')
     : versions;
   return (
@@ -46,6 +46,7 @@ function GroupSection({group, hideCurrentVersion = true, mobile, search, hash, o
         const versionDoc =
           activeDocContext.alternateDocVersions[version.name] ??
           getVersionMainDoc(version);
+        if (!versionDoc) return null;
         return (
           <NavbarItem
             key={version.name}

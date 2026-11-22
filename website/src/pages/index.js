@@ -74,7 +74,7 @@ function Features() {
             icon="🛠️"
             title="Update Tools"
             description={isEn ? 'Automated patch generation and publishing tools' : '自动化补丁包生成与发布工具'}
-            link="/docs/quickstart/GeneralUpdate.PacketTool"
+            link="/tools/quickstart/GeneralUpdate.PacketTool"
           />
           <FeatureCard
             icon="💡"
