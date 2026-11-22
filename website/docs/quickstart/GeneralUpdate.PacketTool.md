@@ -32,17 +32,21 @@ dotnet run --project GeneralUpdate.Tools.csproj
 
 > Simulation 模块内部会调用 `dotnet publish` 构建测试应用，因此使用仿真功能时必须安装 .NET SDK。Mobile 模块的项目模式（Build & Locate）也会调用 `dotnet publish`，同样需要 .NET SDK。仅运行 Patch / Extension / OSS / Config 模块以及 Mobile 的文件模式则不需要。
 
-## 七个模块速览
+## 左侧导航模块
 
 | 模块 | 你提供 | 工具产出 | 下游消费者 |
 |------|--------|----------|------------|
-| **Patch** | 旧版本目录 + 新版本目录 | `{name}.zip`（含 `.patch` 文件、新文件、`generalupdate.delete.json`） | Server、OSS/CDN、Core Upgrade 进程 |
-| **Extension** | 扩展源目录 + 元数据 | `{name}_{version}.zip`（含 `manifest.json`） | `GeneralUpdate.Extension` 组件 |
-| **OSS Config** | 包名、版本、下载 URL、本地 ZIP（计算 Hash） | `oss_config.json`（版本数组） | OSS 客户端、对象存储发布流程 |
-| **Config** | Client/Upgrade 的 `.csproj` | `generalupdate.manifest.json` + `sample_output/` 发布目录 | Client/Upgrade 启动引导 |
-| **Simulation** | 旧版本目录 + 补丁 ZIP | 本地更新服务 + `simulation_report.md` | 发布前质量把关 |
-| **Hash** | 本地文件（ZIP） | SHA256 小写十六进制字符串 | 完整性校验、服务端版本记录 |
-| **Mobile** | APK/AAB 文件或 MAUI/Avalonia Android 的 `.csproj` | `mobile_version_{timestamp}.json` 版本记录 | 移动端更新服务端、GeneralUpdate.Avalonia/Maui 组件 |
+| **补丁包（Patch）** | 旧版本目录 + 新版本目录 | `{name}.zip`（含 `.patch` 文件、新文件和删除清单） | Server、OSS/CDN、Core Upgrade 进程 |
+| **扩展包（Extension）** | 扩展源目录 + 元数据 | `{name}_{version}.zip`（含 `manifest.json`） | `GeneralUpdate.Extension` 组件 |
+| **OSS 配置（OSS）** | 包名、版本、下载 URL、本地文件（计算 Hash） | 用户选择位置的 `oss_config.json` | OSS 客户端、对象存储发布流程 |
+| **模拟更新（Simulate）** | 旧版本目录 + 补丁 ZIP | 本地更新服务 + 仿真报告 | 发布前质量把关 |
+| **移动端（Mobile）** | APK/AAB 或 MAUI/Avalonia Android `.csproj` | 上传结果 + `mobile_version_{timestamp}.json` | 移动端更新服务端、Avalonia/Maui Android 组件 |
+| **配置生成（Config）** | Client/Upgrade 的 `.csproj` | `generalupdate.manifest.json` + 示例发布目录 | Client/Upgrade 启动引导 |
+| **设置（Settings）** | 上传地址、身份认证、仿真参数、功能开关 | `%APPDATA%/GeneralUpdate.Tools/config.json` | 所有需要自动上传或本地仿真的模块 |
+
+:::tip 关于 SHA256
+SHA256 不作为独立导航页面，而是集成在 **OSS 配置**的“计算”和 **移动端**的元数据分析中。
+:::
 
 ---
 
@@ -460,6 +464,51 @@ Generate Sample 额外输出：
 | `package` | `PackageName` | 应用包名（唯一标识） |
 | `android:versionName` | `VersionName` | 展示版本号（如 `2.0.0`） |
 | `android:versionCode` | `VersionCode` | 内部版本代码（整数） |
+
+---
+
+## Settings：上传与运行参数
+
+设置页集中管理所有模块共用的持久化配置。保存后，配置会写入：
+
+```text
+%APPDATA%\GeneralUpdate.Tools\config.json
+```
+
+Windows 可按 `Win+R` 输入 `%APPDATA%\GeneralUpdate.Tools` 后打开。工具会同时维护 `config.json.backup`；密码、Token 和 API Key 使用系统加密后再写入配置。
+
+### 上传服务器
+
+| 字段 | 默认值 | 说明 |
+|------|--------|------|
+| 服务器地址 | 空 | 必须填写绝对地址，例如 `https://update.example.com` |
+| 上传接口路径 | `/api/v1/packages/upload` | 工具会与服务器地址拼接；可填写相对路径或以 `/` 开头的路径 |
+| 超时时间 | 300 秒 | 单次上传最长等待时间 |
+| 重试次数 | 3 | 失败后最多重试的次数；重试间隔采用指数退避 |
+| 补丁生成后自动上传 | 关闭 | 打开后，Patch 打包成功即调用上传接口 |
+
+上传使用 `multipart/form-data`，文件字段名为 `file`。HTTP 4xx（超时、429 除外）会直接视为拒绝；5xx、超时、网络错误可按重试次数继续尝试。
+
+### 身份认证
+
+| 认证方式 | 工具行为 |
+|----------|----------|
+| None | 不发送认证头 |
+| Basic Auth | 使用用户名、密码生成 `Authorization: Basic ...` |
+| Token | 在 `Authorization` 请求头中发送配置的令牌 |
+| API Key | 将 API Key 放入自定义请求头，默认请求头名为 `X-API-Key` |
+
+配置后建议先点击 **测试连接**。测试会向拼接后的完整地址发送 GET 请求，并根据 HTTP 成功状态判断可用性。
+
+### 仿真与功能开关
+
+- **本地服务器端口**：模拟更新的默认端口为 `5000`。
+- **模拟服务器需要身份认证**：为仿真服务器启用认证选项。
+- **打包前检测加密文件**：控制 Patch 模块是否在打包前扫描可疑文件。
+- **自动校验 SemVer**：保留为全局功能开关；实际模块仍会执行版本格式校验。
+- **显示 JSON 预览**：配置中的 JSON 预览选项。
+
+点击 **保存设置**立即持久化；**恢复默认**会重置上传、认证、仿真和功能开关配置。
 
 ---
 
