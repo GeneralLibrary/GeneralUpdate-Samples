@@ -28,17 +28,21 @@ Go to [GeneralUpdate.Tools Releases](https://github.com/GeneralLibrary/GeneralUp
 
 > The Simulation module internally runs `dotnet publish` to build test apps, so you need the .NET SDK for that feature. The Mobile module's Project Mode (Build & Locate) also runs `dotnet publish`, which requires the .NET SDK too. Patch / Extension / OSS / Config modules and Mobile's File Mode work without the SDK.
 
-## Seven modules at a glance
+## Sidebar modules
 
 | Module | What you provide | What the tool produces | Downstream consumer |
 |--------|-----------------|----------------------|---------------------|
-| **Patch** | Old version directory + new version directory | `{name}.zip` (contains `.patch` files, new files, `generalupdate.delete.json`) | Server, OSS/CDN, Core Upgrade process |
-| **Extension** | Extension source directory + metadata | `{name}_{version}.zip` (contains `manifest.json`) | `GeneralUpdate.Extension` component |
-| **OSS Config** | Package name, version, download URL, local ZIP (for hash) | `oss_config.json` (version array) | OSS client, object storage publish flow |
-| **Config** | Client/Upgrade `.csproj` files | `generalupdate.manifest.json` + `sample_output/` publish directory | Client/Upgrade bootstrap |
-| **Simulation** | Old version directory + patch ZIP | Local update server + `simulation_report.md` | Pre-release QA gate |
-| **Hash** | Local file (ZIP) | SHA256 lowercase hex string | Integrity check, server-side version records |
-| **Mobile** | APK/AAB file or MAUI/Avalonia Android `.csproj` | `mobile_version_{timestamp}.json` version record | Mobile update server, GeneralUpdate.Avalonia/Maui components |
+| **Patch** | Old and new version directories | `{name}.zip` with `.patch` files, new files, and a deletion manifest | Server, OSS/CDN, Core Upgrade process |
+| **Extension** | Extension source directory and metadata | `{name}_{version}.zip` containing `manifest.json` | `GeneralUpdate.Extension` component |
+| **OSS** | Package name, version, URL, and a local file for hashing | `oss_config.json` at the location you choose | OSS client or object-storage publish flow |
+| **Simulate** | Old application directory and patch ZIP | Local update server and simulation report | Pre-release QA gate |
+| **Mobile** | APK/AAB file or MAUI/Avalonia Android `.csproj` | Upload result and `mobile_version_{timestamp}.json` | Mobile update server and Android clients |
+| **Config** | Client/Upgrade `.csproj` files | `generalupdate.manifest.json` and an optional sample publish directory | Client/Upgrade bootstrap |
+| **Settings** | Upload server, authentication, simulation, and feature options | `%APPDATA%/GeneralUpdate.Tools/config.json` | Modules that upload or run a local simulation |
+
+:::tip SHA256
+SHA256 is not a separate sidebar page. It is available through **OSS Config > Compute** and the **Mobile** metadata workflow.
+:::
 
 ---
 
@@ -440,6 +444,51 @@ Supports two modes:
 | `package` | `PackageName` | App package name (unique identifier) |
 | `android:versionName` | `VersionName` | Display version (e.g. `2.0.0`) |
 | `android:versionCode` | `VersionCode` | Internal version code (integer) |
+
+---
+
+## Settings: Upload and runtime options
+
+The Settings page stores shared configuration used by upload and simulation workflows:
+
+```text
+%APPDATA%\GeneralUpdate.Tools\config.json
+```
+
+On Windows, open `%APPDATA%\GeneralUpdate.Tools` from `Win+R`. The app keeps a backup at `config.json.backup`. Passwords, bearer tokens, and API keys are protected by the operating-system credential encryption before they are written to the configuration file.
+
+### Upload server
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| Server URL | Empty | An absolute URL such as `https://update.example.com` |
+| Upload endpoint | `/api/v1/packages/upload` | Appended to the server URL |
+| Timeout | 300 seconds | Maximum time to wait for one upload attempt |
+| Retry count | 3 | Number of retries after failure; delays use exponential backoff |
+| Auto-upload after patch generation | Off | Upload the generated ZIP immediately after a successful Patch build |
+
+Uploads use `multipart/form-data`, with the file supplied under the `file` field. HTTP 4xx responses (except timeout and 429) are treated as server rejection; 5xx, timeout, and network errors can be retried.
+
+### Authentication
+
+| Scheme | Behavior |
+|--------|----------|
+| None | No authentication header |
+| Basic Auth | Sends `Authorization: Basic ...` using username and password |
+| Token | Sends the configured token in the `Authorization` request header |
+| API Key | Sends the key in a configurable request header, defaulting to `X-API-Key` |
+
+Use **Test Connection** after saving; it sends a GET request to the configured upload URL and reports whether the response is successful.
+
+### Simulation and feature switches
+
+- **Local server port**: defaults to `5000` for update simulation.
+- **Simulation server requires authentication**: enables authentication for the local simulation server.
+- **Detect encrypted files before packaging**: controls whether Patch scans output for suspicious or packed files.
+- **Validate SemVer automatically**: global option for version-validation behavior; modules still validate required version fields.
+- **Show JSON preview**: the JSON-preview option in the configuration.
+
+**Save Settings** persists immediately. **Reset to Defaults** restores upload, authentication, simulation, and feature options.
 
 ---
 
