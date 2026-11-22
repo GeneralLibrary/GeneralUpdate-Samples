@@ -21,7 +21,6 @@ const sidebars = {
       collapsed: false,
       items: [
         'quickstart/Beginner cookbook',
-        'quickstart/GeneralUpdate.PacketTool',
       ],
     },
 

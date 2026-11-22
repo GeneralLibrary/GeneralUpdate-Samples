@@ -82,7 +82,7 @@ const config = {
         // 启用英文与中文分词（中文基于 nodejieba）
         language: ['en', 'zh'],
         // 覆盖所有 docs 实例的路由（默认只索引 "docs"）
-        docsRouteBasePath: ['docs', 'zip', 'maui', 'avalonia', 'agent-skills', 'spacestation'],
+        docsRouteBasePath: ['docs', 'zip', 'maui', 'avalonia', 'tools', 'agent-skills', 'spacestation'],
         // 仅索引 docs（默认），不索引独立页面
         indexPages: false,
       },
@@ -138,6 +138,23 @@ const config = {
         },
       },
     ],
+    // ── GeneralUpdate.Tools 独立 docs 实例（尚未冻结文档版本）─────────
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'tools',
+        path: 'tools',
+        routeBasePath: 'tools',
+        sidebarPath: './sidebars.tools.js',
+        editUrl:
+          'https://github.com/GeneralLibrary/GeneralUpdate-Samples/tree/main/website',
+        versions: {
+          current: {
+            label: 'Current',
+          },
+        },
+      },
+    ],
     // ── Agent Skills 独立 docs 实例（暂不版本化）────────────────────
     [
       '@docusaurus/plugin-content-docs',
@@ -180,7 +197,7 @@ const config = {
         items: [
           {
             // "文档"分组下拉：产品名做分组标题，悬停/点开才显示已发布版本号
-            // （隐藏未发布的 Next 子项）。版本列表随 docs:version 自动更新，
+            // （通常隐藏未发布的 Next 子项）。版本列表随 docs:version 自动更新，
             // 发布新版无需改导航。见 src/theme/NavbarItem/ProductsVersionsNavbarItem
             type: 'custom-productsVersions',
             position: 'left',
@@ -191,6 +208,7 @@ const config = {
               { label: 'GeneralZip', docsPluginId: 'generalzip', basePath: '/zip' },
               { label: 'GeneralUpdate.Maui', docsPluginId: 'gumaui', basePath: '/maui' },
               { label: 'GeneralUpdate.Avalonia', docsPluginId: 'guavalonia', basePath: '/avalonia' },
+              { label: 'GeneralUpdate.Tools', docsPluginId: 'tools', basePath: '/tools', showCurrentVersion: true },
             ],
           },
           {
