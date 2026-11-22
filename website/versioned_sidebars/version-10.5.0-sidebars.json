@@ -39,7 +39,8 @@
       "label": "Release Log",
       "collapsed": true,
       "items": [
-        "releaselog/GeneralUpdateReleaselog"
+        "releaselog/GeneralUpdateReleaselog",
+        "releaselog/GeneralUpdateToolsReleaselog"
       ]
     }
   ]
