@@ -329,7 +329,7 @@ var result = await updater.UpdateAsync(drivers[0], strategy,
 
 ### 5.3 Production-Ready Example
 
-See the [Chinese documentation](GeneralUpdate.Drivelution.md#53-真实业务落地示例) for a full workflow covering scan, validate, install, rollback, and restart.
+See the [Chinese documentation](https://www.justerzhu.cn/docs/doc/GeneralUpdate.Drivelution#53-真实业务落地示例) for a full workflow covering scan, validate, install, rollback, and restart.
 
 ---
 

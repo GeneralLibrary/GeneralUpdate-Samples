@@ -1,0 +1,10 @@
+{
+  "version.label": {
+    "message": "当前",
+    "description": "The label for version current"
+  },
+  "sidebar.toolsSidebar.category.Release Log": {
+    "message": "发布日志",
+    "description": "The label for category Release Log in sidebar toolsSidebar"
+  }
+}

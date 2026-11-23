@@ -23,6 +23,10 @@
     "message": "Pricing",
     "description": "Navbar item with label 定价"
   },
+  "item.label.源码平台": {
+    "message": "Source Platforms",
+    "description": "Navbar item with label 源码平台"
+  },
   "item.label.联系方式": {
     "message": "Contact",
     "description": "Navbar item with label 联系方式"
