@@ -257,7 +257,7 @@ using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
 
 ---
 
-## 7. Platform Install Implementations
+## 7. Platform Install Implementations: Windows / Linux / macOS
 
 ### 7.1 Windows: pnputil
 

@@ -1,0 +1,22 @@
+{
+  "version.label": {
+    "message": "10.5.0",
+    "description": "The label for version 10.5.0"
+  },
+  "sidebar.tutorialSidebar.category.Quick Start": {
+    "message": "快速入门",
+    "description": "The label for category Quick Start in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Components": {
+    "message": "组件文档",
+    "description": "The label for category Components in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.执行流程详解": {
+    "message": "执行流程详解",
+    "description": "The label for category 执行流程详解 in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Release Log": {
+    "message": "发布日志",
+    "description": "The label for category Release Log in sidebar tutorialSidebar"
+  }
+}

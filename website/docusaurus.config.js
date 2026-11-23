@@ -212,29 +212,6 @@ const config = {
             ],
           },
           {
-            type: 'dropdown',
-            label: 'GeneralUpdate.Tools',
-            position: 'left',
-            items: [
-              {
-                type: 'doc',
-                docId: 'quickstart/GeneralUpdate.PacketTool',
-                docsPluginId: 'default',
-                label: '在线帮助',
-              },
-              {
-                type: 'doc',
-                docId: 'releaselog/GeneralUpdateToolsReleaselog',
-                docsPluginId: 'default',
-                label: 'Release Log',
-              },
-              {
-                href: 'https://github.com/GeneralLibrary/GeneralUpdate.Tools/releases',
-                label: 'GitHub Releases',
-              },
-            ],
-          },
-          {
             type: 'docSidebar',
             sidebarId: 'agentSkillsSidebar',
             docsPluginId: 'agent-skills',

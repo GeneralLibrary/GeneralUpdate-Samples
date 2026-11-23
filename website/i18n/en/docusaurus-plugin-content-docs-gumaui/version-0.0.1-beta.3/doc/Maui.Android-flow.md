@@ -204,7 +204,7 @@ flowchart TB
 
 ---
 
-## 6. Recoverable Download: HttpRangeDownloader
+## 6. Recoverable Download: HttpRangeDownloader Deep Dive
 
 ```
 HEAD request → Content-Length, Accept-Ranges, ETag
